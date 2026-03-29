@@ -1,6 +1,10 @@
-import type { CardDef, GameState, Rarity } from "./types";
+import type { CardDef, GameState, GearItem, Rarity } from "./types";
 import { CARDS } from "./data/cards";
 import { ensureOwned } from "./state";
+import { nextRand01 } from "./rng";
+import { addStones } from "./stones";
+import { metalGachaBonusStones } from "./deckSynergy";
+import { generateRandomGear } from "./systems/gearCraft";
 
 /** 基础概率（单抽），会被 meta.gachaLuck 略微提升高稀有 */
 const BASE_WEIGHT: Record<Rarity, number> = {
@@ -11,7 +15,8 @@ const BASE_WEIGHT: Record<Rarity, number> = {
   UR: 12,
 };
 
-const UR_PITY_MAX = 90;
+/** 天极保底计数上限（与 UI 保底条一致） */
+export const UR_PITY_MAX = 90;
 const SSR_SOFT_START = 65;
 
 function luckFactor(state: GameState): number {
@@ -28,7 +33,6 @@ function pickRarity(state: GameState): Rarity {
     UR: BASE_WEIGHT.UR * Math.pow(luck, 0.9),
   };
 
-  // 软保底：65 抽后 SSR 权重递增
   const soft = state.pitySsrSoft;
   if (soft >= SSR_SOFT_START) {
     const bump = 1 + (soft - SSR_SOFT_START + 1) * 0.08;
@@ -36,13 +40,12 @@ function pickRarity(state: GameState): Rarity {
     w.UR *= 1 + (soft - SSR_SOFT_START) * 0.03;
   }
 
-  // 硬保底：90 抽必 UR
   if (state.pityUr >= UR_PITY_MAX - 1) {
     return "UR";
   }
 
   const total = w.N + w.R + w.SR + w.SSR + w.UR;
-  let r = Math.random() * total;
+  let r = nextRand01(state) * total;
   const order: Rarity[] = ["UR", "SSR", "SR", "R", "N"];
   for (const ra of order) {
     r -= w[ra];
@@ -51,9 +54,10 @@ function pickRarity(state: GameState): Rarity {
   return "N";
 }
 
-function randomCardOfRarity(rarity: Rarity): CardDef {
+function randomCardOfRarity(state: GameState, rarity: Rarity): CardDef {
   const pool = CARDS.filter((c) => c.rarity === rarity);
-  return pool[Math.floor(Math.random() * pool.length)]!;
+  const idx = Math.floor(nextRand01(state) * pool.length);
+  return pool[Math.min(idx, pool.length - 1)]!;
 }
 
 export interface PullResult {
@@ -61,6 +65,17 @@ export interface PullResult {
   isNew: boolean;
   duplicateStars: boolean;
 }
+
+/** 用于抽卡演出：取本批最高稀有度 */
+export function highestRarityInPulls(results: PullResult[]): Rarity {
+  const order: Rarity[] = ["N", "R", "SR", "SSR", "UR"];
+  let best: Rarity = "N";
+  for (const r of results) {
+    if (order.indexOf(r.card.rarity) > order.indexOf(best)) best = r.card.rarity;
+  }
+  return best;
+}
+
 
 function applyPullToState(state: GameState, card: CardDef): PullResult {
   const had = !!state.owned[card.id];
@@ -82,13 +97,38 @@ function applyPullToState(state: GameState, card: CardDef): PullResult {
   if (card.rarity === "SSR" || card.rarity === "UR") {
     state.pitySsrSoft = 0;
   }
+  const metal = metalGachaBonusStones(state);
+  if (metal.gt(0)) {
+    addStones(state, metal);
+  }
   return { card, isNew: !had, duplicateStars };
 }
 
 export function pullOne(state: GameState): PullResult {
   const rarity = pickRarity(state);
-  const card = randomCardOfRarity(rarity);
+  const card = randomCardOfRarity(state, rarity);
   return applyPullToState(state, card);
+}
+
+/** 铸灵池单抽：仅装备，不占灵卡 UR/SSR 保底计数 */
+export function pullGearOne(state: GameState): { ok: true; gear: GearItem } | { ok: false; msg: string } {
+  if (Object.keys(state.gearInventory).length >= 80) {
+    return { ok: false, msg: "背包装备已满" };
+  }
+  const g = generateRandomGear(state);
+  state.gearInventory[g.instanceId] = g;
+  return { ok: true, gear: g };
+}
+
+export function pullGearTen(state: GameState): GearItem[] {
+  const out: GearItem[] = [];
+  for (let i = 0; i < 10; i++) {
+    if (Object.keys(state.gearInventory).length >= 80) break;
+    const r = pullGearOne(state);
+    if (!r.ok || !r.gear) break;
+    out.push(r.gear);
+  }
+  return out;
 }
 
 export function pullTen(state: GameState): PullResult[] {

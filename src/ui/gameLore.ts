@@ -1,0 +1,86 @@
+/**
+ * 面向玩家的说明文：收纳于「万象图鉴 → 修行札记」，避免主界面堆砌。
+ */
+import { REINCARNATION_REALM_REQ } from "../types";
+
+export function renderGameLoreHtml(): string {
+  return `
+    <div class="game-lore" id="game-lore">
+      <h3 class="sub-h game-lore-title">修行札记</h3>
+      <p class="hint sm game-lore-lead">下列为机制细则；日常游玩只需看各页顶部的短提示即可。</p>
+
+      <details class="game-lore-block">
+        <summary>资源与灵石分流</summary>
+        <ul class="game-lore-list">
+          <li><strong>灵石</strong>：破境、洞府蕴灵、灵卡升阶等主要消耗。</li>
+          <li><strong>唤灵髓</strong>：幻域产出为主，用于聚灵阵唤引与铸灵；不可用灵石直接购买。</li>
+          <li><strong>灵砂 / 玄铁</strong>：分解灵卡 / 装备获得，用于升阶与强化。</li>
+          <li>身法、装备与统计汇总在右下角<strong>角色</strong>面板。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary>洞府蕴灵四线</summary>
+        <ul class="game-lore-list">
+          <li><strong>汇灵</strong>：全局灵石效率乘区。</li>
+          <li><strong>灵息</strong>：在汇灵等乘区之后，再叠一层灵石效率（约每级 +2.2%，与汇灵叠乘）。</li>
+          <li><strong>固元</strong>：以道韵淬炼道基，降低破境灵石消耗。</li>
+          <li><strong>共鸣</strong>：加快「聚灵共鸣」累积速度（与法篆叠乘，满级约 +32%）。</li>
+          <li>洞府等级<strong>轮回不重置</strong>，可长期投入。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary>五行灵脉（同系≥3）</summary>
+        <p class="hint sm">灵脉需<strong>同系灵卡≥3</strong>张上阵激活，与洞府并行。</p>
+        <ul class="game-lore-list">
+          <li><strong>焚天（火）</strong>：解锁「焚天」爆发，按阵中火灵与星辉缩短间隔、提高收益。</li>
+          <li><strong>溯流（水）</strong>：水灵卡灵石贡献呈指数链叠乘，多水越强。</li>
+          <li><strong>岁木（木）</strong>：木灵基础产出随修行时长（岁序）缓慢放大。</li>
+          <li><strong>剑虹（金）</strong>：金属性灵卡总战力越高，唤引时额外灵石返利越多。</li>
+          <li><strong>厚土（土）</strong>：提升离线可结算时长与离线灵石倍率。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary>聚灵共鸣</summary>
+        <p class="hint sm">共鸣度随<strong>游戏时间</strong>自动涨（与当前页签无关），<strong>不可点击</strong>；满百得 <strong>唤灵髓 +1</strong>，无次数上限。<strong>在线、离线追赶、闭关预演</strong>均按同公式累积。法篆与洞府「共鸣」可略加快涨速（叠乘）。</p>
+      </details>
+
+      <details class="game-lore-block">
+        <summary>幻域副本</summary>
+        <ul class="game-lore-list">
+          <li>仅掉<strong>唤灵髓</strong>；<strong>整关清完</strong>后统一入背包。</li>
+          <li><strong>幻域生命</strong>为全局状态，进关不会自动回满；接战恢复慢，游走较快。</li>
+          <li>进入波次需少量唤灵髓作入场费；阵亡损失部分灵石并被送出至灵息之地；回满后可<strong>勾选自动进本</strong>或手动进入该关。每次进关<strong>重新随机地图与满血魔物</strong>。</li>
+          <li>已通关波次不可反复刷；地图范围约每 5 波扩大一档。</li>
+          <li>接战圈内<strong>两只及以上</strong>普通怪时为<strong>范围压制</strong>，否则为<strong>剑气</strong>；首领固定剑气。五行克制影响伤害。</li>
+          <li>魔物<strong>闪避</strong>以飘字「偏斜」表现；我方闪避以「闪避」表现。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary>功能解锁一览</summary>
+        <ul class="game-lore-list">
+          <li><strong>幻域</strong>：完成首次唤引。</li>
+          <li><strong>修炼</strong>：幻域至少通关一波、或境界≥三重、或累计唤引≥六次。</li>
+          <li><strong>背包装备 / 铸灵池</strong>：获得第一件装备，或累计唤引≥十次。</li>
+          <li><strong>洞府蕴灵</strong>：完成一次唤引，或境界≥二重。</li>
+          <li><strong>万象图鉴</strong>：累计唤引≥5次，或境界≥四重。</li>
+          <li><strong>轮回阁</strong>：境界≥十八重，或已完成轮回。</li>
+          <li><strong>灵宠</strong>：幻域累计击溃 15 波。</li>
+          <li><strong>封存/拓印</strong>（养成→轮回页底）：境界≥十二重或曾入轮回。</li>
+          <li><strong>功业录</strong>：境界≥六重，或累计唤引≥15次。</li>
+          <li><strong>十连</strong>：完成一次单抽，或境界≥三重。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary>卡组与轮回</summary>
+        <ul class="game-lore-list">
+          <li><strong>上阵</strong>：点空阵位再点仓库，或先点仓库再点阵位；点已有卡的阵位可选中该卡。升阶需灵砂。</li>
+          <li>境界达到 <strong>${REINCARNATION_REALM_REQ}</strong> 后可轮回：清空境界、灵石、卡组与持有卡牌；保留图鉴邂逅、成就与元强化。道韵按本轮灵石巅峰等规则结算。</li>
+        </ul>
+      </details>
+    </div>`;
+}

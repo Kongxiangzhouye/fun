@@ -1,17 +1,22 @@
+import Decimal from "decimal.js";
 import type { GameState } from "../types";
-import { REINCARNATION_REALM_REQ, DECK_SIZE } from "../types";
+import { REINCARNATION_REALM_REQ, DECK_SIZE, DUNGEON_STAMINA_MAX } from "../types";
+import { reseedRng } from "../rng";
+import { playerMaxHp } from "./playerCombat";
 
-/** 轮回：重置进度类数据，保留道韵与元升级、成就、图鉴记录可简化：我们保留 codex 作为“曾经拥有”用于展示，但 owned 清空？ 
- * 设计：轮回清空灵石、境界、卡牌、卡组、抽卡券、保底计数；给予道韵；保留成就与元升级与轮回次数累计
- */
 export function canReincarnate(state: GameState): boolean {
   return state.realmLevel >= REINCARNATION_REALM_REQ;
 }
 
+/** 道韵：按本轮峰值灵石 log10 对数结算（设计案 §2） */
 export function daoEssenceGainOnReincarnate(state: GameState): number {
-  const base = 1 + Math.floor(Math.pow(state.realmLevel, 0.85) * 0.5);
+  const peak = new Decimal(state.peakSpiritStonesThisLife || "0");
+  let logPart = 0;
+  if (peak.gt(1)) {
+    logPart = Math.max(0, Math.floor(peak.log(10).times(2.8).toNumber()));
+  }
   const cardBonus = Math.floor(Object.keys(state.owned).length * 0.15);
-  return base + cardBonus;
+  return Math.max(1, logPart + cardBonus);
 }
 
 export function performReincarnate(state: GameState): void {
@@ -19,15 +24,83 @@ export function performReincarnate(state: GameState): void {
   state.daoEssence += gain;
   state.reincarnations += 1;
 
-  state.spiritStones = 0;
+  state.lifeStartInGameDay = state.inGameDay;
+  state.spiritStones = "0";
+  state.peakSpiritStonesThisLife = "0";
   state.realmLevel = 1;
-  state.tickets = 3 + state.meta.ticketRegen;
+  state.tickets = 0;
+  state.summonEssence = 40 + state.meta.ticketRegen * 15;
   state.owned = {};
   state.deck = Array.from({ length: DECK_SIZE }, () => null);
+  state.gearInventory = {};
+  state.equippedGear = { weapon: null, body: null, ring: null };
+  state.nextGearInstanceId = 1;
+  state.skills = {
+    combat: { level: 1, xp: 0 },
+    gathering: { level: 1, xp: 0 },
+    arcana: { level: 1, xp: 0 },
+  };
+  state.activeSkillId = "combat";
+  state.dungeon = {
+    active: false,
+    wave: 1,
+    monsterHp: 0,
+    monsterMax: 0,
+    playerHp: 0,
+    playerMax: 0,
+    deathCooldownUntil: 0,
+    totalWavesCleared: 0,
+    monsterAttackAccum: 0,
+    playerAttackAccum: 0,
+    playerAttackTargetMobId: 0,
+    packSize: 1,
+    packKilled: 0,
+    sessionKills: 0,
+    sessionEssence: 0,
+    essenceRemainder: 0,
+    playerX: 0.5,
+    playerY: 0.5,
+    mobs: [],
+    nextMobId: 1,
+    walkable: [],
+    mapW: 0,
+    mapH: 0,
+    maxWaveRecord: 0,
+    entryWave: 1,
+    attackAnimPhase: 0,
+    inMelee: false,
+    attackVisualMode: "none",
+    interWaveCooldownUntil: 0,
+    essenceThisWave: 0,
+    pendingToast: null,
+    pendingDeathPresentation: false,
+    waveCheckpoint: {},
+    waveEntrySpawnX: 0.5,
+    waveEntrySpawnY: 0.5,
+    bossDodgeVisual: false,
+    stamina: DUNGEON_STAMINA_MAX,
+    dodgeIframesUntil: 0,
+    dodgeQueued: false,
+    playerMoveLockUntil: 0,
+    playerLastMoveNx: 0,
+    playerLastMoveNy: 0,
+    rewardModeRepeat: false,
+    autoEnterConsumed: false,
+    sessionEnterAtMs: 0,
+  };
+  state.lingSha = 0;
+  state.xuanTie = 0;
+  state.battleSkills = {};
+  state.lastTunaMs = 0;
   state.pityUr = 0;
   state.pitySsrSoft = 0;
-  // 图鉴可选保留：保留“曾见过”的集合，玩家仍有收集目标
-  // state.codexUnlocked 保留
+  state.pullsThisLife = 0;
+  state.wishResonance = 0;
+  state.wishTicketsThisCycle = 0;
+  state.combatHpCurrent = playerMaxHp(state);
+  state.dungeonSanctuaryMode = false;
+  state.dungeonPortalTargetWave = 0;
+  reseedRng(state);
 }
 
 export const META_COST_BASE = [8, 10, 12, 15, 18];

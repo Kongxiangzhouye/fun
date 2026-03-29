@@ -1,28 +1,117 @@
+import Decimal from "decimal.js";
 import type { GameState } from "./types";
-import { incomePerSecond } from "./economy";
+import { ESSENCE_COST_SINGLE, MAX_OFFLINE_SEC_BASE } from "./types";
+import { incomePerSecond, realmBreakthroughCostForState } from "./economy";
 import { totalCardsInPool } from "./storage";
 import { tryCompleteAchievements } from "./achievements";
+import { addStones, stones, subStones, canAfford } from "./stones";
+import { tickInGameClock } from "./inGameClock";
+import { earthOfflineCapMult, earthOfflineIncomeMult } from "./deckSynergy";
+import { pullOne } from "./gacha";
+import { onGachaPulls, tickWishResonancePassive } from "./dailyRewards";
+import { tickDungeon } from "./systems/dungeon";
+import { tickCombatHpRegen } from "./systems/combatHp";
+import { tickSkillTraining } from "./systems/skillTraining";
+import { tryTuna, tunaCooldownLeftMs } from "./systems/tuna";
+import { checkTrueEnding } from "./trueEnding";
+import { tryAutoSalvageInventory } from "./systems/salvage";
 
-const OFFLINE_CAP_SEC = 8 * 3600;
+const TICK_MAX_DT = 120;
+let autoSalvageAccumSec = 0;
 
-export function applyTick(state: GameState, now: number): void {
-  const dt = Math.min(120, Math.max(0, (now - state.lastTick) / 1000));
-  state.lastTick = now;
-  state.playtimeSec += dt;
-  const ips = incomePerSecond(state, totalCardsInPool());
-  state.spiritStones += ips * dt;
+function maxOfflineSec(state: GameState): number {
+  return MAX_OFFLINE_SEC_BASE * earthOfflineCapMult(state);
+}
+
+function tryAutoRealm(state: GameState): void {
+  if (!state.qoL.autoRealm) return;
+  const rb = realmBreakthroughCostForState(state);
+  if (!canAfford(state, rb)) return;
+  if (!subStones(state, rb)) return;
+  state.realmLevel += 1;
+}
+
+function tryAutoTuna(state: GameState, now: number): void {
+  if (!state.qoL.autoTuna) return;
+  if (tunaCooldownLeftMs(state, now) > 0) return;
+  tryTuna(state, now);
+}
+
+function tryAutoGacha(state: GameState, now: number): void {
+  if (!state.qoL.autoGacha) return;
+  if (state.summonEssence < ESSENCE_COST_SINGLE) return;
+  if (now - state.lastAutoGachaMs < 2800) return;
+  state.lastAutoGachaMs = now;
+  state.summonEssence -= ESSENCE_COST_SINGLE;
+  pullOne(state);
+  onGachaPulls(state, 1);
   tryCompleteAchievements(state);
 }
 
-export function catchUpOffline(state: GameState, now: number): number {
-  const raw = (now - state.lastTick) / 1000;
-  const dt = Math.min(OFFLINE_CAP_SEC, Math.max(0, raw));
-  if (dt < 1) return 0;
-  const ips = incomePerSecond(state, totalCardsInPool());
-  const gained = ips * dt;
-  state.spiritStones += gained;
+/** 系统时间回调：时间倒流不扣资源（见设计案 §B） */
+export function applyTick(state: GameState, now: number): void {
+  if (now < state.lastTick) {
+    state.lastTick = now;
+    return;
+  }
+  const dt = Math.min(TICK_MAX_DT, Math.max(0, (now - state.lastTick) / 1000));
   state.lastTick = now;
   state.playtimeSec += dt;
+  tickInGameClock(state, dt);
+  tickWishResonancePassive(state, dt);
+  tickSkillTraining(state, dt);
+  tickCombatHpRegen(state, dt);
+  tickDungeon(state, dt, now);
+  const ips = incomePerSecond(state, totalCardsInPool());
+  addStones(state, ips.mul(dt));
+  tryAutoRealm(state);
+  tryAutoTuna(state, now);
+  tryAutoGacha(state, now);
+  autoSalvageAccumSec += dt;
+  if (autoSalvageAccumSec >= 2.5) {
+    autoSalvageAccumSec = 0;
+    tryAutoSalvageInventory(state);
+  }
   tryCompleteAchievements(state);
+  checkTrueEnding(state);
+}
+
+export function catchUpOffline(state: GameState, now: number): Decimal {
+  if (now < state.lastTick) {
+    state.lastTick = now;
+    return new Decimal(0);
+  }
+  const raw = (now - state.lastTick) / 1000;
+  const cap = maxOfflineSec(state);
+  const dt = Math.min(cap, Math.max(0, raw));
+  if (dt < 1) return new Decimal(0);
+  const ips = incomePerSecond(state, totalCardsInPool());
+  const mult = earthOfflineIncomeMult(state);
+  const gained = ips.mul(dt).mul(mult);
+  addStones(state, gained);
+  state.lastTick = now;
+  state.playtimeSec += dt;
+  tickInGameClock(state, dt);
+  tickWishResonancePassive(state, dt);
+  tickCombatHpRegen(state, dt);
+  tryCompleteAchievements(state);
+  checkTrueEnding(state);
+  return gained;
+}
+
+/** 闭关令 / 合法跳时：按离线规则瞬间结算 */
+export function fastForward(state: GameState, seconds: number): Decimal {
+  if (seconds <= 0) return new Decimal(0);
+  const dt = Math.min(seconds, maxOfflineSec(state));
+  const ips = incomePerSecond(state, totalCardsInPool());
+  const mult = earthOfflineIncomeMult(state);
+  const gained = ips.mul(dt).mul(mult);
+  addStones(state, gained);
+  state.playtimeSec += dt;
+  tickInGameClock(state, dt);
+  tickWishResonancePassive(state, dt);
+  tickCombatHpRegen(state, dt);
+  tryCompleteAchievements(state);
+  checkTrueEnding(state);
   return gained;
 }
