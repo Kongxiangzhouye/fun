@@ -2,6 +2,7 @@ import type { CardDef, Element, GameState } from "./types";
 import { DECK_SIZE, LEVEL_COST_BASE, LEVEL_COST_GAMMA, MAX_CARD_LEVEL } from "./types";
 import { getCard } from "./data/cards";
 import { countUniqueOwned } from "./state";
+import { dailyVigor, idleIncomeVigorFactor } from "./dailyFlow";
 
 /** 境界基础灵石/秒（指数成长，后期靠轮回与元升级） */
 export function realmBaseIncome(realmLevel: number): number {

@@ -61,8 +61,29 @@ export interface GameState {
   lastTick: number;
   /** 累计在线秒（用于统计） */
   playtimeSec: number;
-  /** 今日已领每日（YYYY-MM-DD） */
+  /** @deprecated 迁移用：旧版单日领取标记 */
   dailyClaimDate: string | null;
+
+  /** 0=引导结束；1 欢迎；2 去抽卡页；3 完成单抽；4 去卡组；5 完成上阵 */
+  tutorialStep: number;
+  /** 已处理的日历日，用于每日重置 */
+  dailyProcessedDate: string | null;
+  /** 今日首次打开游戏的时间戳（每个日历日锚定一次） */
+  firstOpenTodayMs: number;
+  /** 连续登录天数 */
+  dailyStreak: number;
+  /** 用于计算 streak 的上一次登录日 */
+  lastLoginCalendarDate: string | null;
+  /** 四层每日礼包 */
+  dailyPackClaimed: [boolean, boolean, boolean, boolean];
+  dailyTaskRewarded: [boolean, boolean, boolean];
+  dailyPullCount: number;
+  dailyDidRealm: boolean;
+  dailyDeckAdjustCount: number;
+  wishResonance: number;
+  wishTicketsToday: number;
+  /** 今日已触发「首抽额外灵石」次数（前几次有加成） */
+  dailyPullBonusCount: number;
 }
 
 export const DECK_SIZE = 6;

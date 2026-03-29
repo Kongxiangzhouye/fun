@@ -1,10 +1,11 @@
 import type { GameState, OwnedCard } from "./types";
 import { DECK_SIZE } from "./types";
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export function createInitialState(): GameState {
   const now = Date.now();
+  const day = `${new Date(now).getFullYear()}-${String(new Date(now).getMonth() + 1).padStart(2, "0")}-${String(new Date(now).getDate()).padStart(2, "0")}`;
   return {
     version: SAVE_VERSION,
     spiritStones: 0,
@@ -29,6 +30,19 @@ export function createInitialState(): GameState {
     lastTick: now,
     playtimeSec: 0,
     dailyClaimDate: null,
+    tutorialStep: 1,
+    dailyProcessedDate: day,
+    firstOpenTodayMs: now,
+    dailyStreak: 1,
+    lastLoginCalendarDate: day,
+    dailyPackClaimed: [false, false, false, false],
+    dailyTaskRewarded: [false, false, false],
+    dailyPullCount: 0,
+    dailyDidRealm: false,
+    dailyDeckAdjustCount: 0,
+    wishResonance: 0,
+    wishTicketsToday: 0,
+    dailyPullBonusCount: 0,
   };
 }
 
