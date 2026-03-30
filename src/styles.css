@@ -814,8 +814,8 @@ body {
   height: 3px;
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, rgba(180, 210, 255, 0.95), transparent);
-  box-shadow: 0 0 10px rgba(124, 156, 255, 0.55);
-  animation: nav-pill-glow 2.2s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(124, 156, 255, 0.35);
+  animation: none;
 }
 
 @keyframes nav-pill-glow {
@@ -836,7 +836,7 @@ body {
 }
 
 .app-nav-item.tutorial-pulse {
-  animation: tab-pulse 1.4s ease-in-out infinite;
+  animation: none;
   box-shadow: 0 0 0 2px rgba(124, 156, 255, 0.45);
 }
 
@@ -899,7 +899,7 @@ body {
 }
 
 .sub-tab.tutorial-pulse {
-  animation: tab-pulse 1.4s ease-in-out infinite;
+  animation: none;
   box-shadow: 0 0 0 2px rgba(124, 156, 255, 0.45);
 }
 
@@ -908,6 +908,10 @@ body {
     0 0 0 2px rgba(124, 156, 255, 0.55),
     0 4px 14px rgba(60, 90, 180, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.hub-sub-tab.tutorial-pulse {
+  animation: none;
 }
 
 .character-hub-root {
@@ -3811,6 +3815,29 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   .dungeon-player-rot .dungeon-entity.player.dungeon-player-iframes {
     animation: none;
+  }
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+  .app-visual-aurora,
+  .modern-pixi-layer {
+    display: none !important;
+  }
+  .app-visual-bg {
+    animation: none !important;
+    filter: none !important;
+    opacity: 0.28;
+  }
+  .panel::before,
+  .gacha-panel-root::before,
+  .gacha-panel-root .resonance-bar,
+  .gacha-reveal-sparkles,
+  .app-title-spirit {
+    animation: none !important;
+  }
+  .gacha-panel-root,
+  .panel {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
   }
 }
 

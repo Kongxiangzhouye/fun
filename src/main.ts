@@ -68,7 +68,6 @@ import { buyQoL, bulkUpgradeAllCards, qoLCost } from "./qoL";
 import type { QoLFlags, Rarity, SkillId, GearItem, Element } from "./types";
 import Decimal from "decimal.js";
 import { gsap } from "gsap";
-import { animate } from "motion";
 import { Application, Container, Graphics, type Ticker } from "pixi.js";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
@@ -235,6 +234,7 @@ let modernFxPointerBound = false;
 let modernFxPointerX = 0.5;
 let modernFxPointerY = 0.2;
 let motionUiFxBound = false;
+let mobileLiteFx = false;
 let pixiFxBooted = false;
 let pixiApp: Application | null = null;
 let pixiLayer: Container | null = null;
@@ -323,30 +323,7 @@ function emitPixiBurst(clientX: number, clientY: number, intensity: "normal" | "
 function bindMotionUiFx(): void {
   if (typeof document === "undefined" || motionUiFxBound) return;
   motionUiFxBound = true;
-  document.addEventListener(
-    "pointerdown",
-    (ev) => {
-      const target = (ev.target as HTMLElement | null)?.closest("button, .hub-sub-tab, .bottom-nav-btn") as
-        | HTMLElement
-        | null;
-      if (!target) return;
-      const pressAnimState = { v: 0 };
-      animate(
-        pressAnimState,
-        { v: [0, 1, 0] },
-        {
-          duration: 0.24,
-          onUpdate: (latest) => {
-            const p = latest.v;
-            target.style.transform = `translateZ(0) scale(${(1 - p * 0.03).toFixed(4)})`;
-          },
-        },
-      );
-      const strong = target.classList.contains("btn-primary") || target.classList.contains("is-active");
-      emitPixiBurst(ev.clientX, ev.clientY, strong ? "high" : "normal");
-    },
-    { passive: true, capture: true },
-  );
+  // 取消页签/按钮按压特效与粒子，避免移动端卡顿与风格不一致。
 }
 
 function playRevealOverlayIntro(overlay: HTMLElement, liteFx: boolean): void {
@@ -395,19 +372,20 @@ function playRevealOverlayExit(overlay: HTMLElement, liteFx: boolean, done: () =
 function bindModernFxInteraction(): void {
   if (typeof document === "undefined" || modernFxPointerBound) return;
   modernFxPointerBound = true;
-  document.addEventListener(
-    "pointermove",
-    (ev) => {
-      const w = Math.max(1, window.innerWidth);
-      const h = Math.max(1, window.innerHeight);
-      modernFxPointerX = Math.min(1, Math.max(0, ev.clientX / w));
-      modernFxPointerY = Math.min(1, Math.max(0, ev.clientY / h));
-    },
-    { passive: true },
-  );
+  // 取消鼠标追踪光效：保持静态中心点即可。
+  modernFxPointerX = 0.5;
+  modernFxPointerY = 0.2;
   reducedMotionQuery?.addEventListener("change", (ev) => {
     prefersReducedMotion = ev.matches;
   });
+}
+
+function shouldUseMobileLiteFx(): boolean {
+  if (typeof window === "undefined") return false;
+  const coarse = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+  const narrow = window.matchMedia?.("(max-width: 900px)")?.matches ?? false;
+  const lowCpu = typeof navigator !== "undefined" && (navigator.hardwareConcurrency ?? 8) <= 6;
+  return coarse || narrow || lowCpu;
 }
 
 function updateModernVisualFx(now: number): void {
@@ -2982,7 +2960,7 @@ function updateEstateIdleLiveReadouts(now: number): void {
 function loop(): void {
   const now = nowMs();
   applyTick(state, now);
-  updateModernVisualFx(now);
+  if (!mobileLiteFx) updateModernVisualFx(now);
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
     activeHub = "battle";
     saveGame(state);
@@ -3420,7 +3398,8 @@ function loop(): void {
 
 function init(): void {
   const t = nowMs();
-  initPixiFxLayer();
+  mobileLiteFx = shouldUseMobileLiteFx();
+  if (!mobileLiteFx) initPixiFxLayer();
   bindModernFxInteraction();
   bindMotionUiFx();
   updateModernVisualFx(t);
