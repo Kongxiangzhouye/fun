@@ -1061,21 +1061,33 @@ function renderUnlockHintsDetailsBlock(lines: string[]): string {
 function refreshDeckPanel(): void {
   const cur = document.getElementById("deck-panel-root");
   if (!cur) return;
+  const modalInv = cur.querySelector("#deck-slot-modal .inventory--modal") as HTMLElement | null;
+  const modalInvScrollTop = modalInv?.scrollTop ?? 0;
   const slots = effectiveDeckSlots(state);
   const w = document.createElement("div");
   w.innerHTML = renderDeck(slots);
   const next = w.firstElementChild as HTMLElement | null;
-  if (next) cur.replaceWith(next);
+  if (next) {
+    cur.replaceWith(next);
+    const nextModalInv = next.querySelector("#deck-slot-modal .inventory--modal") as HTMLElement | null;
+    if (nextModalInv) nextModalInv.scrollTop = modalInvScrollTop;
+  }
   updateTopResourcePillsAndVigor(totalCardsInPool());
 }
 
 function refreshCharacterCardsPanel(): void {
   const cur = document.getElementById("character-cards-root");
   if (!cur) return;
+  const inv = cur.querySelector(".inventory") as HTMLElement | null;
+  const invScrollTop = inv?.scrollTop ?? 0;
   const w = document.createElement("div");
   w.innerHTML = renderCharacterCardsPanel();
   const next = w.firstElementChild as HTMLElement | null;
-  if (next) cur.replaceWith(next);
+  if (next) {
+    cur.replaceWith(next);
+    const nextInv = next.querySelector(".inventory") as HTMLElement | null;
+    if (nextInv) nextInv.scrollTop = invScrollTop;
+  }
   updateTopResourcePillsAndVigor(totalCardsInPool());
 }
 

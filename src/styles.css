@@ -1769,6 +1769,12 @@ h1 {
   font-size: 1.05rem;
 }
 
+/* 卡组/灵卡列表属于高频局部刷新，禁用入场动画避免“抽搐感” */
+#deck-panel-root,
+#character-cards-root {
+  animation: none;
+}
+
 .inventory--modal {
   max-height: min(260px, 40vh);
   margin-top: 10px;
