@@ -60,6 +60,36 @@ function randomCardOfRarity(state: GameState, rarity: Rarity): CardDef {
   return pool[Math.min(idx, pool.length - 1)]!;
 }
 
+function rarityRank(rarity: Rarity): number {
+  switch (rarity) {
+    case "N":
+      return 0;
+    case "R":
+      return 1;
+    case "SR":
+      return 2;
+    case "SSR":
+      return 3;
+    case "UR":
+      return 4;
+    default:
+      return 0;
+  }
+}
+
+function compensationLingShaForMaxStarDup(rarity: Rarity): number {
+  switch (rarity) {
+    case "SR":
+      return 2;
+    case "SSR":
+      return 5;
+    case "UR":
+      return 12;
+    default:
+      return 0;
+  }
+}
+
 export interface PullResult {
   card: CardDef;
   isNew: boolean;
@@ -86,6 +116,8 @@ function applyPullToState(state: GameState, card: CardDef): PullResult {
     if (o.stars < 5) {
       o.stars += 1;
       duplicateStars = true;
+    } else {
+      state.lingSha += compensationLingShaForMaxStarDup(card.rarity);
     }
   }
   state.totalPulls += 1;
@@ -133,9 +165,17 @@ export function pullGearTen(state: GameState): GearItem[] {
 
 export function pullTen(state: GameState): PullResult[] {
   const out: PullResult[] = [];
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 9; i++) {
     out.push(pullOne(state));
   }
+  const hasSrOrBetter = out.some((r) => rarityRank(r.card.rarity) >= rarityRank("SR"));
+  if (hasSrOrBetter) {
+    out.push(pullOne(state));
+    return out;
+  }
+  const rarity = pickRarity(state);
+  const finalRarity: Rarity = rarityRank(rarity) >= rarityRank("SR") ? rarity : "SR";
+  out.push(applyPullToState(state, randomCardOfRarity(state, finalRarity)));
   return out;
 }
 

@@ -80,8 +80,9 @@ function bfsReachable(w: number, h: number, walkable: boolean[], sx: number, sy:
   if (!walkable[start]) return new Set();
   const seen = new Set<number>([start]);
   const q: number[] = [start];
-  while (q.length) {
-    const cur = q.shift()!;
+  let qi = 0;
+  while (qi < q.length) {
+    const cur = q[qi++]!;
     const cx = cur % w;
     const cy = Math.floor(cur / w);
     for (const [dx, dy] of CARDINAL_DIRS) {
@@ -135,6 +136,10 @@ export function generateWalkableMap(
     }
     const reach = bfsReachable(w, h, walkable, cx, cy);
     if (reach.size < w * h * 0.28) continue;
+    // 只保留从出生点四联通可达的区域，避免出现不可达“孤岛”导致卡位/卡怪。
+    for (let i = 0; i < walkable.length; i++) {
+      if (walkable[i] && !reach.has(i)) walkable[i] = false;
+    }
     return { walkable, px: cx, py: cy, w, h };
   }
   /** 兜底：空图（无障碍，仍用本档 w×h） */

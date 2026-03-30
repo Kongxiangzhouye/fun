@@ -25,8 +25,9 @@ export function buyQoL(state: GameState, kind: keyof QoLFlags): boolean {
 }
 
 /** 【袖里乾坤】所有卡牌尽量升级 */
-export function bulkUpgradeAllCards(state: GameState): void {
-  if (!state.qoL.bulkLevel) return;
+export function bulkUpgradeAllCards(state: GameState): number {
+  if (!state.qoL.bulkLevel) return 0;
+  let upgraded = 0;
   let guard = 0;
   let changed = true;
   while (changed && guard++ < 50000) {
@@ -39,8 +40,10 @@ export function bulkUpgradeAllCards(state: GameState): void {
       if (canAfford(state, c) && state.lingSha >= ls && subStones(state, c)) {
         state.lingSha -= ls;
         o.level += 1;
+        upgraded += 1;
         changed = true;
       }
     }
   }
+  return upgraded;
 }

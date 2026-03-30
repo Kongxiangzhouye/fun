@@ -50,11 +50,11 @@ export function renderGameLoreHtml(): string {
       <details class="game-lore-block">
         <summary>幻域副本</summary>
         <ul class="game-lore-list">
-          <li>仅掉<strong>唤灵髓</strong>；<strong>整关清完</strong>后统一入背包。</li>
+          <li>首通主要掉落<strong>唤灵髓</strong>；<strong>整关清完</strong>后统一入背包。复刷关会额外给灵砂。</li>
           <li><strong>幻域生命</strong>为全局状态，进关不会自动回满；接战恢复慢，游走较快。</li>
           <li>进入波次需少量唤灵髓作入场费；阵亡损失部分灵石并被送出至灵息之地；回满后可<strong>勾选自动进本</strong>或手动进入该关。每次进关<strong>重新随机地图与满血魔物</strong>。</li>
-          <li>已通关波次不可反复刷；地图范围约每 5 波扩大一档。</li>
-          <li>接战圈内<strong>两只及以上</strong>普通怪时为<strong>范围压制</strong>，否则为<strong>剑气</strong>；首领固定剑气。五行克制影响伤害。</li>
+          <li>已通关波次可复刷（髓收益降低）；地图范围约每 5 波扩大一档。</li>
+          <li>接战圈内按范围命中结算；五行克制会影响伤害。</li>
           <li>魔物<strong>闪避</strong>以飘字「偏斜」表现；我方闪避以「闪避」表现。</li>
         </ul>
       </details>

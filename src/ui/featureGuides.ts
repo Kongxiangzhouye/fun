@@ -31,49 +31,49 @@ const COPY: Record<
   { title: string; body: string; tabHint: string }
 > = {
   dungeon: {
-    title: "幻域已开",
-    body: "「<strong>幻域</strong>」刷怪得唤灵髓；阵亡后在灵息之地回满后，可<strong>勾选自动进本</strong>或手动进入该关（付入场髓），每次进关重新随机地图与魔物。细则见<strong>万象图鉴 → 修行札记</strong>。",
-    tabHint: "解锁后点底部「幻域」进入副本。",
+    title: "幻域已解锁",
+    body: "在「<strong>幻域</strong>」刷怪获取唤灵髓。阵亡后回满生命可再次进本；可勾选自动进本。详细规则见「<strong>养成 → 图鉴·札记</strong>」。",
+    tabHint: "入口：底部「幻域」。",
   },
   train: {
-    title: "修炼之道",
-    body: "「<strong>修炼</strong>」挂机三技能，同时只能修一项：战艺副本、采灵灵石、法篆共鸣。",
-    tabHint: "底部「养成 → 修炼」。",
+    title: "修炼已解锁",
+    body: "在「<strong>修炼</strong>」里挂机提升技能。一次只能修炼一项。",
+    tabHint: "入口：底部「养成 → 修炼·挂机」。",
   },
   gear: {
-    title: "装备构筑",
-    body: "「<strong>装备</strong>」在「角色 → 行囊」；<strong>抽卡</strong>页铸灵池产装。前缀后缀、强化；天极可精炼。",
-    tabHint: "底部「角色 → 行囊」；抽卡选铸灵池。",
+    title: "装备已解锁",
+    body: "装备管理在「<strong>角色 → 行囊·装备</strong>」。装备来源在「<strong>抽卡 → 铸灵池</strong>」。可强化，天极可精炼。",
+    tabHint: "入口：角色看装备，抽卡拿装备。",
   },
   vein: {
-    title: "洞府蕴灵",
-    body: "「<strong>洞府</strong>」与灵卡并行，<strong>轮回不重置</strong>。",
-    tabHint: "底部「灵府 → 洞府」。",
+    title: "洞府已解锁",
+    body: "「<strong>灵府 → 洞府·养成</strong>」提供长期增益，轮回不重置。",
+    tabHint: "入口：底部「灵府 → 洞府·养成」。",
   },
   codex: {
-    title: "万象图鉴",
-    body: "「<strong>万象图鉴</strong>」收录邂逅与<strong>修行札记</strong>（机制长文）。",
-    tabHint: "底部「养成 → 图鉴」。",
+    title: "图鉴已解锁",
+    body: "图鉴记录卡牌进度；「修行札记」里有机制说明。",
+    tabHint: "入口：底部「养成 → 图鉴·札记」。",
   },
   meta: {
-    title: "轮回阁",
-    body: "「<strong>轮回阁</strong>」轮回换道韵，强化元印记。",
-    tabHint: "底部「养成 → 轮回」。",
+    title: "轮回已解锁",
+    body: "在「<strong>养成 → 轮回·元印</strong>」进行轮回，获取道韵并升级元印。",
+    tabHint: "入口：底部「养成 → 轮回·元印」。",
   },
   ach: {
-    title: "功业录",
-    body: "「<strong>功业录</strong>」成就与奖励一览。",
-    tabHint: "底部「养成 → 功业」。",
+    title: "功业已解锁",
+    body: "这里查看成就进度与奖励。",
+    tabHint: "入口：底部「养成 → 功业·奖励」。",
   },
   gacha_ten: {
-    title: "十连开放",
-    body: "已解锁<strong>十连唤引</strong>：聚灵阵批量邂逅灵卡。",
-    tabHint: "底部「抽卡」页十连按钮。",
+    title: "十连已解锁",
+    body: "抽卡页可直接十连。",
+    tabHint: "入口：底部「抽卡」。",
   },
   footer: {
-    title: "灵识封存",
-    body: "「<strong>养成 → 轮回</strong>」页底<strong>封存 / 拓印 / 迎回</strong>密文，便于换机与备份。",
-    tabHint: "底部「养成」→「轮回」。",
+    title: "存档工具已解锁",
+    body: "在「<strong>养成 → 轮回·元印</strong>」页底可封存、导出、导入存档。",
+    tabHint: "入口：底部「养成 → 轮回·元印」。",
   },
 };
 
@@ -98,13 +98,13 @@ export function guideAlreadyExperienced(state: GameState, id: FeatureGuideId): b
     case "codex":
       return state.totalPulls >= 5;
     case "meta":
-      return state.reincarnations >= 1 || state.realmLevel >= 18;
+      return state.reincarnations >= 1;
     case "ach":
       return state.achievementsDone.size > 0;
     case "gacha_ten":
-      return state.totalPulls >= 1 || state.realmLevel >= 3 || state.qoL.tenPull;
+      return state.totalPulls >= 10 || state.qoL.tenPull;
     case "footer":
-      return state.realmLevel >= 12 || state.reincarnations >= 1;
+      return false;
     default:
       return false;
   }
@@ -155,14 +155,14 @@ export function featureGuidePanelHtml(state: GameState, u: UiUnlocks): string {
     return `
     <section class="panel feature-guide-page">
       <h2>功能预览</h2>
-      <p class="hint">当前没有待读的新功能说明。解锁新区域后，若你尚未「体验过」对应玩法，会在此出现一条说明。</p>
+      <p class="hint">当前没有新功能说明。后续解锁新内容时会在这里提示。</p>
     </section>`;
   }
   const c = COPY[pending];
   return `
     <section class="panel feature-guide-page">
       <h2>功能预览</h2>
-      <p class="hint">以下为待确认的一项说明；确认后本条不再出现。</p>
+      <p class="hint">这是当前待确认的新功能提示，确认后不再重复显示。</p>
       <div id="feature-guide-panel" data-guide-id="${pending}">
         <div class="feature-guide-card feature-guide-card--inline">
           <p class="feature-guide-kicker">新功能</p>

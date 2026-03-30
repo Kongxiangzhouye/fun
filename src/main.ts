@@ -94,6 +94,9 @@ import {
   UI_PITY_SIGIL,
   UI_TITLE_SPIRIT,
   UI_BG_SPARKLES,
+  UI_PANEL_RUNES,
+  UI_HEAD_STATS,
+  UI_HEAD_COMBAT,
 } from "./ui/visualAssets";
 import {
   playerAttack,
@@ -203,6 +206,8 @@ let refineTargetId: string | null = null;
 let gearDetailSlot: "weapon" | "body" | "ring" | null = null;
 /** 聚灵阵：灵卡池 / 铸灵池 */
 let gachaPool: "cards" | "gear" = "cards";
+let autoEnterPromptHandled = false;
+let veinHelpDocListenerBound = false;
 /** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
 type EstateSub = "idle" | "vein";
@@ -241,16 +246,20 @@ const TOAST_DURATION_MS = 4200;
 const TOAST_ACHIEVEMENT_DURATION_MS = 6200;
 const CURRENCY_HINT_TOAST_MS = 10000;
 const CURRENCY_LONG_PRESS_MS = 450;
+const DODGE_FAIL_TOAST_GAP_MS = 900;
+let lastDodgeFailToastAt = 0;
+const AUTO_ENTER_FAIL_TOAST_GAP_MS = 3000;
+let lastAutoEnterFailToastAt = 0;
 
 /** 顶栏货币/条目：长按或右键查看用途（文案供 toast 多行展示） */
 const CURRENCY_HINTS: Record<string, string> = {
   stone:
-    "灵石\n\n基础货币。用于境界突破、灵卡升阶与分解、闭关预演、焚天灌体等；由上阵卡组与灵府灵脉加成持续产出，部分玩法与成就也会给予。",
+    "灵石\n\n基础货币。用于破境、灵卡升阶、洞府升级等。主要来自每秒产出，也可由玩法和成就获得。",
   essence:
-    "唤灵髓\n\n用于唤引灵卡与铸灵装备、幻域入场、抽取战艺等；主要由共鸣度随时间转化为髓，成就与玩法奖励也会给予；不可用灵石直接购买。",
-  realm: "境界\n\n当前修行层数，影响属性与系统解锁。在灵府「洞府」消耗灵石进行「破境」提升。",
-  dao: "道韵\n\n轮回时按本轮灵石峰值等规则结算。用于轮回阁强化「元印记」等长期成长；轮回后保留。",
-  zao: "造化玉\n\n用于灵府灵脉页「造化镌刻」，消耗造化玉解锁便利权柄；图鉴全满等成就会赠送。",
+    "唤灵髓\n\n用于抽卡、进入幻域、抽取心法。主要由共鸣进度生成，也可由玩法和成就获得。不能用灵石直接购买。",
+  realm: "境界\n\n当前境界等级。影响属性和功能解锁。可在「灵府→灵脉」消耗灵石提升。",
+  dao: "道韵\n\n轮回结算获得。用于「养成→轮回」中的元强化。轮回后保留。",
+  zao: "造化玉\n\n用于解锁便利功能。可通过成就等方式获得。",
   lingSha: "灵砂\n\n灵卡相关资源。升阶灵卡时除灵石外需消耗灵砂；分解灵卡可获得灵砂。",
   xuanTie: "玄铁\n\n装备相关资源。铸灵装备强化消耗玄铁；分解装备可获得玄铁。",
 };
@@ -297,6 +306,51 @@ function toastCurrencyHint(text: string): void {
 function showCurrencyHintById(id: string): void {
   const t = CURRENCY_HINTS[id];
   if (t) toastCurrencyHint(t);
+}
+
+function tryQueueDungeonDodgeWithFeedback(): void {
+  if (!state.dungeon.active) return;
+  const d = state.dungeon;
+  const now = nowMs();
+  const canToast = now - lastDodgeFailToastAt >= DODGE_FAIL_TOAST_GAP_MS;
+  const toastOnce = (msg: string): void => {
+    if (!canToast) return;
+    lastDodgeFailToastAt = now;
+    toast(msg);
+  };
+  if (now < d.playerMoveLockUntil) {
+    toastOnce("当前处于硬直，暂时无法闪避。");
+    return;
+  }
+  if (d.stamina < DUNGEON_DODGE_STAMINA_COST) {
+    toastOnce(`体力不足：闪避需 ${DUNGEON_DODGE_STAMINA_COST} 点体力。`);
+    return;
+  }
+  if (now < d.dodgeIframesUntil) {
+    toastOnce("闪避冷却中。");
+    return;
+  }
+  queueDungeonDodge(state);
+}
+
+function maybeToastAutoEnterFailure(now: number): void {
+  if (!state.dungeonSanctuaryAutoEnter || !state.dungeonSanctuaryMode || state.dungeon.active) return;
+  if (now - lastAutoEnterFailToastAt < AUTO_ENTER_FAIL_TOAST_GAP_MS) return;
+  const w = state.dungeonPortalTargetWave;
+  if (w < 1) return;
+  const pmax = playerMaxHp(state);
+  if (state.combatHpCurrent < pmax - 0.25) return;
+  if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
+    lastAutoEnterFailToastAt = now;
+    toast("自动进本未触发：当前条件不满足（冷却或关卡不可进）。");
+    return;
+  }
+  const rm = computeDungeonRepeatMode(state, w);
+  const fee = dungeonEntryFeeEssence(state, w, rm);
+  if (state.summonEssence < fee) {
+    lastAutoEnterFailToastAt = now;
+    toast(`自动进本未触发：唤灵髓不足（需 ${fee}）。`);
+  }
 }
 
 /** 顶栏货币：长按显示说明（仅长按，避免与日常操作冲突） */
@@ -384,21 +438,35 @@ function pickCardFxVariant(i: number, salt: number): CardFxVariant {
   return "drift";
 }
 
+function shouldUseLiteRevealFx(): boolean {
+  if (typeof window === "undefined") return false;
+  const prefersReduced = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+  const coarsePointer = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
+  const narrowScreen = window.matchMedia?.("(max-width: 720px)")?.matches ?? false;
+  const lowCpu = typeof navigator !== "undefined" && (navigator.hardwareConcurrency ?? 8) <= 6;
+  const lowMem =
+    typeof navigator !== "undefined" &&
+    "deviceMemory" in navigator &&
+    ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4;
+  return prefersReduced || (coarsePointer && (narrowScreen || lowCpu || lowMem));
+}
+
 /** 全屏抽卡演出：关闭后再刷新界面并弹出汇总提示 */
 function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toastMsg: string, onDone: () => void): void {
   const overlay = document.createElement("div");
+  const liteFx = shouldUseLiteRevealFx();
   const hi = highestRarityInPulls(results);
   const single = results.length === 1;
   const r0 = results[0]!.card.rarity;
   const orbTier = single ? r0 : hi;
-  const fx = pickRevealFxVariant();
+  const fx = liteFx ? "rift" : pickRevealFxVariant();
   const cardSalt = Math.floor(Math.random() * 9);
-  overlay.className = `gacha-reveal-overlay ${single ? `gacha-single reveal-${r0}` : `gacha-ten reveal-hi-${hi}`}`;
+  overlay.className = `gacha-reveal-overlay ${liteFx ? "gacha-reveal-lite" : ""} ${single ? `gacha-single reveal-${r0}` : `gacha-ten reveal-hi-${hi}`}`;
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
 
   const hasJackpot = hi === "UR" || hi === "SSR";
-  if (hasJackpot && typeof navigator !== "undefined" && navigator.vibrate) {
+  if (!liteFx && hasJackpot && typeof navigator !== "undefined" && navigator.vibrate) {
     try {
       navigator.vibrate(hi === "UR" ? [20, 50, 30, 50, 40] : [18, 35, 18]);
     } catch {
@@ -416,7 +484,7 @@ function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toas
     .map((r, i) => {
       const tag = r.isNew ? "初见" : r.duplicateStars ? "星辉+1" : "再遇";
       const cardFx = pickCardFxVariant(i, cardSalt);
-      return `<div class="gacha-reveal-card card-fx-${cardFx} rarity-${r.card.rarity} tier-${r.card.rarity}" style="--stagger:${i}">
+      return `<div class="gacha-reveal-card ${liteFx ? "card-fx-lite" : `card-fx-${cardFx}`} rarity-${r.card.rarity} tier-${r.card.rarity}" style="--stagger:${liteFx ? 0 : i}">
         ${rarityCorner(r.card.rarity)}
         <span class="gacha-reveal-card-name">${r.card.name}</span>
         <span class="gacha-reveal-card-r">${rarityZh(r.card.rarity)}</span>
@@ -425,15 +493,14 @@ function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toas
     })
     .join("");
 
-  const bonusLine =
-    bonusStones > 0 ? `<p class="gacha-reveal-bonus">余泽：灵石 +${fmtNumZh(bonusStones)}</p>` : "";
+  const bonusLine = bonusStones > 0 ? `<p class="gacha-reveal-bonus">额外灵石 +${fmtNumZh(bonusStones)}</p>` : "";
 
   overlay.innerHTML = `
     <div class="gacha-reveal-sparkles" aria-hidden="true"></div>
     <div class="gacha-reveal-backdrop bd-${orbTier}"></div>
     <div class="gacha-reveal-content fx-${fx} ${hasJackpot ? "is-high" : ""} ${results.length > 1 ? "is-ten" : "is-one"}" data-hi="${hi}">
       <div class="gacha-reveal-orb orb-${orbTier}" aria-hidden="true"></div>
-      <p class="gacha-reveal-title tit-${orbTier}">${results.length > 1 ? "连珠唤引" : "灵光显化"}</p>
+      <p class="gacha-reveal-title tit-${orbTier}">${results.length > 1 ? "十连结果" : "抽卡结果"}</p>
       <div class="gacha-reveal-cards">${cardsHtml}</div>
       ${bonusLine}
       <p class="gacha-reveal-dismiss">点击任意处继续</p>
@@ -449,7 +516,7 @@ function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toas
       overlay.remove();
       toast(toastMsg);
       onDone();
-    }, 320);
+    }, liteFx ? 140 : 320);
   };
 
   overlay.addEventListener("click", () => finish());
@@ -457,7 +524,7 @@ function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toas
   requestAnimationFrame(() => {
     overlay.classList.add("gacha-reveal-active");
   });
-  const autoMs = results.length === 1 ? 3200 : 4200 + results.length * 120;
+  const autoMs = liteFx ? (results.length === 1 ? 1300 : 1900 + results.length * 60) : results.length === 1 ? 3200 : 4200 + results.length * 120;
   window.setTimeout(() => finish(), autoMs);
 }
 
@@ -472,17 +539,18 @@ function highestGearRarityInList(gears: GearItem[]): Rarity {
 
 function showGearRevealOverlay(gears: GearItem[], toastMsg: string, onDone: () => void): void {
   const overlay = document.createElement("div");
+  const liteFx = shouldUseLiteRevealFx();
   const hi = highestGearRarityInList(gears);
   const single = gears.length === 1;
   const r0 = gears[0]!.rarity;
   const orbTier = single ? r0 : hi;
-  const fx = pickRevealFxVariant();
+  const fx = liteFx ? "rift" : pickRevealFxVariant();
   const cardSalt = Math.floor(Math.random() * 9);
-  overlay.className = `gacha-reveal-overlay gacha-gear ${single ? `gacha-single reveal-${r0}` : `gacha-ten reveal-hi-${hi}`}`;
+  overlay.className = `gacha-reveal-overlay gacha-gear ${liteFx ? "gacha-reveal-lite" : ""} ${single ? `gacha-single reveal-${r0}` : `gacha-ten reveal-hi-${hi}`}`;
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
   const hasHigh = hi === "UR" || hi === "SSR";
-  if (hasHigh && typeof navigator !== "undefined" && navigator.vibrate) {
+  if (!liteFx && hasHigh && typeof navigator !== "undefined" && navigator.vibrate) {
     try {
       navigator.vibrate(hi === "UR" ? [18, 45, 25] : [15, 30, 15]);
     } catch {
@@ -499,7 +567,7 @@ function showGearRevealOverlay(gears: GearItem[], toastMsg: string, onDone: () =
     .map((g, i) => {
       const pre = g.prefixes.length + g.suffixes.length;
       const cardFx = pickCardFxVariant(i, cardSalt);
-      return `<div class="gacha-reveal-card card-fx-${cardFx} gear-reveal rarity-${g.rarity} tier-${g.rarity}" style="--stagger:${i}">
+      return `<div class="gacha-reveal-card ${liteFx ? "card-fx-lite" : `card-fx-${cardFx}`} gear-reveal rarity-${g.rarity} tier-${g.rarity}" style="--stagger:${liteFx ? 0 : i}">
         ${gearRarityCorner(g.rarity)}
         <span class="gacha-reveal-card-name">${g.displayName}</span>
         <span class="gacha-reveal-card-r">${rarityZh(g.rarity)} · ilvl ${g.itemLevel}</span>
@@ -526,12 +594,12 @@ function showGearRevealOverlay(gears: GearItem[], toastMsg: string, onDone: () =
       overlay.remove();
       toast(toastMsg);
       onDone();
-    }, 320);
+    }, liteFx ? 140 : 320);
   };
   overlay.addEventListener("click", () => finish());
   document.body.appendChild(overlay);
   requestAnimationFrame(() => overlay.classList.add("gacha-reveal-active"));
-  const autoMs = gears.length === 1 ? 3000 : 4000 + gears.length * 100;
+  const autoMs = liteFx ? (gears.length === 1 ? 1200 : 1800 + gears.length * 55) : gears.length === 1 ? 3000 : 4000 + gears.length * 100;
   window.setTimeout(() => finish(), autoMs);
 }
 
@@ -619,19 +687,22 @@ function renderPlayerStatsBlock(st: GameState): string {
   const skillsLine = `战 ${st.skills.combat.level} · 采 ${st.skills.gathering.level} · 篆 ${st.skills.arcana.level}`;
   return `
     <div class="player-stats-block" id="player-stats-block">
-      <h3 class="sub-h">入世统计</h3>
+      <div class="panel-title-art-row panel-title-art-row--sub">
+        <img class="panel-title-art-icon" src="${UI_HEAD_STATS}" alt="" width="24" height="24" loading="lazy" />
+        <h3 class="sub-h">入世统计</h3>
+      </div>
       <p class="hint sm player-stats-lead">本存档汇总；灵石峰值为当世最高。</p>
       <div class="player-stats-grid">
         <div class="ps-stat"><span class="ps-stat-label">累计入世时长</span><strong id="ps-playtime">${fmtPlaytimeSec(st.playtimeSec)}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">本界日序</span><strong id="ps-life-day">第 ${lifeDay} 日</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">境界</span><strong id="ps-stat-realm">${st.realmLevel}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">修炼技能</span><strong id="ps-stat-skills" class="ps-stat-long">${skillsLine}</strong></div>
-        <div class="ps-stat"><span class="ps-stat-label">累计唤引</span><strong id="ps-total-pulls">${st.totalPulls}</strong></div>
-        <div class="ps-stat"><span class="ps-stat-label">本世唤引</span><strong id="ps-pulls-life">${pullsLife}</strong></div>
+        <div class="ps-stat"><span class="ps-stat-label">累计抽卡</span><strong id="ps-total-pulls">${st.totalPulls}</strong></div>
+        <div class="ps-stat"><span class="ps-stat-label">本轮抽卡</span><strong id="ps-pulls-life">${pullsLife}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">幻域通关波次</span><strong id="ps-dungeon-waves">${st.dungeon.totalWavesCleared}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">最高推进波</span><strong id="ps-max-wave">${st.dungeon.maxWaveRecord}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">轮回次数</span><strong id="ps-reinc">${st.reincarnations}</strong></div>
-        <div class="ps-stat"><span class="ps-stat-label">图鉴邂逅</span><strong id="ps-codex">${unique} / ${pool}</strong></div>
+        <div class="ps-stat"><span class="ps-stat-label">图鉴收集</span><strong id="ps-codex">${unique} / ${pool}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">功业达成</span><strong id="ps-ach">${achN} / ${achTotal}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">登录连签</span><strong id="ps-streak">${st.dailyStreak}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">本世灵石峰值</span><strong id="ps-peak-stone">${peak}</strong></div>
@@ -689,7 +760,10 @@ function renderCombatStatsPanel(): string {
     : "";
   return `
     <div class="combat-stats-panel" id="combat-stats-panel">
-      <h3 class="sub-h">身法与战斗属性</h3>
+      <div class="panel-title-art-row panel-title-art-row--sub">
+        <img class="panel-title-art-icon" src="${UI_HEAD_COMBAT}" alt="" width="24" height="24" loading="lazy" />
+        <h3 class="sub-h">身法与战斗属性</h3>
+      </div>
       <p class="hint sm combat-stats-lead">攻防血暴为全局属性；护体减免幻域受击，来源含装备、境界、战艺、洞府固元、卡组厚土/溯流、心法、灵宠等。</p>
       <div class="combat-stats-grid">
         <div class="cs-cell"><span class="cs-label">境界</span><strong id="ps-realm">${state.realmLevel}</strong></div>
@@ -714,7 +788,7 @@ function advanceTutorialAfterPull(): void {
   if (state.tutorialStep === 3) {
     state.tutorialStep = 4;
     saveGame(state);
-    toast("很好：去「养成 → 卡组」点阵位布阵，或「角色 → 灵卡」管理仓库；激活产出需上阵。");
+    toast("下一步：到「养成→卡组」上阵灵卡。升阶和分解在「角色→灵卡」。");
   }
 }
 
@@ -723,7 +797,7 @@ function advanceTutorialAfterDeckAssign(): boolean {
   if (state.tutorialStep === 5) {
     state.tutorialStep = 6;
     saveGame(state);
-    toast("去「灵府 → 洞府」强化洞府，与灵卡养成并行");
+    toast("下一步：到「灵府→洞府」强化一次。");
     return true;
   }
   return false;
@@ -732,39 +806,40 @@ function advanceTutorialAfterDeckAssign(): boolean {
 function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   const unlockLines: string[] = [];
   if (!u.tabDungeon) {
-    unlockLines.push("首次<strong>唤引</strong>后开放底部「<strong>幻域</strong>」（启程礼已含髓）。");
+    unlockLines.push("「<strong>幻域</strong>」解锁条件：抽卡≥1，或境界≥2，或曾通关幻域。");
   }
   if (!u.tabTrain) {
-    unlockLines.push("「<strong>修炼</strong>」：幻域通关一波、或境界≥三重、或唤引≥六次。");
+    unlockLines.push("「<strong>修炼</strong>」解锁条件：幻域通关 1 波，或境界≥3，或抽卡≥6。");
   }
   if (!u.tabGear) {
-    unlockLines.push("底部「<strong>角色 → 行囊</strong>」：首件装备或唤引≥十次开放背包与铸灵。");
+    unlockLines.push("「<strong>角色→行囊</strong>」解锁条件：抽卡≥10（或已持有装备）。");
   }
   if (!u.tabVein && state.tutorialStep !== 6 && state.tutorialStep !== 7) {
-    unlockLines.push("一次唤引或境界≥二重 →「<strong>灵府 → 洞府</strong>」。");
+    unlockLines.push("「<strong>灵府→洞府</strong>」解锁条件：抽卡 1 次，或境界≥2。");
   }
   if (!u.tabCodex && u.tabVein) {
-    unlockLines.push("累计唤引≥5 或境界≥四重，开放「<strong>万象图鉴</strong>」。");
+    unlockLines.push("「<strong>养成→图鉴</strong>」解锁条件：抽卡≥5，或境界≥4。");
   }
   if (!u.tabMeta && u.tabCodex) {
-    unlockLines.push("境界≥十八或已轮回 →「<strong>轮回阁</strong>」。");
+    unlockLines.push("「<strong>养成→轮回</strong>」解锁条件：境界≥18，或已轮回。");
   }
   if (!u.tabPets && u.tabDungeon) {
-    unlockLines.push("幻域累计 <strong>15</strong> 波 →「<strong>灵宠</strong>」。");
+    unlockLines.push("「<strong>灵宠</strong>」解锁条件：幻域累计通关 15 波。");
   }
   if (!u.footerTools && u.tabMeta) {
-    unlockLines.push("境界≥十二或曾轮回 →「<strong>养成 → 轮回</strong>」页底<strong>封存/拓印</strong>。");
+    unlockLines.push("存档工具解锁条件：境界≥12，或曾轮回。入口在「养成→轮回」页底。");
   }
   return unlockLines;
 }
 
 function renderUnlockHintsDetailsBlock(lines: string[]): string {
+  if (state.tutorialStep !== 0) return "";
   if (lines.length === 0) return "";
   return `<details class="unlock-hints-details">
-    <summary class="unlock-hints-summary">功能解锁条件（点击展开）</summary>
+    <summary class="unlock-hints-summary">功能解锁条件</summary>
     <div class="unlock-hints unlock-hints-details-body">
       ${lines.map((t) => `<p class="unlock-hint">${t}</p>`).join("")}
-      <p class="hint sm unlock-hint-more">完整条件见「万象图鉴 → 修行札记」。</p>
+      <p class="hint sm unlock-hint-more">更多说明见「养成→图鉴·札记」。</p>
     </div>
   </details>`;
 }
@@ -1086,6 +1161,7 @@ function handleDeckPanelClick(e: MouseEvent): void {
         render();
         return;
       }
+      deckModalSlot = null;
       saveGame(state);
       refreshDeckPanel();
       return;
@@ -1110,6 +1186,7 @@ function handleDeckPanelClick(e: MouseEvent): void {
       render();
       return;
     }
+    deckModalSlot = null;
     saveGame(state);
     refreshDeckPanel();
     return;
@@ -1169,10 +1246,10 @@ function renderFlyOverlay(): string {
     <div class="fly-overlay" id="fly-overlay">
       <div class="fly-modal">
         <h2>飞升</h2>
-        <p>万象归一，道成肉身。你在本存档中共轮回 <strong>${state.reincarnations}</strong> 次，
-        累计祈愿 <strong>${state.totalPulls}</strong> 次，在线约 <strong>${fmt(state.playtimeSec / 3600)}</strong> 小时。</p>
-        <p class="hint">主界面已镀<strong>金辉圣纹</strong>；造化玉再赐三枚。此后天地法则尽在你心，随意推演无妨。</p>
-        <button class="btn btn-primary" type="button" id="btn-fly-dismiss">踏入新天地</button>
+        <p>你已达成飞升。本存档轮回 <strong>${state.reincarnations}</strong> 次，
+        抽卡 <strong>${state.totalPulls}</strong> 次，在线约 <strong>${fmt(state.playtimeSec / 3600)}</strong> 小时。</p>
+        <p class="hint">主界面已切换飞升外观，并额外获得 3 枚造化玉。</p>
+        <button class="btn btn-primary" type="button" id="btn-fly-dismiss">继续游戏</button>
       </div>
     </div>`;
 }
@@ -1183,22 +1260,22 @@ function renderTutorialBlock(): string {
     return `
       <div class="tutorial-backdrop" role="dialog">
         <div class="tutorial-modal">
-          <h3>欢迎来到万象唤灵</h3>
-          <p class="hint">新来的修行者：先领<strong>启程礼</strong>，再点底部<strong>抽卡</strong>唤引真灵，然后去<strong>养成 → 卡组</strong>布阵，灵脉才会汇聚灵石。</p>
+          <h3>新手引导</h3>
+          <p class="hint">先领新手礼包，再去「<strong>抽卡</strong>」抽一次，然后到「<strong>养成→卡组</strong>」上阵灵卡开始产出。</p>
           <div class="btn-row">
-            <button class="btn btn-primary" type="button" id="btn-tutorial-claim">领取启程礼（唤灵髓×50 · 灵石×600）</button>
+            <button class="btn btn-primary" type="button" id="btn-tutorial-claim">领取新手礼包（唤灵髓×50 · 灵石×600）</button>
             <button class="btn" type="button" id="btn-tutorial-skip">跳过引导</button>
           </div>
         </div>
       </div>`;
   }
   const hints: Record<number, string> = {
-    2: "引导：点底部「抽卡」前往唤引。",
-    3: "引导：在抽卡页消耗唤灵髓至少唤引一次（启程礼已赠髓）。首次唤引后开放底部「幻域」。",
-    4: "引导：点「养成」→「卡组」，点击阵位在弹出层中放入灵卡；仓库与升阶在「角色」→「灵卡」。",
-    5: "引导：点阵位打开布阵浮层，点选灵卡上阵；升阶可在浮层或「角色」→「灵卡」。",
-    6: "引导：点「灵府」→「洞府」，任选一条洞府线强化一次。",
-    7: "引导：「灵府」→「灵脉」，完成一次破境。",
+    2: "引导：点底部「抽卡」。",
+    3: "引导：在抽卡页完成 1 次抽卡。完成后开放「幻域」。",
+    4: "引导：点「养成→卡组」，再点任意阵位。",
+    5: "引导：在弹层里选择 1 张灵卡上阵。",
+    6: "引导：点「灵府→洞府」，任意强化 1 次。",
+    7: "引导：点「灵府→灵脉」，完成 1 次破境。",
   };
   const h = hints[state.tutorialStep];
   if (!h) return "";
@@ -1223,7 +1300,7 @@ function renderTopBar(
     extra += `<span class="res-chip res-chip-extra" data-currency-hint-id="xuanTie"><img class="res-ico" src="${UI_XUAN_TIE}" alt="" width="20" height="20" /><strong id="pill-xuan-tie">${state.xuanTie}</strong></span>`;
   }
   return `
-  <div class="resource-strip${goldClass}" id="top-bar" title="长按各项货币查看用途">
+  <div class="resource-strip${goldClass}" id="top-bar" title="长按货币图标查看用途">
     <span class="res-chip res-chip-stone" data-currency-hint-id="stone">
       <img class="res-ico" src="${UI_STONE}" alt="" width="20" height="20" />
       <span class="res-chip-stack">
@@ -1277,38 +1354,89 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
   const mkCult = (id: CultivateSub, label: string, unlocked: boolean, active: boolean, pulse: boolean): string =>
     unlocked
       ? `<button type="button" class="hub-sub-tab ${active ? "active" : ""} ${pulse ? "tutorial-pulse" : ""}" data-cultivate-sub="${id}"${active ? ` aria-current="page"` : ""}>${label}</button>`
-      : `<span class="hub-sub-tab hub-sub-tab-locked" title="尚未解锁">${label}</span>`;
+      : `<span class="hub-sub-tab hub-sub-tab-locked" title="未解锁">${label}</span>`;
   const mkChar = (id: CharacterSub, label: string, active: boolean): string =>
     `<button type="button" class="hub-sub-tab ${active ? "active" : ""}" data-character-sub="${id}"${active ? ` aria-current="page"` : ""}>${label}</button>`;
 
   let left = "";
   let right = "";
   if (activeHub === "estate" && u.tabVein) {
-    left = mkEstate("idle", "灵脉", estateSub === "idle", state.tutorialStep === 7);
-    right = mkEstate("vein", "洞府", estateSub === "vein", state.tutorialStep === 6);
+    left = mkEstate("idle", "灵脉·破境", estateSub === "idle", state.tutorialStep === 7);
+    right = mkEstate("vein", "洞府·养成", estateSub === "vein", state.tutorialStep === 6);
   } else if (activeHub === "cultivate") {
     left = [
-      mkCult("deck", "卡组", true, cultivateSub === "deck", state.tutorialStep >= 4 && state.tutorialStep <= 5),
-      mkCult("train", "修炼", u.tabTrain, cultivateSub === "train", false),
-      mkCult("pets", "灵宠", u.tabPets, cultivateSub === "pets", false),
+      mkCult(
+        "deck",
+        "卡组·上阵",
+        true,
+        cultivateSub === "deck",
+        state.tutorialStep >= 4 && state.tutorialStep <= 5,
+      ),
+      mkCult("train", "修炼·挂机", u.tabTrain, cultivateSub === "train", false),
+      mkCult("pets", "灵宠·全局", u.tabPets, cultivateSub === "pets", false),
     ].join("");
     right = [
-      mkCult("codex", "图鉴", u.tabCodex, cultivateSub === "codex", false),
-      mkCult("meta", "轮回", u.tabMeta, cultivateSub === "meta", false),
-      mkCult("ach", "功业", u.tabAch, cultivateSub === "ach", false),
+      mkCult("codex", "图鉴·札记", u.tabCodex, cultivateSub === "codex", false),
+      mkCult("meta", "轮回·元印", u.tabMeta, cultivateSub === "meta", false),
+      mkCult("ach", "功业·奖励", u.tabAch, cultivateSub === "ach", false),
     ].join("");
   } else if (activeHub === "character") {
     left = [
-      mkChar("stats", "属性", characterSub === "stats"),
-      mkChar("cards", "灵卡", characterSub === "cards"),
-      mkChar("gear", "行囊", characterSub === "gear"),
-      mkChar("guides", "功能预览", characterSub === "guides"),
+      mkChar("stats", "属性·总览", characterSub === "stats"),
+      mkChar("cards", "灵卡·仓库", characterSub === "cards"),
+      mkChar("gear", "行囊·装备", characterSub === "gear"),
+      mkChar("guides", "功能预览·导航", characterSub === "guides"),
     ].join("");
   }
   if (!left && !right) return "";
   return `<div class="hub-inline-subnav" aria-label="页内导航">
     <div class="hub-inline-subnav-row">${left}${right}</div>
   </div>`;
+}
+
+function renderDiscoverabilityHint(): string {
+  if (state.tutorialStep !== 0) return "";
+  let text = "";
+  if (activeHub === "cultivate") {
+    switch (cultivateSub) {
+      case "deck":
+        text = "常用入口：布阵在「养成→卡组」点阵位；升阶/分解在「角色→灵卡」；装备在「角色→行囊」。";
+        break;
+      case "train":
+        text = "常用入口：这里只负责挂机修炼；灵卡与装备请去「养成→卡组」或「角色」页。";
+        break;
+      case "codex":
+        text = "常用入口：规则说明看「养成→图鉴·札记」；若找不到功能，去「角色→功能预览·导航」。";
+        break;
+      case "meta":
+        text = "常用入口：轮回与元印在此页；保存/导出/导入存档在本页最下方。";
+        break;
+      case "ach":
+        text = "常用入口：奖励自动发放；若不清楚玩法入口，先看「角色→功能预览·导航」。";
+        break;
+      case "pets":
+        text = "常用入口：灵宠是全局加成；唤灵入口在底部「抽卡」，成长进度在本页查看。";
+        break;
+      default:
+        text = "";
+    }
+  } else if (activeHub === "character") {
+    if (characterSub === "cards") {
+      text = "常用入口：这里只做灵卡升阶/分解；上阵请去「养成→卡组」点阵位。";
+    } else if (characterSub === "gear") {
+      text = "常用入口：装备产出在底部「抽卡→铸灵池」；强化/精炼/卸下在本页行囊。";
+    } else if (characterSub === "guides") {
+      text = "常用入口：这里专门告诉你“功能在哪”；遇到找不到入口先来这里。";
+    }
+  } else if (activeHub === "gacha") {
+    text = "常用入口：灵卡池=卡牌，铸灵池=装备；自动分解开关在本页底部。";
+  } else if (activeHub === "estate") {
+    text = "常用入口：灵脉负责破境，洞府负责常驻增益；两条线可并行。";
+  } else if (activeHub === "battle") {
+    text = "常用入口：进本与复刷都在此页；详细机制在「养成→图鉴·札记」。";
+  }
+  if (!text) return "";
+  return `<p class="hint sm discoverability-hint">${text}</p>`;
 }
 
 function renderBottomNav(u: ReturnType<typeof getUiUnlocks>): string {
@@ -1335,7 +1463,7 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
   }
   const gearBlock = u.tabGear
     ? renderGearPanel(state, refineTargetId, gearDetailSlot)
-    : `<section class="panel character-hub-gear-locked"><p class="hint">获得第一件装备或累计唤引≥十次后，开放<strong>铸灵池</strong>与行囊装备管理。</p></section>`;
+    : `<section class="panel character-hub-gear-locked"><p class="hint">解锁条件：获得 1 件装备，或累计抽卡≥10。解锁后开放铸灵池和行囊装备管理。</p></section>`;
   return `<div class="character-hub-root">${gearBlock}</div>`;
 }
 
@@ -1351,7 +1479,7 @@ function renderHubContent(
     case "battle":
       return u.tabDungeon
         ? renderDungeonPanel(state)
-        : `<section class="panel"><p class="hint">首次<strong>唤引</strong>后开放底部「<strong>幻域</strong>」战斗。</p></section>`;
+        : `<section class="panel"><p class="hint">完成 1 次抽卡后开放底部「<strong>幻域</strong>」。</p></section>`;
     case "estate":
       return estateSub === "idle" ? renderIdle(ips, rb, canBreak, u) : renderVeinPage();
     case "gacha":
@@ -1402,16 +1530,16 @@ function render(): void {
     u.footerTools && activeHub === "cultivate" && cultivateSub === "meta";
   const footerHtml = showFooterTools
     ? `<div class="footer-tools">
-      <button class="btn" type="button" id="btn-save">手动封存灵识</button>
-      <button class="btn" type="button" id="btn-export">拓印存档密文</button>
-      <input type="text" id="import-input" class="import-input" placeholder="在此粘贴密文以迎回灵识" />
-      <button class="btn" type="button" id="btn-import">迎回存档</button>
+      <button class="btn" type="button" id="btn-save">保存到本机</button>
+      <button class="btn" type="button" id="btn-export">导出存档字符串</button>
+      <input type="text" id="import-input" class="import-input" placeholder="粘贴存档字符串" />
+      <button class="btn" type="button" id="btn-import">导入存档</button>
     </div>`
     : "";
 
   app.innerHTML = `
     <div class="app-visual-bg" style="--ui-sparkles:url('${UI_BG_SPARKLES}')" aria-hidden="true"></div>
-    <div class="app-root-content">
+    <div class="app-root-content" style="--ui-panel-runes:url('${UI_PANEL_RUNES}')">
     <div class="app-head">
     <div class="app-brand-row">
       <div class="app-title-cluster">
@@ -1427,6 +1555,7 @@ function render(): void {
     <div class="hub-page-scroll">
     ${unlockDetailsBlock}
     ${renderFloatingSubNav(u)}
+    ${renderDiscoverabilityHint()}
     ${renderHubContent(ips, rb, canBreak, u, pityUr, slots)}
     </div>
     </main>
@@ -1435,8 +1564,8 @@ function render(): void {
     ${
       activeHub === "character"
         ? `<div class="reset-strip">
-      <button type="button" class="btn btn-danger" id="btn-reset-world">重开道途</button>
-      <span class="reset-strip-hint">清空本界存档并从头修行；建议先「拓印密文」备份</span>
+      <button type="button" class="btn btn-danger" id="btn-reset-world">重置存档</button>
+      <span class="reset-strip-hint">会清空当前存档并从头开始，建议先导出备份</span>
     </div>`
         : ""
     }
@@ -1500,14 +1629,14 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       </div>
       ${petIncomeHint !== "" ? `<p class="hint sm income-pet-line" id="income-pet-line">${petIncomeHint}</p>` : ""}
       </div>
-      <p class="hint stone-uses">灵石：破境、洞府、升阶；唤灵髓：幻域与聚灵阵。细则见「万象图鉴 → 修行札记」。</p>
+      <p class="hint stone-uses">灵石用于破境、洞府升级和升阶；唤灵髓用于抽卡和幻域。详细规则见「养成→图鉴·札记」。</p>
       ${exploreBlock}
       <p class="hint vein-hint-row">洞府乘区（已计入上方每秒灵石）：<strong>汇灵</strong> ×<span id="idle-vein-hui">${huiLingM}</span> · <strong>灵息</strong> ×<span id="idle-vein-ling">${lingXiM}</span>
-        <button type="button" class="btn-help-icon" id="btn-vein-synergy-help" aria-expanded="false" title="五行灵脉（卡组）说明">?</button>
+        <button type="button" class="btn-help-icon" id="btn-vein-synergy-help" aria-expanded="false" aria-controls="vein-synergy-popover" aria-label="查看卡组灵脉说明" title="卡组灵脉说明">?</button>
       </p>
       <p class="hint sm vein-hint-sub">境界基础与灵卡汇流相加后，再乘洞府等加成（灵息每级约 +2.2%，与汇灵叠乘）。</p>
       <div id="vein-synergy-popover" class="vein-help-panel hidden" role="region" aria-label="五行灵脉说明">
-        <p class="hint">同系≥3 激活一条灵脉；五条详解见「万象图鉴 → 修行札记 → 五行灵脉」。</p>
+        <p class="hint">同系卡牌≥3 激活对应灵脉。完整规则见「养成→图鉴·札记」。</p>
         <ul class="vein-help-list vein-help-list-compact">
           <li><strong>焚天</strong> 爆发 · <strong>溯流</strong> 水链 · <strong>岁木</strong> 岁序 · <strong>剑虹</strong> 返利 · <strong>厚土</strong> 离线</li>
         </ul>
@@ -1527,8 +1656,8 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <span class="cooldown-label">吐纳回气</span>
         <div class="progress-track slim"><div class="progress-fill cd tuna" id="tuna-cd-bar" style="width:${tunaPct}%"></div></div>
       </div>
-      <p class="hint">吐纳间隔约 ${Math.round(TUNA_COOLDOWN_MS / 1000)} 秒，可补一小笔灵石。</p>
-      <p class="hint">图鉴邂逅 ${unique} / ${codex}${deckRealmPct > 0.001 ? ` · 卡组境界加护 ${deckRealmPct.toFixed(2)}%` : ""}</p>
+      <p class="hint">吐纳冷却约 ${Math.round(TUNA_COOLDOWN_MS / 1000)} 秒。</p>
+      <p class="hint">图鉴收集 ${unique} / ${codex}${deckRealmPct > 0.001 ? ` · 卡组境界加成 ${deckRealmPct.toFixed(2)}%` : ""}</p>
     </section>`;
 
   if (!u.privilegePanel) return core;
@@ -1536,7 +1665,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const bulkRow =
     state.qoL.bulkLevel
       ? `<button class="btn" type="button" id="btn-bulk-up">一键尽升（袖里乾坤）</button>`
-      : `<button class="btn" type="button" disabled title="需先镌刻袖里乾坤">一键尽升（未镌刻）</button>`;
+      : `<button class="btn" type="button" disabled title="需先解锁一键尽升">一键尽升（未解锁）</button>`;
 
   const ffLeft = Math.max(0, state.biGuanCooldownUntil - nowMs());
   const ffCooling = ffLeft > 0;
@@ -1555,14 +1684,14 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
     core +
     `
     <section class="panel">
-      <h2>造化镌刻</h2>
-      <p class="hint">唤灵髓不可灵石直购；造化玉镌刻下列权柄。</p>
+      <h2>便利功能</h2>
+      <p class="hint">使用造化玉解锁以下功能。</p>
       <div class="meta-grid">
-        ${qoLRow("天道酬勤", "tenPull", "十连结束余泽多一层")}
-        ${qoLRow("袖里乾坤", "bulkLevel", "一键将所持卡升到当前灵石上限")}
-        ${qoLRow("万法自然", "autoRealm", "灵石够时自动破境")}
-        ${qoLRow("心血来潮", "autoGacha", "髓够时间歇自动唤引")}
-        ${qoLRow("吐纳自成", "autoTuna", "吐纳就绪自动运转")}
+        ${qoLRow("十连加成", "tenPull", "十连结束后额外获得 1 层奖励加成")}
+        ${qoLRow("一键尽升", "bulkLevel", "一键将已拥有灵卡升到当前上限")}
+        ${qoLRow("自动破境", "autoRealm", "灵石足够时自动破境")}
+        ${qoLRow("自动抽卡", "autoGacha", "唤灵髓足够时自动抽卡")}
+        ${qoLRow("自动吐纳", "autoTuna", "吐纳冷却结束后自动执行")}
       </div>
       <div class="btn-row" style="margin-top:10px">
         ${bulkRow}
@@ -1603,7 +1732,7 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
         </div>
         <p class="resonance-readout" id="resonance-readout-live">共鸣度 ${resFrac.toFixed(1)} / 100 · 持续累积</p>
       </div>`
-    : `<p class="hint">再唤引数次，可解锁聚灵共鸣。</p>`;
+    : `<p class="hint">再抽几次卡可解锁共鸣进度。</p>`;
 
   if (!u.tabGear && gachaPool === "gear") gachaPool = "cards";
 
@@ -1611,11 +1740,11 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
     ? `<table class="rates-table">
         <thead><tr><th>品阶</th><th>说明</th></tr></thead>
         <tbody>
-          <tr><td class="rarity-UR">天极</td><td>万古难遇；九十唤引必现其一</td></tr>
-          <tr><td class="rarity-SSR">绝品</td><td>霞光贯日</td></tr>
-          <tr><td class="rarity-SR">珍品</td><td>灵韵自成</td></tr>
-          <tr><td class="rarity-R">灵品</td><td>可堪大任</td></tr>
-          <tr><td class="rarity-N">凡品</td><td>世间常见</td></tr>
+          <tr><td class="rarity-UR">天极</td><td>最高稀有度；90 抽保底至少 1 张</td></tr>
+          <tr><td class="rarity-SSR">绝品</td><td>高稀有度</td></tr>
+          <tr><td class="rarity-SR">珍品</td><td>中高稀有度</td></tr>
+          <tr><td class="rarity-R">灵品</td><td>中稀有度</td></tr>
+          <tr><td class="rarity-N">凡品</td><td>基础稀有度</td></tr>
         </tbody>
       </table>`
     : "";
@@ -1642,7 +1771,7 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
           <div class="pity-meter-fill" id="pity-fill-cards" style="width:${pityProgressPct}%"></div>
         </div>
       </div>
-      <p class="hint">金灵≥三：唤引伴剑气长虹灵石；「天道酬勤」加厚十连余泽。</p>
+      <p class="hint">金系卡牌≥3 时，抽卡可获得额外灵石；解锁十连加成功能后收益更高。</p>
       <div class="gacha-actions">
         <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-1" ${state.summonEssence >= ESSENCE_COST_SINGLE ? "" : "disabled"}>单抽（${ESSENCE_COST_SINGLE} 唤灵髓）</button>
         ${
@@ -1682,15 +1811,15 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
     </div>`;
 
   const gachaLead = u.tabGear
-    ? `<p class="hint gacha-lead"><strong>灵卡池</strong>邂逅真灵，<strong>铸灵池</strong>产装备。</p>`
-    : `<p class="hint gacha-lead">唤引真灵于此；铸灵池与「角色」装备栏同步开放（首件装备或唤引≥十次）。</p>`;
+    ? `<p class="hint gacha-lead"><strong>灵卡池</strong>产出灵卡，<strong>铸灵池</strong>产出装备。</p>`
+    : `<p class="hint gacha-lead">抽卡入口。铸灵池会在获得首件装备或累计抽卡 10 次后开放。</p>`;
 
   return `
     <section class="panel gacha-panel-root">
       <header class="gacha-panel-header">
         <img class="gacha-panel-decor-img" src="${UI_GACHA_DECOR}" alt="" width="180" height="108" loading="lazy" />
         <div class="gacha-panel-header-inner">
-        <p class="gacha-panel-kicker">万象聚灵 · 邂逅真灵</p>
+        <p class="gacha-panel-kicker">抽卡与装备获取</p>
         <h2 class="gacha-panel-title">抽卡 · 聚灵阵</h2>
         ${gachaLead}
         </div>
@@ -1774,7 +1903,7 @@ function renderDeck(slots: number): string {
     const filled = !!def && !!o;
     const picked = deckModalSlot === i;
     slotsHtml += `
-      <div class="deck-slot ${filled ? "filled" : ""} ${picked ? "deck-slot-picked" : ""}" data-slot="${i}" role="button" tabindex="0">
+      <div class="deck-slot ${filled ? "filled" : ""} ${picked ? "deck-slot-picked" : ""}" data-slot="${i}" role="button" tabindex="0" aria-pressed="${picked ? "true" : "false"}">
         <div class="slot-label">阵位 ${i + 1}${i >= 4 ? " · 轮回阁中解封" : ""}</div>
         ${
           filled
@@ -1881,7 +2010,7 @@ function renderMeta(): string {
       </div>
     </section>
     <section class="panel">
-      <h2>道途元强化</h2>
+      <h2>元强化</h2>
       <div class="meta-grid">${grid}</div>
     </section>
   `;
@@ -1981,7 +2110,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     state.summonEssence += 50;
     addStones(state, 600);
     saveGame(state);
-    toast("启程礼已领取：请点底部「抽卡」唤引；首次唤引后开放底部「幻域」");
+    toast("新手礼包已领取。请先去「抽卡」完成 1 次抽卡。");
     render();
   });
 
@@ -1996,7 +2125,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       state.realmLevel += 1;
       if (state.tutorialStep === 7) {
         state.tutorialStep = 0;
-        toast("境界突破成功。引导已毕：洞府与灵脉可并行精进。");
+        toast("破境成功。新手引导已完成。");
       } else {
         toast("境界突破成功");
       }
@@ -2009,14 +2138,14 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.getElementById("btn-fentian")?.addEventListener("click", () => {
     if (tryFenTianBurst(state)) {
       saveGame(state);
-      toast("焚天已施：灵石灌体");
+      toast("焚天已触发：已获得灵石增益。");
       const pool = totalCardsInPool();
       updateTopResourcePillsAndVigor(pool);
       if (activeHub === "estate" && estateSub === "idle") {
         updateEstateIdleLiveReadouts(nowMs());
       }
     } else {
-      toast("焚天未成：阵中火灵不足三，或术式尚在回气");
+      toast("焚天不可用：需要火系卡牌≥3，且技能不在冷却。");
     }
   });
 
@@ -2025,7 +2154,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     if (g > 0) {
       const newly = tryCompleteAchievements(state);
       saveGame(state);
-      toast(`吐纳：灵石 +${g}`);
+      toast(`吐纳完成：灵石 +${g}`);
       if (newly.length > 0) {
         render();
       } else {
@@ -2043,34 +2172,34 @@ function bindEvents(rb: Decimal, _slots: number): void {
       const k = (el as HTMLElement).dataset.qol as keyof QoLFlags;
       if (buyQoL(state, k)) {
         saveGame(state);
-        toast("造化权柄已镌刻");
+        toast("便利功能已解锁。");
         render();
       }
     });
   });
 
   document.getElementById("btn-bulk-up")?.addEventListener("click", () => {
-    bulkUpgradeAllCards(state);
+    const n = bulkUpgradeAllCards(state);
     saveGame(state);
-    toast("袖里乾坤已尽升");
+    toast(n > 0 ? `已完成一键尽升：共升级 ${n} 次。` : "未升级：资源不足或已全部满级。");
     render();
   });
 
   document.getElementById("btn-ff")?.addEventListener("click", () => {
     const t = nowMs();
     if (t < state.biGuanCooldownUntil) {
-      toast("闭关术式尚在回气，稍待片刻再施");
+      toast("闭关冷却中，请稍后再试。");
       return;
     }
     const g = fastForward(state, 3600);
     state.biGuanCooldownUntil = t + BI_GUAN_COOLDOWN_MS;
     saveGame(state);
-    toast(`闭关一纪：灵石约 ${fmtDecimal(g)}（${Math.round(BI_GUAN_COOLDOWN_MS / 1000)} 息内不可再施）`);
+    toast(`闭关完成：获得约 ${fmtDecimal(g)} 灵石（${Math.round(BI_GUAN_COOLDOWN_MS / 1000)} 秒冷却）`);
     render();
   });
 
   document.getElementById("btn-reset-world")?.addEventListener("click", () => {
-    if (!confirm("确定重开道途？当前进度将彻底消散，仅已拓印的密文可挽回。")) return;
+    if (!confirm("确定重置存档？当前进度将被清空。建议先导出存档备份。")) return;
     state = clearSaveAndNewGame();
     selectedInvId = null;
     deckModalSlot = null;
@@ -2081,8 +2210,9 @@ function bindEvents(rb: Decimal, _slots: number): void {
     estateSub = "idle";
     cultivateSub = "deck";
     characterSub = "stats";
+    autoEnterPromptHandled = false;
     flyCreditsDismissed = false;
-    toast("已重开新途");
+    toast("存档已重置。");
     render();
   });
 
@@ -2097,7 +2227,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       const p = (el as HTMLElement).dataset.gachaPool as "cards" | "gear" | undefined;
       if (p !== "cards" && p !== "gear") return;
       if (p === "gear" && !getUiUnlocks(state).tabGear) {
-        toast("铸灵池与底部「角色 → 行囊」同步开放：先获得一件装备，或累计唤引≥十次");
+        toast("铸灵池未解锁：获得 1 件装备，或累计抽卡达到 10 次后开放。");
         return;
       }
       gachaPool = p;
@@ -2107,7 +2237,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
 
   const runCardPull = (n: 1 | 10) => {
     if (n === 10 && !getUiUnlocks(state).gachaTenUnlocked) {
-      toast("十连尚未解锁：请先完成一次单抽，或境界≥三重");
+      toast("十连未解锁：先完成 1 次单抽，或境界达到 3。");
       return;
     }
     const cost = n === 1 ? ESSENCE_COST_SINGLE : ESSENCE_COST_TEN;
@@ -2123,9 +2253,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       tryCompleteAchievements(state);
       saveGame(state);
       const tag = r.isNew ? "初见" : r.duplicateStars ? "星辉+1" : "再遇";
-      toastMsg =
-        `唤引：${r.card.name}「${rarityZh(r.card.rarity)}」${tag}` +
-        (bonus > 0 ? ` · 余泽 +${fmt(bonus)} 灵石` : "");
+      toastMsg = `抽卡：${r.card.name}「${rarityZh(r.card.rarity)}」${tag}` + (bonus > 0 ? ` · 额外 +${fmt(bonus)} 灵石` : "");
       pullHtml = `<span class="pull-tag">${r.card.name} · ${rarityZh(r.card.rarity)}</span>`;
       advanceTutorialAfterPull();
       const bonusNum = bonus;
@@ -2145,8 +2273,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       const bonus = onGachaPulls(state, 10);
       tryCompleteAchievements(state);
       saveGame(state);
-      toastMsg =
-        "连珠唤引已毕：" + formatPullResults(results) + (bonus > 0 ? ` · 余泽共 ${fmt(bonus)} 灵石` : "");
+      toastMsg = "十连完成：" + formatPullResults(results) + (bonus > 0 ? ` · 额外共 ${fmt(bonus)} 灵石` : "");
       pullHtml = results.map((r) => `<span class="pull-tag">${r.card.name}·${rarityZh(r.card.rarity)}</span>`).join("");
       advanceTutorialAfterPull();
       const bonusNum = bonus;
@@ -2165,11 +2292,11 @@ function bindEvents(rb: Decimal, _slots: number): void {
 
   const runGearPull = (n: 1 | 10) => {
     if (!getUiUnlocks(state).tabGear) {
-      toast("铸灵池与「角色 → 行囊」同步开放：先获得一件装备，或累计唤引≥十次");
+      toast("铸灵池未解锁：获得 1 件装备，或累计抽卡达到 10 次后开放。");
       return;
     }
     if (n === 10 && !getUiUnlocks(state).gachaTenUnlocked) {
-      toast("十连尚未解锁：请先完成一次单抽，或境界≥三重");
+      toast("十连未解锁：先完成 1 次单抽，或境界达到 3。");
       return;
     }
     const cost = n === 1 ? ESSENCE_COST_GEAR_SINGLE : ESSENCE_COST_GEAR_TEN;
@@ -2232,6 +2359,19 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.getElementById("btn-pull-gear-10")?.addEventListener("click", () => runGearPull(10));
 
   document.getElementById("main-content")?.addEventListener("click", handleDeckPanelClick);
+  document.getElementById("main-content")?.addEventListener("keydown", (e) => {
+    const ke = e as KeyboardEvent;
+    if (ke.key !== "Enter" && ke.key !== " ") return;
+    const t = ke.target as HTMLElement | null;
+    const slotEl = t?.closest?.(".deck-slot") as HTMLElement | null;
+    if (!slotEl || slotEl.closest("#deck-slot-modal")) return;
+    ke.preventDefault();
+    const si = Number(slotEl.dataset.slot);
+    if (!Number.isFinite(si) || si < 0 || si >= effectiveDeckSlots(state)) return;
+    deckModalSlot = si;
+    selectedInvId = state.deck[si] ?? null;
+    refreshDeckPanel();
+  });
   document.getElementById("main-content")?.addEventListener("click", handleCharacterCardsClick);
   document.getElementById("main-content")?.addEventListener("click", handleGearPanelClick);
 
@@ -2261,29 +2401,32 @@ function bindEvents(rb: Decimal, _slots: number): void {
     const expanded = !p.classList.contains("hidden");
     if (btn) btn.setAttribute("aria-expanded", expanded ? "true" : "false");
   });
-  document.addEventListener("click", (ev) => {
-    const t = ev.target as HTMLElement;
-    if (t.closest("#btn-vein-synergy-help") || t.closest("#vein-synergy-popover")) return;
-    const pop = document.getElementById("vein-synergy-popover");
-    const btn = document.getElementById("btn-vein-synergy-help");
-    if (!pop || !btn) return;
-    pop.classList.add("hidden");
-    btn.setAttribute("aria-expanded", "false");
-  });
+  if (!veinHelpDocListenerBound) {
+    veinHelpDocListenerBound = true;
+    document.addEventListener("click", (ev) => {
+      const t = ev.target as HTMLElement;
+      if (t.closest("#btn-vein-synergy-help") || t.closest("#vein-synergy-popover")) return;
+      const pop = document.getElementById("vein-synergy-popover");
+      const btn = document.getElementById("btn-vein-synergy-help");
+      if (!pop || !btn) return;
+      pop.classList.add("hidden");
+      btn.setAttribute("aria-expanded", "false");
+    });
+  }
 
   document.querySelectorAll("[data-meta]").forEach((el) => {
     el.addEventListener("click", () => {
       const k = (el as HTMLElement).dataset.meta as keyof GameState["meta"];
       if (buyMeta(state, k)) {
         saveGame(state);
-        toast("道途印记已深一分");
+        toast("元强化升级成功。");
         render();
       }
     });
   });
 
   document.getElementById("btn-rein")?.addEventListener("click", () => {
-    if (!confirm("确定轮回？境界、灵石、卡组与卡牌将重置，图鉴邂逅保留。")) return;
+    if (!confirm("确定轮回？境界、灵石、卡组与持有卡将重置，图鉴进度保留。")) return;
     performReincarnate(state);
     tryCompleteAchievements(state);
     saveGame(state);
@@ -2301,9 +2444,9 @@ function bindEvents(rb: Decimal, _slots: number): void {
       if (buyVeinUpgrade(state, k)) {
         if (state.tutorialStep === 6) {
           state.tutorialStep = 7;
-          toast("回「灵脉」完成一次破境，以证道基");
+        toast("下一步：回到「灵府→灵脉」完成 1 次破境。");
         } else {
-          toast(`${VEIN_TITLES[k]} 已深一层`);
+          toast(`${VEIN_TITLES[k]} 升级成功。`);
         }
         tryCompleteAchievements(state);
         saveGame(state);
@@ -2337,7 +2480,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     state.dungeon.entryWave = w;
     const now = nowMs();
     if (!canEnterDungeon(state, now)) {
-      toast("冷却中或仍在副本内");
+      toast("当前无法进入：冷却中或仍在副本内。");
       return;
     }
     if (!canEnterAtWave(state, w)) {
@@ -2349,6 +2492,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       toast(`唤灵髓不足：进入第 ${w} 波需 ${fee} 唤灵髓（约本波预期收益的 5%）`);
       return;
     }
+    if (!confirm(`确认进入第 ${w} 关？将消耗 ${fee} 唤灵髓。`)) return;
     if (enterDungeon(state, w)) {
       saveGame(state);
       toast(`已进入幻域（自第 ${w} 波），已支付入场费 ${fee} 唤灵髓`);
@@ -2374,7 +2518,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       return;
     }
     if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
-      toast("暂不可进入");
+      toast("当前无法进入该关卡。");
       return;
     }
     const rm = computeDungeonRepeatMode(state, w);
@@ -2383,6 +2527,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       toast(`唤灵髓不足：进入第 ${w} 波需 ${fee} 唤灵髓`);
       return;
     }
+    if (!confirm(`确认进入第 ${w} 关？将消耗 ${fee} 唤灵髓。`)) return;
     if (enterDungeon(state, w)) {
       activeHub = "battle";
       saveGame(state);
@@ -2408,13 +2553,14 @@ function bindEvents(rb: Decimal, _slots: number): void {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     const el = e.target as HTMLElement | null;
     if (el?.closest("button, a, input, textarea, select, label, [role='button']")) return;
-    queueDungeonDodge(state);
+    tryQueueDungeonDodgeWithFeedback();
   };
   document.getElementById("dungeon-live-root")?.addEventListener("pointerup", onDungeonLivePointerUp);
   document.getElementById("btn-dungeon-leave")?.addEventListener("click", () => {
+    if (!confirm("确认暂离副本？再次进入将重置本波地图与魔物。")) return;
     leaveDungeon(state);
     saveGame(state);
-    toast("已暂离副本");
+    toast("已暂离副本；再次进入将重置本波地图与魔物。");
     render();
   });
 
@@ -2466,37 +2612,60 @@ function bindEvents(rb: Decimal, _slots: number): void {
       const never = (document.getElementById("chk-feature-guide-never") as HTMLInputElement | null)?.checked ?? false;
       dismiss(never);
     });
-    document.getElementById("btn-feature-guide-skip-once")?.addEventListener("click", () => dismiss(false));
+    document.getElementById("btn-feature-guide-skip-once")?.addEventListener("click", () => {
+      const never = (document.getElementById("chk-feature-guide-never") as HTMLInputElement | null)?.checked ?? false;
+      // “跳过”按“本条已处理”执行，但不强制开启全局不再显示。
+      dismiss(never);
+      characterSub = "stats";
+      render();
+    });
   }
 
   document.getElementById("btn-save")?.addEventListener("click", () => {
     saveGame(state);
-    toast("灵识已封存于此界");
+    toast("已保存到本机。");
   });
 
   document.getElementById("btn-export")?.addEventListener("click", () => {
     const s = exportSave(state);
     void navigator.clipboard.writeText(s).then(
-      () => toast("密文已誊入剪贴，可携走灵识"),
-      () => toast(s.slice(0, 80) + "…"),
+      () => toast("存档字符串已复制到剪贴板。"),
+      () => {
+        const pasted = window.prompt("剪贴板不可用，请手动复制以下完整存档字符串：", s);
+        if (pasted == null) {
+          toast("导出未完成：请重试或检查剪贴板权限。");
+        } else {
+          toast("已显示完整存档字符串，请手动复制。");
+        }
+      },
     );
   });
 
   document.getElementById("btn-import")?.addEventListener("click", () => {
     const inp = document.getElementById("import-input") as HTMLInputElement | null;
     const raw = inp?.value?.trim();
-    if (!raw) return;
+    if (!raw) {
+      toast("请先粘贴存档字符串。");
+      inp?.focus();
+      return;
+    }
     const next = importSave(raw);
     if (!next) {
-      toast("密文难辨，迎回未果");
+      toast("导入失败：字符串无效。");
       return;
+    }
+    const curExport = exportSave(state);
+    if (raw !== curExport) {
+      const ok = confirm("导入会覆盖当前进度，建议先导出备份。确认继续导入吗？");
+      if (!ok) return;
     }
     state = next;
     selectedInvId = null;
     refineTargetId = null;
+    autoEnterPromptHandled = false;
     flyCreditsDismissed = false;
     saveGame(state);
-    toast("灵识已自密文归位");
+    toast("存档导入成功。");
     render();
   });
 
@@ -2592,10 +2761,13 @@ function loop(): void {
     saveGame(state);
     toast(`灵息已盈，已传送至第 ${state.dungeon.wave} 关`);
     render();
+  } else if (typeof document !== "undefined") {
+    maybeToastAutoEnterFailure(now);
   }
   // 幻域解锁后首次且尚未通关第 1 波：自动从第 1 关进本（需付得起入场费）
   if (
     typeof document !== "undefined" &&
+    state.tutorialStep === 0 &&
     getUiUnlocks(state).tabDungeon &&
     !state.dungeon.active &&
     !state.dungeon.autoEnterConsumed &&
@@ -2604,11 +2776,20 @@ function loop(): void {
     canEnterAtWave(state, 1)
   ) {
     const fee = dungeonEntryFeeEssence(state, 1, computeDungeonRepeatMode(state, 1));
-    if (state.summonEssence >= fee && enterDungeon(state, 1)) {
-      state.dungeon.autoEnterConsumed = true;
-      activeHub = "battle";
-      saveGame(state);
-      render();
+    if (!autoEnterPromptHandled) {
+      autoEnterPromptHandled = true;
+      if (state.summonEssence >= fee) {
+        const ok = confirm(`幻域已解锁，是否立即进入第 1 关？将消耗 ${fee} 唤灵髓。`);
+        if (ok && enterDungeon(state, 1)) {
+          activeHub = "battle";
+          saveGame(state);
+          toast(`已进入第 1 关（入场费 ${fee} 唤灵髓）`);
+          render();
+        } else if (!ok) {
+          state.dungeon.autoEnterConsumed = true;
+          saveGame(state);
+        }
+      }
     }
   }
   const floatPopups = drainDungeonDamageFloats();
@@ -3015,7 +3196,7 @@ function init(): void {
   const offline = catchUpOffline(state, t);
   if (offline.gt(0.01)) {
     saveGame(state);
-    queueMicrotask(() => toast(`离线所纳灵息：约 ${fmtDecimal(offline)} 灵石`));
+    queueMicrotask(() => toast(`离线收益：约 ${fmtDecimal(offline)} 灵石`));
   }
   tryCompleteAchievements(state);
   for (const a of drainAchievementToastQueue()) {
@@ -3029,9 +3210,12 @@ function init(): void {
       if (e.code !== "Space" && e.key !== " ") return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (t?.closest("button, a, select, label, [role='button'], [tabindex]")) return;
       if (!state.dungeon.active) return;
+      const d = state.dungeon;
+      if (d.mobs.length === 0 && d.interWaveCooldownUntil > nowMs()) return;
       e.preventDefault();
-      queueDungeonDodge(state);
+      tryQueueDungeonDodgeWithFeedback();
     },
     { passive: false },
   );

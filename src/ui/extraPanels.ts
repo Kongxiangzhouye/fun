@@ -9,6 +9,7 @@ import {
 } from "../types";
 import {
   canEnterDungeon,
+  describeWaveProfile,
   describeMobBattleRole,
   dungeonEntryFeeForSelectedWave,
   essenceRewardTotalFloat,
@@ -34,7 +35,18 @@ import { xuanTieEnhanceCost } from "../systems/gearCraft";
 import { BATTLE_SKILLS } from "../data/battleSkills";
 import { battleSkillPullCost, describeBattleSkillLevels } from "../systems/battleSkills";
 import { rarityZh } from "./rarityZh";
-import { GEAR_SLOT_ICON, PET_PORTRAIT, UI_ESSENCE } from "./visualAssets";
+import {
+  GEAR_SLOT_ICON,
+  PET_PORTRAIT,
+  UI_ESSENCE,
+  UI_EMPTY_GEAR,
+  UI_EMPTY_PET,
+  UI_EMPTY_UNLOCK,
+  UI_HEAD_DUNGEON,
+  UI_HEAD_GEAR,
+  UI_HEAD_PET,
+  UI_HEAD_TRAIN,
+} from "./visualAssets";
 import { formatMobDisplayName } from "../data/dungeonMobs";
 import { currentBossMob } from "../systems/dungeon";
 import { PET_DEFS } from "../data/pets";
@@ -99,7 +111,7 @@ export function formatDungeonActiveMeta(state: GameState, now: number): string {
 }
 
 export function formatDungeonInterMeta(): string {
-  return "单关已结算；休整结束后刷新地图与魔物。接战移速降低，出手与受击后短暂定身。";
+  return "本关结算完成。休整后进入下一关。接战时移速会降低，出手和受击后会短暂停顿。";
 }
 
 function renderDungeonMapHtml(state: GameState): string {
@@ -188,7 +200,7 @@ function renderDungeonMapHtml(state: GameState): string {
     </div>`;
 }
 
-const DUNGEON_HELP_BLURB = `仅掉唤灵髓，清关结算；幻域生命全局、进关不回满。每次进关重新随机地图与魔物。入场费、阵亡罚没与复刷规则见万象图鉴。近战/远程、剑气、首领与五行相克等同上。`;
+const DUNGEON_HELP_BLURB = `幻域只掉唤灵髓，按关结算。幻域生命为全局共享，进关不会回满。每次进关都会重置地图和怪物。入场费、阵亡损失和复刷规则见「养成→图鉴·札记」。`;
 
 function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
   const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
@@ -199,16 +211,16 @@ function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): stri
     ? auto
       ? `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
       <div class="sanctuary-portal-ring" aria-hidden="true"></div>
-      <p class="sanctuary-portal-msg">灵息已盈 · 将自动接引至第 <strong>${w}</strong> 关</p>
+      <p class="sanctuary-portal-msg">生命已回满，将自动进入第 <strong>${w}</strong> 关</p>
     </div>`
       : `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
       <div class="sanctuary-portal-ring" aria-hidden="true"></div>
-      <p class="sanctuary-portal-msg">灵息已盈 · 可进入第 <strong>${w}</strong> 关（需入场髓）</p>
+      <p class="sanctuary-portal-msg">生命已回满，可进入第 <strong>${w}</strong> 关（需入场髓）</p>
       <button type="button" class="btn btn-primary btn-sanctuary-portal" id="btn-sanctuary-portal">进入副本</button>
     </div>`
     : auto
-      ? `<p class="sanctuary-wait-txt">灵息疗伤中，回满后将自动传送</p>`
-      : `<p class="sanctuary-wait-txt">灵息疗伤中，回满后可手动进入第 <strong>${w}</strong> 关</p>`;
+      ? `<p class="sanctuary-wait-txt">恢复中，回满后将自动进入</p>`
+      : `<p class="sanctuary-wait-txt">恢复中，回满后可手动进入第 <strong>${w}</strong> 关</p>`;
   return `<div class="sanctuary-visual">
     <div class="sanctuary-visual-bg" aria-hidden="true"></div>
     <div class="sanctuary-heal-particles" aria-hidden="true"></div>
@@ -218,7 +230,7 @@ function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): stri
         <input type="checkbox" id="sanctuary-auto-enter" ${autoAttr} />
         <span>回满后自动进本</span>
       </label>
-      <span class="hint sm sanctuary-auto-hint">未勾选则扣髓前需确认</span>
+      <span class="hint sm sanctuary-auto-hint">未勾选时，进本前会先确认</span>
     </div>
     ${portalSection}
   </div>`;
@@ -245,6 +257,7 @@ export function renderDungeonPanel(state: GameState): string {
     petSystemUnlocked(state) && petDungeonAtkAdditive(state) > 0
       ? (petDungeonAtkAdditive(state) * 100).toFixed(2)
       : null;
+  const nextWavePreview = describeWaveProfile(Math.max(1, d.entryWave));
   const cdPct = cd > 0 ? Math.min(100, 100 - (100 * cd) / DUNGEON_DEATH_CD_MS) : 100;
   const interWaveWait = d.active && d.mobs.length === 0 && d.interWaveCooldownUntil > now;
   const interSec = interWaveWait ? Math.max(0, Math.ceil((d.interWaveCooldownUntil - now) / 1000)) : 0;
@@ -254,14 +267,18 @@ export function renderDungeonPanel(state: GameState): string {
       : 0;
   const sanctuaryIdle = state.dungeonSanctuaryMode && !d.active;
 
-  const helpPop = `<div id="dungeon-help-popover" class="dungeon-help-popover" hidden>
+  const helpPop = `<div id="dungeon-help-popover" class="dungeon-help-popover" role="region" aria-label="幻域说明" hidden>
     <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
   </div>`;
 
   return `
     <section class="panel dungeon-strip-panel">
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_DUNGEON}" alt="" width="28" height="28" loading="lazy" />
+        <h2>幻域</h2>
+      </div>
       <div class="dungeon-map-stage">
-        <button type="button" class="dungeon-map-help-btn" id="btn-dungeon-help" aria-expanded="false" title="幻域说明">?</button>
+        <button type="button" class="dungeon-map-help-btn" id="btn-dungeon-help" aria-expanded="false" aria-controls="dungeon-help-popover" aria-label="查看幻域说明" title="幻域说明">?</button>
         ${helpPop}
       ${
         d.active
@@ -291,8 +308,9 @@ export function renderDungeonPanel(state: GameState): string {
         </div>`
             : `<div class="dungeon-idle dungeon-stage-fill">
           ${renderIdlePreviewMap()}
-          <p class="dungeon-idle-stats">历史累计通关 <strong>${d.totalWavesCleared}</strong> 波 · 最高第 <strong>${d.maxWaveRecord}</strong> 波</p>
-          <p class="hint sm">可进前沿关、有存档的关，或复刷已通关。入场约 <strong>${entryFeeShow}</strong> 髓；阵亡约失灵石 <strong>5%</strong>（至少 1）。</p>
+          <p class="dungeon-idle-stats">累计通关 <strong>${d.totalWavesCleared}</strong> 波 · 最高第 <strong>${d.maxWaveRecord}</strong> 波</p>
+          <p class="hint sm">目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波：${nextWavePreview}</p>
+          <p class="hint sm">可选下一关或已通关关卡复刷。入场约 <strong>${entryFeeShow}</strong> 髓；阵亡损失灵石 <strong>5%</strong>（至少 1）。</p>
           <div class="dungeon-entry-tools">
             <label class="dungeon-entry-label">起始波次（1～${Math.max(1, d.maxWaveRecord + 1)}）
               <input type="number" id="dungeon-entry-wave" min="1" max="${Math.max(1, d.maxWaveRecord + 1)}" step="1" value="${d.entryWave}" />
@@ -324,8 +342,8 @@ export function renderDungeonPanel(state: GameState): string {
         <div class="dungeon-foot-timer hint sm" id="dungeon-foot-timer-row" aria-live="polite">
           <span>本局用时 <strong id="dungeon-session-elapsed">—</strong></span>
           <span class="dungeon-foot-timer-sep">·</span>
-          <span>预计清怪剩余 <strong id="dungeon-eta-remaining">—</strong></span>
-          <span class="dungeon-foot-timer-hint">（按剩余血量 ÷ 期望秒伤，仅供参考）</span>
+          <span>预计剩余 <strong id="dungeon-eta-remaining">—</strong></span>
+          <span class="dungeon-foot-timer-hint">（估算值）</span>
         </div>
       </div>
     </section>`;
@@ -373,21 +391,24 @@ export function renderTrainPanel(state: GameState): string {
   }
   return `
     <section class="panel train-panel">
-      <h2>修炼</h2>
-      <p class="hint">同时只修一项。战艺副本、采灵灵石、法篆共鸣。</p>
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_TRAIN}" alt="" width="28" height="28" loading="lazy" />
+        <h2>修炼</h2>
+      </div>
+      <p class="hint">一次只能修炼一项技能。</p>
       <div class="train-active-banner ${activeLabel ? "" : "train-paused"}" id="train-active-banner">
         ${
           activeLabel
             ? `<span class="train-pulse"></span><span>当前修炼：<strong>${activeLabel}</strong></span>
                <span class="train-banner-meta">+<strong id="train-banner-rate">${activeRate.toFixed(1)}</strong> 经验/秒</span>
                <span class="train-banner-meta">距升级 <strong id="train-banner-eta">${fmtEta(activeEta)}</strong></span>`
-            : `<span>当前<strong>未修炼</strong>：点击下方技能开始挂机</span>`
+            : `<span>当前未修炼：点击下方技能开始</span>`
         }
       </div>
       <div class="skill-list">${rows}</div>
       <button class="btn" type="button" id="btn-skill-none" ${state.activeSkillId === null ? "disabled" : ""}>暂停修炼</button>
       <h3 class="sub-h">心法</h3>
-      <p class="hint">耗髓随机领悟/精进心法，同类叠至 Lv.20，与三技能独立。</p>
+      <p class="hint">消耗唤灵髓随机获得或升级心法，同名最高 Lv.20。</p>
       <div class="battle-skill-catalog" aria-label="心法说明">
         ${BATTLE_SKILLS.map((def) => {
           const lv = state.battleSkills[def.id] ?? 0;
@@ -534,15 +555,18 @@ export function renderGearPanel(
   }
   return `
     <section class="panel" id="gear-panel-root">
-      <h2>装备</h2>
-      <p class="hint">唤引可得装备；强化耗<strong>玄铁</strong>（分解得）。前缀后缀分组；天极精炼。</p>
-      <p class="hint">点武器/衣甲/指环看详情、卸下或强化；背包未装备件亦可强化。</p>
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_GEAR}" alt="" width="28" height="28" loading="lazy" />
+        <h2>装备</h2>
+      </div>
+      <p class="hint">装备来自抽卡的铸灵池。强化消耗玄铁（分解装备获得）；天极可精炼。</p>
+      <p class="hint">点武器/衣甲/指环查看详情，可卸下或强化。背包中的未装备件也能强化。</p>
       ${refineHint}
       <h3 class="sub-h">已装备</h3>
       ${slotHtml}
       ${detailBlock}
       <h3 class="sub-h">背包</h3>
-      <div class="gear-inv">${inv || '<p class="hint">暂无装备</p>'}</div>
+      <div class="gear-inv">${inv || `<div class="empty-art-wrap"><img src="${UI_EMPTY_GEAR}" alt="暂无装备" class="empty-art-img" width="320" height="160" loading="lazy" /></div>`}</div>
     </section>`;
 }
 
@@ -551,8 +575,12 @@ export function renderPetPanel(state: GameState): string {
     const w = state.dungeon.totalWavesCleared;
     return `
     <section class="panel pet-panel">
-      <h2>灵宠</h2>
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_PET}" alt="" width="28" height="28" loading="lazy" />
+        <h2>灵宠</h2>
+      </div>
       <p class="hint">幻域累计 <strong>${PET_SYSTEM_UNLOCK_WAVES}</strong> 波开放唤灵池；灵宠全局生效。当前 <strong>${w}</strong> / ${PET_SYSTEM_UNLOCK_WAVES} 波。</p>
+      <div class="empty-art-wrap"><img src="${UI_EMPTY_UNLOCK}" alt="未解锁灵宠" class="empty-art-img" width="320" height="160" loading="lazy" /></div>
     </section>`;
   }
 
@@ -581,7 +609,7 @@ export function renderPetPanel(state: GameState): string {
               ? "幻域攻（加算）"
               : def.bonusKind === "essence_find"
                 ? "唤灵髓（叠乘）"
-                : "万象三项"
+                : "三项综合"
         }</p>
         <p class="inv-meta pet-bonus-num">本等级单宠：${petBonusPreviewLine(def, p.level)}</p>
         ${
@@ -608,16 +636,19 @@ export function renderPetPanel(state: GameState): string {
 
   return `
     <section class="panel pet-panel">
-      <h2>灵宠 · 唤灵池</h2>
-      <p class="hint">耗髓唤灵；已结缘者全局叠加，灵契随重复邂逅。轮回不重置。</p>
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_PET}" alt="" width="28" height="28" loading="lazy" />
+        <h2>灵宠 · 唤灵池</h2>
+      </div>
+      <p class="hint">消耗唤灵髓抽取灵宠。已拥有灵宠的加成全局生效，轮回不重置。</p>
       <div class="pet-pool-row">
         <button class="btn btn-primary" type="button" id="btn-pet-pull" ${canPull ? "" : "disabled"}>
           唤灵（${PET_PULL_COST} <img class="btn-inline-ico" src="${UI_ESSENCE}" alt="" width="14" height="14" />）
         </button>
         <span class="inv-meta pet-pull-meta">累计唤灵 <strong>${state.petPullsTotal}</strong> 次 · 持有唤灵髓 <strong>${Math.floor(state.summonEssence)}</strong></span>
       </div>
-      <p class="hint sm">概率约：凡 38% · 灵 26% · 珍 20% · 绝 12% · 天 4%；重复加灵契。</p>
+      <p class="hint sm">大致概率：凡 38% · 灵 26% · 珍 20% · 绝 12% · 天 4%。重复会增加灵契经验。</p>
       <p class="pet-active-summary">当前全局加成：<strong>${bonusLine}</strong></p>
-      <div class="pet-grid">${cards}</div>
+      ${cards ? `<div class="pet-grid">${cards}</div>` : `<div class="empty-art-wrap"><img src="${UI_EMPTY_PET}" alt="暂无灵宠" class="empty-art-img" width="320" height="160" loading="lazy" /></div>`}
     </section>`;
 }

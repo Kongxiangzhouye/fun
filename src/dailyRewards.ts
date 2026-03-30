@@ -21,9 +21,9 @@ export function essenceIncomePerSecondFromResonance(state: GameState): number {
   return wishResonancePointsPerSecond(state) / 100;
 }
 
-export function tickWishResonancePassive(state: GameState, dtSec: number): void {
+export function tickWishResonancePassive(state: GameState, dtSec: number, gainMult = 1): void {
   if (dtSec <= 0) return;
-  const rate = wishResonancePointsPerSecond(state);
+  const rate = wishResonancePointsPerSecond(state) * Math.max(0, gainMult);
   state.wishResonance += rate * dtSec;
   while (state.wishResonance >= 100) {
     state.wishResonance -= 100;

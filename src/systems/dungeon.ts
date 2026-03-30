@@ -58,6 +58,14 @@ const BASE_PLAYER_SPEED = 0.14;
  */
 const BOSS_CHASE_VS_PLAYER = 0.8;
 const BOSS_CHASE_PULSE_AMP = 0.12;
+/** 新波次/进本短保护：避免刷怪瞬间互殴导致“刚进图就掉血” */
+const WAVE_START_GRACE_MS = 700;
+/** 刷怪与玩家出生点的最小格距（曼哈顿）；降低贴脸刷怪感 */
+const SPAWN_MIN_CELL_DIST = 3;
+/** 过渡波（每段第 4 波）稍降压，缓冲到下一波节点 */
+function isTransitionWave(wave: number): boolean {
+  return wave % 5 === 4;
+}
 /** 每帧移动拆成多段，避免高速穿墙或卡死角 */
 const MOVE_SUBSTEPS = 14;
 /** 单次积分最大步长（秒），避免 tab 切回时 dt 过大一帧跨过许多格 */
@@ -89,6 +97,16 @@ function mobBodyRadius(m: DungeonMob): number {
 function mobInPlayerAttackDisk(d: DungeonState, m: DungeonMob, pRange: number): boolean {
   if (m.hp <= 0) return false;
   return dist(d.playerX, d.playerY, m.x, m.y) <= pRange + mobBodyRadius(m);
+}
+
+/** 攻击连线是否被墙阻断：用于命中判定公平化（隔墙不互殴） */
+function hasClearCombatLine(d: DungeonState, tx: number, ty: number): boolean {
+  const w = d.mapW;
+  const h = d.mapH;
+  if (w <= 0 || h <= 0 || !d.walkable.length) return true;
+  const [px, py] = normToCell(d.playerX, d.playerY, w, h);
+  const [mx, my] = normToCell(tx, ty, w, h);
+  return gridLineInteriorWalkClear(w, h, d.walkable, px, py, mx, my);
 }
 
 /** 与 tick 内 inCombat 一致：锁定目标在「接战/被怪摸」带内则不因更近怪而切换 */
@@ -259,7 +277,9 @@ function applyDodgeSlide(state: GameState, d: DungeonState, target: DungeonMob):
   const flip = nextRand01(state) < 0.5 ? 1 : -1;
   const pPos = { x: d.playerX, y: d.playerY };
   const mag = DUNGEON_DODGE_SLIDE * flip;
-  slideEntity(d, pPos, perpX * mag, perpY * mag, MOVE_SUBSTEPS);
+  const gx = d.playerX + perpX * mag;
+  const gy = d.playerY + perpY * mag;
+  moveEntityGridSeek(d, pPos, gx, gy, Math.abs(mag), 1, { x: target.x, y: target.y });
   d.playerX = pPos.x;
   d.playerY = pPos.y;
 }
@@ -281,7 +301,9 @@ function applyDodgeAlongMoveDirection(state: GameState, d: DungeonState, target:
   }
   const pPos = { x: d.playerX, y: d.playerY };
   const mag = DUNGEON_DODGE_SLIDE;
-  slideEntity(d, pPos, nx * mag, ny * mag, MOVE_SUBSTEPS);
+  const gx = d.playerX + nx * mag;
+  const gy = d.playerY + ny * mag;
+  moveEntityGridSeek(d, pPos, gx, gy, mag, 1, { x: target.x, y: target.y });
   d.playerX = pPos.x;
   d.playerY = pPos.y;
 }
@@ -330,7 +352,7 @@ function rollMobCombatStats(
       2.2,
     );
     const moveSpeedMul = clamp(1.0 + nextRand01(state) * 0.22, 0.45, 1.45);
-    return { dodge, attackRange, attackInterval, moveSpeedMul };
+    return { dodge: Math.min(0.26, dodge), attackRange, attackInterval, moveSpeedMul };
   }
 
   /** 近战：入战距短、血厚、略难闪避、移速较快；远程：射程远、血脆、易偏斜、移速慢 */
@@ -344,7 +366,7 @@ function rollMobCombatStats(
       2.2,
     );
     const moveSpeedMul = clamp(0.72 + nextRand01(state) * 0.58, 0.48, 1.42);
-    return { dodge, attackRange, attackInterval, moveSpeedMul };
+    return { dodge: Math.min(0.28, dodge), attackRange, attackInterval, moveSpeedMul };
   }
 
   dodge = clamp(waveDodge * 0.68, 0.02, 0.26);
@@ -356,7 +378,7 @@ function rollMobCombatStats(
     2.35,
   );
   const moveSpeedMul = clamp(0.48 + nextRand01(state) * 0.46, 0.4, 1.05);
-  return { dodge, attackRange, attackInterval, moveSpeedMul };
+  return { dodge: Math.min(0.22, dodge), attackRange, attackInterval, moveSpeedMul };
 }
 
 /**
@@ -390,6 +412,45 @@ function movePlayerKiteMaxRange(
   const inMelee = range <= reach;
   const spd = playerMoveSpeed(state) * (inMelee ? DUNGEON_MELEE_MOVE_MULT : 1);
   moveEntityGridSeek(d, pPos, goalX, goalY, spd, subDt, { x: target.x, y: target.y });
+}
+
+function moveMobFourWayChase(
+  d: DungeonState,
+  m: DungeonMob,
+  subDt: number,
+): void {
+  const mPos = { x: m.x, y: m.y };
+  const mRange = Math.max(DUNGEON_ENGAGE_NORM * 1.05, m.attackRange ?? DUNGEON_ENGAGE_NORM);
+  const desired = mRange * 0.92;
+  const dx = d.playerX - mPos.x;
+  const dy = d.playerY - mPos.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const goalX = d.playerX - ux * desired;
+  const goalY = d.playerY - uy * desired;
+  const spd = BASE_PLAYER_SPEED * 0.9 * (m.moveSpeedMul > 0 ? m.moveSpeedMul : 1);
+  moveEntityGridSeek(d, mPos, goalX, goalY, spd, subDt, { x: d.playerX, y: d.playerY });
+  m.x = mPos.x;
+  m.y = mPos.y;
+}
+
+function moveMobFourWayWander(
+  state: GameState,
+  d: DungeonState,
+  m: DungeonMob,
+  subDt: number,
+): void {
+  if (m.wanderHeading == null) m.wanderHeading = nextRand01(state) * Math.PI * 2;
+  m.wanderHeading += (nextRand01(state) - 0.5) * WANDER_HEADING_JITTER * subDt;
+  const wh = m.wanderHeading;
+  const roamStep = Math.max(0.02, WANDER_SPEED * (m.moveSpeedMul > 0 ? m.moveSpeedMul : 1) * 0.75);
+  const goalX = clamp(m.x + Math.cos(wh) * roamStep, 0.02, 0.98);
+  const goalY = clamp(m.y + Math.sin(wh) * roamStep, 0.02, 0.98);
+  const mPos = { x: m.x, y: m.y };
+  moveEntityGridSeek(d, mPos, goalX, goalY, roamStep, 1, { x: d.playerX, y: d.playerY });
+  m.x = mPos.x;
+  m.y = mPos.y;
 }
 
 /**
@@ -1033,7 +1094,16 @@ export function essenceRewardTotalFloat(
   const base = 5 + wave * 2.1;
   let v = Math.max(0.05, base * essenceFindMult(state) * (1 + dungeonEssenceBonusFromSkills(state)));
   if (isBoss) v *= 1.45;
-  if (repeatMode) v *= DUNGEON_REPEAT_ESSENCE_MULT;
+  if (repeatMode) {
+    v *= DUNGEON_REPEAT_ESSENCE_MULT;
+    // 复刷若明显落后前沿波次，则再做温和衰减，避免长期低关稳定刷最优。
+    const frontier = dungeonFrontierWave(state);
+    const lag = Math.max(0, frontier - wave);
+    if (lag >= 4) {
+      const extraDecay = Math.max(0.5, 1 - (lag - 3) * 0.05);
+      v *= extraDecay;
+    }
+  }
   return v;
 }
 
@@ -1049,7 +1119,16 @@ export function essenceRewardForWave(
 
 export function packSizeForWave(wave: number): number {
   if (wave % 5 === 0) return 1;
-  return Math.min(42, 10 + Math.floor(wave * 1.35) + Math.floor(wave / 8));
+  const base = Math.min(42, 10 + Math.floor(wave * 1.35) + Math.floor(wave / 8));
+  if (!isTransitionWave(wave)) return base;
+  return Math.max(8, Math.floor(base * 0.82));
+}
+
+/** 供 UI 展示：下一关关卡类型预告 */
+export function describeWaveProfile(wave: number): string {
+  if (wave % 5 === 0) return "首领关（单体高压）";
+  if (isTransitionWave(wave)) return "过渡关（群怪缓冲）";
+  return "普通关（群怪推进）";
 }
 
 function hpSlice(total: number, size: number, index: number): number {
@@ -1219,6 +1298,10 @@ function cellDistApprox(ax: number, ay: number, bx: number, by: number, w: numbe
   return Math.hypot((ax - bx) * w, (ay - by) * h);
 }
 
+function cellManhattanDist(ax: number, ay: number, bx: number, by: number): number {
+  return Math.abs(ax - bx) + Math.abs(ay - by);
+}
+
 function randomEl(state: GameState): Element {
   return EL_LIST[Math.floor(nextRand01(state) * EL_LIST.length)]!;
 }
@@ -1245,6 +1328,8 @@ function spawnMobsForWave(state: GameState): void {
   d.mobs = [];
 
   const startI = py * d.mapW + px;
+  const startX = startI % d.mapW;
+  const startY = Math.floor(startI / d.mapW);
   const reach = reachableCellsForFourWaySpawn(
     d.mapW,
     d.mapH,
@@ -1257,9 +1342,17 @@ function spawnMobsForWave(state: GameState): void {
   if (bossWave) {
     d.packSize = 1;
     const forbid = new Set<number>([startI]);
-    let spot = pickRandomWalkableCell(state, d.walkable, d.mapW, d.mapH, reach, forbid);
+    let bossReach = reach;
+    const safeBossReach = new Set<number>();
+    for (const i of reach) {
+      const cx = i % d.mapW;
+      const cy = Math.floor(i / d.mapW);
+      if (cellManhattanDist(cx, cy, startX, startY) >= SPAWN_MIN_CELL_DIST + 1) safeBossReach.add(i);
+    }
+    if (safeBossReach.size > 0) bossReach = safeBossReach;
+    let spot = pickRandomWalkableCell(state, d.walkable, d.mapW, d.mapH, bossReach, forbid);
     if (!spot) {
-      for (const i of reach) {
+      for (const i of bossReach) {
         if (i === startI) continue;
         spot = { x: i % d.mapW, y: Math.floor(i / d.mapW) };
         break;
@@ -1290,9 +1383,33 @@ function spawnMobsForWave(state: GameState): void {
   }
 
   const forbid = new Set<number>([startI]);
+  const safeReach = new Set<number>();
+  for (const i of reach) {
+    const cx = i % d.mapW;
+    const cy = Math.floor(i / d.mapW);
+    if (cellManhattanDist(cx, cy, startX, startY) >= SPAWN_MIN_CELL_DIST) safeReach.add(i);
+  }
+  const spawnReach = safeReach.size > 0 ? safeReach : reach;
+  let anchorCell: { x: number; y: number } | null = null;
   for (let i = 0; i < d.packSize; i++) {
-    const spot = pickRandomWalkableCell(state, d.walkable, d.mapW, d.mapH, reach, forbid);
+    let pickPool = spawnReach;
+    // 非首领波采用“主簇 + 分散”混合刷怪，减少清波末段满图追怪。
+    if (anchorCell) {
+      const clustered = new Set<number>();
+      for (const ci of spawnReach) {
+        const cx = ci % d.mapW;
+        const cy = Math.floor(ci / d.mapW);
+        const dist = Math.abs(cx - anchorCell.x) + Math.abs(cy - anchorCell.y);
+        if (dist <= 4) clustered.add(ci);
+      }
+      if (clustered.size > 0) {
+        const useCluster = nextRand01(state) < 0.72;
+        pickPool = useCluster ? clustered : spawnReach;
+      }
+    }
+    const spot = pickRandomWalkableCell(state, d.walkable, d.mapW, d.mapH, pickPool, forbid);
     if (!spot) break;
+    if (!anchorCell) anchorCell = { ...spot };
     forbid.add(spot.y * d.mapW + spot.x);
     const role: "melee" | "ranged" = nextRand01(state) < 0.5 ? "melee" : "ranged";
     const hpBase = hpSlice(totalHp0, d.packSize, i);
@@ -1361,6 +1478,7 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   const fee = dungeonEntryFeeEssence(state, w, d.rewardModeRepeat);
   if (state.summonEssence < fee) return false;
   state.summonEssence -= fee;
+  d.autoEnterConsumed = true;
   state.dungeonSanctuaryMode = false;
   state.dungeonPortalTargetWave = 0;
   d.active = true;
@@ -1392,6 +1510,7 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   damageFloatQueue.length = 0;
   resetDamageFloatAccum();
   spawnMobsForWave(state);
+  d.dodgeIframesUntil = now + WAVE_START_GRACE_MS;
   return true;
 }
 
@@ -1449,6 +1568,7 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
   if (d.interWaveCooldownUntil > 0 && now >= d.interWaveCooldownUntil && d.mobs.length === 0) {
     d.interWaveCooldownUntil = 0;
     spawnMobsForWave(state);
+    d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
   }
 
   const pEl = playerBattleElement(state);
@@ -1521,22 +1641,12 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
         }
         continue;
       }
-      if (m.id === target.id) continue;
-      if (m.wanderHeading == null) m.wanderHeading = nextRand01(state) * Math.PI * 2;
-      m.wanderHeading += (nextRand01(state) - 0.5) * WANDER_HEADING_JITTER * subDt;
-      const wh = m.wanderHeading;
-      const wvx = Math.cos(wh) * WANDER_SPEED * msm * subDt;
-      const wvy = Math.sin(wh) * WANDER_SPEED * msm * subDt;
-      const ox = m.x;
-      const oy = m.y;
-      slideEntity(d, m, wvx, wvy, MOVE_SUBSTEPS);
-      /** 顶墙/贴图边界时位移被吃光但朝向仍朝外，会原地抖；撞墙则换向 */
-      const intended = Math.hypot(wvx, wvy);
-      if (intended > 1e-10) {
-        const moved = Math.hypot(m.x - ox, m.y - oy);
-        if (moved < intended * 0.22) {
-          m.wanderHeading = nextRand01(state) * Math.PI * 2;
-        }
+      const cd = cellDistApprox(m.x, m.y, d.playerX, d.playerY, d.mapW, d.mapH);
+      // 非首领怪也按四联通寻路：近处追击，远处游走。
+      if (m.id === target.id || cd <= CHASE_CELL_DIST) {
+        moveMobFourWayChase(d, m, subDt);
+      } else {
+        moveMobFourWayWander(state, d, m, subDt);
       }
     }
     const pPos = { x: d.playerX, y: d.playerY };
@@ -1586,11 +1696,20 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
   const distT = dist(d.playerX, d.playerY, hitTarget.x, hitTarget.y);
   const mobArFromStat = Math.max(DUNGEON_ENGAGE_NORM * 1.08, hitTarget.attackRange ?? DUNGEON_ENGAGE_NORM);
   const mobAR = Math.max(mobArFromStat, pRange * MOB_ATTACK_RANGE_VS_PLAYER);
-  const playerCanHit = d.mobs.some((m) => mobInPlayerAttackDisk(d, m, pRange));
-  const mobCanHit = distT <= mobAR + PLAYER_BODY_RADIUS_NORM;
+  const playerCanHit = d.mobs.some((m) => mobInPlayerAttackDisk(d, m, pRange) && hasClearCombatLine(d, m.x, m.y));
+  const mobCanHit = distT <= mobAR + PLAYER_BODY_RADIUS_NORM && hasClearCombatLine(d, hitTarget.x, hitTarget.y);
   const hitInterval = Math.max(0.35, hitTarget.attackInterval ?? DUNGEON_MONSTER_HIT_INTERVAL);
   const atkSpd = playerDungeonAttackSpeedMult(state);
   const playerHitInterval = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
+  const attackersInRange = d.mobs.reduce((n, m) => {
+    if (m.hp <= 0) return n;
+    const mArFromStat = Math.max(DUNGEON_ENGAGE_NORM * 1.08, m.attackRange ?? DUNGEON_ENGAGE_NORM);
+    const mAr = Math.max(mArFromStat, pRange * MOB_ATTACK_RANGE_VS_PLAYER);
+    const canHit =
+      dist(d.playerX, d.playerY, m.x, m.y) <= mAr + PLAYER_BODY_RADIUS_NORM &&
+      hasClearCombatLine(d, m.x, m.y);
+    return canHit ? n + 1 : n;
+  }, 0);
 
   if (!playerCanHit) {
     resetDamageFloatAccum();
@@ -1604,10 +1723,10 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
     /** 圆形 AoE：攻击圈内魔物同一瞬各自判定偏斜/暴击 */
     while (d.playerAttackAccum >= playerHitInterval) {
       d.playerAttackAccum -= playerHitInterval;
-      const inSweep = d.mobs.filter((m) => mobInPlayerAttackDisk(d, m, pRange));
+      const inSweep = d.mobs.filter((m) => mobInPlayerAttackDisk(d, m, pRange) && hasClearCombatLine(d, m.x, m.y));
       d.attackAnimPhase += Math.PI * 2;
-      /** 每次普攻周期落地均定身一瞬（与 UI「出手硬直」一致），不依赖是否有人吃伤 */
-      d.playerMoveLockUntil = Math.max(d.playerMoveLockUntil, now + DUNGEON_PLAYER_ATTACK_ROOT_MS);
+      /** 命中后再定身，避免“空挥也锁脚”造成手感发黏 */
+      let landedHit = false;
       if (inSweep.length === 0) {
         continue;
       }
@@ -1624,6 +1743,7 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
         } else {
           const critRoll = nextRand01(state) < cc ? cm : 1;
           const hitDmg = baseAtk * mdMul * critRoll;
+          landedHit = true;
           mob.hp -= hitDmg;
           const v = Math.max(1, Math.round(hitDmg));
           pushDamageFloat(fx, fy, String(v), "dmg-out");
@@ -1636,6 +1756,10 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
           }
         }
       }
+      if (landedHit) {
+        const rootMs = Math.max(120, Math.min(DUNGEON_PLAYER_ATTACK_ROOT_MS, Math.floor(playerHitInterval * 1000 * 0.45)));
+        d.playerMoveLockUntil = Math.max(d.playerMoveLockUntil, now + rootMs);
+      }
     }
   }
 
@@ -1646,6 +1770,11 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
     const mdBase = monsterDamageForWave(d.wave) * (hitTarget.isBoss ? 1.35 : 1);
     const mdMul = elementDamageMultiplier(hitTarget.element, pEl);
     let md = mdBase * mdMul;
+    if (attackersInRange > 1) {
+      // 群怪压迫：随可攻击怪数量缓增并设上限，避免瞬间爆炸伤害。
+      const pressure = Math.min(2.2, 1 + 0.22 * (attackersInRange - 1));
+      md *= pressure;
+    }
     if (hitTarget.isBoss && d.bossDodgeVisual) {
       md *= 0.52;
     }
@@ -1688,7 +1817,7 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
             ? "灵力溃散，已回气。再入本关将重新随机地图与魔物。"
             : `灵力溃散，已回气。损失灵石 ${pen.toFixed(0)}（约当前灵石 5%，至少 1）。再入本关将重新随机地图与魔物。`;
         d.pendingDeathPresentation = false;
-        d.deathCooldownUntil = 0;
+        d.deathCooldownUntil = now + DUNGEON_DEATH_CD_MS;
         damageFloatQueue.length = 0;
         resetDamageFloatAccum();
         return;

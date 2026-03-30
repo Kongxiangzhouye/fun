@@ -9,6 +9,14 @@ interface AffixTemplate {
   text: (v: number) => string;
 }
 
+function findAffixTemplate(groupId: string, stat: GearStatKey): AffixTemplate | null {
+  const all = [...PREFIXES, ...SUFFIXES];
+  for (const t of all) {
+    if (t.groupId === groupId && t.stat === stat) return t;
+  }
+  return null;
+}
+
 const PREFIXES: AffixTemplate[] = [
   {
     groupId: "phys",
@@ -174,6 +182,8 @@ export function enhanceGear(state: GameState, id: string): { ok: boolean; msg: s
   g.enhanceLevel += 1;
   for (const m of [...g.prefixes, ...g.suffixes]) {
     m.value *= 1.035;
+    const tpl = findAffixTemplate(m.groupId, m.stat);
+    if (tpl) m.text = tpl.text(m.value);
   }
   return { ok: true, msg: "强化成功" };
 }

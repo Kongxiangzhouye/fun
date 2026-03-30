@@ -10,12 +10,16 @@ export function battleSkillPullCost(): number {
 
 /** 随机领悟或升级已有心法 */
 export function pullBattleSkill(state: GameState): { ok: boolean; msg: string; id?: string } {
+  const pool = BATTLE_SKILLS.filter((def) => (state.battleSkills[def.id] ?? 0) < 20);
+  if (pool.length === 0) {
+    return { ok: false, msg: "心法已全部满级" };
+  }
   if (state.summonEssence < PULL_COST_ESSENCE) {
     return { ok: false, msg: "唤灵髓不足" };
   }
   state.summonEssence -= PULL_COST_ESSENCE;
   const roll = nextRand01(state);
-  const pick = BATTLE_SKILLS[Math.floor(roll * BATTLE_SKILLS.length)]!;
+  const pick = pool[Math.floor(roll * pool.length)]!;
   const cur = state.battleSkills[pick.id] ?? 0;
   state.battleSkills[pick.id] = Math.min(20, cur + 1);
   return { ok: true, msg: cur === 0 ? `领悟「${pick.name}」` : `「${pick.name}」精进至 Lv.${state.battleSkills[pick.id]}`, id: pick.id };

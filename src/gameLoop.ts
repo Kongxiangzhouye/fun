@@ -18,6 +18,7 @@ import { tryAutoSalvageInventory } from "./systems/salvage";
 
 const TICK_MAX_DT = 120;
 let autoSalvageAccumSec = 0;
+const OFFLINE_RESONANCE_GAIN_MULT = 0.28;
 
 function maxOfflineSec(state: GameState): number {
   return MAX_OFFLINE_SEC_BASE * earthOfflineCapMult(state);
@@ -54,19 +55,23 @@ export function applyTick(state: GameState, now: number): void {
     state.lastTick = now;
     return;
   }
-  const dt = Math.min(TICK_MAX_DT, Math.max(0, (now - state.lastTick) / 1000));
-  state.lastTick = now;
+  const elapsedSec = Math.max(0, (now - state.lastTick) / 1000);
+  if (elapsedSec <= 0) return;
+  const dt = Math.min(TICK_MAX_DT, elapsedSec);
+  // 仅推进已处理的时间，避免大间隔时丢失剩余进度。
+  state.lastTick += dt * 1000;
+  const tickNow = state.lastTick;
   state.playtimeSec += dt;
   tickInGameClock(state, dt);
   tickWishResonancePassive(state, dt);
   tickSkillTraining(state, dt);
   tickCombatHpRegen(state, dt);
-  tickDungeon(state, dt, now);
+  tickDungeon(state, dt, tickNow);
   const ips = incomePerSecond(state, totalCardsInPool());
   addStones(state, ips.mul(dt));
   tryAutoRealm(state);
-  tryAutoTuna(state, now);
-  tryAutoGacha(state, now);
+  tryAutoTuna(state, tickNow);
+  tryAutoGacha(state, tickNow);
   autoSalvageAccumSec += dt;
   if (autoSalvageAccumSec >= 2.5) {
     autoSalvageAccumSec = 0;
@@ -92,8 +97,9 @@ export function catchUpOffline(state: GameState, now: number): Decimal {
   state.lastTick = now;
   state.playtimeSec += dt;
   tickInGameClock(state, dt);
-  tickWishResonancePassive(state, dt);
-  tickCombatHpRegen(state, dt);
+  tickWishResonancePassive(state, dt, OFFLINE_RESONANCE_GAIN_MULT);
+  tickSkillTraining(state, dt);
+  if (!state.dungeon.active) tickCombatHpRegen(state, dt);
   tryCompleteAchievements(state);
   checkTrueEnding(state);
   return gained;
@@ -109,8 +115,9 @@ export function fastForward(state: GameState, seconds: number): Decimal {
   addStones(state, gained);
   state.playtimeSec += dt;
   tickInGameClock(state, dt);
-  tickWishResonancePassive(state, dt);
-  tickCombatHpRegen(state, dt);
+  tickWishResonancePassive(state, dt, OFFLINE_RESONANCE_GAIN_MULT);
+  tickSkillTraining(state, dt);
+  if (!state.dungeon.active) tickCombatHpRegen(state, dt);
   tryCompleteAchievements(state);
   checkTrueEnding(state);
   return gained;

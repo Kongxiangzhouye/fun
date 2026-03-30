@@ -45,6 +45,18 @@ export const UI_PITY_SIGIL = asset("pity-sigil.svg");
 export const UI_TITLE_SPIRIT = asset("title-spirit.svg");
 export const UI_PANEL_CORNER = asset("panel-corner.svg");
 export const UI_BG_SPARKLES = asset("bg-sparkles.svg");
+export const UI_PANEL_RUNES = asset("bg-panel-runes.svg");
+
+/** 分区标题与空状态插画（自绘 SVG） */
+export const UI_HEAD_DUNGEON = asset("deco-dungeon-header.svg");
+export const UI_HEAD_TRAIN = asset("deco-train-header.svg");
+export const UI_HEAD_GEAR = asset("deco-gear-header.svg");
+export const UI_HEAD_PET = asset("deco-pet-header.svg");
+export const UI_HEAD_STATS = asset("deco-stats-header.svg");
+export const UI_HEAD_COMBAT = asset("deco-combat-header.svg");
+export const UI_EMPTY_GEAR = asset("art-empty-gear.svg");
+export const UI_EMPTY_PET = asset("art-empty-pet.svg");
+export const UI_EMPTY_UNLOCK = asset("art-empty-unlock.svg");
 
 /** 灵宠立绘（SVG） */
 export const PET_PORTRAIT: Record<PetId, string> = {
