@@ -6,19 +6,27 @@ export type VeinKind = "huiLing" | "guYuan" | "lingXi" | "gongMing";
 
 export const VEIN_MAX_LEVEL = 80;
 
+function normalizedVeinLevel(level: number): number {
+  if (!Number.isFinite(level)) return 0;
+  return Math.max(0, Math.min(VEIN_MAX_LEVEL, Math.floor(level)));
+}
+
 /** 汇灵：全局灵石效率 */
 export function veinHuiLingMult(level: number): number {
-  return 1 + level * 0.017;
+  const lv = normalizedVeinLevel(level);
+  return 1 + lv * 0.017;
 }
 
 /** 固元：降低破境灵石消耗（上限约 45%） */
 export function veinGuYuanDiscount(level: number): number {
-  return Math.min(0.45, level * 0.009);
+  const lv = normalizedVeinLevel(level);
+  return Math.min(0.45, lv * 0.009);
 }
 
 /** 灵息：放大挂机灵石（叠乘于全局灵息）；每级增幅略高于汇灵线，便于长期感知成长 */
 export function veinLingXiMult(level: number): number {
-  return 1 + level * 0.022;
+  const lv = normalizedVeinLevel(level);
+  return 1 + lv * 0.022;
 }
 
 /**
@@ -26,23 +34,28 @@ export function veinLingXiMult(level: number): number {
  * 每级 +0.4%，上限 +32%（约 80 级满），避免后期与法篆叠乘过于离谱。
  */
 export function veinGongMingResonanceMult(level: number): number {
-  return 1 + Math.min(0.32, level * 0.004);
+  const lv = normalizedVeinLevel(level);
+  return 1 + Math.min(0.32, lv * 0.004);
 }
 
 export function huiLingUpgradeCost(level: number): Decimal {
-  return new Decimal(22).mul(new Decimal(1.62).pow(level));
+  const lv = normalizedVeinLevel(level);
+  return new Decimal(22).mul(new Decimal(1.62).pow(lv));
 }
 
 export function guYuanUpgradeCost(level: number): number {
-  return Math.floor(6 + 7 * Math.pow(1.7, level));
+  const lv = normalizedVeinLevel(level);
+  return Math.floor(6 + 7 * Math.pow(1.7, lv));
 }
 
 export function lingXiUpgradeCost(level: number): Decimal {
-  return new Decimal(35).mul(new Decimal(1.55).pow(level));
+  const lv = normalizedVeinLevel(level);
+  return new Decimal(35).mul(new Decimal(1.55).pow(lv));
 }
 
 export function gongMingUpgradeCost(level: number): Decimal {
-  return new Decimal(28).mul(new Decimal(1.54).pow(level));
+  const lv = normalizedVeinLevel(level);
+  return new Decimal(28).mul(new Decimal(1.54).pow(lv));
 }
 
 export function buyVeinUpgrade(state: GameState, kind: VeinKind): boolean {

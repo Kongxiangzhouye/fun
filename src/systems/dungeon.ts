@@ -417,11 +417,16 @@ function movePlayerKiteMaxRange(
 function moveMobFourWayChase(
   d: DungeonState,
   m: DungeonMob,
+  pRange: number,
   subDt: number,
 ): void {
   const mPos = { x: m.x, y: m.y };
   const mRange = Math.max(DUNGEON_ENGAGE_NORM * 1.05, m.attackRange ?? DUNGEON_ENGAGE_NORM);
-  const desired = mRange * 0.92;
+  const reachByPlayer = pRange + mobBodyRadius(m);
+  const desired =
+    m.mobRole === "ranged"
+      ? Math.min(mRange * 0.92, reachByPlayer * 0.9)
+      : Math.max(PLAYER_BODY_RADIUS_NORM + mobBodyRadius(m) + 0.002, mRange * 0.7);
   const dx = d.playerX - mPos.x;
   const dy = d.playerY - mPos.y;
   const len = Math.hypot(dx, dy) || 1;
@@ -1644,7 +1649,7 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
       const cd = cellDistApprox(m.x, m.y, d.playerX, d.playerY, d.mapW, d.mapH);
       // 非首领怪也按四联通寻路：近处追击，远处游走。
       if (m.id === target.id || cd <= CHASE_CELL_DIST) {
-        moveMobFourWayChase(d, m, subDt);
+        moveMobFourWayChase(d, m, pRange, subDt);
       } else {
         moveMobFourWayWander(state, d, m, subDt);
       }
