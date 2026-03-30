@@ -67,6 +67,9 @@ import { tryFenTianBurst } from "./fenTian";
 import { buyQoL, bulkUpgradeAllCards, qoLCost } from "./qoL";
 import type { QoLFlags, Rarity, SkillId, GearItem, Element } from "./types";
 import Decimal from "decimal.js";
+import { gsap } from "gsap";
+import { animate } from "motion";
+import { Application, Container, Graphics, type Ticker } from "pixi.js";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
 import {
@@ -225,6 +228,212 @@ let toastTimer = 0;
 let flyCreditsDismissed = false;
 const deferredDungeonToasts: string[] = [];
 let lastDungeonActive = false;
+const reducedMotionQuery =
+  typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+let prefersReducedMotion = reducedMotionQuery?.matches ?? false;
+let modernFxPointerBound = false;
+let modernFxPointerX = 0.5;
+let modernFxPointerY = 0.2;
+let motionUiFxBound = false;
+let pixiFxBooted = false;
+let pixiApp: Application | null = null;
+let pixiLayer: Container | null = null;
+type PixiParticle = { g: Graphics; vx: number; vy: number; ttl: number; life: number };
+const pixiParticles: PixiParticle[] = [];
+
+function initPixiFxLayer(): void {
+  if (typeof document === "undefined" || pixiFxBooted) return;
+  pixiFxBooted = true;
+  void (async () => {
+    try {
+      const app = new Application();
+      await app.init({
+        width: Math.max(1, window.innerWidth),
+        height: Math.max(1, window.innerHeight),
+        backgroundAlpha: 0,
+        antialias: true,
+        autoDensity: true,
+        resolution: Math.min(2, window.devicePixelRatio || 1),
+      });
+      const canvas = app.canvas as HTMLCanvasElement;
+      canvas.className = "modern-pixi-layer";
+      document.body.appendChild(canvas);
+      const layer = new Container();
+      app.stage.addChild(layer);
+      app.ticker.add((ticker: Ticker) => {
+        const deltaMs = ticker.deltaMS;
+        for (let i = pixiParticles.length - 1; i >= 0; i -= 1) {
+          const p = pixiParticles[i]!;
+          p.life += deltaMs;
+          const t = Math.min(1, p.life / p.ttl);
+          p.g.x += (p.vx * deltaMs) / 16.6667;
+          p.g.y += (p.vy * deltaMs) / 16.6667;
+          p.g.alpha = 1 - t;
+          const s = 1 + t * 0.9;
+          p.g.scale.set(s, s);
+          if (t >= 1) {
+            p.g.removeFromParent();
+            p.g.destroy();
+            pixiParticles.splice(i, 1);
+          }
+        }
+      });
+      window.addEventListener(
+        "resize",
+        () => {
+          app.renderer.resize(Math.max(1, window.innerWidth), Math.max(1, window.innerHeight));
+        },
+        { passive: true },
+      );
+      pixiApp = app;
+      pixiLayer = layer;
+    } catch {
+      pixiApp = null;
+      pixiLayer = null;
+    }
+  })();
+}
+
+function emitPixiBurst(clientX: number, clientY: number, intensity: "normal" | "high" = "normal"): void {
+  if (!pixiApp || !pixiLayer || prefersReducedMotion) return;
+  const n = intensity === "high" ? 30 : 14;
+  const speed = intensity === "high" ? 7.6 : 5.4;
+  const palette = intensity === "high" ? [0xfff2b1, 0xffb6f8, 0x8fe8ff, 0xaac4ff] : [0x9bb8ff, 0x81d8ff, 0x9ff1d4];
+  for (let i = 0; i < n; i += 1) {
+    const g = new Graphics();
+    const r = intensity === "high" ? 1.8 + Math.random() * 3.6 : 1.3 + Math.random() * 2.2;
+    const c = palette[(Math.random() * palette.length) | 0]!;
+    g.circle(0, 0, r);
+    g.fill({ color: c, alpha: 0.95 });
+    g.x = clientX;
+    g.y = clientY;
+    const a = Math.random() * Math.PI * 2;
+    const mag = speed * (0.6 + Math.random() * 1.1);
+    pixiLayer.addChild(g);
+    pixiParticles.push({
+      g,
+      vx: Math.cos(a) * mag,
+      vy: Math.sin(a) * mag - (intensity === "high" ? 1.8 : 0.9),
+      ttl: intensity === "high" ? 720 + Math.random() * 380 : 520 + Math.random() * 260,
+      life: 0,
+    });
+  }
+}
+
+function bindMotionUiFx(): void {
+  if (typeof document === "undefined" || motionUiFxBound) return;
+  motionUiFxBound = true;
+  document.addEventListener(
+    "pointerdown",
+    (ev) => {
+      const target = (ev.target as HTMLElement | null)?.closest("button, .hub-sub-tab, .bottom-nav-btn") as
+        | HTMLElement
+        | null;
+      if (!target) return;
+      const pressAnimState = { v: 0 };
+      animate(
+        pressAnimState,
+        { v: [0, 1, 0] },
+        {
+          duration: 0.24,
+          onUpdate: (latest) => {
+            const p = latest.v;
+            target.style.transform = `translateZ(0) scale(${(1 - p * 0.03).toFixed(4)})`;
+          },
+        },
+      );
+      const strong = target.classList.contains("btn-primary") || target.classList.contains("is-active");
+      emitPixiBurst(ev.clientX, ev.clientY, strong ? "high" : "normal");
+    },
+    { passive: true, capture: true },
+  );
+}
+
+function playRevealOverlayIntro(overlay: HTMLElement, liteFx: boolean): void {
+  if (liteFx || prefersReducedMotion) {
+    overlay.classList.add("gacha-reveal-active");
+    return;
+  }
+  const content = overlay.querySelector(".gacha-reveal-content") as HTMLElement | null;
+  const cards = [...overlay.querySelectorAll(".gacha-reveal-card")] as HTMLElement[];
+  gsap.set(overlay, { opacity: 0 });
+  if (content) gsap.set(content, { opacity: 0, y: 24, scale: 0.95, filter: "blur(8px)" });
+  gsap.set(cards, { opacity: 0, y: 16, rotateX: -12, transformOrigin: "50% 100%" });
+  const tl = gsap.timeline();
+  tl.to(overlay, { opacity: 1, duration: 0.2, ease: "power2.out" });
+  if (content) {
+    tl.to(content, { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 0.02);
+  }
+  if (cards.length > 0) {
+    tl.to(cards, { opacity: 1, y: 0, rotateX: 0, duration: 0.4, stagger: 0.05, ease: "back.out(1.35)" }, 0.12);
+  }
+  overlay.classList.add("gacha-reveal-active");
+}
+
+function playRevealOverlayExit(overlay: HTMLElement, liteFx: boolean, done: () => void): void {
+  if (liteFx || prefersReducedMotion) {
+    window.setTimeout(done, 140);
+    return;
+  }
+  const content = overlay.querySelector(".gacha-reveal-content") as HTMLElement | null;
+  gsap.to(content, {
+    opacity: 0,
+    y: -10,
+    scale: 0.98,
+    filter: "blur(4px)",
+    duration: 0.22,
+    ease: "power2.in",
+  });
+  gsap.to(overlay, {
+    opacity: 0,
+    duration: 0.28,
+    ease: "power2.in",
+    onComplete: done,
+  });
+}
+
+function bindModernFxInteraction(): void {
+  if (typeof document === "undefined" || modernFxPointerBound) return;
+  modernFxPointerBound = true;
+  document.addEventListener(
+    "pointermove",
+    (ev) => {
+      const w = Math.max(1, window.innerWidth);
+      const h = Math.max(1, window.innerHeight);
+      modernFxPointerX = Math.min(1, Math.max(0, ev.clientX / w));
+      modernFxPointerY = Math.min(1, Math.max(0, ev.clientY / h));
+    },
+    { passive: true },
+  );
+  reducedMotionQuery?.addEventListener("change", (ev) => {
+    prefersReducedMotion = ev.matches;
+  });
+}
+
+function updateModernVisualFx(now: number): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const cycle = 28000;
+  const t = ((now % cycle) + cycle) / cycle;
+  const pulse = (Math.sin((now / 1800) * Math.PI * 2) + 1) * 0.5;
+  const hubHue: Record<HubId, number> = {
+    estate: 0,
+    cultivate: -20,
+    battle: 22,
+    gacha: 34,
+    character: -10,
+  };
+  const pullDensity = Math.min(1, Math.log10(Math.max(10, state.totalPulls + 10)) / 4);
+  const resonance = (((state.wishResonance % 100) + 100) % 100) / 100;
+  const hue = 220 + hubHue[activeHub] + pulse * 22 + resonance * 18;
+  const energy = 0.34 + 0.38 * pullDensity + 0.28 * resonance;
+  root.style.setProperty("--modern-fx-hue", `${hue.toFixed(2)}deg`);
+  root.style.setProperty("--modern-fx-energy", energy.toFixed(3));
+  root.style.setProperty("--modern-fx-t", t.toFixed(4));
+  root.style.setProperty("--modern-fx-mx", `${(modernFxPointerX * 100).toFixed(2)}%`);
+  root.style.setProperty("--modern-fx-my", `${(modernFxPointerY * 100).toFixed(2)}%`);
+  root.classList.toggle("fx-reduce-motion", prefersReducedMotion);
+}
 
 function tryToast(msg: string): void {
   if (typeof document !== "undefined" && document.visibilityState === "hidden") {
@@ -473,6 +682,9 @@ function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toas
       /* ignore */
     }
   }
+  if (hasJackpot) {
+    emitPixiBurst(window.innerWidth * 0.5, window.innerHeight * 0.34, "high");
+  }
 
   const rarityCorner = (r: Rarity): string =>
     r === "SSR"
@@ -512,18 +724,16 @@ function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toas
     if (closed) return;
     closed = true;
     overlay.classList.add("gacha-reveal-exit");
-    window.setTimeout(() => {
+    playRevealOverlayExit(overlay, liteFx, () => {
       overlay.remove();
       toast(toastMsg);
       onDone();
-    }, liteFx ? 140 : 320);
+    });
   };
 
   overlay.addEventListener("click", () => finish());
   document.body.appendChild(overlay);
-  requestAnimationFrame(() => {
-    overlay.classList.add("gacha-reveal-active");
-  });
+  requestAnimationFrame(() => playRevealOverlayIntro(overlay, liteFx));
   const autoMs = liteFx ? (results.length === 1 ? 1300 : 1900 + results.length * 60) : results.length === 1 ? 3200 : 4200 + results.length * 120;
   window.setTimeout(() => finish(), autoMs);
 }
@@ -556,6 +766,9 @@ function showGearRevealOverlay(gears: GearItem[], toastMsg: string, onDone: () =
     } catch {
       /* ignore */
     }
+  }
+  if (hasHigh) {
+    emitPixiBurst(window.innerWidth * 0.5, window.innerHeight * 0.34, "high");
   }
   const gearRarityCorner = (r: Rarity): string =>
     r === "SSR"
@@ -590,15 +803,15 @@ function showGearRevealOverlay(gears: GearItem[], toastMsg: string, onDone: () =
     if (closed) return;
     closed = true;
     overlay.classList.add("gacha-reveal-exit");
-    window.setTimeout(() => {
+    playRevealOverlayExit(overlay, liteFx, () => {
       overlay.remove();
       toast(toastMsg);
       onDone();
-    }, liteFx ? 140 : 320);
+    });
   };
   overlay.addEventListener("click", () => finish());
   document.body.appendChild(overlay);
-  requestAnimationFrame(() => overlay.classList.add("gacha-reveal-active"));
+  requestAnimationFrame(() => playRevealOverlayIntro(overlay, liteFx));
   const autoMs = liteFx ? (gears.length === 1 ? 1200 : 1800 + gears.length * 55) : gears.length === 1 ? 3000 : 4000 + gears.length * 100;
   window.setTimeout(() => finish(), autoMs);
 }
@@ -1539,6 +1752,7 @@ function render(): void {
 
   app.innerHTML = `
     <div class="app-visual-bg" style="--ui-sparkles:url('${UI_BG_SPARKLES}')" aria-hidden="true"></div>
+    <div class="app-visual-aurora" aria-hidden="true"></div>
     <div class="app-root-content" style="--ui-panel-runes:url('${UI_PANEL_RUNES}')">
     <div class="app-head">
     <div class="app-brand-row">
@@ -2756,6 +2970,7 @@ function updateEstateIdleLiveReadouts(now: number): void {
 function loop(): void {
   const now = nowMs();
   applyTick(state, now);
+  updateModernVisualFx(now);
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
     activeHub = "battle";
     saveGame(state);
@@ -3193,6 +3408,10 @@ function loop(): void {
 
 function init(): void {
   const t = nowMs();
+  initPixiFxLayer();
+  bindModernFxInteraction();
+  bindMotionUiFx();
+  updateModernVisualFx(t);
   const offline = catchUpOffline(state, t);
   if (offline.gt(0.01)) {
     saveGame(state);

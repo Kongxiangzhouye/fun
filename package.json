@@ -13,6 +13,9 @@
   },
   "dependencies": {
     "decimal.js": "^10.4.3",
+    "gsap": "^3.14.2",
+    "motion": "^12.38.0",
+    "pixi.js": "^8.17.1",
     "seedrandom": "^3.0.5"
   },
   "devDependencies": {
