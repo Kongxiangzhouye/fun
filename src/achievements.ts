@@ -1,7 +1,6 @@
 import type { GameState } from "./types";
 import { CARDS, getCard } from "./data/cards";
 import { ALL_PET_IDS } from "./data/pets";
-import { countUniqueOwned } from "./state";
 import { addStones } from "./stones";
 
 export interface AchievementDef {
@@ -180,7 +179,7 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
     case "realm_30":
       return state.realmLevel >= 30;
     case "codex_half":
-      return countUniqueOwned(state) >= half;
+      return state.codexUnlocked.size >= half;
     case "first_ur":
       return hasUr(state);
     case "rein_1":
@@ -196,7 +195,7 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
     case "first_ssr":
       return hasSsr(state);
     case "codex_full":
-      return countUniqueOwned(state) >= CARDS.length;
+      return state.codexUnlocked.size >= CARDS.length;
     case "rein_3":
       return state.reincarnations >= 3;
     case "rein_5":

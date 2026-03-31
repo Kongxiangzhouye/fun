@@ -865,7 +865,7 @@ function fmtPlaytimeSec(sec: number): string {
 }
 
 function renderPlayerStatsBlock(st: GameState): string {
-  const unique = Object.keys(st.owned).length;
+  const unique = st.codexUnlocked.size;
   const pool = totalCardsInPool();
   const achN = st.achievementsDone.size;
   const achTotal = ACHIEVEMENTS.length;
@@ -1016,9 +1016,6 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   }
   if (!u.tabPets && u.tabDungeon) {
     unlockLines.push("「<strong>灵宠</strong>」解锁条件：幻域累计通关 15 波。");
-  }
-  if (!u.footerTools && u.tabMeta) {
-    unlockLines.push("存档工具解锁条件：境界≥12，或曾轮回。入口在「养成→轮回」页底。");
   }
   return unlockLines;
 }
@@ -1564,8 +1561,8 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
   let left = "";
   let right = "";
   if (activeHub === "estate" && u.tabVein) {
-    left = mkEstate("idle", "灵脉·破境", estateSub === "idle", state.tutorialStep === 7);
-    right = mkEstate("vein", "洞府·养成", estateSub === "vein", state.tutorialStep === 6);
+    left = mkEstate("idle", "灵脉·境界升级", estateSub === "idle", state.tutorialStep === 7);
+    right = mkEstate("vein", "洞府·长期加成", estateSub === "vein", state.tutorialStep === 6);
   } else if (activeHub === "cultivate") {
     left = [
       mkCult(
@@ -1575,20 +1572,20 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
         cultivateSub === "deck",
         state.tutorialStep >= 4 && state.tutorialStep <= 5,
       ),
-      mkCult("train", "修炼·挂机", u.tabTrain, cultivateSub === "train", false),
-      mkCult("pets", "灵宠·全局", u.tabPets, cultivateSub === "pets", false),
+      mkCult("train", "修炼·自动收益", u.tabTrain, cultivateSub === "train", false),
+      mkCult("pets", "灵宠·全局加成", u.tabPets, cultivateSub === "pets", false),
     ].join("");
     right = [
-      mkCult("codex", "图鉴·札记", u.tabCodex, cultivateSub === "codex", false),
-      mkCult("meta", "轮回·元印", u.tabMeta, cultivateSub === "meta", false),
-      mkCult("ach", "功业·奖励", u.tabAch, cultivateSub === "ach", false),
+      mkCult("codex", "图鉴·规则说明", u.tabCodex, cultivateSub === "codex", false),
+      mkCult("meta", "轮回·永久强化", u.tabMeta, cultivateSub === "meta", false),
+      mkCult("ach", "成就·奖励", u.tabAch, cultivateSub === "ach", false),
     ].join("");
   } else if (activeHub === "character") {
     left = [
       mkChar("stats", "属性·总览", characterSub === "stats"),
-      mkChar("cards", "灵卡·仓库", characterSub === "cards"),
-      mkChar("gear", "行囊·装备", characterSub === "gear"),
-      mkChar("guides", "功能预览·导航", characterSub === "guides"),
+      mkChar("cards", "卡牌·仓库", characterSub === "cards"),
+      mkChar("gear", "装备·背包", characterSub === "gear"),
+      mkChar("guides", "功能·指引", characterSub === "guides"),
     ].join("");
   }
   if (!left && !right) return "";
@@ -1612,7 +1609,7 @@ function renderDiscoverabilityHint(): string {
         text = "常用入口：规则说明看「养成→图鉴·札记」；若找不到功能，去「角色→功能预览·导航」。";
         break;
       case "meta":
-        text = "常用入口：轮回与元印在此页；保存/导出/导入存档在本页最下方。";
+        text = "常用入口：轮回=重开本轮并换永久加成；保存/导出/导入存档在「角色」页最下方。";
         break;
       case "ach":
         text = "常用入口：奖励自动发放；若不清楚玩法入口，先看「角色→功能预览·导航」。";
@@ -1629,14 +1626,14 @@ function renderDiscoverabilityHint(): string {
     } else if (characterSub === "gear") {
       text = "常用入口：装备产出在底部「抽卡→铸灵池」；强化/精炼/卸下在本页行囊。";
     } else if (characterSub === "guides") {
-      text = "常用入口：这里专门告诉你“功能在哪”；遇到找不到入口先来这里。";
+      text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在本页最下方。";
     }
   } else if (activeHub === "gacha") {
     text = "常用入口：灵卡池=卡牌，铸灵池=装备；自动分解开关在本页底部。";
   } else if (activeHub === "estate") {
-    text = "常用入口：灵脉负责破境，洞府负责常驻增益；两条线可并行。";
+    text = "常用入口：灵脉=升级境界，洞府=长期加成；两条线可并行。";
   } else if (activeHub === "battle") {
-    text = "常用入口：进本与复刷都在此页；详细机制在「养成→图鉴·札记」。";
+    text = "常用入口：这里就是副本（幻域）；进本与复刷都在此页。";
   }
   if (!text) return "";
   return `<p class="hint sm discoverability-hint">${text}</p>`;
@@ -1648,9 +1645,9 @@ function renderBottomNav(u: ReturnType<typeof getUiUnlocks>): string {
   return `<nav class="app-bottom-nav" role="navigation" aria-label="主导航">
     ${item("character", "角色", false, false)}
     ${item("cultivate", "养成", false, state.tutorialStep >= 4 && state.tutorialStep <= 5)}
-    ${item("battle", "幻域", !u.tabDungeon, false)}
+    ${item("battle", "幻域·副本", !u.tabDungeon, false)}
     ${item("gacha", "抽卡", false, state.tutorialStep === 2 || state.tutorialStep === 3)}
-    ${item("estate", "灵府", false, state.tutorialStep === 6 || state.tutorialStep === 7)}
+    ${item("estate", "灵府·成长", false, state.tutorialStep === 6 || state.tutorialStep === 7)}
   </nav>`;
 }
 
@@ -1728,9 +1725,9 @@ function render(): void {
   const unlockLines = collectUnlockHintLines(u);
   const unlockDetailsBlock = renderUnlockHintsDetailsBlock(unlockLines);
 
-  /** 仅存于「养成 → 轮回」页底，避免全主导航各页都出现一排存档条 */
+  /** 存档工具前期可用：放在「角色」页底；轮回页保留一份，照顾老玩家路径记忆 */
   const showFooterTools =
-    u.footerTools && activeHub === "cultivate" && cultivateSub === "meta";
+    activeHub === "character" || (activeHub === "cultivate" && cultivateSub === "meta");
   const footerHtml = showFooterTools
     ? `<div class="footer-tools">
       <button class="btn" type="button" id="btn-save">保存到本机</button>
@@ -1798,7 +1795,7 @@ function qoLRow(label: string, kind: keyof QoLFlags, desc: string): string {
 
 function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<typeof getUiUnlocks>): string {
   const codex = totalCardsInPool();
-  const unique = Object.keys(state.owned).length;
+  const unique = state.codexUnlocked.size;
   const now = nowMs();
   const huiLingM = veinHuiLingMult(state.vein.huiLing).toFixed(2);
   const lingXiM = veinLingXiMult(state.vein.lingXi).toFixed(2);
@@ -3377,7 +3374,7 @@ function loop(): void {
   if (pReinc) pReinc.textContent = String(state.reincarnations);
   const pCodex = document.getElementById("ps-codex");
   if (pCodex) {
-    const uniq = Object.keys(state.owned).length;
+    const uniq = state.codexUnlocked.size;
     pCodex.textContent = `${uniq} / ${pool}`;
   }
   const pAch = document.getElementById("ps-ach");

@@ -1,13 +1,12 @@
 import type { GameState } from "./types";
 import { REINCARNATION_REALM_REQ } from "./types";
-import { countUniqueOwned } from "./state";
 import { totalCardsInPool } from "./storage";
 
 /** 灵脉页「下一探索」短句，增强目标感（纯文案，不改数值） */
 export function explorationHints(state: GameState): string[] {
   const out: string[] = [];
   const pool = totalCardsInPool();
-  const n = countUniqueOwned(state);
+  const n = state.codexUnlocked.size;
   if (n < pool) {
     out.push(`图鉴 ${n}/${pool}：新卡略增全局灵石（有上限）。`);
   }

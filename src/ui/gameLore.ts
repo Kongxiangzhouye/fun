@@ -9,6 +9,17 @@ export function renderGameLoreHtml(): string {
       <h3 class="sub-h game-lore-title">修行札记</h3>
       <p class="hint sm game-lore-lead">下列为机制细则；日常游玩只需看各页顶部的短提示即可。</p>
 
+      <details class="game-lore-block" open>
+        <summary>术语速查（白话版）</summary>
+        <ul class="game-lore-list">
+          <li><strong>幻域</strong> = 副本；刷怪拿资源。</li>
+          <li><strong>破境</strong> = 升级境界；提升基础强度并解锁功能。</li>
+          <li><strong>轮回</strong> = 重开本轮；会重置部分进度，但保留永久向强化。</li>
+          <li><strong>洞府</strong> = 永久成长线；投入后跨轮回保留。</li>
+          <li><strong>灵卡</strong> = 卡牌；上阵后提供产出与战斗效果。</li>
+        </ul>
+      </details>
+
       <details class="game-lore-block">
         <summary>资源与灵石分流</summary>
         <ul class="game-lore-list">

@@ -56,6 +56,6 @@ export function getUiUnlocks(state: GameState): {
     biGuan: rl >= 6,
     gachaResonance: pulls >= 2,
     gachaRates: pulls >= 4,
-    footerTools: rl >= 12 || state.reincarnations >= 1,
+    footerTools: true,
   };
 }

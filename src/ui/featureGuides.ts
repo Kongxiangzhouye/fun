@@ -72,8 +72,8 @@ const COPY: Record<
   },
   footer: {
     title: "存档工具已解锁",
-    body: "在「<strong>养成 → 轮回·元印</strong>」页底可封存、导出、导入存档。",
-    tabHint: "入口：底部「养成 → 轮回·元印」。",
+    body: "在「<strong>角色</strong>」页最下方可保存到本机、导出与导入存档。",
+    tabHint: "入口：底部「角色」，拉到页底。",
   },
 };
 

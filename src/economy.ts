@@ -2,7 +2,6 @@ import Decimal from "decimal.js";
 import type { GameState } from "./types";
 import { DECK_SIZE, LEVEL_COST_BASE, LEVEL_COST_GAMMA, MAX_CARD_LEVEL } from "./types";
 import { getCard } from "./data/cards";
-import { countUniqueOwned } from "./state";
 import { idleLingXiFactor } from "./inGameClock";
 import { starMult } from "./cardStats";
 import { computeDeckProdDecimal } from "./deckSynergy";
@@ -60,7 +59,7 @@ export function incomePerSecond(state: GameState, totalCardsInPool: number): Dec
   const base = realmBaseIncome(state.realmLevel);
   const realmExtraPct = deckRealmBonusSum(state) / 100;
   const realmMult = new Decimal(1).plus(realmExtraPct);
-  const codex = new Decimal(1).plus(codexBonusPct(countUniqueOwned(state), totalCardsInPool) / 100);
+  const codex = new Decimal(1).plus(codexBonusPct(state.codexUnlocked.size, totalCardsInPool) / 100);
   const metaIdle = new Decimal(1).plus(state.meta.idleMult * 0.08);
   const metaStone = new Decimal(1).plus(state.meta.stoneMult * 0.06);
   const rein = new Decimal(1).plus(state.reincarnations * 0.04);
@@ -93,7 +92,7 @@ export function incomeBreakdownForDisplay(
   const base = realmBaseIncome(state.realmLevel);
   const realmExtraPct = deckRealmBonusSum(state) / 100;
   const realmMult = new Decimal(1).plus(realmExtraPct);
-  const codex = new Decimal(1).plus(codexBonusPct(countUniqueOwned(state), totalCardsInPool) / 100);
+  const codex = new Decimal(1).plus(codexBonusPct(state.codexUnlocked.size, totalCardsInPool) / 100);
   const metaIdle = new Decimal(1).plus(state.meta.idleMult * 0.08);
   const metaStone = new Decimal(1).plus(state.meta.stoneMult * 0.06);
   const rein = new Decimal(1).plus(state.reincarnations * 0.04);
