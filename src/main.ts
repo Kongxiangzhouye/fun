@@ -85,6 +85,9 @@ import {
   UI_STONE,
   UI_ESSENCE,
   UI_REALM,
+  UI_DAO,
+  UI_ZAO,
+  UI_POWER,
   UI_LING_SHA,
   UI_XUAN_TIE,
   RARITY_BADGE_SSR,
@@ -221,6 +224,7 @@ let activeHub: HubId = "estate";
 let estateSub: EstateSub = "idle";
 let cultivateSub: CultivateSub = "deck";
 let characterSub: CharacterSub = "stats";
+let topBarExtrasExpanded = false;
 /** 主循环间隔：过小会增加 CPU，过大则幻域位移像「瞬移」跨格 */
 const LOOP_INTERVAL_MS = 50;
 
@@ -438,6 +442,7 @@ const DODGE_FAIL_TOAST_GAP_MS = 900;
 let lastDodgeFailToastAt = 0;
 const AUTO_ENTER_FAIL_TOAST_GAP_MS = 3000;
 let lastAutoEnterFailToastAt = 0;
+let lastAutoEnterFailReason = "";
 let lastCombatPower = 0;
 const COMBAT_POWER_POPUP_DURATION_MS = 1000;
 const COMBAT_POWER_POPUP_HOLD_MS = 520;
@@ -535,13 +540,25 @@ function tryQueueDungeonDodgeWithFeedback(): void {
 }
 
 function maybeToastAutoEnterFailure(now: number): void {
-  if (!state.dungeonSanctuaryAutoEnter || !state.dungeonSanctuaryMode || state.dungeon.active) return;
-  if (now - lastAutoEnterFailToastAt < AUTO_ENTER_FAIL_TOAST_GAP_MS) return;
+  if (!state.dungeonSanctuaryAutoEnter || !state.dungeonSanctuaryMode || state.dungeon.active) {
+    lastAutoEnterFailReason = "";
+    return;
+  }
   const w = state.dungeonPortalTargetWave;
-  if (w < 1) return;
+  if (w < 1) {
+    lastAutoEnterFailReason = "";
+    return;
+  }
   const pmax = playerMaxHp(state);
-  if (state.combatHpCurrent < pmax - 0.25) return;
+  if (state.combatHpCurrent < pmax - 0.25) {
+    lastAutoEnterFailReason = "";
+    return;
+  }
   if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
+    const reason = "not-eligible";
+    if (reason === lastAutoEnterFailReason) return;
+    if (now - lastAutoEnterFailToastAt < AUTO_ENTER_FAIL_TOAST_GAP_MS) return;
+    lastAutoEnterFailReason = reason;
     lastAutoEnterFailToastAt = now;
     toast("自动进本未触发：当前条件不满足（冷却或关卡不可进）。");
     return;
@@ -549,9 +566,15 @@ function maybeToastAutoEnterFailure(now: number): void {
   const rm = computeDungeonRepeatMode(state, w);
   const fee = dungeonEntryFeeEssence(state, w, rm);
   if (state.summonEssence < fee) {
+    const reason = `essence-short:${fee}`;
+    if (reason === lastAutoEnterFailReason) return;
+    if (now - lastAutoEnterFailToastAt < AUTO_ENTER_FAIL_TOAST_GAP_MS) return;
+    lastAutoEnterFailReason = reason;
     lastAutoEnterFailToastAt = now;
     toast(`自动进本未触发：唤灵髓不足（需 ${fee}）。`);
+    return;
   }
+  lastAutoEnterFailReason = "";
 }
 
 /** 顶栏货币：长按显示说明（仅长按，避免与日常操作冲突） */
@@ -1504,40 +1527,80 @@ function renderTopBar(
 ): string {
   let extra = "";
   if (u.statDao) {
-    extra += `<span class="res-chip res-chip-extra" data-currency-hint-id="dao"><span class="res-lbl">道韵</span><strong id="pill-dao">${fmt(state.daoEssence)}</strong></span>`;
+    extra += `<span class="res-chip res-chip-extra" data-currency-hint-id="dao">
+      <img class="res-ico" src="${UI_DAO}" alt="" width="20" height="20" />
+      <span class="res-chip-stack">
+        <span class="res-lbl">道韵</span>
+        <strong id="pill-dao">${fmt(state.daoEssence)}</strong>
+      </span>
+    </span>`;
   }
   if (u.statZao) {
-    extra += `<span class="res-chip res-chip-extra" data-currency-hint-id="zao"><span class="res-lbl">玉</span><strong id="pill-zao">${state.zaoHuaYu}</strong></span>`;
+    extra += `<span class="res-chip res-chip-extra" data-currency-hint-id="zao">
+      <img class="res-ico" src="${UI_ZAO}" alt="" width="20" height="20" />
+      <span class="res-chip-stack">
+        <span class="res-lbl">造化玉</span>
+        <strong id="pill-zao">${state.zaoHuaYu}</strong>
+      </span>
+    </span>`;
   }
   if (u.tabGear) {
-    extra += `<span class="res-chip res-chip-extra" data-currency-hint-id="lingSha"><img class="res-ico" src="${UI_LING_SHA}" alt="" width="20" height="20" /><strong id="pill-ling-sha">${state.lingSha}</strong></span>`;
-    extra += `<span class="res-chip res-chip-extra" data-currency-hint-id="xuanTie"><img class="res-ico" src="${UI_XUAN_TIE}" alt="" width="20" height="20" /><strong id="pill-xuan-tie">${state.xuanTie}</strong></span>`;
+    extra += `<span class="res-chip res-chip-extra" data-currency-hint-id="lingSha">
+      <img class="res-ico" src="${UI_LING_SHA}" alt="" width="20" height="20" />
+      <span class="res-chip-stack">
+        <span class="res-lbl">灵砂</span>
+        <strong id="pill-ling-sha">${state.lingSha}</strong>
+      </span>
+    </span>`;
+    extra += `<span class="res-chip res-chip-extra" data-currency-hint-id="xuanTie">
+      <img class="res-ico" src="${UI_XUAN_TIE}" alt="" width="20" height="20" />
+      <span class="res-chip-stack">
+        <span class="res-lbl">玄铁</span>
+        <strong id="pill-xuan-tie">${state.xuanTie}</strong>
+      </span>
+    </span>`;
   }
+  const hasExtra = extra.length > 0;
+  const extraWrap = hasExtra
+    ? `<div class="resource-strip-extra${topBarExtrasExpanded ? " expanded" : ""}" id="top-bar-extra">${extra}</div>`
+    : "";
+  const moreBtn = hasExtra
+    ? `<button type="button" class="res-chip res-chip-more" id="btn-topbar-more" aria-expanded="${topBarExtrasExpanded ? "true" : "false"}">${topBarExtrasExpanded ? "收起" : "更多"}</button>`
+    : "";
   return `
   <div class="resource-strip${goldClass}" id="top-bar" title="长按货币图标查看用途">
-    <span class="res-chip res-chip-stone" data-currency-hint-id="stone">
+    <span class="res-chip res-chip-key res-chip-stone" data-currency-hint-id="stone">
       <img class="res-ico" src="${UI_STONE}" alt="" width="20" height="20" />
       <span class="res-chip-stack">
+        <span class="res-lbl">灵石</span>
         <strong id="pill-stones">${fmtDecimal(stones(state))}</strong>
         <span class="res-delta" id="pill-stones-delta">+${fmtDecimal(ips)}/秒</span>
       </span>
     </span>
-    <span class="res-chip res-chip-essence" data-currency-hint-id="essence">
+    <span class="res-chip res-chip-key res-chip-essence" data-currency-hint-id="essence">
       <img class="res-ico" src="${UI_ESSENCE}" alt="" width="20" height="20" />
       <span class="res-chip-stack">
+        <span class="res-lbl">灵髓</span>
         <strong id="pill-essence">${state.summonEssence}</strong>
         <span class="res-delta res-delta-ess" id="pill-essence-delta">+${essenceIncomePerSecondFromResonance(state).toFixed(3)}/秒</span>
       </span>
     </span>
-    <span class="res-chip" data-currency-hint-id="realm">
+    <span class="res-chip res-chip-key" data-currency-hint-id="realm">
       <img class="res-ico" src="${UI_REALM}" alt="" width="20" height="20" />
-      <strong id="pill-realm">${state.realmLevel}</strong>
+      <span class="res-chip-stack">
+        <span class="res-lbl">境界</span>
+        <strong id="pill-realm">${state.realmLevel}</strong>
+      </span>
     </span>
-    <span class="res-chip res-chip-power" data-currency-hint-id="power">
-      <span class="res-lbl">战力</span>
-      <strong id="pill-power">${fmtNumZh(playerCombatPower(state))}</strong>
+    <span class="res-chip res-chip-key res-chip-power" data-currency-hint-id="power">
+      <img class="res-ico" src="${UI_POWER}" alt="" width="20" height="20" />
+      <span class="res-chip-stack">
+        <span class="res-lbl">战力</span>
+        <strong id="pill-power">${fmtNumZh(playerCombatPower(state))}</strong>
+      </span>
     </span>
-    ${extra}
+    ${moreBtn}
+    ${extraWrap}
   </div>`;
 }
 
@@ -2287,6 +2350,11 @@ function bindEvents(rb: Decimal, _slots: number): void {
       if ((el as HTMLButtonElement).disabled) return;
       applyHub(hub);
     });
+  });
+
+  document.getElementById("btn-topbar-more")?.addEventListener("click", () => {
+    topBarExtrasExpanded = !topBarExtrasExpanded;
+    render();
   });
 
   document.querySelectorAll("[data-estate-sub]").forEach((el) => {
@@ -3087,6 +3155,7 @@ function loop(): void {
   if (!mobileLiteFx) updateModernVisualFx(now);
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
     activeHub = "battle";
+    lastAutoEnterFailReason = "";
     saveGame(state);
     toast(`灵息已盈，已传送至第 ${state.dungeon.wave} 关`);
     render();

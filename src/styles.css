@@ -995,6 +995,10 @@ h1 {
   min-width: min(100%, 280px);
 }
 
+.resource-strip-extra {
+  display: contents;
+}
+
 .resource-strip.app-gold {
   filter: none;
 }
@@ -1018,11 +1022,23 @@ h1 {
   user-select: none;
 }
 
+.res-chip-more {
+  cursor: pointer;
+  border-style: dashed;
+  color: #cdd9f8;
+}
+
 .res-chip strong {
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: 0.95rem;
   color: #f0e6c8;
+}
+
+.res-chip .res-lbl {
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.03em;
 }
 
 .res-chip-stack {
@@ -1161,16 +1177,9 @@ h1 {
   }
 }
 
-.res-chip-extra .res-lbl {
-  font-size: 0.72rem;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-}
-
+.res-chip-extra .res-lbl,
 .res-chip-power .res-lbl {
-  font-size: 0.72rem;
-  color: var(--muted);
-  letter-spacing: 0.04em;
+  font-size: 0.7rem;
 }
 
 .combat-power-popup {
@@ -1428,6 +1437,7 @@ h1 {
     flex: 0 0 auto;
     gap: 4px;
     padding: 5px 8px 5px 6px;
+    min-height: 38px;
   }
 
   .resource-strip .res-chip strong {
@@ -1440,6 +1450,27 @@ h1 {
   }
 
   .resource-strip .res-chip-stack .res-delta {
+    display: block;
+    font-size: 0.6rem;
+    line-height: 1.08;
+    letter-spacing: 0.01em;
+  }
+
+  .resource-strip .res-chip-more {
+    min-width: 46px;
+    justify-content: center;
+    font-size: 0.78rem;
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .resource-strip-extra {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .resource-strip-extra:not(.expanded) {
     display: none;
   }
 

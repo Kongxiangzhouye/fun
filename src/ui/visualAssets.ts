@@ -14,6 +14,9 @@ function asset(name: string): string {
 export const UI_STONE = asset("ui-stone.png");
 export const UI_ESSENCE = asset("ui-essence.png");
 export const UI_REALM = asset("ui-realm.png");
+export const UI_DAO = asset("ui-dao.svg");
+export const UI_ZAO = asset("ui-zao.svg");
+export const UI_POWER = asset("ui-power.svg");
 export const UI_LING_SHA = asset("ui-ling-sha.svg");
 export const UI_XUAN_TIE = asset("ui-xuan-tie.svg");
 
