@@ -62,7 +62,7 @@ export function incomePerSecond(state: GameState, totalCardsInPool: number): Dec
   const codex = new Decimal(1).plus(codexBonusPct(state.codexUnlocked.size, totalCardsInPool) / 100);
   const metaIdle = new Decimal(1).plus(state.meta.idleMult * 0.08);
   const metaStone = new Decimal(1).plus(state.meta.stoneMult * 0.06);
-  const rein = new Decimal(1).plus(state.reincarnations * 0.04);
+  const rein = new Decimal(1).plus(state.reincarnations * 0.06);
   const gather = new Decimal(1).plus(state.skills.gathering.level * 0.0045);
   const skillsStone = new Decimal(1).plus(stoneIncomeBonusFromSkills(state));
 
@@ -95,7 +95,7 @@ export function incomeBreakdownForDisplay(
   const codex = new Decimal(1).plus(codexBonusPct(state.codexUnlocked.size, totalCardsInPool) / 100);
   const metaIdle = new Decimal(1).plus(state.meta.idleMult * 0.08);
   const metaStone = new Decimal(1).plus(state.meta.stoneMult * 0.06);
-  const rein = new Decimal(1).plus(state.reincarnations * 0.04);
+  const rein = new Decimal(1).plus(state.reincarnations * 0.06);
   const gather = new Decimal(1).plus(state.skills.gathering.level * 0.0045);
   const deckProd = computeDeckProdDecimal(state);
   const hui = new Decimal(veinHuiLingMult(state.vein.huiLing));

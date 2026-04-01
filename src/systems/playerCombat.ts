@@ -138,6 +138,26 @@ export function playerExpectedDps(state: GameState): number {
   return (atk * cf * playerDungeonAttackSpeedMult(state)) / PLAYER_DUNGEON_HIT_INTERVAL_SEC;
 }
 
+/** 顶栏展示用综合战力（用于体现角色攻防成长趋势） */
+export function playerCombatPower(state: GameState): number {
+  const atk = playerAttack(state);
+  const dps = playerExpectedDps(state);
+  const hp = playerMaxHp(state);
+  const def = playerDefenseRating(state);
+  const cc = playerCritChance(state);
+  const cm = playerCritMult(state);
+  const dodge = playerDungeonDodgeChance(state);
+  const score =
+    dps * 3.2 +
+    atk * 1.4 +
+    hp * 0.9 +
+    def * 7.5 +
+    cc * 220 +
+    Math.max(0, cm - 1) * 180 +
+    dodge * 240;
+  return Math.max(1, Math.floor(score));
+}
+
 /** 用于木系等：以「修行时长」替代已移除的周天概念 */
 export function woodAdventureDays(state: GameState): number {
   return Math.max(1, 1 + Math.floor(state.playtimeSec / 240));

@@ -13,10 +13,10 @@ export function daoEssenceGainOnReincarnate(state: GameState): number {
   const peak = new Decimal(state.peakSpiritStonesThisLife || "0");
   let logPart = 0;
   if (peak.gt(1)) {
-    logPart = Math.max(0, Math.floor(peak.log(10).times(2.8).toNumber()));
+    logPart = Math.max(0, Math.floor(peak.log(10).times(3.8).toNumber()));
   }
-  const cardBonus = Math.floor(Object.keys(state.owned).length * 0.15);
-  return Math.max(1, logPart + cardBonus);
+  const cardBonus = Math.floor(Object.keys(state.owned).length * 0.28);
+  return Math.max(3, logPart + cardBonus);
 }
 
 export function performReincarnate(state: GameState): void {
@@ -28,8 +28,7 @@ export function performReincarnate(state: GameState): void {
   state.spiritStones = "0";
   state.peakSpiritStonesThisLife = "0";
   state.realmLevel = 1;
-  state.tickets = 0;
-  state.summonEssence = 40 + state.meta.ticketRegen * 15;
+  state.summonEssence = 80 + state.meta.ticketRegen * 24;
   state.owned = {};
   state.deck = Array.from({ length: DECK_SIZE }, () => null);
   state.gearInventory = {};
@@ -96,7 +95,6 @@ export function performReincarnate(state: GameState): void {
   state.pitySsrSoft = 0;
   state.pullsThisLife = 0;
   state.wishResonance = 0;
-  state.wishTicketsThisCycle = 0;
   state.combatHpCurrent = playerMaxHp(state);
   state.dungeonSanctuaryMode = false;
   state.dungeonPortalTargetWave = 0;
@@ -107,14 +105,14 @@ export const META_COST_BASE = [8, 10, 12, 15, 18];
 
 export function metaUpgradeCost(kind: keyof GameState["meta"], level: number): number {
   const bases: Record<keyof GameState["meta"], number> = {
-    idleMult: 10,
-    gachaLuck: 12,
-    deckSlots: 25,
-    ticketRegen: 15,
-    stoneMult: 14,
+    idleMult: 8,
+    gachaLuck: 9,
+    deckSlots: 18,
+    ticketRegen: 10,
+    stoneMult: 10,
   };
   const b = bases[kind];
-  return Math.floor(b * Math.pow(1.65, level));
+  return Math.floor(b * Math.pow(1.52, level));
 }
 
 export function buyMeta(state: GameState, kind: keyof GameState["meta"]): boolean {

@@ -108,6 +108,7 @@ import {
   essenceFindMult,
   playerResAllSum,
   playerExpectedDps,
+  playerCombatPower,
   playerDefenseRating,
   playerIncomingDamageMult,
   playerDungeonDodgeChance,
@@ -214,7 +215,7 @@ let veinHelpDocListenerBound = false;
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
 type EstateSub = "idle" | "vein";
 type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach";
-type CharacterSub = "stats" | "cards" | "gear" | "guides";
+type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive";
 
 let activeHub: HubId = "estate";
 let estateSub: EstateSub = "idle";
@@ -437,6 +438,17 @@ const DODGE_FAIL_TOAST_GAP_MS = 900;
 let lastDodgeFailToastAt = 0;
 const AUTO_ENTER_FAIL_TOAST_GAP_MS = 3000;
 let lastAutoEnterFailToastAt = 0;
+let lastCombatPower = 0;
+const COMBAT_POWER_POPUP_DURATION_MS = 1000;
+const COMBAT_POWER_POPUP_HOLD_MS = 520;
+let combatPowerPopupEl: HTMLDivElement | null = null;
+let combatPowerPopupBaseEl: HTMLSpanElement | null = null;
+let combatPowerPopupDeltaEl: HTMLSpanElement | null = null;
+let combatPowerPopupToken = 0;
+let combatPowerPopupHideTimer = 0;
+let combatPowerPopupAnim:
+  | { startAt: number; startBase: number; endBase: number; startDelta: number; endDelta: number; token: number }
+  | null = null;
 
 /** 顶栏货币/条目：长按或右键查看用途（文案供 toast 多行展示） */
 const CURRENCY_HINTS: Record<string, string> = {
@@ -449,6 +461,8 @@ const CURRENCY_HINTS: Record<string, string> = {
   zao: "造化玉\n\n用于解锁便利功能。可通过成就等方式获得。",
   lingSha: "灵砂\n\n灵卡相关资源。升阶灵卡时除灵石外需消耗灵砂；分解灵卡可获得灵砂。",
   xuanTie: "玄铁\n\n装备相关资源。铸灵装备强化消耗玄铁；分解装备可获得玄铁。",
+  power:
+    "战力\n\n综合攻、防、生命、暴击、闪避等战斗属性的总分。会随装备、境界、技能、轮回、灵宠等实时变化。",
 };
 
 function appendToastProgress(el: HTMLElement, durationMs: number): void {
@@ -1519,6 +1533,13 @@ function renderTopBar(
       <img class="res-ico" src="${UI_REALM}" alt="" width="20" height="20" />
       <strong id="pill-realm">${state.realmLevel}</strong>
     </span>
+    <span class="res-chip res-chip-power" data-currency-hint-id="power">
+      <span class="res-lbl">战力</span>
+      <span class="res-chip-stack">
+        <strong id="pill-power">${fmtNumZh(playerCombatPower(state))}</strong>
+        <span class="res-delta res-delta-power" id="pill-power-delta">—</span>
+      </span>
+    </span>
     ${extra}
   </div>`;
 }
@@ -1586,6 +1607,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
       mkChar("cards", "卡牌·仓库", characterSub === "cards"),
       mkChar("gear", "装备·背包", characterSub === "gear"),
       mkChar("guides", "功能·指引", characterSub === "guides"),
+      mkChar("archive", "存档·管理", characterSub === "archive"),
     ].join("");
   }
   if (!left && !right) return "";
@@ -1609,7 +1631,7 @@ function renderDiscoverabilityHint(): string {
         text = "常用入口：规则说明看「养成→图鉴·札记」；若找不到功能，去「角色→功能预览·导航」。";
         break;
       case "meta":
-        text = "常用入口：轮回=重开本轮并换永久加成；保存/导出/导入存档在「角色」页最下方。";
+        text = "常用入口：轮回=重开本轮并换永久加成；保存/导出/导入存档在「角色→存档·管理」。";
         break;
       case "ach":
         text = "常用入口：奖励自动发放；若不清楚玩法入口，先看「角色→功能预览·导航」。";
@@ -1626,7 +1648,9 @@ function renderDiscoverabilityHint(): string {
     } else if (characterSub === "gear") {
       text = "常用入口：装备产出在底部「抽卡→铸灵池」；强化/精炼/卸下在本页行囊。";
     } else if (characterSub === "guides") {
-      text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在本页最下方。";
+      text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在「角色→存档·管理」。";
+    } else if (characterSub === "archive") {
+      text = "常用入口：这里集中管理保存/导出/导入与重置存档。";
     }
   } else if (activeHub === "gacha") {
     text = "常用入口：灵卡池=卡牌，铸灵池=装备；自动分解开关在本页底部。";
@@ -1661,10 +1685,30 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
   if (characterSub === "guides") {
     return `<div class="character-hub-root">${featureGuidePanelHtml(state, u)}</div>`;
   }
+  if (characterSub === "archive") {
+    return `<div class="character-hub-root">${renderSaveToolsPanel()}</div>`;
+  }
   const gearBlock = u.tabGear
     ? renderGearPanel(state, refineTargetId, gearDetailSlot)
     : `<section class="panel character-hub-gear-locked"><p class="hint">解锁条件：获得 1 件装备，或累计抽卡≥10。解锁后开放铸灵池和行囊装备管理。</p></section>`;
   return `<div class="character-hub-root">${gearBlock}</div>`;
+}
+
+function renderSaveToolsPanel(): string {
+  return `<section class="panel save-tools-panel">
+    <h2>存档管理</h2>
+    <p class="hint">保存/导出/导入与重置都集中在这里。重置前建议先导出备份。</p>
+    <div class="footer-tools">
+      <button class="btn" type="button" id="btn-save">保存到本机</button>
+      <button class="btn" type="button" id="btn-export">导出存档字符串</button>
+      <input type="text" id="import-input" class="import-input" placeholder="粘贴存档字符串" />
+      <button class="btn" type="button" id="btn-import">导入存档</button>
+    </div>
+    <div class="reset-strip">
+      <button type="button" class="btn btn-danger" id="btn-reset-world">重置存档</button>
+      <span class="reset-strip-hint">会清空当前存档并从头开始，建议先导出备份</span>
+    </div>
+  </section>`;
 }
 
 function renderHubContent(
@@ -1725,18 +1769,6 @@ function render(): void {
   const unlockLines = collectUnlockHintLines(u);
   const unlockDetailsBlock = renderUnlockHintsDetailsBlock(unlockLines);
 
-  /** 存档工具前期可用：放在「角色」页底；轮回页保留一份，照顾老玩家路径记忆 */
-  const showFooterTools =
-    activeHub === "character" || (activeHub === "cultivate" && cultivateSub === "meta");
-  const footerHtml = showFooterTools
-    ? `<div class="footer-tools">
-      <button class="btn" type="button" id="btn-save">保存到本机</button>
-      <button class="btn" type="button" id="btn-export">导出存档字符串</button>
-      <input type="text" id="import-input" class="import-input" placeholder="粘贴存档字符串" />
-      <button class="btn" type="button" id="btn-import">导入存档</button>
-    </div>`
-    : "";
-
   app.innerHTML = `
     <div class="app-visual-bg" style="--ui-sparkles:url('${UI_BG_SPARKLES}')" aria-hidden="true"></div>
     <div class="app-visual-aurora" aria-hidden="true"></div>
@@ -1761,15 +1793,6 @@ function render(): void {
     </div>
     </main>
 
-    ${footerHtml}
-    ${
-      activeHub === "character"
-        ? `<div class="reset-strip">
-      <button type="button" class="btn btn-danger" id="btn-reset-world">重置存档</button>
-      <span class="reset-strip-hint">会清空当前存档并从头开始，建议先导出备份</span>
-    </div>`
-        : ""
-    }
     ${renderTutorialBlock()}
     ${renderFlyOverlay()}
     ${renderBottomNav(u)}
@@ -2299,9 +2322,9 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.querySelectorAll("[data-character-sub]").forEach((el) => {
     el.addEventListener("click", () => {
       const s = (el as HTMLElement).dataset.characterSub as CharacterSub | undefined;
-      if (s !== "stats" && s !== "cards" && s !== "gear" && s !== "guides") return;
+      if (s !== "stats" && s !== "cards" && s !== "gear" && s !== "guides" && s !== "archive") return;
       characterSub = s;
-      if (s === "stats" || s === "cards" || s === "guides") gearDetailSlot = null;
+      if (s !== "gear") gearDetailSlot = null;
       render();
     });
   });
@@ -2883,6 +2906,116 @@ function setPillStrong(pillId: string, text: string): void {
   if (strong) strong.textContent = text;
 }
 
+function easeOutCubic01(t: number): number {
+  const x = Math.max(0, Math.min(1, t));
+  const y = 1 - x;
+  return 1 - y * y * y;
+}
+
+function ensureCombatPowerPopup(): void {
+  if (combatPowerPopupEl) return;
+  if (typeof document === "undefined") return;
+  const el = document.createElement("div");
+  el.id = "combat-power-popup";
+  el.className = "combat-power-popup";
+  el.setAttribute("aria-live", "polite");
+  el.setAttribute("aria-atomic", "true");
+  el.innerHTML = `<div class="combat-power-popup-inner"><span class="combat-power-popup-base" id="combat-power-popup-base">0</span><span class="combat-power-popup-delta" id="combat-power-popup-delta">+0</span></div>`;
+  document.body.appendChild(el);
+  combatPowerPopupEl = el;
+  combatPowerPopupBaseEl = el.querySelector("#combat-power-popup-base");
+  combatPowerPopupDeltaEl = el.querySelector("#combat-power-popup-delta");
+}
+
+function readCombatPowerPopupSnapshot(now: number): { base: number; delta: number } | null {
+  if (!combatPowerPopupAnim) return null;
+  const t = Math.min(1, (now - combatPowerPopupAnim.startAt) / COMBAT_POWER_POPUP_DURATION_MS);
+  const e = easeOutCubic01(t);
+  return {
+    base: combatPowerPopupAnim.startBase + (combatPowerPopupAnim.endBase - combatPowerPopupAnim.startBase) * e,
+    delta: combatPowerPopupAnim.startDelta + (combatPowerPopupAnim.endDelta - combatPowerPopupAnim.startDelta) * e,
+  };
+}
+
+function renderCombatPowerPopup(base: number, delta: number): void {
+  ensureCombatPowerPopup();
+  if (!combatPowerPopupEl || !combatPowerPopupBaseEl || !combatPowerPopupDeltaEl) return;
+  const b = Math.max(0, Math.round(base));
+  const d = Math.round(delta);
+  combatPowerPopupBaseEl.textContent = fmtNumZh(b);
+  combatPowerPopupDeltaEl.textContent = `${d >= 0 ? "+" : "-"}${fmtNumZh(Math.abs(d))}`;
+  combatPowerPopupDeltaEl.classList.remove("is-up", "is-down");
+  combatPowerPopupDeltaEl.classList.add(d >= 0 ? "is-up" : "is-down");
+}
+
+function animateCombatPowerPopup(fromPower: number, toPower: number): void {
+  if (fromPower === toPower) return;
+  ensureCombatPowerPopup();
+  if (!combatPowerPopupEl) return;
+  const now = nowMs();
+  const snap = readCombatPowerPopupSnapshot(now);
+  const startBase = snap ? snap.base : fromPower;
+  const endBase = toPower;
+  const startDelta = toPower - startBase;
+  const endDelta = 0;
+  combatPowerPopupToken += 1;
+  const token = combatPowerPopupToken;
+  combatPowerPopupAnim = { startAt: now, startBase, endBase, startDelta, endDelta, token };
+  if (combatPowerPopupHideTimer) {
+    window.clearTimeout(combatPowerPopupHideTimer);
+    combatPowerPopupHideTimer = 0;
+  }
+  const rising = toPower >= fromPower;
+  combatPowerPopupEl.classList.remove("fx-up", "fx-down");
+  // 强制重排，确保连续覆盖时动效可重播。
+  void combatPowerPopupEl.offsetWidth;
+  combatPowerPopupEl.classList.add(rising ? "fx-up" : "fx-down");
+  combatPowerPopupEl.classList.add("active");
+  const tick = (): void => {
+    if (!combatPowerPopupAnim || combatPowerPopupAnim.token !== token) return;
+    const curNow = nowMs();
+    const t = Math.min(1, (curNow - combatPowerPopupAnim.startAt) / COMBAT_POWER_POPUP_DURATION_MS);
+    const e = easeOutCubic01(t);
+    const base = combatPowerPopupAnim.startBase + (combatPowerPopupAnim.endBase - combatPowerPopupAnim.startBase) * e;
+    const delta = combatPowerPopupAnim.startDelta + (combatPowerPopupAnim.endDelta - combatPowerPopupAnim.startDelta) * e;
+    renderCombatPowerPopup(base, delta);
+    if (t < 1) {
+      requestAnimationFrame(tick);
+      return;
+    }
+    renderCombatPowerPopup(endBase, 0);
+    combatPowerPopupAnim = null;
+    combatPowerPopupHideTimer = window.setTimeout(() => {
+      if (combatPowerPopupEl) combatPowerPopupEl.classList.remove("active", "fx-up", "fx-down");
+      combatPowerPopupHideTimer = 0;
+    }, COMBAT_POWER_POPUP_HOLD_MS);
+  };
+  requestAnimationFrame(tick);
+}
+
+function updateCombatPowerTip(power: number): void {
+  const prev = lastCombatPower;
+  if (prev <= 0) {
+    lastCombatPower = power;
+    return;
+  }
+  const delta = power - prev;
+  if (delta === 0) return;
+  const threshold = Math.max(8, Math.floor(prev * 0.025));
+  if (Math.abs(delta) < threshold) {
+    lastCombatPower = power;
+    return;
+  }
+  const hintEl = document.getElementById("pill-power-delta");
+  if (hintEl) {
+    hintEl.textContent = `${delta > 0 ? "+" : "-"}${fmtNumZh(Math.abs(delta))}`;
+    hintEl.classList.remove("is-up", "is-down");
+    hintEl.classList.add(delta > 0 ? "is-up" : "is-down");
+  }
+  animateCombatPowerPopup(prev, power);
+  lastCombatPower = power;
+}
+
 /** 顶栏灵石/髓等 + 道韵行：局部操作后调用，避免整页 innerHTML 重绘 */
 function updateTopResourcePillsAndVigor(pool: number): void {
   const u = getUiUnlocks(state);
@@ -2901,6 +3034,9 @@ function updateTopResourcePillsAndVigor(pool: number): void {
   if (u.statDao) setPillStrong("pill-dao", fmt(state.daoEssence));
   if (u.statZao) setPillStrong("pill-zao", String(state.zaoHuaYu));
   setPillStrong("pill-realm", String(state.realmLevel));
+  const power = playerCombatPower(state);
+  setPillStrong("pill-power", fmtNumZh(power));
+  updateCombatPowerTip(power);
   const vigLine = document.querySelector(".vigor-line");
   if (vigLine) {
     const t = describeInGameUi(state).tagLine;

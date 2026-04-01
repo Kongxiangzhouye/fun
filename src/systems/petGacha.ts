@@ -48,7 +48,7 @@ export function pullPet(state: GameState): {
 
   if (had) {
     const idx = RARITY_ORDER.indexOf(def.rarity);
-    const bonusXp = 18 + Math.max(0, idx) * 14;
+    const bonusXp = 38 + Math.max(0, idx) * 26;
     addPetXp(state, def.id, bonusXp);
     return {
       ok: true,

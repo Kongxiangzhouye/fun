@@ -222,8 +222,6 @@ export interface GameState {
   peakSpiritStonesThisLife: string;
   /** 唤灵髓：抽卡唯一货币，仅副本掉落 */
   summonEssence: number;
-  /** @deprecated 迁移至 summonEssence */
-  tickets: number;
   /** 道韵：轮回货币 */
   daoEssence: number;
   /** 造化玉：QoL 解锁 */
@@ -268,8 +266,6 @@ export interface GameState {
   lastTick: number;
   /** 累计在线秒（用于统计） */
   playtimeSec: number;
-  /** @deprecated 仅迁移 */
-  dailyClaimDate: string | null;
 
   /** 固定随机：gachaSeed 字符串 + seedrandom 状态 JSON */
   rngSeed: string;
@@ -337,11 +333,6 @@ export interface GameState {
   battleSkills: Record<string, number>;
 
   wishResonance: number;
-  /** @deprecated 旧版周期计数，逻辑已移除，存档兼容保留 */
-  wishTicketsThisCycle: number;
-
-  /** @deprecated v2 迁移用，不再用于逻辑 */
-  dailyProcessedDate: string | null;
   firstOpenTodayMs: number;
   dailyStreak: number;
   lastLoginCalendarDate: string | null;
@@ -382,10 +373,6 @@ export const ESSENCE_COST_TEN = 110;
 export const ESSENCE_COST_GEAR_SINGLE = 16;
 export const ESSENCE_COST_GEAR_TEN = 145;
 
-/** @deprecated 使用 ESSENCE_COST_* */
-export const TICKET_COST_SINGLE = ESSENCE_COST_SINGLE;
-export const TICKET_COST_TEN = ESSENCE_COST_TEN;
-
 /** 轮回解锁：境界 >= 此值可轮回 */
 export const REINCARNATION_REALM_REQ = 25;
 
@@ -399,7 +386,7 @@ export const GAME_HOUR_REAL_SEC = 36;
 export const BI_GUAN_COOLDOWN_MS = 70_000;
 
 /** 吐纳：小额主动灵石，冷却 ms */
-export const TUNA_COOLDOWN_MS = 32_000;
+export const TUNA_COOLDOWN_MS = 24_000;
 
 /** 飞升数值阈值（与文档一致） */
 export const TRUE_ENDING_STONE_THRESHOLD = "1e1000";

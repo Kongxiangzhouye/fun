@@ -3,7 +3,10 @@ import { TUNA_COOLDOWN_MS } from "../types";
 import { addStones } from "../stones";
 
 export function tunaStoneReward(realmLevel: number): number {
-  return 42 + realmLevel * 15;
+  const rl = Math.max(1, Math.floor(realmLevel));
+  const linear = 72 + rl * 20;
+  const scale = Math.pow(1.035, Math.max(0, rl - 1));
+  return Math.max(1, Math.floor(linear * scale));
 }
 
 function normalizedElapsedMs(lastMs: number, nowMs: number): number {

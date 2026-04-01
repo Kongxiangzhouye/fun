@@ -8,7 +8,7 @@ export const PET_SYSTEM_UNLOCK_WAVES = 15;
 export const MAX_PET_LEVEL = 60;
 
 /** 单次唤灵消耗唤灵髓 */
-export const PET_PULL_COST = 88;
+export const PET_PULL_COST = 42;
 
 export function petSystemUnlocked(state: GameState): boolean {
   return state.dungeon.totalWavesCleared >= PET_SYSTEM_UNLOCK_WAVES;
@@ -24,15 +24,15 @@ export function petOwned(state: GameState, id: PetId): boolean {
 
 export function xpToNextPetLevel(level: number): number {
   if (level >= MAX_PET_LEVEL) return 0;
-  return 24 + level * 6;
+  return 16 + level * 3;
 }
 
 export function petFeedCost(level: number): number {
-  return 12 + Math.floor(Math.max(1, level) * 1.2);
+  return 8 + Math.floor(Math.max(1, level) * 0.9);
 }
 
 export function petFeedXpGain(level: number): number {
-  return 10 + Math.floor(Math.max(1, level) * 0.5);
+  return 16 + Math.floor(Math.max(1, level) * 1.2);
 }
 
 function clampPetProgress(p: { level: number; xp: number }): void {
@@ -54,11 +54,11 @@ function stoneFactorFromPet(def: PetDef, level: number): Decimal {
   const s = sqrtLv(level);
   const R = rarityP(def);
   if (def.bonusKind === "all") {
-    const b = 0.0015 * R * s * def.allSplit;
+    const b = 0.0024 * R * s * def.allSplit;
     return new Decimal(1).plus(b);
   }
   if (def.bonusKind === "stone") {
-    const b = 0.0015 * R * s;
+    const b = 0.0024 * R * s;
     return new Decimal(1).plus(b);
   }
   return new Decimal(1);
@@ -68,10 +68,10 @@ function dungeonAddFromPet(def: PetDef, level: number): number {
   const s = sqrtLv(level);
   const R = rarityP(def);
   if (def.bonusKind === "all") {
-    return 0.002 * R * s * def.allSplit;
+    return 0.003 * R * s * def.allSplit;
   }
   if (def.bonusKind === "dungeon_atk") {
-    return 0.002 * R * s;
+    return 0.003 * R * s;
   }
   return 0;
 }
@@ -81,10 +81,10 @@ function defenseFlatFromPet(def: PetDef, level: number): number {
   const s = sqrtLv(level);
   const R = rarityP(def);
   if (def.bonusKind === "all") {
-    return 4 + R * s * def.allSplit * 1.15;
+    return 8 + R * s * def.allSplit * 1.8;
   }
   if (def.bonusKind === "dungeon_def") {
-    return 10 + R * s * 2.6;
+    return 18 + R * s * 3.8;
   }
   return 0;
 }
@@ -93,10 +93,10 @@ function essenceFactorFromPet(def: PetDef, level: number): number {
   const s = sqrtLv(level);
   const R = rarityP(def);
   if (def.bonusKind === "all") {
-    return 1 + 0.0012 * R * s * def.allSplit;
+    return 1 + 0.0018 * R * s * def.allSplit;
   }
   if (def.bonusKind === "essence_find") {
-    return 1 + 0.0012 * R * s;
+    return 1 + 0.0018 * R * s;
   }
   return 1;
 }
@@ -241,15 +241,15 @@ export function describePetBonusesSummary(state: GameState): string {
 /** 旧 UI 兼容：按单宠等级估算展示（图鉴用） */
 export function petStoneBonusPctFromLevel(level: number): number {
   const s = sqrtLv(level);
-  return 100 * 0.0015 * s;
+  return 100 * 0.0024 * s;
 }
 
 export function petDungeonAtkBonusPctFromLevel(level: number): number {
   const s = sqrtLv(level);
-  return 100 * 0.002 * s;
+  return 100 * 0.003 * s;
 }
 
 export function petEssenceBonusPctFromLevel(level: number): number {
   const s = sqrtLv(level);
-  return 100 * 0.0012 * s;
+  return 100 * 0.0018 * s;
 }

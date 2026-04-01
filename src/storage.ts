@@ -19,7 +19,8 @@ export interface SerializedState {
   version: number;
   spiritStones: string | number;
   peakSpiritStonesThisLife?: string | number;
-  tickets: number;
+  /** 仅兼容旧存档读取，不再写入 */
+  tickets?: number;
   summonEssence?: number;
   daoEssence: number;
   zaoHuaYu?: number;
@@ -35,7 +36,8 @@ export interface SerializedState {
   achievementsDone: string[];
   lastTick: number;
   playtimeSec: number;
-  dailyClaimDate: string | null;
+  /** 仅兼容旧存档读取，不再写入 */
+  dailyClaimDate?: string | null;
   rngSeed?: string | number;
   rngState?: number;
   rngStateJson?: string;
@@ -49,7 +51,6 @@ export interface SerializedState {
   lastAutoGachaMs?: number;
   trueEndingSeen?: boolean;
   tutorialStep?: number;
-  dailyProcessedDate?: string | null;
   firstOpenTodayMs?: number;
   dailyStreak?: number;
   lastLoginCalendarDate?: string | null;
@@ -61,7 +62,6 @@ export interface SerializedState {
   salvageAuto?: { n?: boolean; r?: boolean; gearN?: boolean; gearR?: boolean };
   battleSkills?: Record<string, number>;
   wishResonance?: number;
-  wishTicketsThisCycle?: number;
   wishTicketsToday?: number;
   skills?: SkillsSave;
   activeSkillId?: SkillId | null;
@@ -202,7 +202,6 @@ export function serialize(state: GameState): string {
     version: SAVE_VERSION,
     spiritStones: state.spiritStones,
     peakSpiritStonesThisLife: state.peakSpiritStonesThisLife,
-    tickets: state.tickets,
     summonEssence: state.summonEssence,
     daoEssence: state.daoEssence,
     zaoHuaYu: state.zaoHuaYu,
@@ -218,7 +217,6 @@ export function serialize(state: GameState): string {
     achievementsDone: [...state.achievementsDone],
     lastTick: state.lastTick,
     playtimeSec: state.playtimeSec,
-    dailyClaimDate: state.dailyClaimDate,
     rngSeed: state.rngSeed,
     rngStateJson: state.rngStateJson,
     inGameHour: state.inGameHour,
@@ -231,7 +229,6 @@ export function serialize(state: GameState): string {
     lastAutoGachaMs: state.lastAutoGachaMs,
     trueEndingSeen: state.trueEndingSeen,
     tutorialStep: state.tutorialStep,
-    dailyProcessedDate: state.dailyProcessedDate,
     firstOpenTodayMs: state.firstOpenTodayMs,
     dailyStreak: state.dailyStreak,
     lastLoginCalendarDate: state.lastLoginCalendarDate,
@@ -243,7 +240,6 @@ export function serialize(state: GameState): string {
     salvageAuto: { ...state.salvageAuto },
     battleSkills: { ...state.battleSkills },
     wishResonance: state.wishResonance,
-    wishTicketsThisCycle: state.wishTicketsThisCycle,
     skills: state.skills,
     activeSkillId: state.activeSkillId,
     dungeon: state.dungeon,
@@ -296,7 +292,6 @@ export function deserialize(json: string): GameState {
 
   st.spiritStones = toStoneString(data.spiritStones, "0");
   st.peakSpiritStonesThisLife = toStoneString(data.peakSpiritStonesThisLife, st.spiritStones);
-  st.tickets = 0;
   st.summonEssence =
     data.summonEssence !== undefined && data.summonEssence !== null
       ? data.summonEssence
@@ -317,9 +312,7 @@ export function deserialize(json: string): GameState {
   st.achievementsDone = new Set(data.achievementsDone ?? []);
   st.lastTick = data.lastTick ?? Date.now();
   st.playtimeSec = data.playtimeSec ?? 0;
-  st.dailyClaimDate = data.dailyClaimDate ?? null;
   st.tutorialStep = data.tutorialStep ?? 0;
-  st.dailyProcessedDate = data.dailyProcessedDate ?? null;
   st.firstOpenTodayMs = data.firstOpenTodayMs ?? Date.now();
   st.dailyStreak = data.dailyStreak ?? 1;
   st.lastLoginCalendarDate = data.lastLoginCalendarDate ?? null;
@@ -338,7 +331,6 @@ export function deserialize(json: string): GameState {
   };
   st.battleSkills = data.battleSkills && typeof data.battleSkills === "object" ? { ...data.battleSkills } : {};
   st.wishResonance = data.wishResonance ?? 0;
-  st.wishTicketsThisCycle = data.wishTicketsThisCycle ?? data.wishTicketsToday ?? 0;
 
   st.inGameHour = data.inGameHour ?? 3;
   st.inGameDay = Math.max(1, data.inGameDay ?? 1);
@@ -420,7 +412,6 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
 
   st.spiritStones = toStoneString(data.spiritStones, "0");
   st.peakSpiritStonesThisLife = st.spiritStones;
-  st.tickets = 0;
   st.summonEssence = Math.floor((data.tickets ?? 0) * 14) + 48;
   st.daoEssence = data.daoEssence ?? 0;
   st.zaoHuaYu = data.zaoHuaYu ?? 0;
@@ -438,7 +429,6 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.achievementsDone = new Set(data.achievementsDone ?? []);
   st.lastTick = data.lastTick ?? now;
   st.playtimeSec = data.playtimeSec ?? 0;
-  st.dailyClaimDate = data.dailyClaimDate ?? null;
 
   const progressed = (data.totalPulls ?? 0) > 0 || Object.keys(st.owned).length > 0 || (data.realmLevel ?? 1) > 1;
   st.tutorialStep = progressed ? 0 : 1;
@@ -455,8 +445,6 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 };
   st.pullsThisLife = 0;
   st.wishResonance = 0;
-  st.wishTicketsThisCycle = 0;
-  st.dailyProcessedDate = day;
   st.firstOpenTodayMs = now;
   st.dailyStreak = data.dailyStreak ?? 1;
   st.lastLoginCalendarDate = day;
