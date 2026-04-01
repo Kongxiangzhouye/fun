@@ -1535,10 +1535,7 @@ function renderTopBar(
     </span>
     <span class="res-chip res-chip-power" data-currency-hint-id="power">
       <span class="res-lbl">战力</span>
-      <span class="res-chip-stack">
-        <strong id="pill-power">${fmtNumZh(playerCombatPower(state))}</strong>
-        <span class="res-delta res-delta-power" id="pill-power-delta">—</span>
-      </span>
+      <strong id="pill-power">${fmtNumZh(playerCombatPower(state))}</strong>
     </span>
     ${extra}
   </div>`;
@@ -3005,12 +3002,6 @@ function updateCombatPowerTip(power: number): void {
   if (Math.abs(delta) < threshold) {
     lastCombatPower = power;
     return;
-  }
-  const hintEl = document.getElementById("pill-power-delta");
-  if (hintEl) {
-    hintEl.textContent = `${delta > 0 ? "+" : "-"}${fmtNumZh(Math.abs(delta))}`;
-    hintEl.classList.remove("is-up", "is-down");
-    hintEl.classList.add(delta > 0 ? "is-up" : "is-down");
   }
   animateCombatPowerPopup(prev, power);
   lastCombatPower = power;
