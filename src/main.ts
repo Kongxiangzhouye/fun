@@ -71,6 +71,7 @@ import { gsap } from "gsap";
 import { Application, Container, Graphics, type Ticker } from "pixi.js";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
+import { sessionFunFlavorLine, onTitleSpiritPet, bindKonamiEasterEgg } from "./funBits";
 import {
   formatDungeonActiveMeta,
   renderDungeonPanel,
@@ -1836,12 +1837,12 @@ function render(): void {
     <div class="app-head">
     <div class="app-brand-row">
       <div class="app-title-cluster">
-        <img class="app-title-spirit" src="${UI_TITLE_SPIRIT}" alt="" width="40" height="40" loading="eager" />
+        <img class="app-title-spirit" src="${UI_TITLE_SPIRIT}" alt="" width="40" height="40" loading="eager" title="戳一戳" />
         <h1 class="app-title">万象唤灵</h1>
       </div>
       ${renderTopBar(u, ui, goldClass, ips)}
     </div>
-    ${ui.tagLine ? `<p class="vigor-line vigor-compact">${ui.tagLine}</p>` : ""}
+    ${ui.tagLine ? `<p class="vigor-line vigor-compact">${ui.tagLine}</p>` : `<p class="vigor-line vigor-compact fun-flavor-line">「${sessionFunFlavorLine()}」</p>`}
     </div>
 
     <main class="app-main app-main-stack" id="main-content">
@@ -2958,6 +2959,10 @@ function bindEvents(rb: Decimal, _slots: number): void {
     render();
   });
 
+  document.querySelector(".app-title-spirit")?.addEventListener("click", () => {
+    const msg = onTitleSpiritPet();
+    if (msg) toast(msg);
+  });
 }
 
 function setPillStrong(pillId: string, text: string): void {
@@ -3607,6 +3612,9 @@ function init(): void {
   }
   render();
   setupCurrencyHintInteractions();
+  bindKonamiEasterEgg(() => {
+    toast("秘传心法已领悟……开玩笑的，继续挂机吧。");
+  });
   document.addEventListener(
     "keydown",
     (e) => {
