@@ -2,10 +2,14 @@ import type { GameState, PetId, PetProgress, QoLFlags, SkillId } from "./types";
 
 type VeinSave = GameState["vein"];
 type SkillsSave = GameState["skills"];
-type DungeonSave = GameState["dungeon"];
 type GearInvSave = GameState["gearInventory"];
 type EquippedSave = GameState["equippedGear"];
-import { DECK_SIZE, DUNGEON_STAMINA_MAX } from "./types";
+import { DECK_SIZE } from "./types";
+
+/** 仅兼容旧存档读取 `dungeon` 以迁移 combatReferenceWave */
+interface LegacyDungeonBlob {
+  maxWaveRecord?: number;
+}
 import { SAVE_VERSION, createInitialState } from "./state";
 import { CARDS } from "./data/cards";
 import { initRng, rollNewRngSeed, syncRngFromState } from "./rng";
@@ -65,7 +69,9 @@ export interface SerializedState {
   wishTicketsToday?: number;
   skills?: SkillsSave;
   activeSkillId?: SkillId | null;
-  dungeon?: DungeonSave;
+  /** 仅兼容 v22 及以前 */
+  dungeon?: LegacyDungeonBlob;
+  combatReferenceWave?: number;
   gearInventory?: GearInvSave;
   equippedGear?: EquippedSave;
   nextGearInstanceId?: number;
@@ -74,91 +80,6 @@ export interface SerializedState {
   pets?: GameState["pets"];
   petPullsTotal?: number;
   combatHpCurrent?: number;
-  dungeonSanctuaryMode?: boolean;
-  dungeonPortalTargetWave?: number;
-  dungeonSanctuaryAutoEnter?: boolean;
-}
-
-function normalizeDungeonState(st: GameState): void {
-  const d = st.dungeon;
-  if (d.packSize == null || !(d.packSize >= 1)) d.packSize = 1;
-  if (d.packKilled == null || d.packKilled < 0) d.packKilled = 0;
-  if (d.sessionKills == null || d.sessionKills < 0) d.sessionKills = 0;
-  if (d.sessionEssence == null || d.sessionEssence < 0) d.sessionEssence = 0;
-  if (d.essenceRemainder == null || !Number.isFinite(d.essenceRemainder)) d.essenceRemainder = 0;
-  d.essenceRemainder = Math.max(0, d.essenceRemainder);
-  if (d.playerX == null || !Number.isFinite(d.playerX)) d.playerX = 0.5;
-  if (d.playerY == null || !Number.isFinite(d.playerY)) d.playerY = 0.5;
-  if (d.nextMobId == null || d.nextMobId < 1) d.nextMobId = 1;
-  if (!Array.isArray(d.mobs)) d.mobs = [];
-  /** 旧存档：单怪逻辑 → 单只 mob 接入地图 */
-  if (d.active && d.mobs.length === 0 && d.monsterMax > 0 && d.monsterHp > 0) {
-    d.mobs = [
-      {
-        id: d.nextMobId++,
-        x: 0.62,
-        y: 0.48,
-        hp: d.monsterHp,
-        maxHp: d.monsterMax,
-        element: "metal",
-        isBoss: false,
-        mobKind: 0,
-        dodge: 0.08,
-        attackRange: 0.045,
-        attackInterval: 1.15,
-        moveSpeedMul: 1,
-      },
-    ];
-  }
-  for (const m of d.mobs) {
-    if (!m.element) m.element = "metal";
-    if (m.isBoss == null) m.isBoss = false;
-    if (m.mobKind == null || !Number.isFinite(m.mobKind)) m.mobKind = Math.abs((m.id * 7) % 8);
-    if (m.dodge == null || !Number.isFinite(m.dodge)) m.dodge = 0.08;
-    if (m.attackRange == null || !Number.isFinite(m.attackRange)) m.attackRange = 0.045;
-    if (m.attackInterval == null || !Number.isFinite(m.attackInterval)) m.attackInterval = 1.15;
-    if (m.moveSpeedMul == null || !Number.isFinite(m.moveSpeedMul)) m.moveSpeedMul = 1;
-  }
-  if (!Array.isArray(d.walkable)) d.walkable = [];
-  if (d.mapW == null || d.mapW < 1) d.mapW = 0;
-  if (d.mapH == null || d.mapH < 1) d.mapH = 0;
-  if (d.maxWaveRecord == null || d.maxWaveRecord < 0) d.maxWaveRecord = d.totalWavesCleared ?? 0;
-  if (!d.waveCheckpoint || typeof d.waveCheckpoint !== "object") d.waveCheckpoint = {};
-  {
-    const frontier = Math.max(1, d.maxWaveRecord + 1);
-    if (d.entryWave == null || d.entryWave < 1) d.entryWave = frontier;
-    else if (d.entryWave > frontier) d.entryWave = frontier;
-    else if (d.entryWave < frontier) {
-      const ck = d.waveCheckpoint[d.entryWave];
-      if (!ck || !Array.isArray(ck.mobs) || !ck.mobs.some((m) => m.hp > 0)) d.entryWave = frontier;
-    }
-  }
-  if (d.attackAnimPhase == null) d.attackAnimPhase = 0;
-  if (d.inMelee == null) d.inMelee = false;
-  if (d.attackVisualMode !== "aoe" && d.attackVisualMode !== "single" && d.attackVisualMode !== "none") {
-    d.attackVisualMode = "none";
-  }
-  if (d.interWaveCooldownUntil == null || !Number.isFinite(d.interWaveCooldownUntil)) d.interWaveCooldownUntil = 0;
-  if (d.essenceThisWave == null || !Number.isFinite(d.essenceThisWave)) d.essenceThisWave = 0;
-  if (d.pendingToast === undefined) d.pendingToast = null;
-  if (d.pendingDeathPresentation == null) d.pendingDeathPresentation = false;
-  if (d.waveEntrySpawnX == null || !Number.isFinite(d.waveEntrySpawnX)) d.waveEntrySpawnX = 0.5;
-  if (d.waveEntrySpawnY == null || !Number.isFinite(d.waveEntrySpawnY)) d.waveEntrySpawnY = 0.5;
-  if (d.bossDodgeVisual == null) d.bossDodgeVisual = false;
-  if (d.stamina == null || !Number.isFinite(d.stamina)) d.stamina = DUNGEON_STAMINA_MAX;
-  d.stamina = Math.max(0, Math.min(DUNGEON_STAMINA_MAX, d.stamina));
-  if (d.dodgeIframesUntil == null || !Number.isFinite(d.dodgeIframesUntil)) d.dodgeIframesUntil = 0;
-  d.dodgeQueued = !!d.dodgeQueued;
-  if (d.playerMoveLockUntil == null || !Number.isFinite(d.playerMoveLockUntil)) d.playerMoveLockUntil = 0;
-  if (d.playerLastMoveNx == null || !Number.isFinite(d.playerLastMoveNx)) d.playerLastMoveNx = 0;
-  if (d.playerLastMoveNy == null || !Number.isFinite(d.playerLastMoveNy)) d.playerLastMoveNy = 0;
-  if (d.rewardModeRepeat == null) d.rewardModeRepeat = false;
-  if (d.autoEnterConsumed == null) d.autoEnterConsumed = false;
-  if (d.playerAttackAccum == null || !Number.isFinite(d.playerAttackAccum)) d.playerAttackAccum = 0;
-  if (d.playerAttackTargetMobId == null || !Number.isFinite(d.playerAttackTargetMobId)) d.playerAttackTargetMobId = 0;
-  if (d.sessionEnterAtMs == null || !Number.isFinite(d.sessionEnterAtMs)) d.sessionEnterAtMs = 0;
-  /** 旧存档进本中无计时：从当前时刻起算，避免本局用时为 0 */
-  if (d.active && d.sessionEnterAtMs <= 0) d.sessionEnterAtMs = Date.now();
 }
 
 function normalizePetsState(st: GameState): void {
@@ -242,7 +163,7 @@ export function serialize(state: GameState): string {
     wishResonance: state.wishResonance,
     skills: state.skills,
     activeSkillId: state.activeSkillId,
-    dungeon: state.dungeon,
+    combatReferenceWave: state.combatReferenceWave,
     gearInventory: state.gearInventory,
     equippedGear: state.equippedGear,
     nextGearInstanceId: state.nextGearInstanceId,
@@ -251,9 +172,6 @@ export function serialize(state: GameState): string {
     pets: { ...state.pets },
     petPullsTotal: state.petPullsTotal,
     combatHpCurrent: state.combatHpCurrent,
-    dungeonSanctuaryMode: state.dungeonSanctuaryMode,
-    dungeonPortalTargetWave: state.dungeonPortalTargetWave,
-    dungeonSanctuaryAutoEnter: state.dungeonSanctuaryAutoEnter,
   };
   return JSON.stringify(s);
 }
@@ -363,8 +281,14 @@ export function deserialize(json: string): GameState {
       : data.activeSkillId === null
         ? null
         : st.activeSkillId;
-  if (data.dungeon) {
-    st.dungeon = { ...st.dungeon, ...data.dungeon };
+  {
+    const legacy = data.dungeon as LegacyDungeonBlob | undefined;
+    const fromLegacy = legacy?.maxWaveRecord != null && Number.isFinite(legacy.maxWaveRecord) ? Math.max(1, Math.floor(legacy.maxWaveRecord)) : null;
+    if (data.combatReferenceWave != null && Number.isFinite(data.combatReferenceWave)) {
+      st.combatReferenceWave = Math.max(1, Math.floor(data.combatReferenceWave));
+    } else if (fromLegacy != null) {
+      st.combatReferenceWave = fromLegacy;
+    }
   }
   st.gearInventory = data.gearInventory && typeof data.gearInventory === "object" ? data.gearInventory : st.gearInventory;
   if (data.equippedGear) {
@@ -385,20 +309,9 @@ export function deserialize(json: string): GameState {
     data.combatHpCurrent !== undefined && data.combatHpCurrent !== null && Number.isFinite(data.combatHpCurrent)
       ? data.combatHpCurrent
       : st.combatHpCurrent;
-  st.dungeonSanctuaryMode = data.dungeonSanctuaryMode ?? false;
-  st.dungeonPortalTargetWave =
-    data.dungeonPortalTargetWave !== undefined && data.dungeonPortalTargetWave !== null && Number.isFinite(data.dungeonPortalTargetWave)
-      ? Math.max(0, Math.floor(data.dungeonPortalTargetWave))
-      : 0;
-  /** 旧存档无此字段时默认自动（与更新前行为一致）；显式存盘后尊重玩家勾选 */
-  st.dungeonSanctuaryAutoEnter =
-    data.dungeonSanctuaryAutoEnter !== undefined && data.dungeonSanctuaryAutoEnter !== null
-      ? !!data.dungeonSanctuaryAutoEnter
-      : true;
   clampCombatHpToMax(st);
 
   normalizePetsState(st);
-  normalizeDungeonState(st);
 
   applyRngMigrate(st, data);
   st.version = SAVE_VERSION;

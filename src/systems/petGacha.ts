@@ -31,7 +31,7 @@ export function pullPet(state: GameState): {
   petId?: PetId;
   duplicate?: boolean;
 } {
-  if (!petSystemUnlocked(state)) return { ok: false, msg: "幻域累计击溃 15 波后开放唤灵池" };
+  if (!petSystemUnlocked(state)) return { ok: false, msg: "境界≥12 或累计唤引≥25 次后开放唤灵池" };
   if (state.summonEssence < PET_PULL_COST) return { ok: false, msg: `唤灵髓不足（需 ${PET_PULL_COST}）` };
 
   state.summonEssence -= PET_PULL_COST;

@@ -12,7 +12,7 @@ export function renderGameLoreHtml(): string {
       <details class="game-lore-block" open>
         <summary>术语速查（白话版）</summary>
         <ul class="game-lore-list">
-          <li><strong>幻域</strong> = 副本；刷怪拿资源。</li>
+          <li><strong>战斗属性</strong>：攻防血暴、护体、闪避等在「角色」面板汇总，用于心法与灵宠等加成展示。</li>
           <li><strong>破境</strong> = 升级境界；提升基础强度并解锁功能。</li>
           <li><strong>轮回</strong> = 重开本轮；会重置部分进度，但保留永久向强化。</li>
           <li><strong>洞府</strong> = 永久成长线；投入后跨轮回保留。</li>
@@ -24,7 +24,7 @@ export function renderGameLoreHtml(): string {
         <summary>资源与灵石分流</summary>
         <ul class="game-lore-list">
           <li><strong>灵石</strong>：破境、洞府蕴灵、灵卡升阶等主要消耗。</li>
-          <li><strong>唤灵髓</strong>：幻域产出为主，用于聚灵阵唤引与铸灵；不可用灵石直接购买。</li>
+          <li><strong>唤灵髓</strong>：主要由共鸣进度等玩法产出，用于聚灵阵唤引、铸灵与领悟心法；不可用灵石直接购买。</li>
           <li><strong>灵砂 / 玄铁</strong>：分解灵卡 / 装备获得，用于升阶与强化。</li>
           <li>身法、装备与统计汇总在右下角<strong>角色</strong>面板。</li>
         </ul>
@@ -59,27 +59,14 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary>幻域副本</summary>
-        <ul class="game-lore-list">
-          <li>首通主要掉落<strong>唤灵髓</strong>；<strong>整关清完</strong>后统一入背包。复刷关会额外给灵砂。</li>
-          <li><strong>幻域生命</strong>为全局状态，进关不会自动回满；接战恢复慢，游走较快。</li>
-          <li>进入波次需少量唤灵髓作入场费；阵亡损失部分灵石并被送出至灵息之地；回满后可<strong>勾选自动进本</strong>或手动进入该关。每次进关<strong>重新随机地图与满血魔物</strong>。</li>
-          <li>已通关波次可复刷（髓收益降低）；地图范围约每 5 波扩大一档。</li>
-          <li>接战圈内按范围命中结算；五行克制会影响伤害。</li>
-          <li>魔物<strong>闪避</strong>以飘字「偏斜」表现；我方闪避以「闪避」表现。</li>
-        </ul>
-      </details>
-
-      <details class="game-lore-block">
         <summary>功能解锁一览</summary>
         <ul class="game-lore-list">
-          <li><strong>幻域</strong>：完成首次唤引。</li>
-          <li><strong>修炼</strong>：幻域至少通关一波、或境界≥三重、或累计唤引≥六次。</li>
+          <li><strong>修炼</strong>：境界≥三重，或累计唤引≥六次。</li>
           <li><strong>背包装备 / 铸灵池</strong>：获得第一件装备，或累计唤引≥十次。</li>
           <li><strong>洞府蕴灵</strong>：完成一次唤引，或境界≥二重。</li>
           <li><strong>万象图鉴</strong>：累计唤引≥5次，或境界≥四重。</li>
           <li><strong>轮回阁</strong>：境界≥十八重，或已完成轮回。</li>
-          <li><strong>灵宠</strong>：幻域累计击溃 15 波。</li>
+          <li><strong>灵宠</strong>：境界≥十二重，或累计唤引≥二十五次。</li>
           <li><strong>封存/拓印</strong>（养成→轮回页底）：境界≥十二重或曾入轮回。</li>
           <li><strong>功业录</strong>：境界≥六重，或累计唤引≥15次。</li>
           <li><strong>十连</strong>：完成一次单抽，或境界≥三重。</li>

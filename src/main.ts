@@ -9,11 +9,7 @@ import {
   REINCARNATION_REALM_REQ,
   BI_GUAN_COOLDOWN_MS,
   TUNA_COOLDOWN_MS,
-  DUNGEON_DEATH_CD_MS,
-  DUNGEON_INTER_WAVE_CD_MS,
   PLAYER_DUNGEON_HIT_INTERVAL_SEC,
-  DUNGEON_STAMINA_MAX,
-  DUNGEON_DODGE_STAMINA_COST,
 } from "./types";
 import { loadGame, saveGame, exportSave, importSave, totalCardsInPool, clearSaveAndNewGame } from "./storage";
 import {
@@ -72,13 +68,7 @@ import { Application, Container, Graphics, type Ticker } from "pixi.js";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
 import { sessionFunFlavorLine, onTitleSpiritPet, bindKonamiEasterEgg } from "./funBits";
-import {
-  formatDungeonActiveMeta,
-  renderDungeonPanel,
-  renderTrainPanel,
-  renderGearPanel,
-  renderPetPanel,
-} from "./ui/extraPanels";
+import { renderTrainPanel, renderGearPanel, renderPetPanel } from "./ui/extraPanels";
 import { featureGuidePanelHtml, type FeatureGuideId } from "./ui/featureGuides";
 import { renderGameLoreHtml } from "./ui/gameLore";
 import {
@@ -119,25 +109,8 @@ import {
   playerDungeonAttackRangeMult,
   playerDungeonAttackSpeedMult,
   playerDungeonSustainedDamageMult,
-} from "./systems/playerCombat";
-import {
-  enterDungeon,
-  leaveDungeon,
-  tryAutoEnterFromSanctuaryPortal,
-  canEnterDungeon,
-  canEnterAtWave,
-  dungeonFrontierWave,
-  dungeonEntryFeeEssence,
-  computeDungeonRepeatMode,
-  pickCombatTargetMob,
-  drainDungeonDamageFloats,
-  bossDisplayTitle,
-  currentBossMob,
   playerEngageRadiusNorm,
-  playerAttackDiskOuterRadiusNormForUi,
-  queueDungeonDodge,
-  totalAliveMobHpSum,
-} from "./systems/dungeon";
+} from "./systems/playerCombat";
 import {
   ownedPetIds,
   petSystemUnlocked,
@@ -182,15 +155,6 @@ function fmtNumZh(n: number): string {
   return n.toFixed(2);
 }
 
-/** 幻域本局用时 / 预计清怪剩余（秒 → 展示） */
-function fmtDungeonDur(sec: number): string {
-  if (!Number.isFinite(sec) || sec < 0) return "—";
-  if (sec < 60) return `${Math.max(0, Math.floor(sec))} 秒`;
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
 function fmtSkillEta(sec: number | null): string {
   if (sec == null) return "—";
   if (sec <= 0) return "即将突破";
@@ -213,10 +177,9 @@ let refineTargetId: string | null = null;
 let gearDetailSlot: "weapon" | "body" | "ring" | null = null;
 /** 聚灵阵：灵卡池 / 铸灵池 */
 let gachaPool: "cards" | "gear" = "cards";
-let autoEnterPromptHandled = false;
 let veinHelpDocListenerBound = false;
-/** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
-type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
+/** 主导航：底部四栏 + 部分页内二级子栏 */
+type HubId = "character" | "cultivate" | "gacha" | "estate";
 type EstateSub = "idle" | "vein";
 type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach";
 type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive";
@@ -226,13 +189,11 @@ let estateSub: EstateSub = "idle";
 let cultivateSub: CultivateSub = "deck";
 let characterSub: CharacterSub = "stats";
 let topBarExtrasExpanded = false;
-/** 主循环间隔：过小会增加 CPU，过大则幻域位移像「瞬移」跨格 */
 const LOOP_INTERVAL_MS = 50;
 
 let toastTimer = 0;
 let flyCreditsDismissed = false;
-const deferredDungeonToasts: string[] = [];
-let lastDungeonActive = false;
+const deferredHiddenTabToasts: string[] = [];
 const reducedMotionQuery =
   typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 let prefersReducedMotion = reducedMotionQuery?.matches ?? false;
@@ -403,7 +364,6 @@ function updateModernVisualFx(now: number): void {
   const hubHue: Record<HubId, number> = {
     estate: 0,
     cultivate: -20,
-    battle: 22,
     gacha: 34,
     character: -10,
   };
@@ -421,7 +381,7 @@ function updateModernVisualFx(now: number): void {
 
 function tryToast(msg: string): void {
   if (typeof document !== "undefined" && document.visibilityState === "hidden") {
-    deferredDungeonToasts.push(msg);
+    deferredHiddenTabToasts.push(msg);
     return;
   }
   toast(msg);
@@ -439,11 +399,6 @@ const TOAST_DURATION_MS = 4200;
 const TOAST_ACHIEVEMENT_DURATION_MS = 6200;
 const CURRENCY_HINT_TOAST_MS = 10000;
 const CURRENCY_LONG_PRESS_MS = 450;
-const DODGE_FAIL_TOAST_GAP_MS = 900;
-let lastDodgeFailToastAt = 0;
-const AUTO_ENTER_FAIL_TOAST_GAP_MS = 3000;
-let lastAutoEnterFailToastAt = 0;
-let lastAutoEnterFailReason = "";
 let lastCombatPower = 0;
 const COMBAT_POWER_POPUP_DURATION_MS = 1000;
 const COMBAT_POWER_POPUP_HOLD_MS = 520;
@@ -461,7 +416,7 @@ const CURRENCY_HINTS: Record<string, string> = {
   stone:
     "灵石\n\n基础货币。用于破境、灵卡升阶、洞府升级等。主要来自每秒产出，也可由玩法和成就获得。",
   essence:
-    "唤灵髓\n\n用于抽卡、进入幻域、抽取心法。主要由共鸣进度生成，也可由玩法和成就获得。不能用灵石直接购买。",
+    "唤灵髓\n\n用于抽卡、铸灵、领悟心法等。主要由共鸣进度生成，也可由玩法和成就获得。不能用灵石直接购买。",
   realm: "境界\n\n当前境界等级。影响属性和功能解锁。可在「灵府→灵脉」消耗灵石提升。",
   dao: "道韵\n\n轮回结算获得。用于「养成→轮回」中的元强化。轮回后保留。",
   zao: "造化玉\n\n用于解锁便利功能。可通过成就等方式获得。",
@@ -513,69 +468,6 @@ function toastCurrencyHint(text: string): void {
 function showCurrencyHintById(id: string): void {
   const t = CURRENCY_HINTS[id];
   if (t) toastCurrencyHint(t);
-}
-
-function tryQueueDungeonDodgeWithFeedback(): void {
-  if (!state.dungeon.active) return;
-  const d = state.dungeon;
-  const now = nowMs();
-  const canToast = now - lastDodgeFailToastAt >= DODGE_FAIL_TOAST_GAP_MS;
-  const toastOnce = (msg: string): void => {
-    if (!canToast) return;
-    lastDodgeFailToastAt = now;
-    toast(msg);
-  };
-  if (now < d.playerMoveLockUntil) {
-    toastOnce("当前处于硬直，暂时无法闪避。");
-    return;
-  }
-  if (d.stamina < DUNGEON_DODGE_STAMINA_COST) {
-    toastOnce(`体力不足：闪避需 ${DUNGEON_DODGE_STAMINA_COST} 点体力。`);
-    return;
-  }
-  if (now < d.dodgeIframesUntil) {
-    toastOnce("闪避冷却中。");
-    return;
-  }
-  queueDungeonDodge(state);
-}
-
-function maybeToastAutoEnterFailure(now: number): void {
-  if (!state.dungeonSanctuaryAutoEnter || !state.dungeonSanctuaryMode || state.dungeon.active) {
-    lastAutoEnterFailReason = "";
-    return;
-  }
-  const w = state.dungeonPortalTargetWave;
-  if (w < 1) {
-    lastAutoEnterFailReason = "";
-    return;
-  }
-  const pmax = playerMaxHp(state);
-  if (state.combatHpCurrent < pmax - 0.25) {
-    lastAutoEnterFailReason = "";
-    return;
-  }
-  if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
-    const reason = "not-eligible";
-    if (reason === lastAutoEnterFailReason) return;
-    if (now - lastAutoEnterFailToastAt < AUTO_ENTER_FAIL_TOAST_GAP_MS) return;
-    lastAutoEnterFailReason = reason;
-    lastAutoEnterFailToastAt = now;
-    toast("自动进本未触发：当前条件不满足（冷却或关卡不可进）。");
-    return;
-  }
-  const rm = computeDungeonRepeatMode(state, w);
-  const fee = dungeonEntryFeeEssence(state, w, rm);
-  if (state.summonEssence < fee) {
-    const reason = `essence-short:${fee}`;
-    if (reason === lastAutoEnterFailReason) return;
-    if (now - lastAutoEnterFailToastAt < AUTO_ENTER_FAIL_TOAST_GAP_MS) return;
-    lastAutoEnterFailReason = reason;
-    lastAutoEnterFailToastAt = now;
-    toast(`自动进本未触发：唤灵髓不足（需 ${fee}）。`);
-    return;
-  }
-  lastAutoEnterFailReason = "";
 }
 
 /** 顶栏货币：长按显示说明（仅长按，避免与日常操作冲突） */
@@ -928,14 +820,12 @@ function renderPlayerStatsBlock(st: GameState): string {
         <div class="ps-stat"><span class="ps-stat-label">修炼技能</span><strong id="ps-stat-skills" class="ps-stat-long">${skillsLine}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">累计抽卡</span><strong id="ps-total-pulls">${st.totalPulls}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">本轮抽卡</span><strong id="ps-pulls-life">${pullsLife}</strong></div>
-        <div class="ps-stat"><span class="ps-stat-label">幻域通关波次</span><strong id="ps-dungeon-waves">${st.dungeon.totalWavesCleared}</strong></div>
-        <div class="ps-stat"><span class="ps-stat-label">最高推进波</span><strong id="ps-max-wave">${st.dungeon.maxWaveRecord}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">轮回次数</span><strong id="ps-reinc">${st.reincarnations}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">图鉴收集</span><strong id="ps-codex">${unique} / ${pool}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">功业达成</span><strong id="ps-ach">${achN} / ${achTotal}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">登录连签</span><strong id="ps-streak">${st.dailyStreak}</strong></div>
         <div class="ps-stat"><span class="ps-stat-label">本世灵石峰值</span><strong id="ps-peak-stone">${peak}</strong></div>
-        <div class="ps-stat"><span class="ps-stat-label">幻域生命</span><strong id="ps-combat-hp">${fmtNumZh(Math.max(0, chp))} / ${mxhp}</strong></div>
+        <div class="ps-stat"><span class="ps-stat-label">战斗生命</span><strong id="ps-combat-hp">${fmtNumZh(Math.max(0, chp))} / ${mxhp}</strong></div>
         ${
           petSystemUnlocked(st)
             ? `<div class="ps-stat"><span class="ps-stat-label">结缘灵宠</span><strong id="ps-pet-n">${petN} 只</strong></div>`
@@ -959,7 +849,7 @@ function renderCombatStatsPanel(): string {
   const pAtkSpd = playerDungeonAttackSpeedMult(state);
   const pDmgTick = playerDungeonSustainedDamageMult(state);
   const defRating = playerDefenseRating(state);
-  const refWave = state.dungeon.active ? state.dungeon.wave : Math.max(1, state.dungeon.maxWaveRecord);
+  const refWave = Math.max(1, state.combatReferenceWave);
   const incMul = playerIncomingDamageMult(state, refWave);
   const petUnlocked = petSystemUnlocked(state);
   const pr = petBonusRowsInnerHtml(state);
@@ -972,13 +862,13 @@ function renderCombatStatsPanel(): string {
   const anyPetStat = petUnlocked && (psStone || psDng || psDef || psEss);
   const petNoBond = petUnlocked && ownedPetIds(state).length === 0;
   const petBlock = petUnlocked
-    ? `<h3 class="sub-h">灵宠（通关幻域≥15 波 · 唤灵池）</h3>
+    ? `<h3 class="sub-h">灵宠（境界≥12 或唤引≥25 · 唤灵池）</h3>
       <p class="hint sm pet-bonus-hint">灵宠全局叠加，灵契随重复邂逅成长。</p>
       ${
         anyPetStat
           ? `<div class="combat-stats-grid combat-stats-grid-pet">
         ${psStone ? `<div class="cs-cell cs-cell-wide"><span class="cs-label">灵石乘区（全局）</span><strong id="ps-pet-stone">${pr.stone}</strong></div>` : ""}
-        ${psDng ? `<div class="cs-cell cs-cell-wide"><span class="cs-label">幻域攻加算（全局）</span><strong id="ps-pet-dng">${pr.dng}</strong></div>` : ""}
+        ${psDng ? `<div class="cs-cell cs-cell-wide"><span class="cs-label">战斗攻加算（灵宠）</span><strong id="ps-pet-dng">${pr.dng}</strong></div>` : ""}
         ${psDef ? `<div class="cs-cell cs-cell-wide"><span class="cs-label">护体（灵宠）</span><strong id="ps-pet-def">${pr.def}</strong></div>` : ""}
         ${psEss ? `<div class="cs-cell cs-cell-wide"><span class="cs-label">噬髓乘区（全局）</span><strong id="ps-pet-ess-part">${pr.ess}</strong></div>` : ""}
       </div>`
@@ -993,21 +883,21 @@ function renderCombatStatsPanel(): string {
         <img class="panel-title-art-icon" src="${UI_HEAD_COMBAT}" alt="" width="24" height="24" loading="lazy" />
         <h3 class="sub-h">身法与战斗属性</h3>
       </div>
-      <p class="hint sm combat-stats-lead">攻防血暴为全局属性；护体减免幻域受击，来源含装备、境界、战艺、洞府固元、卡组厚土/溯流、心法、灵宠等。</p>
+      <p class="hint sm combat-stats-lead">攻防血暴为全局属性；护体影响受击参考乘区，来源含装备、境界、战艺、洞府固元、卡组厚土/溯流、心法、灵宠等。</p>
       <div class="combat-stats-grid">
         <div class="cs-cell"><span class="cs-label">境界</span><strong id="ps-realm">${state.realmLevel}</strong></div>
         <div class="cs-cell"><span class="cs-label">基础攻击</span><strong id="ps-atk">${fmtNumZh(atk)}</strong></div>
         <div class="cs-cell"><span class="cs-label">期望秒伤</span><strong id="ps-dps">${fmtNumZh(edps)}</strong></div>
         <div class="cs-cell"><span class="cs-label">生命</span><strong id="ps-hp">${hp}</strong></div>
         <div class="cs-cell"><span class="cs-label">护体</span><strong id="ps-def">${defRating.toFixed(1)}</strong></div>
-        <div class="cs-cell"><span class="cs-label">幻域受击（参考）</span><strong id="ps-incmul">×${incMul.toFixed(3)}</strong> <span class="cs-sub" id="ps-incmul-wave">（第 ${refWave} 波）</span></div>
+        <div class="cs-cell"><span class="cs-label">受击参考（K/波次）</span><strong id="ps-incmul">×${incMul.toFixed(3)}</strong> <span class="cs-sub" id="ps-incmul-wave">（第 ${refWave} 波）</span></div>
         <div class="cs-cell"><span class="cs-label">暴击率</span><strong id="ps-crit">${(cc * 100).toFixed(1)}%</strong></div>
         <div class="cs-cell"><span class="cs-label">暴伤倍率</span><strong id="ps-cm">${cm.toFixed(2)}×</strong></div>
         ${showRes ? `<div class="cs-cell"><span class="cs-label">全相抗性</span><strong id="ps-res">${res.toFixed(1)}%</strong></div>` : ""}
         ${showEss ? `<div class="cs-cell"><span class="cs-label">噬髓加成（合计）</span><strong id="ps-ess">${((em - 1) * 100).toFixed(1)}%</strong></div>` : ""}
-        <div class="cs-cell cs-cell-wide"><span class="cs-label">幻域闪避</span><strong id="ps-dodge">${(pDodge * 100).toFixed(2)}%</strong></div>
-        <div class="cs-cell cs-cell-wide"><span class="cs-label">幻域接战距离</span><strong id="ps-prange">${pRangeNorm.toFixed(4)} <span class="cs-sub">（基准 ×${pRangeMul.toFixed(3)}）</span></strong></div>
-        <div class="cs-cell cs-cell-wide"><span class="cs-label">幻域攻击频率</span><strong id="ps-atkspd">×${pDmgTick.toFixed(3)}</strong> <span class="cs-sub">（攻速 ×${pAtkSpd.toFixed(2)} ÷ ${PLAYER_DUNGEON_HIT_INTERVAL_SEC}s 基准间隔）</span></div>
+        <div class="cs-cell cs-cell-wide"><span class="cs-label">闪避</span><strong id="ps-dodge">${(pDodge * 100).toFixed(2)}%</strong></div>
+        <div class="cs-cell cs-cell-wide"><span class="cs-label">接战距离</span><strong id="ps-prange">${pRangeNorm.toFixed(4)} <span class="cs-sub">（基准 ×${pRangeMul.toFixed(3)}）</span></strong></div>
+        <div class="cs-cell cs-cell-wide"><span class="cs-label">攻击频率（期望）</span><strong id="ps-atkspd">×${pDmgTick.toFixed(3)}</strong> <span class="cs-sub">（攻速 ×${pAtkSpd.toFixed(2)} ÷ ${PLAYER_DUNGEON_HIT_INTERVAL_SEC}s 基准间隔）</span></div>
       </div>
       ${petBlock || ""}
     </div>`;
@@ -1034,11 +924,8 @@ function advanceTutorialAfterDeckAssign(): boolean {
 
 function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   const unlockLines: string[] = [];
-  if (!u.tabDungeon) {
-    unlockLines.push("「<strong>幻域</strong>」解锁条件：抽卡≥1，或境界≥2，或曾通关幻域。");
-  }
   if (!u.tabTrain) {
-    unlockLines.push("「<strong>修炼</strong>」解锁条件：幻域通关 1 波，或境界≥3，或抽卡≥6。");
+    unlockLines.push("「<strong>修炼</strong>」解锁条件：境界≥3，或抽卡≥6。");
   }
   if (!u.tabGear) {
     unlockLines.push("「<strong>角色→行囊</strong>」解锁条件：抽卡≥10（或已持有装备）。");
@@ -1052,8 +939,8 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabMeta && u.tabCodex) {
     unlockLines.push("「<strong>养成→轮回</strong>」解锁条件：境界≥18，或已轮回。");
   }
-  if (!u.tabPets && u.tabDungeon) {
-    unlockLines.push("「<strong>灵宠</strong>」解锁条件：幻域累计通关 15 波。");
+  if (!u.tabPets) {
+    unlockLines.push("「<strong>灵宠</strong>」解锁条件：境界≥12 或累计唤引≥25 次。");
   }
   return unlockLines;
 }
@@ -1509,7 +1396,7 @@ function renderTutorialBlock(): string {
   }
   const hints: Record<number, string> = {
     2: "引导：点底部「抽卡」。",
-    3: "引导：在抽卡页完成 1 次抽卡。完成后开放「幻域」。",
+    3: "引导：在抽卡页完成 1 次抽卡。",
     4: "引导：点「养成→卡组」，再点任意阵位。",
     5: "引导：在弹层里选择 1 张灵卡上阵。",
     6: "引导：点「灵府→洞府」，任意强化 1 次。",
@@ -1606,7 +1493,7 @@ function renderTopBar(
 }
 
 function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
-  if (activeHub === "battle" && !u.tabDungeon) activeHub = "estate";
+
   if (activeHub === "estate" && estateSub === "vein" && !u.tabVein) estateSub = "idle";
   const subOk = (s: CultivateSub): boolean => {
     switch (s) {
@@ -1629,7 +1516,7 @@ function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
   if (activeHub === "cultivate" && !subOk(cultivateSub)) cultivateSub = "deck";
 }
 
-/** 二级页签：主内容区顶部横排（幻域已独立为底部「幻域」页） */
+/** 二级页签：主内容区顶部横排 */
 function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
   const mkEstate = (id: EstateSub, label: string, active: boolean, pulse: boolean): string =>
     `<button type="button" class="hub-sub-tab ${active ? "active" : ""} ${pulse ? "tutorial-pulse" : ""}" data-estate-sub="${id}"${active ? ` aria-current="page"` : ""}>${label}</button>`;
@@ -1717,8 +1604,6 @@ function renderDiscoverabilityHint(): string {
     text = "常用入口：灵卡池=卡牌，铸灵池=装备；自动分解开关在本页底部。";
   } else if (activeHub === "estate") {
     text = "常用入口：灵脉=升级境界，洞府=长期加成；两条线可并行。";
-  } else if (activeHub === "battle") {
-    text = "常用入口：这里就是副本（幻域）；进本与复刷都在此页。";
   }
   if (!text) return "";
   return `<p class="hint sm discoverability-hint">${text}</p>`;
@@ -1730,7 +1615,6 @@ function renderBottomNav(u: ReturnType<typeof getUiUnlocks>): string {
   return `<nav class="app-bottom-nav" role="navigation" aria-label="主导航">
     ${item("character", "角色", false, false)}
     ${item("cultivate", "养成", false, state.tutorialStep >= 4 && state.tutorialStep <= 5)}
-    ${item("battle", "幻域·副本", !u.tabDungeon, false)}
     ${item("gacha", "抽卡", false, state.tutorialStep === 2 || state.tutorialStep === 3)}
     ${item("estate", "灵府·成长", false, state.tutorialStep === 6 || state.tutorialStep === 7)}
   </nav>`;
@@ -1781,10 +1665,6 @@ function renderHubContent(
   slots: number,
 ): string {
   switch (activeHub) {
-    case "battle":
-      return u.tabDungeon
-        ? renderDungeonPanel(state)
-        : `<section class="panel"><p class="hint">完成 1 次抽卡后开放底部「<strong>幻域</strong>」。</p></section>`;
     case "estate":
       return estateSub === "idle" ? renderIdle(ips, rb, canBreak, u) : renderVeinPage();
     case "gacha":
@@ -1914,7 +1794,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       </div>
       ${petIncomeHint !== "" ? `<p class="hint sm income-pet-line" id="income-pet-line">${petIncomeHint}</p>` : ""}
       </div>
-      <p class="hint stone-uses">灵石用于破境、洞府升级和升阶；唤灵髓用于抽卡和幻域。详细规则见「养成→图鉴·札记」。</p>
+      <p class="hint stone-uses">灵石用于破境、洞府升级和升阶；唤灵髓用于抽卡、铸灵与心法等。详细规则见「养成→图鉴·札记」。</p>
       ${exploreBlock}
       <p class="hint vein-hint-row">洞府乘区（已计入上方每秒灵石）：<strong>汇灵</strong> ×<span id="idle-vein-hui">${huiLingM}</span> · <strong>灵息</strong> ×<span id="idle-vein-ling">${lingXiM}</span>
         <button type="button" class="btn-help-icon" id="btn-vein-synergy-help" aria-expanded="false" aria-controls="vein-synergy-popover" aria-label="查看卡组灵脉说明" title="卡组灵脉说明">?</button>
@@ -2500,7 +2380,6 @@ function bindEvents(rb: Decimal, _slots: number): void {
     estateSub = "idle";
     cultivateSub = "deck";
     characterSub = "stats";
-    autoEnterPromptHandled = false;
     flyCreditsDismissed = false;
     toast("存档已重置。");
     render();
@@ -2734,7 +2613,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       if (buyVeinUpgrade(state, k)) {
         if (state.tutorialStep === 6) {
           state.tutorialStep = 7;
-        toast("下一步：回到「灵府→灵脉」完成 1 次破境。");
+          toast("下一步：回到「灵府→灵脉」完成 1 次破境。");
         } else {
           toast(`${VEIN_TITLES[k]} 升级成功。`);
         }
@@ -2745,113 +2624,6 @@ function bindEvents(rb: Decimal, _slots: number): void {
         toast("资源不足或已达上限");
       }
     });
-  });
-
-  const readEntryWave = (): number => {
-    const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
-    const raw = inp?.valueAsNumber;
-    const d = state.dungeon;
-    const cap = dungeonFrontierWave(state);
-    if (raw == null || !Number.isFinite(raw)) return Math.max(1, Math.min(cap, d.entryWave));
-    return Math.max(1, Math.min(cap, Math.floor(raw)));
-  };
-
-  document.getElementById("btn-dungeon-entry-frontier")?.addEventListener("click", () => {
-    const n = dungeonFrontierWave(state);
-    const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
-    if (inp) inp.value = String(n);
-    state.dungeon.entryWave = n;
-    saveGame(state);
-    render();
-  });
-
-  document.getElementById("btn-dungeon-enter")?.addEventListener("click", () => {
-    const w = readEntryWave();
-    state.dungeon.entryWave = w;
-    const now = nowMs();
-    if (!canEnterDungeon(state, now)) {
-      toast("当前无法进入：冷却中或仍在副本内。");
-      return;
-    }
-    if (!canEnterAtWave(state, w)) {
-      toast("无法从该波进入：已超过当前可推进范围，或该波不可选。");
-      return;
-    }
-    const fee = dungeonEntryFeeEssence(state, w, computeDungeonRepeatMode(state, w));
-    if (state.summonEssence < fee) {
-      toast(`唤灵髓不足：进入第 ${w} 波需 ${fee} 唤灵髓（约本波预期收益的 5%）`);
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？将消耗 ${fee} 唤灵髓。`)) return;
-    if (enterDungeon(state, w)) {
-      saveGame(state);
-      toast(`已进入幻域（自第 ${w} 波），已支付入场费 ${fee} 唤灵髓`);
-      render();
-    } else {
-      toast("无法进入副本（冷却或其它限制）");
-    }
-  });
-
-  document.getElementById("sanctuary-auto-enter")?.addEventListener("change", (e) => {
-    const el = e.target as HTMLInputElement;
-    state.dungeonSanctuaryAutoEnter = el.checked;
-    saveGame(state);
-    render();
-  });
-  document.getElementById("btn-sanctuary-portal")?.addEventListener("click", () => {
-    const now = nowMs();
-    const w = state.dungeonPortalTargetWave;
-    if (!state.dungeonSanctuaryMode || state.dungeon.active || w < 1) return;
-    const pmax = playerMaxHp(state);
-    if (state.combatHpCurrent < pmax - 0.25) {
-      toast("灵息未满");
-      return;
-    }
-    if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
-      toast("当前无法进入该关卡。");
-      return;
-    }
-    const rm = computeDungeonRepeatMode(state, w);
-    const fee = dungeonEntryFeeEssence(state, w, rm);
-    if (state.summonEssence < fee) {
-      toast(`唤灵髓不足：进入第 ${w} 波需 ${fee} 唤灵髓`);
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？将消耗 ${fee} 唤灵髓。`)) return;
-    if (enterDungeon(state, w)) {
-      activeHub = "battle";
-      saveGame(state);
-      toast(`已进入第 ${w} 关（已付入场费 ${fee} 唤灵髓）`);
-      render();
-    } else {
-      toast("无法进入副本");
-    }
-  });
-  document.getElementById("btn-dungeon-help")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const p = document.getElementById("dungeon-help-popover");
-    const b = document.getElementById("btn-dungeon-help");
-    if (!p || !b) return;
-    p.hidden = !p.hidden;
-    b.setAttribute("aria-expanded", p.hidden ? "false" : "true");
-  });
-  const onDungeonLivePointerUp = (e: PointerEvent): void => {
-    if (!state.dungeon.active) return;
-    const d = state.dungeon;
-    const interWaveWait = d.mobs.length === 0 && d.interWaveCooldownUntil > nowMs();
-    if (interWaveWait) return;
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    const el = e.target as HTMLElement | null;
-    if (el?.closest("button, a, input, textarea, select, label, [role='button']")) return;
-    tryQueueDungeonDodgeWithFeedback();
-  };
-  document.getElementById("dungeon-live-root")?.addEventListener("pointerup", onDungeonLivePointerUp);
-  document.getElementById("btn-dungeon-leave")?.addEventListener("click", () => {
-    if (!confirm("确认暂离副本？再次进入将重置本波地图与魔物。")) return;
-    leaveDungeon(state);
-    saveGame(state);
-    toast("已暂离副本；再次进入将重置本波地图与魔物。");
-    render();
   });
 
   document.querySelectorAll("[data-skill-train]").forEach((el) => {
@@ -2952,7 +2724,6 @@ function bindEvents(rb: Decimal, _slots: number): void {
     state = next;
     selectedInvId = null;
     refineTargetId = null;
-    autoEnterPromptHandled = false;
     flyCreditsDismissed = false;
     saveGame(state);
     toast("存档导入成功。");
@@ -3158,84 +2929,6 @@ function loop(): void {
   const now = nowMs();
   applyTick(state, now);
   if (!mobileLiteFx) updateModernVisualFx(now);
-  if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
-    activeHub = "battle";
-    lastAutoEnterFailReason = "";
-    saveGame(state);
-    toast(`灵息已盈，已传送至第 ${state.dungeon.wave} 关`);
-    render();
-  } else if (typeof document !== "undefined") {
-    maybeToastAutoEnterFailure(now);
-  }
-  // 幻域解锁后首次且尚未通关第 1 波：自动从第 1 关进本（需付得起入场费）
-  if (
-    typeof document !== "undefined" &&
-    state.tutorialStep === 0 &&
-    getUiUnlocks(state).tabDungeon &&
-    !state.dungeon.active &&
-    !state.dungeon.autoEnterConsumed &&
-    state.dungeon.maxWaveRecord === 0 &&
-    canEnterDungeon(state, now) &&
-    canEnterAtWave(state, 1)
-  ) {
-    const fee = dungeonEntryFeeEssence(state, 1, computeDungeonRepeatMode(state, 1));
-    if (!autoEnterPromptHandled) {
-      autoEnterPromptHandled = true;
-      if (state.summonEssence >= fee) {
-        const ok = confirm(`幻域已解锁，是否立即进入第 1 关？将消耗 ${fee} 唤灵髓。`);
-        if (ok && enterDungeon(state, 1)) {
-          activeHub = "battle";
-          saveGame(state);
-          toast(`已进入第 1 关（入场费 ${fee} 唤灵髓）`);
-          render();
-        } else if (!ok) {
-          state.dungeon.autoEnterConsumed = true;
-          saveGame(state);
-        }
-      }
-    }
-  }
-  const floatPopups = drainDungeonDamageFloats();
-  if (floatPopups.length && typeof document !== "undefined") {
-    const layer = document.getElementById("dungeon-float-layer");
-    if (layer) {
-      for (const f of floatPopups) {
-        const el = document.createElement("span");
-        el.className = `dungeon-float-txt ${f.cls}`;
-        el.textContent = f.text;
-        el.style.left = `${100 * f.nx}%`;
-        el.style.top = `${100 * f.ny}%`;
-        layer.appendChild(el);
-        setTimeout(() => el.remove(), 880);
-      }
-    }
-  }
-  if (state.dungeon.pendingToast) {
-    const m = state.dungeon.pendingToast;
-    state.dungeon.pendingToast = null;
-    tryToast(m);
-    saveGame(state);
-  }
-  /** 阵亡/暂离出本：仍在幻域页时整页重绘，避免底部生命/地图卡在进本前状态 */
-  if (
-    typeof document !== "undefined" &&
-    lastDungeonActive &&
-    !state.dungeon.active &&
-    activeHub === "battle"
-  ) {
-    render();
-  }
-  /** 阵亡已在 `dungeonSanctuaryMode` 中处理并会走 pendingToast；此处仅补「暂离等非回气所」在后台结束时的提示 */
-  if (
-    lastDungeonActive &&
-    !state.dungeon.active &&
-    typeof document !== "undefined" &&
-    document.visibilityState === "hidden" &&
-    !state.dungeonSanctuaryMode
-  ) {
-    deferredDungeonToasts.push("幻域已结束（阵亡或暂离）");
-  }
-  lastDungeonActive = state.dungeon.active;
   for (const a of drainAchievementToastQueue()) {
     toastAchievement(a);
   }
@@ -3300,160 +2993,6 @@ function loop(): void {
     const btnPull = document.getElementById("btn-pull-battle-skill") as HTMLButtonElement | null;
     if (btnPull) btnPull.disabled = state.summonEssence < battleSkillPullCost();
   }
-  if (getUiUnlocks(state).tabDungeon && state.dungeon.active) {
-    const d = state.dungeon;
-    /** 仅当正在查看「幻域」页时才补挂载地图；否则地图本就不在 DOM，会误判为缺失而每帧 render */
-    if (activeHub === "battle" && d.mobs.length > 0 && !document.getElementById("dungeon-map")) {
-      render();
-    }
-    if (
-      d.mobs.length === 0 &&
-      d.interWaveCooldownUntil > now &&
-      document.getElementById("dungeon-inter-sec")
-    ) {
-      const cd = Math.max(0, d.interWaveCooldownUntil - now);
-      const pct =
-        DUNGEON_INTER_WAVE_CD_MS > 0
-          ? Math.min(100, (100 * (DUNGEON_INTER_WAVE_CD_MS - cd)) / DUNGEON_INTER_WAVE_CD_MS)
-          : 100;
-      const secEl = document.getElementById("dungeon-inter-sec");
-      const barEl = document.getElementById("dungeon-inter-bar-fill") as HTMLElement | null;
-      if (secEl) secEl.textContent = `${Math.ceil(cd / 1000)} 秒`;
-      if (barEl) barEl.style.width = `${pct}%`;
-    }
-    const mapEl = document.getElementById("dungeon-map");
-    let mapOutOfSync = false;
-    if (mapEl) {
-      const domIds = [...mapEl.querySelectorAll(".dungeon-mob-stack")]
-        .map((el) => el.getAttribute("data-mob-id") ?? "")
-        .sort()
-        .join(",");
-      const stIds = d.mobs
-        .map((m) => String(m.id))
-        .sort()
-        .join(",");
-      mapOutOfSync = domIds !== stIds;
-    }
-    if (activeHub === "battle" && mapOutOfSync) {
-      render();
-    } else if (activeHub === "battle") {
-      const pst = document.getElementById("dungeon-player-stack");
-      if (pst) {
-        pst.style.left = `${d.playerX * 100}%`;
-        pst.style.top = `${d.playerY * 100}%`;
-      }
-      const pl = document.getElementById("dungeon-player");
-      if (pl) {
-        pl.classList.toggle("attacking", d.inMelee);
-        pl.classList.toggle("dungeon-player-dodge", d.bossDodgeVisual);
-        pl.classList.toggle("dungeon-player-iframes", now < d.dodgeIframesUntil);
-        pl.classList.toggle(
-          "dungeon-player-rooted",
-          now < d.playerMoveLockUntil && now >= d.dodgeIframesUntil,
-        );
-      }
-      if (mapEl) {
-        mapEl.classList.toggle("is-aoe", d.inMelee && d.attackVisualMode === "aoe");
-        mapEl.classList.toggle("is-single", d.inMelee && d.attackVisualMode === "single");
-        mapEl.classList.toggle("in-combat", d.inMelee);
-        const atkSpd = playerDungeonAttackSpeedMult(state);
-        const hitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
-        mapEl.style.setProperty("--dungeon-player-hit-interval", `${hitIntSec}s`);
-        /** 接战光圈与命中判定同一公式，禁止固定 px，否则会出现「视觉上进圈却不普攻」 */
-        const ring = mapEl.querySelector(".dungeon-engage-ring") as HTMLElement | null;
-        if (ring) {
-          const rNorm = playerAttackDiskOuterRadiusNormForUi(state, d);
-          const rect = mapEl.getBoundingClientRect();
-          const rx = rNorm * rect.width;
-          const ry = rNorm * rect.height;
-          ring.style.width = `${2 * rx}px`;
-          ring.style.height = `${2 * ry}px`;
-          ring.style.marginLeft = `${-rx}px`;
-          ring.style.marginTop = `${-ry}px`;
-        }
-      }
-      const prot = document.getElementById("dungeon-player-rot");
-      const nearMob = pickCombatTargetMob(d, playerEngageRadiusNorm(state));
-      if (prot && nearMob) {
-        const deg = (Math.atan2(nearMob.y - d.playerY, nearMob.x - d.playerX) * 180) / Math.PI;
-        prot.style.transform = `rotate(${deg}deg)`;
-      } else if (prot) {
-        prot.style.transform = "";
-      }
-      const nearestId = pickCombatTargetMob(d, playerEngageRadiusNorm(state))?.id;
-      for (const m of d.mobs) {
-        const el = document.querySelector(`.dungeon-mob-stack[data-mob-id="${m.id}"]`) as HTMLElement | null;
-        if (el) {
-          el.style.left = `${m.x * 100}%`;
-          el.style.top = `${m.y * 100}%`;
-          el.classList.toggle("mob-target", d.inMelee && m.id === nearestId && m.hp > 0);
-          const fill = el.querySelector(".mob-hp-fill") as HTMLElement | null;
-          if (fill && m.maxHp > 0) {
-            fill.style.width = `${Math.min(100, (100 * Math.max(0, m.hp)) / m.maxHp)}%`;
-          }
-          const dot = el.querySelector(".dungeon-entity.mob");
-          if (dot) {
-            const sk = ((m.mobKind % 8) + 8) % 8;
-            dot.className = `dungeon-entity mob mob-skin-${sk}${m.isBoss ? " mob-boss" : ""} ${m.hp <= 0 ? "mob-dead" : ""}`;
-          }
-        }
-      }
-    }
-    const mobPct = d.monsterMax > 0 ? Math.min(100, (100 * Math.max(0, d.monsterHp)) / d.monsterMax) : 0;
-    const hpPct = d.playerMax > 0 ? Math.min(100, (100 * Math.max(0, d.playerHp)) / d.playerMax) : 0;
-    const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
-    const interWaveWait = d.mobs.length === 0 && d.interWaveCooldownUntil > now;
-    const metaEl = document.getElementById("dungeon-active-meta");
-    if (metaEl && !interWaveWait) {
-      metaEl.textContent = formatDungeonActiveMeta(state, now);
-    }
-    const plTxt = document.getElementById("dungeon-pl-txt");
-    if (plTxt) plTxt.textContent = `${fmtN(Math.max(0, d.playerHp))} / ${fmtN(d.playerMax)}`;
-    const stBar = document.getElementById("dungeon-stamina-bar");
-    const stTxt = document.getElementById("dungeon-stamina-txt");
-    if (stBar && DUNGEON_STAMINA_MAX > 0) {
-      stBar.style.width = `${Math.min(100, (100 * Math.max(0, d.stamina)) / DUNGEON_STAMINA_MAX)}%`;
-    }
-    if (stTxt) stTxt.textContent = `${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}`;
-    const pb = document.getElementById("dungeon-pl-bar");
-    const bb = document.getElementById("dungeon-boss-bar");
-    const btxt = document.getElementById("dungeon-boss-hp-txt");
-    if (pb) pb.style.width = `${hpPct}%`;
-    if (bb) bb.style.width = `${mobPct}%`;
-    if (btxt) btxt.textContent = `${fmtN(Math.max(0, d.monsterHp))} / ${fmtN(d.monsterMax)}`;
-    const bname = document.getElementById("dungeon-boss-name");
-    const bm = currentBossMob(d);
-    if (bname && bm) bname.textContent = bossDisplayTitle(bm);
-  }
-  if (getUiUnlocks(state).tabDungeon && !state.dungeon.active) {
-    const d = state.dungeon;
-    const now = nowMs();
-    const cd = Math.max(0, d.deathCooldownUntil - now);
-    const cdPct = cd > 0 ? Math.min(100, 100 - (100 * cd) / DUNGEON_DEATH_CD_MS) : 100;
-    const canEnter = canEnterDungeon(state, now);
-    const secEl = document.getElementById("dungeon-cd-sec");
-    const barEl = document.getElementById("dungeon-cd-bar-fill") as HTMLElement | null;
-    const cdBlock = document.getElementById("dungeon-cd-block") as HTMLElement | null;
-    const readyHint = document.getElementById("dungeon-idle-ready-hint") as HTMLElement | null;
-    const btnEnter = document.getElementById("btn-dungeon-enter") as HTMLButtonElement | null;
-    if (secEl) secEl.textContent = `${Math.ceil(cd / 1000)} 秒`;
-    if (barEl) barEl.style.width = `${cdPct}%`;
-    if (cdBlock) cdBlock.hidden = cd <= 0;
-    if (readyHint) readyHint.hidden = cd > 0;
-    if (btnEnter) {
-      btnEnter.disabled = !canEnter;
-      btnEnter.textContent = canEnter ? "进入副本" : cd > 0 ? "冷却中" : "无法进入";
-    }
-  }
-  if (getUiUnlocks(state).tabDungeon && state.dungeonSanctuaryMode && !state.dungeon.active) {
-    const pmax = playerMaxHp(state);
-    const chp = state.combatHpCurrent;
-    const pct = pmax > 0 ? Math.min(100, (100 * Math.max(0, chp)) / pmax) : 0;
-    const t = document.getElementById("dungeon-global-hp-txt");
-    const b = document.getElementById("dungeon-global-hp-bar");
-    if (t) t.textContent = `${fmtNumZh(Math.max(0, chp))} / ${fmtNumZh(pmax)}`;
-    if (b) (b as HTMLElement).style.width = `${pct}%`;
-  }
   if (activeHub === "gacha") {
     const bar = document.getElementById("resonance-bar-fill");
     const ring = document.getElementById("resonance-ring");
@@ -3472,33 +3011,6 @@ function loop(): void {
     const pityTxt = document.getElementById("pity-remain-txt");
     if (pityFill) pityFill.style.width = `${pityPct}%`;
     if (pityTxt) pityTxt.textContent = String(pityRem);
-  }
-  if (getUiUnlocks(state).tabDungeon && activeHub === "battle") {
-    const d = state.dungeon;
-    const pmax = playerMaxHp(state);
-    const chp = state.combatHpCurrent;
-    const footChp = document.getElementById("dungeon-foot-chp");
-    const footPmax = document.getElementById("dungeon-foot-pmax");
-    const footEdps = document.getElementById("dungeon-foot-edps");
-    if (footChp) footChp.textContent = fmtNumZh(Math.max(0, chp));
-    if (footPmax) footPmax.textContent = fmtNumZh(pmax);
-    if (footEdps) footEdps.textContent = fmtNumZh(playerExpectedDps(state));
-    const elElapsed = document.getElementById("dungeon-session-elapsed");
-    const elEta = document.getElementById("dungeon-eta-remaining");
-    if (d.active && d.sessionEnterAtMs > 0) {
-      const elapsedSec = (now - d.sessionEnterAtMs) / 1000;
-      if (elElapsed) elElapsed.textContent = fmtDungeonDur(elapsedSec);
-      const poolHp = totalAliveMobHpSum(d);
-      const edps = playerExpectedDps(state);
-      if (elEta) {
-        if (poolHp <= 0) elEta.textContent = "—";
-        else if (edps <= 1e-9) elEta.textContent = "∞";
-        else elEta.textContent = fmtDungeonDur(poolHp / edps);
-      }
-    } else {
-      if (elElapsed) elElapsed.textContent = "—";
-      if (elEta) elEta.textContent = "—";
-    }
   }
   updateTopResourcePillsAndVigor(pool);
   const pr = document.getElementById("ps-realm");
@@ -3532,7 +3044,7 @@ function loop(): void {
   const pInc = document.getElementById("ps-incmul");
   const pIncW = document.getElementById("ps-incmul-wave");
   if (pInc && pIncW) {
-    const rw = state.dungeon.active ? state.dungeon.wave : Math.max(1, state.dungeon.maxWaveRecord);
+    const rw = Math.max(1, state.combatReferenceWave);
     pInc.textContent = `×${playerIncomingDamageMult(state, rw).toFixed(3)}`;
     pIncW.textContent = `（第 ${rw} 波）`;
   }
@@ -3567,10 +3079,6 @@ function loop(): void {
   if (ptPulls) ptPulls.textContent = String(state.totalPulls);
   const pPullLife = document.getElementById("ps-pulls-life");
   if (pPullLife) pPullLife.textContent = String(state.pullsThisLife ?? 0);
-  const pDw = document.getElementById("ps-dungeon-waves");
-  if (pDw) pDw.textContent = String(state.dungeon.totalWavesCleared);
-  const pMw = document.getElementById("ps-max-wave");
-  if (pMw) pMw.textContent = String(state.dungeon.maxWaveRecord);
   const pReinc = document.getElementById("ps-reinc");
   if (pReinc) pReinc.textContent = String(state.reincarnations);
   const pCodex = document.getElementById("ps-codex");
@@ -3615,26 +3123,11 @@ function init(): void {
   bindKonamiEasterEgg(() => {
     toast("秘传心法已领悟……开玩笑的，继续挂机吧。");
   });
-  document.addEventListener(
-    "keydown",
-    (e) => {
-      if (e.code !== "Space" && e.key !== " ") return;
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
-      if (t?.closest("button, a, select, label, [role='button'], [tabindex]")) return;
-      if (!state.dungeon.active) return;
-      const d = state.dungeon;
-      if (d.mobs.length === 0 && d.interWaveCooldownUntil > nowMs()) return;
-      e.preventDefault();
-      tryQueueDungeonDodgeWithFeedback();
-    },
-    { passive: false },
-  );
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState !== "visible") return;
-    if (deferredDungeonToasts.length === 0) return;
-    for (const m of deferredDungeonToasts) toast(m);
-    deferredDungeonToasts.length = 0;
+    if (deferredHiddenTabToasts.length === 0) return;
+    for (const m of deferredHiddenTabToasts) toast(m);
+    deferredHiddenTabToasts.length = 0;
   });
   setInterval(loop, LOOP_INTERVAL_MS);
 }

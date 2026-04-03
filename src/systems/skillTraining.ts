@@ -40,7 +40,7 @@ export const SKILL_LABEL: Record<SkillId, string> = {
 };
 
 export const SKILL_HINT: Record<SkillId, string> = {
-  combat: "副本伤害、生命与幻域闪避/接战/攻速（见「角色」）",
+  combat: "战艺等级影响战斗向展示属性（见「角色」身法与战斗属性）",
   gathering: "略增灵石与资源向收益",
   arcana: "略加快聚灵共鸣累积",
 };

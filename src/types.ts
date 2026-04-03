@@ -71,135 +71,6 @@ export interface GearItem {
   suffixes: GearAffixRoll[];
 }
 
-/** 幻域地图上的单只魔物（位置 0–1 归一化，对应格子中心） */
-export interface DungeonMob {
-  id: number;
-  x: number;
-  y: number;
-  hp: number;
-  maxHp: number;
-  element: Element;
-  /** 首领：更高血与掉落加成 */
-  isBoss: boolean;
-  /** 外观种类 0–7，影响配色与称呼 */
-  mobKind: number;
-  /** 仅首领：称号片段（与元素组合成全名） */
-  bossEpithet?: string;
-  /** 闪避：0–1，玩家对其造成伤害时期望按 (1−闪避) 结算 */
-  dodge: number;
-  /** 攻击范围（归一化距离）：与玩家距离不大于此值时魔物可攻击玩家 */
-  attackRange: number;
-  /** 攻击间隔（秒），越小攻速越快 */
-  attackInterval: number;
-  /** 移动速度乘数（相对同类基础移速） */
-  moveSpeedMul: number;
-  /** 普通怪：近战血厚距短；远程攻远血脆。首领不设 */
-  mobRole?: "melee" | "ranged";
-  /** 非锁定目标时的游荡朝向（弧度），随机转向以覆盖全图可走区域，非周期绕圈 */
-  wanderHeading?: number;
-}
-
-/** 未通关波次的快照（暂离存档；进关时会清除以重新刷怪） */
-export interface WaveCheckpoint {
-  mobs: DungeonMob[];
-  walkable: boolean[];
-  mapW: number;
-  mapH: number;
-  packSize: number;
-  packKilled: number;
-  essenceThisWave: number;
-  monsterAttackAccum: number;
-  /** 接续：玩家普攻间隔累积（与 `DungeonState` 同步） */
-  playerAttackAccum?: number;
-  /** 接续：当前普攻目标魔物 id */
-  playerAttackTargetMobId?: number;
-  /** 本波生成时的出生点（归一化） */
-  spawnX: number;
-  spawnY: number;
-  /** 接续时是否复刷关（影响唤灵髓倍率） */
-  rewardModeRepeat?: boolean;
-}
-
-export interface DungeonState {
-  active: boolean;
-  wave: number;
-  /** 当前锁定目标（UI 血条）；与 mobs 中目标同步 */
-  monsterHp: number;
-  monsterMax: number;
-  playerHp: number;
-  playerMax: number;
-  deathCooldownUntil: number;
-  totalWavesCleared: number;
-  /** 怪物普攻间隔累积（秒） */
-  monsterAttackAccum: number;
-  /** 幻域：玩家普攻间隔累积（秒），满间隔出一击离散伤害 */
-  playerAttackAccum: number;
-  /** 幻域：当前普攻计时锁定的魔物 id（切换目标时清零 accum） */
-  playerAttackTargetMobId: number;
-  /** 本波怪群总只数（刷宝：一波多怪） */
-  packSize: number;
-  /** 本波已击杀只数 */
-  packKilled: number;
-  /** 本次进本累计击杀 */
-  sessionKills: number;
-  /** 本次进本已获得唤灵髓（按关结算后累计，可含小数显示） */
-  sessionEssence: number;
-  /** 本波掉落小数累加，清关时与 essenceThisWave 一并折算进背包 */
-  essenceRemainder: number;
-  /** 角色在地图上的位置（0–1） */
-  playerX: number;
-  playerY: number;
-  /** 地图上全部魔物（含已死 hp≤0，便于过渡动画；波次刷新时重建） */
-  mobs: DungeonMob[];
-  nextMobId: number;
-  /** 当前关卡地图：row-major，true=可走 */
-  walkable: boolean[];
-  mapW: number;
-  mapH: number;
-  /** 历史最高通关波次（存档） */
-  maxWaveRecord: number;
-  /** 下次进入副本默认起始波；合法值为「下一未通关波」或仍有存活魔物的存档波 */
-  entryWave: number;
-  /** 攻击摆动相位（表现用） */
-  attackAnimPhase: number;
-  /** 是否与目标接战（供 UI 动画） */
-  inMelee: boolean;
-  /** 幻域表现：接战且出手时为圆形 AoE（`aoe`）；`single` 保留兼容旧存档 */
-  attackVisualMode: "none" | "aoe" | "single";
-  /** 清完一波后，到下一波刷怪前的休整截止时间（ms）；0 表示未在休整 */
-  interWaveCooldownUntil: number;
-  /** 当前波累计获得唤灵髓（本关结算展示） */
-  essenceThisWave: number;
-  /** 待主界面 toast 的关卡结算文案（消费后清空） */
-  pendingToast: string | null;
-  /** 兼容旧存档；已不再用于 UI，阵亡说明见 `pendingToast` */
-  pendingDeathPresentation: boolean;
-  /** 各波次未通关时的进度（反复挑战同一关时魔物血量持久化） */
-  waveCheckpoint: Record<number, WaveCheckpoint>;
-  /** 当前波地图生成时的出生点（用于阵亡/暂离后再入） */
-  waveEntrySpawnX: number;
-  waveEntrySpawnY: number;
-  /** 首领战：当前帧是否处于受击前闪避位移（供 UI） */
-  bossDodgeVisual: boolean;
-  /** 幻域体力（闪避消耗） */
-  stamina: number;
-  /** 闪避无敌帧结束时间（ms 时间戳）；`now < 此值` 时无敌 */
-  dodgeIframesUntil: number;
-  /** 主线程输入：请求本 tick 尝试闪避（消费后清空） */
-  dodgeQueued: boolean;
-  /** 定身/硬直结束时间（ms）；`now < 此值` 时不可移动、不可闪避 */
-  playerMoveLockUntil: number;
-  /** 上一帧寻路位移方向（单位向量）；非接战闪避沿此方向；无位移时由追击方向兜底 */
-  playerLastMoveNx: number;
-  playerLastMoveNy: number;
-  /** 本局是否为复刷旧关（唤灵髓削减，关末奖灵砂） */
-  rewardModeRepeat: boolean;
-  /** 幻域解锁后是否已自动进过第一关（仅一次） */
-  autoEnterConsumed: boolean;
-  /** 本次进本时刻（ms），用于本局用时；进本时写入，暂离/阵亡出本后保留至下次进本覆盖 */
-  sessionEnterAtMs: number;
-}
-
 /** 造化玉解锁的 QoL（文档 §5） */
 export interface QoLFlags {
   /** 【天道酬勤】一键十连 */
@@ -220,7 +91,7 @@ export interface GameState {
   spiritStones: string;
   /** 本轮轮回内峰值灵石（道韵对数结算） */
   peakSpiritStonesThisLife: string;
-  /** 唤灵髓：抽卡唯一货币，仅副本掉落 */
+  /** 唤灵髓：抽卡、铸灵、心法等主要消耗货币 */
   summonEssence: number;
   /** 道韵：轮回货币 */
   daoEssence: number;
@@ -228,17 +99,13 @@ export interface GameState {
   zaoHuaYu: number;
   /** 境界等级 */
   realmLevel: number;
-  /**
-   * 幻域/战斗当前生命（不随进关重置；上限为 playerMaxHp）
-   * 阵亡后为 0，随时间恢复。
-   */
+  /** 战斗当前生命（上限为 playerMaxHp），随时间恢复 */
   combatHpCurrent: number;
-  /** 阵亡后在灵息之地回气；满血后可传送回中断关卡 */
-  dungeonSanctuaryMode: boolean;
-  /** 自动传送目标波次（阵亡时记录，0 表示无） */
-  dungeonPortalTargetWave: number;
-  /** 圣所回满后是否自动进本（付入场髓）；未勾选则需手动点击 */
-  dungeonSanctuaryAutoEnter: boolean;
+  /**
+   * 用于 `playerIncomingDamageMult` 中 K 的波次项（≥1）。
+   * 新存档默认 1；从旧存档迁移时取原幻域最高推进波，以保持护体受击参考与迁移前一致。
+   */
+  combatReferenceWave: number;
   /** 已抽总次数（用于统计与成就） */
   totalPulls: number;
   /** 距离 UR 保底的计数（大保底） */
@@ -344,8 +211,6 @@ export interface GameState {
   /** 当前挂机修炼的技能；null 为不修炼 */
   activeSkillId: SkillId | null;
 
-  dungeon: DungeonState;
-
   gearInventory: Record<string, GearItem>;
   equippedGear: { weapon: string | null; body: string | null; ring: string | null };
   nextGearInstanceId: number;
@@ -394,48 +259,13 @@ export const TRUE_ENDING_STONE_THRESHOLD = "1e1000";
 /** 飞升境界阈值 */
 export const TRUE_ENDING_REALM = 50;
 
-/** 副本死亡惩罚：真实时间 CD */
-export const DUNGEON_DEATH_CD_MS = 75_000;
-
-/** 幻域：清关后进入下一关前的休整时间 */
-export const DUNGEON_INTER_WAVE_CD_MS = 4_000;
-
-/** 复刷已通关波次：唤灵髓相对首通的比例 */
-export const DUNGEON_REPEAT_ESSENCE_MULT = 0.2;
-/** 复刷关入场费相对首通的比例 */
-export const DUNGEON_REPEAT_ENTRY_FEE_MULT = 0.45;
-
-/** 怪物攻击间隔（秒） */
-export const DUNGEON_MONSTER_HIT_INTERVAL = 1.15;
-
-/** 幻域玩家持续伤害：基准攻击间隔（秒）；伤害/秒 ∝ 攻速乘区 ÷ 此值 */
+/** 战斗期望秒伤：基准攻击间隔（秒）；与攻速乘区相除得等效攻击频率 */
 export const PLAYER_DUNGEON_HIT_INTERVAL_SEC = 1.5;
 
-/** 幻域：接战圈内移速乘数（相对未接战；约降低 70%） */
-export const DUNGEON_MELEE_MOVE_MULT = 0.3;
-
 /**
- * 幻域受击：护体值 K 与 `playerDefenseRating` 共同决定乘区 K/(K+护体)，
- * 与闪避、元素相克独立；随波次略升，避免前期护体过强。
+ * 受击参考：护体值 K 与 `playerDefenseRating` 共同决定乘区 K/(K+护体)。
+ * 波次项由 `combatReferenceWave` 提供，与境界项叠加。
  */
 export const PLAYER_DEFENSE_K_BASE = 88;
 export const PLAYER_DEFENSE_K_PER_WAVE = 1.65;
 export const PLAYER_DEFENSE_K_PER_REALM = 1.1;
-
-/** 幻域体力上限（闪避消耗） */
-export const DUNGEON_STAMINA_MAX = 100;
-/** 单次闪避消耗体力 */
-export const DUNGEON_DODGE_STAMINA_COST = 38;
-/** 闪避无敌帧时长（毫秒） */
-export const DUNGEON_DODGE_IFRAMES_MS = 480;
-/** 体力每秒回复（副本内） */
-export const DUNGEON_STAMINA_REGEN_PER_SEC = 22;
-/** 闪避侧向位移强度（归一化坐标量级） */
-export const DUNGEON_DODGE_SLIDE = 0.034;
-
-/** 幻域：己方攻击周期落地后定身（不可移动/闪避，毫秒） */
-export const DUNGEON_PLAYER_ATTACK_ROOT_MS = 260;
-/** 幻域：受敌方伤害硬直（毫秒） */
-export const DUNGEON_HITSTUN_ROOT_MS = 340;
-/** 幻域：首领攻击命中硬直（长于普通怪，与接战移速 debuff 配套） */
-export const DUNGEON_BOSS_HITSTUN_ROOT_MS = 520;

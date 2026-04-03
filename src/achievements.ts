@@ -127,8 +127,8 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "streak_7",
-    title: "副本深耕",
-    desc: "在幻域副本中累计击溃 40 波",
+    title: "七日恒心",
+    desc: "登录连签达到 7 天",
     rewardStones: 350,
     rewardEssence: 50,
   },
@@ -201,7 +201,7 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
     case "rein_5":
       return state.reincarnations >= 5;
     case "streak_7":
-      return state.dungeon.totalWavesCleared >= 40;
+      return state.dailyStreak >= 7;
     case "pet_first_feed":
       return anyPetOwned(state);
     default:

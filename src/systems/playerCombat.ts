@@ -6,6 +6,9 @@ import {
   PLAYER_DEFENSE_K_PER_REALM,
   PLAYER_DEFENSE_K_PER_WAVE,
 } from "../types";
+
+/** 与旧幻域接战基准半径一致，供面板展示期望秒伤与接战距离 */
+const ENGAGE_RADIUS_BASE_NORM = 0.045;
 import { getCard } from "../data/cards";
 import {
   critChanceBonusFromSkills,
@@ -114,6 +117,11 @@ export function playerDungeonDodgeChance(state: GameState): number {
 /** 幻域：玩家攻击距离乘数（叠在基础接战半径上） */
 export function playerDungeonAttackRangeMult(state: GameState): number {
   return Math.min(1.4, 1 + 0.0025 * combatSkillLevel(state) + 0.0008 * state.realmLevel);
+}
+
+/** 玩家接战/攻击距离（归一化），与旧幻域公式一致，供属性面板 */
+export function playerEngageRadiusNorm(state: GameState): number {
+  return ENGAGE_RADIUS_BASE_NORM * playerDungeonAttackRangeMult(state);
 }
 
 /** 幻域：玩家攻击速度乘数（叠在持续伤害上）；成长已压低，避免前期过快 */

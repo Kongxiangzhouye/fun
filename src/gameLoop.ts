@@ -9,7 +9,6 @@ import { tickInGameClock } from "./inGameClock";
 import { earthOfflineCapMult, earthOfflineIncomeMult } from "./deckSynergy";
 import { pullOne } from "./gacha";
 import { onGachaPulls, tickWishResonancePassive } from "./dailyRewards";
-import { tickDungeon } from "./systems/dungeon";
 import { tickCombatHpRegen } from "./systems/combatHp";
 import { tickSkillTraining } from "./systems/skillTraining";
 import { tryTuna, tunaCooldownLeftMs } from "./systems/tuna";
@@ -66,7 +65,6 @@ export function applyTick(state: GameState, now: number): void {
   tickWishResonancePassive(state, dt);
   tickSkillTraining(state, dt);
   tickCombatHpRegen(state, dt);
-  tickDungeon(state, dt, tickNow);
   const ips = incomePerSecond(state, totalCardsInPool());
   addStones(state, ips.mul(dt));
   tryAutoRealm(state);
@@ -99,7 +97,7 @@ export function catchUpOffline(state: GameState, now: number): Decimal {
   tickInGameClock(state, dt);
   tickWishResonancePassive(state, dt, OFFLINE_RESONANCE_GAIN_MULT);
   tickSkillTraining(state, dt);
-  if (!state.dungeon.active) tickCombatHpRegen(state, dt);
+  tickCombatHpRegen(state, dt);
   tryCompleteAchievements(state);
   checkTrueEnding(state);
   return gained;
@@ -117,7 +115,7 @@ export function fastForward(state: GameState, seconds: number): Decimal {
   tickInGameClock(state, dt);
   tickWishResonancePassive(state, dt, OFFLINE_RESONANCE_GAIN_MULT);
   tickSkillTraining(state, dt);
-  if (!state.dungeon.active) tickCombatHpRegen(state, dt);
+  tickCombatHpRegen(state, dt);
   tryCompleteAchievements(state);
   checkTrueEnding(state);
   return gained;

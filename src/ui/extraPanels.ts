@@ -1,36 +1,11 @@
 import type { GameState, Rarity, SkillId } from "../types";
 import {
-  DUNGEON_DEATH_CD_MS,
-  DUNGEON_DODGE_IFRAMES_MS,
-  DUNGEON_DODGE_STAMINA_COST,
-  DUNGEON_INTER_WAVE_CD_MS,
-  DUNGEON_STAMINA_MAX,
-  PLAYER_DUNGEON_HIT_INTERVAL_SEC,
-} from "../types";
-import {
-  canEnterDungeon,
-  describeWaveProfile,
-  describeMobBattleRole,
-  dungeonEntryFeeForSelectedWave,
-  essenceRewardTotalFloat,
-  packSizeForWave,
-  pickCombatTargetMob,
-  playerEngageRadiusNorm,
-} from "../systems/dungeon";
-import {
-  playerAttack,
-  playerDungeonAttackSpeedMult,
-  playerExpectedDps,
-  playerMaxHp,
-} from "../systems/playerCombat";
-import {
   SKILL_HINT,
   SKILL_LABEL,
   secondsToNextLevel,
   skillXpPerSecond,
   xpToNextLevel,
 } from "../systems/skillTraining";
-import { getGearBase } from "../data/gearBases";
 import { xuanTieEnhanceCost } from "../systems/gearCraft";
 import { BATTLE_SKILLS } from "../data/battleSkills";
 import { battleSkillPullCost, describeBattleSkillLevels } from "../systems/battleSkills";
@@ -42,23 +17,20 @@ import {
   UI_EMPTY_GEAR,
   UI_EMPTY_PET,
   UI_EMPTY_UNLOCK,
-  UI_HEAD_DUNGEON,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
   UI_HEAD_TRAIN,
 } from "./visualAssets";
-import { formatMobDisplayName } from "../data/dungeonMobs";
-import { currentBossMob } from "../systems/dungeon";
 import { PET_DEFS } from "../data/pets";
 import {
   describePetBonusesSummary,
   MAX_PET_LEVEL,
   petBonusPreviewLine,
   petSystemUnlocked,
-  PET_SYSTEM_UNLOCK_WAVES,
+  PET_SYSTEM_UNLOCK_REALM,
+  PET_SYSTEM_UNLOCK_PULLS,
   PET_PULL_COST,
   xpToNextPetLevel,
-  petDungeonAtkAdditive,
 } from "../systems/pets";
 
 /** 灵宠列表：稀有度天极 → 凡品 */
@@ -79,274 +51,6 @@ function fmtEta(sec: number | null): string {
     return `约 ${m} 分 ${s} 秒`;
   }
   return `约 ${Math.floor(sec / 60)} 分钟`;
-}
-
-/** 幻域战斗中：波次、锁定、掉落说明等合并为一段文字（由 loop 刷新） */
-export function formatDungeonActiveMeta(state: GameState, now: number): string {
-  const d = state.dungeon;
-  const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
-  const fmtSessEss = (n: number) => (n >= 200 ? n.toFixed(1) : n.toFixed(2));
-  const curMob = Math.min(d.packKilled + 1, d.packSize);
-  const waveEssF = essenceRewardTotalFloat(d.wave, state, d.wave % 5 === 0, d.rewardModeRepeat);
-  const nPk = packSizeForWave(d.wave + 1);
-  const aliveN = d.mobs.filter((m) => m.hp > 0).length;
-  const nearest = pickCombatTargetMob(d, playerEngageRadiusNorm(state));
-  const bossAlive = d.mobs.some((m) => m.isBoss && m.hp > 0);
-  const lockLine = nearest
-    ? `锁定 ${describeMobBattleRole(nearest)}：${fmtN(Math.max(0, nearest.hp))} / ${fmtN(nearest.maxHp)}`
-    : "—";
-  const lines = [
-    `本次击杀 ${d.sessionKills} · 本次髓 +${fmtSessEss(d.sessionEssence)} · 累计通关 ${d.totalWavesCleared} 波`,
-    `第 ${d.wave} 波 · 本波第 ${curMob} / ${d.packSize} · 场上 ${aliveN} 存活`,
-    `${lockLine} · 本关清完约 ${waveEssF.toFixed(2)} 髓 · 下波约 ${nPk} 只`,
-  ];
-  if (!bossAlive && d.monsterMax > 0) {
-    lines.push(`汇总额 ${fmtN(Math.max(0, d.monsterHp))} / ${fmtN(d.monsterMax)}`);
-  }
-  const iframesLeft = now < d.dodgeIframesUntil ? Math.ceil((d.dodgeIframesUntil - now) / 1000) : 0;
-  lines.push(
-    `点击地图闪避（空格） · 耗体 ${DUNGEON_DODGE_STAMINA_COST} · 化劲 ${(DUNGEON_DODGE_IFRAMES_MS / 1000).toFixed(1)} 秒${iframesLeft > 0 ? ` · 余 ${iframesLeft} 秒` : ""}`,
-  );
-  return lines.join("\n");
-}
-
-export function formatDungeonInterMeta(): string {
-  return "本关结算完成。休整后进入下一关。接战时移速会降低，出手和受击后会短暂停顿。";
-}
-
-function renderDungeonMapHtml(state: GameState): string {
-  const d = state.dungeon;
-  if (!d.active) return "";
-  let cells = "";
-  if (d.walkable.length && d.mapW > 0) {
-    for (let y = 0; y < d.mapH; y++) {
-      for (let x = 0; x < d.mapW; x++) {
-        const w = d.walkable[y * d.mapW + x];
-        cells += `<div class="dcell ${w ? "walk" : "wall"}"></div>`;
-      }
-    }
-  }
-  let mobs = "";
-  for (const m of d.mobs) {
-    const boss = m.isBoss ? " mob-boss" : "";
-    const skin = ` mob-skin-${((m.mobKind % 8) + 8) % 8}`;
-    const hpPct = m.maxHp > 0 ? Math.min(100, (100 * Math.max(0, m.hp)) / m.maxHp) : 0;
-    const miniHp = m.isBoss
-      ? ""
-      : `<div class="mob-hp-mini" aria-hidden="true"><span class="mob-hp-fill" style="width:${hpPct}%"></span></div>`;
-    const roleCls = !m.isBoss && m.mobRole === "ranged" ? " mob-stack-ranged" : "";
-    mobs += `<div class="dungeon-mob-stack${roleCls}" data-mob-id="${m.id}" style="left:${m.x * 100}%;top:${m.y * 100}%">
-      ${miniHp}
-      <div class="dungeon-entity mob${skin}${boss} ${m.hp <= 0 ? "mob-dead" : ""}"></div>
-    </div>`;
-  }
-  const atkCls = d.inMelee ? " attacking" : "";
-  /** 幻域普攻与转圈剑气一致，不再用群怪爆发圈 */
-  const fxAoe = "";
-  const fxSingle = d.inMelee && d.attackVisualMode === "single" ? " is-single" : "";
-  const bossMob = currentBossMob(d);
-  const bossAlive = !!bossMob;
-  const mobPct = d.monsterMax > 0 ? Math.min(100, (100 * Math.max(0, d.monsterHp)) / d.monsterMax) : 0;
-  const bossTitle = bossMob
-    ? formatMobDisplayName(bossMob.element, bossMob.mobKind, true, bossMob.bossEpithet, undefined)
-    : "首领";
-  const bossHud = bossAlive
-    ? `<div class="dungeon-map-hud-overlay" aria-hidden="true">
-      <div class="dungeon-boss-strip" id="dungeon-boss-hud">
-        <div class="dungeon-boss-strip-title" id="dungeon-boss-name">${bossTitle}</div>
-        <div class="dungeon-boss-strip-bar-wrap">
-          <div class="dungeon-boss-strip-bar-bg" aria-hidden="true"></div>
-          <div class="dungeon-boss-strip-bar-fill" id="dungeon-boss-bar" style="width:${mobPct}%"></div>
-        </div>
-        <div class="dungeon-boss-strip-readout" id="dungeon-boss-hp-txt">${fmtNum(Math.max(0, d.monsterHp))} / ${fmtNum(d.monsterMax)}</div>
-      </div>
-      <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
-    </div>`
-    : `<div class="dungeon-map-hud-overlay" aria-hidden="true">
-      <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
-    </div>`;
-  const hpPct = d.playerMax > 0 ? Math.min(100, (100 * Math.max(0, d.playerHp)) / d.playerMax) : 0;
-  const staPct = DUNGEON_STAMINA_MAX > 0 ? Math.min(100, (100 * Math.max(0, d.stamina)) / DUNGEON_STAMINA_MAX) : 0;
-  const hitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / playerDungeonAttackSpeedMult(state));
-  return `
-    <div class="dungeon-map-frame">
-      <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
-      <div class="dungeon-map-hud-bl" aria-hidden="true">
-        <div class="dungeon-hud-mini-row"><span>生命</span><span id="dungeon-pl-txt">${fmtNum(Math.max(0, d.playerHp))} / ${fmtNum(d.playerMax)}</span></div>
-        <div class="progress-track dungeon slim hud-mini"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
-        <div class="dungeon-hud-mini-row"><span>体力</span><span id="dungeon-stamina-txt">${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}</span></div>
-        <div class="progress-track dungeon slim stamina-track hud-mini"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
-      </div>
-      <div class="dungeon-map-wrap">
-        <div class="dungeon-map${fxAoe}${fxSingle}" id="dungeon-map" aria-label="幻域俯视" style="--gw:${d.mapW || 1};--gh:${d.mapH || 1};--dungeon-player-hit-interval:${hitIntSec}s">
-          ${bossHud}
-          <div class="dungeon-cells">${cells}</div>
-          <div class="dungeon-entities">
-          <div class="dungeon-player-stack" id="dungeon-player-stack" style="left:${d.playerX * 100}%;top:${d.playerY * 100}%">
-            <div class="dungeon-player-fx" aria-hidden="true">
-              <div class="dungeon-engage-ring"></div>
-              <div class="fx-aoe-ring"></div>
-              <div class="fx-single-slash"></div>
-            </div>
-            <div class="dungeon-player-rot" id="dungeon-player-rot">
-              <span class="player-facing-wedge" aria-hidden="true"></span>
-              <div class="dungeon-entity player${atkCls}" id="dungeon-player"></div>
-            </div>
-          </div>
-          ${mobs}
-          </div>
-        </div>
-      </div>
-    </div>`;
-}
-
-const DUNGEON_HELP_BLURB = `幻域只掉唤灵髓，按关结算。幻域生命为全局共享，进关不会回满。每次进关都会重置地图和怪物。入场费、阵亡损失和复刷规则见「养成→图鉴·札记」。`;
-
-function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
-  const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
-  const w = state.dungeonPortalTargetWave;
-  const auto = state.dungeonSanctuaryAutoEnter;
-  const autoAttr = auto ? "checked" : "";
-  const portalSection = portalReady
-    ? auto
-      ? `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
-      <div class="sanctuary-portal-ring" aria-hidden="true"></div>
-      <p class="sanctuary-portal-msg">生命已回满，将自动进入第 <strong>${w}</strong> 关</p>
-    </div>`
-      : `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
-      <div class="sanctuary-portal-ring" aria-hidden="true"></div>
-      <p class="sanctuary-portal-msg">生命已回满，可进入第 <strong>${w}</strong> 关（需入场髓）</p>
-      <button type="button" class="btn btn-primary btn-sanctuary-portal" id="btn-sanctuary-portal">进入副本</button>
-    </div>`
-    : auto
-      ? `<p class="sanctuary-wait-txt">恢复中，回满后将自动进入</p>`
-      : `<p class="sanctuary-wait-txt">恢复中，回满后可手动进入第 <strong>${w}</strong> 关</p>`;
-  return `<div class="sanctuary-visual">
-    <div class="sanctuary-visual-bg" aria-hidden="true"></div>
-    <div class="sanctuary-heal-particles" aria-hidden="true"></div>
-    <div class="sanctuary-player-dot" aria-hidden="true"></div>
-    <div class="sanctuary-auto-row">
-      <label class="sanctuary-auto-label">
-        <input type="checkbox" id="sanctuary-auto-enter" ${autoAttr} />
-        <span>回满后自动进本</span>
-      </label>
-      <span class="hint sm sanctuary-auto-hint">未勾选时，进本前会先确认</span>
-    </div>
-    ${portalSection}
-  </div>`;
-}
-
-function renderIdlePreviewMap(): string {
-  return `<div class="dungeon-idle-preview-map" aria-hidden="true"><div class="dungeon-idle-preview-grid"></div></div>`;
-}
-
-export function renderDungeonPanel(state: GameState): string {
-  const d = state.dungeon;
-  const now = Date.now();
-  const cd = Math.max(0, d.deathCooldownUntil - now);
-  const canEnter = canEnterDungeon(state, now);
-  const edps = playerExpectedDps(state);
-  const pmax = playerMaxHp(state);
-  const chp = state.combatHpCurrent;
-  const chpPctGlobal = pmax > 0 ? Math.min(100, (100 * Math.max(0, chp)) / pmax) : 0;
-  const entryFeeShow = dungeonEntryFeeForSelectedWave(
-    state,
-    Math.max(1, Math.min(d.maxWaveRecord + 1, d.entryWave)),
-  );
-  const petAtkPct =
-    petSystemUnlocked(state) && petDungeonAtkAdditive(state) > 0
-      ? (petDungeonAtkAdditive(state) * 100).toFixed(2)
-      : null;
-  const nextWavePreview = describeWaveProfile(Math.max(1, d.entryWave));
-  const cdPct = cd > 0 ? Math.min(100, 100 - (100 * cd) / DUNGEON_DEATH_CD_MS) : 100;
-  const interWaveWait = d.active && d.mobs.length === 0 && d.interWaveCooldownUntil > now;
-  const interSec = interWaveWait ? Math.max(0, Math.ceil((d.interWaveCooldownUntil - now) / 1000)) : 0;
-  const interPct =
-    interWaveWait && DUNGEON_INTER_WAVE_CD_MS > 0
-      ? Math.min(100, (100 * (DUNGEON_INTER_WAVE_CD_MS - (d.interWaveCooldownUntil - now))) / DUNGEON_INTER_WAVE_CD_MS)
-      : 0;
-  const sanctuaryIdle = state.dungeonSanctuaryMode && !d.active;
-
-  const helpPop = `<div id="dungeon-help-popover" class="dungeon-help-popover" role="region" aria-label="幻域说明" hidden>
-    <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
-  </div>`;
-
-  return `
-    <section class="panel dungeon-strip-panel">
-      <div class="panel-title-art-row">
-        <img class="panel-title-art-icon" src="${UI_HEAD_DUNGEON}" alt="" width="28" height="28" loading="lazy" />
-        <h2>幻域</h2>
-      </div>
-      <div class="dungeon-map-stage">
-        <button type="button" class="dungeon-map-help-btn" id="btn-dungeon-help" aria-expanded="false" aria-controls="dungeon-help-popover" aria-label="查看幻域说明" title="幻域说明">?</button>
-        ${helpPop}
-      ${
-        d.active
-          ? interWaveWait
-            ? `<div class="dungeon-active-stack">
-          <div class="dungeon-viewport dungeon-inter-wave">
-            <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
-            <div class="dungeon-inter-wave-inner">
-              <p class="dungeon-inter-title">休整中 · 即将进入第 <strong>${d.wave}</strong> 关</p>
-              <div class="bar-label"><span>下一关就绪</span><span id="dungeon-inter-sec">${interSec} 秒</span></div>
-              <div class="progress-track cd"><div class="progress-fill cd" id="dungeon-inter-bar-fill" style="width:${interPct}%"></div></div>
-            </div>
-          </div>
-          <p class="dungeon-active-meta hint sm" id="dungeon-active-meta">${formatDungeonInterMeta()}</p>
-        </div>`
-            : `<div class="dungeon-active-stack">
-          <div class="dungeon-viewport dungeon-live-combat" id="dungeon-live-root">
-          ${renderDungeonMapHtml(state)}
-          </div>
-          <p class="dungeon-active-meta hint sm" id="dungeon-active-meta">${formatDungeonActiveMeta(state, now)}</p>
-        </div>`
-          : sanctuaryIdle
-            ? `<div class="dungeon-idle-sanctuary dungeon-stage-fill">
-          ${renderSanctuaryBlock(state, chp, pmax)}
-          <div class="bar-label"><span>幻域生命</span><span id="dungeon-global-hp-txt">${fmtNum(Math.max(0, chp))} / ${fmtNum(pmax)}</span></div>
-          <div class="progress-track dungeon"><div class="progress-fill player sanctuary-hp-fill" id="dungeon-global-hp-bar" style="width:${chpPctGlobal}%"></div></div>
-        </div>`
-            : `<div class="dungeon-idle dungeon-stage-fill">
-          ${renderIdlePreviewMap()}
-          <p class="dungeon-idle-stats">累计通关 <strong>${d.totalWavesCleared}</strong> 波 · 最高第 <strong>${d.maxWaveRecord}</strong> 波</p>
-          <p class="hint sm">目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波：${nextWavePreview}</p>
-          <p class="hint sm">可选下一关或已通关关卡复刷。入场约 <strong>${entryFeeShow}</strong> 髓；阵亡损失灵石 <strong>5%</strong>（至少 1）。</p>
-          <div class="dungeon-entry-tools">
-            <label class="dungeon-entry-label">起始波次（1～${Math.max(1, d.maxWaveRecord + 1)}）
-              <input type="number" id="dungeon-entry-wave" min="1" max="${Math.max(1, d.maxWaveRecord + 1)}" step="1" value="${d.entryWave}" />
-            </label>
-            <button type="button" class="btn btn-primary" id="btn-dungeon-entry-frontier">下一关</button>
-          </div>
-          <div class="cd-block" id="dungeon-cd-block" ${cd > 0 ? "" : "hidden"}>
-              <div class="bar-label"><span>再入冷却</span><span id="dungeon-cd-sec">${Math.ceil(cd / 1000)} 秒</span></div>
-              <div class="progress-track cd"><div class="progress-fill cd" id="dungeon-cd-bar-fill" style="width:${cdPct}%"></div></div>
-          </div>
-          <p class="hint" id="dungeon-idle-ready-hint" ${cd > 0 ? "hidden" : ""}>可进入幻域</p>
-          <button class="btn btn-primary" type="button" id="btn-dungeon-enter" ${canEnter ? "" : "disabled"}>
-            ${canEnter ? "进入副本" : cd > 0 ? "冷却中" : "无法进入"}
-          </button>
-        </div>`
-      }
-      </div>
-      <div class="dungeon-foot-bar" aria-label="幻域战力简要">
-        <div class="dungeon-foot-bar-inner">
-          <span class="dungeon-foot-chip dungeon-foot-chip--skill" title="战艺等级">战艺 <strong>Lv.${state.skills.combat.level}</strong></span>
-          <span class="dungeon-foot-chip dungeon-foot-chip--dps" title="期望秒伤（不含五行相克）">期望 <strong id="dungeon-foot-edps">${fmtNum(edps)}</strong><span class="dungeon-foot-unit">/s</span></span>
-          <span class="dungeon-foot-chip dungeon-foot-chip--hp" title="幻域生命（全局）">生命 <strong id="dungeon-foot-chp">${fmtNum(Math.max(0, chp))}</strong><span class="dungeon-foot-sep">/</span><strong id="dungeon-foot-pmax">${fmtNum(pmax)}</strong></span>
-          ${
-            petAtkPct !== null
-              ? `<span class="dungeon-foot-chip dungeon-foot-chip--pet" title="灵宠幻域攻击加成">灵宠 <strong>+${petAtkPct}%</strong> 攻</span>`
-              : ""
-          }
-        </div>
-        <div class="dungeon-foot-timer hint sm" id="dungeon-foot-timer-row" aria-live="polite">
-          <span>本局用时 <strong id="dungeon-session-elapsed">—</strong></span>
-          <span class="dungeon-foot-timer-sep">·</span>
-          <span>预计剩余 <strong id="dungeon-eta-remaining">—</strong></span>
-          <span class="dungeon-foot-timer-hint">（估算值）</span>
-        </div>
-      </div>
-    </section>`;
 }
 
 export function renderTrainPanel(state: GameState): string {
@@ -414,7 +118,7 @@ export function renderTrainPanel(state: GameState): string {
           const lv = state.battleSkills[def.id] ?? 0;
           const numParts: string[] = [];
           if (def.dungeonAtkBonusPerLevel > 0) {
-            numParts.push(`幻域攻击 <strong>+${(def.dungeonAtkBonusPerLevel * 100).toFixed(2)}%</strong>/级`);
+            numParts.push(`战斗攻击（面板） <strong>+${(def.dungeonAtkBonusPerLevel * 100).toFixed(2)}%</strong>/级`);
           }
           if (def.stoneIncomeBonusPerLevel > 0) {
             numParts.push(`灵石 <strong>+${(def.stoneIncomeBonusPerLevel * 100).toFixed(3)}%</strong>/级`);
@@ -429,7 +133,7 @@ export function renderTrainPanel(state: GameState): string {
             numParts.push(`暴伤倍率 <strong>+${(def.critMultPerLevel * 100).toFixed(2)}%</strong>/级`);
           }
           if (def.dungeonMoveSpeedPerLevel > 0) {
-            numParts.push(`幻域移速 <strong>+${(def.dungeonMoveSpeedPerLevel * 100).toFixed(2)}%</strong>/级`);
+            numParts.push(`移动（面板预留） <strong>+${(def.dungeonMoveSpeedPerLevel * 100).toFixed(2)}%</strong>/级`);
           }
           const nums = numParts.length > 0 ? numParts.join(" · ") : "无数值加成";
           return `<div class="battle-skill-card">
@@ -572,14 +276,13 @@ export function renderGearPanel(
 
 export function renderPetPanel(state: GameState): string {
   if (!petSystemUnlocked(state)) {
-    const w = state.dungeon.totalWavesCleared;
     return `
     <section class="panel pet-panel">
       <div class="panel-title-art-row">
         <img class="panel-title-art-icon" src="${UI_HEAD_PET}" alt="" width="28" height="28" loading="lazy" />
         <h2>灵宠</h2>
       </div>
-      <p class="hint">幻域累计 <strong>${PET_SYSTEM_UNLOCK_WAVES}</strong> 波开放唤灵池；灵宠全局生效。当前 <strong>${w}</strong> / ${PET_SYSTEM_UNLOCK_WAVES} 波。</p>
+      <p class="hint">境界 ≥ <strong>${PET_SYSTEM_UNLOCK_REALM}</strong> 或累计唤引 ≥ <strong>${PET_SYSTEM_UNLOCK_PULLS}</strong> 次后开放唤灵池；灵宠全局生效。当前境界 <strong>${state.realmLevel}</strong>，累计唤引 <strong>${state.totalPulls}</strong> 次。</p>
       <div class="empty-art-wrap"><img src="${UI_EMPTY_UNLOCK}" alt="未解锁灵宠" class="empty-art-img" width="320" height="160" loading="lazy" /></div>
     </section>`;
   }
@@ -606,7 +309,7 @@ export function renderPetPanel(state: GameState): string {
           def.bonusKind === "stone"
             ? "灵石汇流（叠乘）"
             : def.bonusKind === "dungeon_atk"
-              ? "幻域攻（加算）"
+              ? "战斗攻（加算）"
               : def.bonusKind === "essence_find"
                 ? "唤灵髓（叠乘）"
                 : "三项综合"

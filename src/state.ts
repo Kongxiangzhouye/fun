@@ -1,62 +1,14 @@
 import type { GameState, OwnedCard, SkillId } from "./types";
-import { DECK_SIZE, DUNGEON_STAMINA_MAX } from "./types";
+import { DECK_SIZE } from "./types";
 import { initRng, rollNewRngSeed } from "./rng";
 import { playerMaxHp } from "./systems/playerCombat";
 
-export const SAVE_VERSION = 22;
+export const SAVE_VERSION = 23;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
   gathering: { level: 1, xp: 0 },
   arcana: { level: 1, xp: 0 },
-});
-
-const emptyDungeon = (): GameState["dungeon"] => ({
-  active: false,
-  wave: 1,
-  monsterHp: 0,
-  monsterMax: 0,
-  playerHp: 0,
-  playerMax: 0,
-  deathCooldownUntil: 0,
-  totalWavesCleared: 0,
-  monsterAttackAccum: 0,
-  playerAttackAccum: 0,
-  playerAttackTargetMobId: 0,
-  packSize: 1,
-  packKilled: 0,
-  sessionKills: 0,
-  sessionEssence: 0,
-  essenceRemainder: 0,
-  playerX: 0.5,
-  playerY: 0.5,
-  mobs: [],
-  nextMobId: 1,
-  walkable: [],
-  mapW: 0,
-  mapH: 0,
-  maxWaveRecord: 0,
-  entryWave: 1,
-  attackAnimPhase: 0,
-  inMelee: false,
-  attackVisualMode: "none",
-  interWaveCooldownUntil: 0,
-  essenceThisWave: 0,
-  pendingToast: null,
-  pendingDeathPresentation: false,
-  waveCheckpoint: {},
-  waveEntrySpawnX: 0.5,
-  waveEntrySpawnY: 0.5,
-  bossDodgeVisual: false,
-  stamina: DUNGEON_STAMINA_MAX,
-  dodgeIframesUntil: 0,
-  dodgeQueued: false,
-  playerMoveLockUntil: 0,
-  playerLastMoveNx: 0,
-  playerLastMoveNy: 0,
-  rewardModeRepeat: false,
-  autoEnterConsumed: false,
-  sessionEnterAtMs: 0,
 });
 
 export function createInitialState(): GameState {
@@ -121,16 +73,13 @@ export function createInitialState(): GameState {
     lastTunaMs: 0,
     skills: emptySkills(),
     activeSkillId: "combat" as SkillId | null,
-    dungeon: emptyDungeon(),
     gearInventory: {},
     equippedGear: { weapon: null, body: null, ring: null },
     nextGearInstanceId: 1,
     pets: {},
     petPullsTotal: 0,
     combatHpCurrent: 100,
-    dungeonSanctuaryMode: false,
-    dungeonPortalTargetWave: 0,
-    dungeonSanctuaryAutoEnter: false,
+    combatReferenceWave: 1,
   };
   initRng(st, seed);
   st.combatHpCurrent = playerMaxHp(st);

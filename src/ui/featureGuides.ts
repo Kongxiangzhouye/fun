@@ -4,7 +4,6 @@ import { getUiUnlocks } from "../uiUnlocks";
 type UiUnlocks = ReturnType<typeof getUiUnlocks>;
 
 export type FeatureGuideId =
-  | "dungeon"
   | "train"
   | "gear"
   | "vein"
@@ -15,7 +14,6 @@ export type FeatureGuideId =
   | "footer";
 
 const ORDER: FeatureGuideId[] = [
-  "dungeon",
   "train",
   "gear",
   "vein",
@@ -30,11 +28,6 @@ const COPY: Record<
   FeatureGuideId,
   { title: string; body: string; tabHint: string }
 > = {
-  dungeon: {
-    title: "幻域已解锁",
-    body: "在「<strong>幻域</strong>」刷怪获取唤灵髓。阵亡后回满生命可再次进本；可勾选自动进本。详细规则见「<strong>养成 → 图鉴·札记</strong>」。",
-    tabHint: "入口：底部「幻域」。",
-  },
   train: {
     title: "修炼已解锁",
     body: "在「<strong>修炼</strong>」里挂机提升技能。一次只能修炼一项。",
@@ -80,8 +73,6 @@ const COPY: Record<
 /** 若玩家早已使用过该功能，则不再弹引导（与是否「刚解锁」无关） */
 export function guideAlreadyExperienced(state: GameState, id: FeatureGuideId): boolean {
   switch (id) {
-    case "dungeon":
-      return state.dungeon.totalWavesCleared > 0;
     case "train":
       return (
         state.skills.combat.level > 1 ||
@@ -112,8 +103,6 @@ export function guideAlreadyExperienced(state: GameState, id: FeatureGuideId): b
 
 function unlocked(id: FeatureGuideId, u: ReturnType<typeof getUiUnlocks>): boolean {
   switch (id) {
-    case "dungeon":
-      return u.tabDungeon;
     case "train":
       return u.tabTrain;
     case "gear":

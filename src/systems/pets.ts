@@ -2,8 +2,9 @@ import Decimal from "decimal.js";
 import type { GameState, PetId } from "../types";
 import { getPetDef, PET_DEFS, PET_RARITY_POWER, type PetDef } from "../data/pets";
 
-/** 与策划一致：累计通关幻域波次 ≥ 此值后开放灵宠池 */
-export const PET_SYSTEM_UNLOCK_WAVES = 15;
+/** 境界或唤引进度达此条件后开放灵宠池（替代原幻域波次门槛） */
+export const PET_SYSTEM_UNLOCK_REALM = 12;
+export const PET_SYSTEM_UNLOCK_PULLS = 25;
 
 export const MAX_PET_LEVEL = 60;
 
@@ -11,7 +12,7 @@ export const MAX_PET_LEVEL = 60;
 export const PET_PULL_COST = 42;
 
 export function petSystemUnlocked(state: GameState): boolean {
-  return state.dungeon.totalWavesCleared >= PET_SYSTEM_UNLOCK_WAVES;
+  return state.realmLevel >= PET_SYSTEM_UNLOCK_REALM || state.totalPulls >= PET_SYSTEM_UNLOCK_PULLS;
 }
 
 export function ownedPetIds(state: GameState): PetId[] {
