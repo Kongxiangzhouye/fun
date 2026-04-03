@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 
-/** 本地默认 ./；CI 设 BASE_PATH=/funv2/ 以匹配 https://kongxiangzhouye.github.io/funv2/ */
+/** 本地默认 ./；CI 设 BASE_PATH=/fun/ 以匹配项目站 https://kongxiangzhouye.github.io/fun/（路径须与仓库名一致） */
 const base = process.env.BASE_PATH || "./";
 const isCi = process.env.CI === "true";
 
