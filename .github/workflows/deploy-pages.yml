@@ -19,9 +19,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # 与 GitHub 项目站 URL 一致：https://<user>.github.io/<仓库名>/
-      # 若仓库不叫 fun，请改成 /你的仓库名/
-      BASE_PATH: /fun/
+      # 与 GitHub 项目站 URL 一致：https://kongxiangzhouye.github.io/funv2/
+      BASE_PATH: /funv2/
     steps:
       - uses: actions/checkout@v4
 
