@@ -5693,6 +5693,24 @@ header h1 {
   margin-top: 4px;
 }
 
+.bounty-claim-all-row {
+  margin-top: 10px;
+}
+
+.bounty-claim-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.bounty-claim-all-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .bounty-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

@@ -63,6 +63,8 @@ export const UI_HEAD_GARDEN = asset("deco-garden-header.svg");
 export const UI_HEAD_BOUNTY = asset("deco-bounty-header.svg");
 /** 周常悬赏 · 铸灵功课卡片标题旁 */
 export const UI_BOUNTY_FORGE_DECO = asset("bounty-forge-deco.svg");
+/** 周常悬赏 · 一键领取按钮内图标 */
+export const UI_BOUNTY_CLAIM_ALL_DECO = asset("bounty-claim-all-deco.svg");
 /** 幻域周常词缀条左侧装饰 */
 export const UI_DUNGEON_AFFIX_DECO = asset("deco-dungeon-affix.svg");
 /** 道韵灵窍页标题装饰 */

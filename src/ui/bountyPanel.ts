@@ -6,11 +6,14 @@ import {
   isWeeklyBountyClaimed,
   currentWeekKey,
   ensureWeeklyBountyWeek,
+  countClaimableWeeklyBounties,
 } from "../systems/weeklyBounty";
-import { UI_BOUNTY_FORGE_DECO, UI_HEAD_BOUNTY } from "./visualAssets";
+import { UI_BOUNTY_CLAIM_ALL_DECO, UI_BOUNTY_FORGE_DECO, UI_HEAD_BOUNTY } from "./visualAssets";
 
 export function renderBountyPanel(state: GameState, now: number): string {
+  ensureWeeklyBountyWeek(state, now);
   const wk = currentWeekKey(now);
+  const claimableN = countClaimableWeeklyBounties(state, now);
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
     const prog = weeklyBountyProgress(state, t);
     const done = isWeeklyBountyComplete(state, t);
@@ -48,6 +51,12 @@ export function renderBountyPanel(state: GameState, now: number): string {
       </div>
       <p class="hint">每周一（本地时间）刷新进度与领取状态。完成条目可领取灵石与唤灵髓。</p>
       <p class="hint sm bounty-week-line">当前周次：<strong>${wk}</strong></p>
+      <div class="bounty-claim-all-row">
+        <button type="button" class="btn btn-primary bounty-claim-all-btn" id="btn-bounty-claim-all" ${claimableN > 0 ? "" : "disabled"}>
+          <img class="bounty-claim-all-ico" src="${UI_BOUNTY_CLAIM_ALL_DECO}" alt="" width="20" height="20" loading="lazy" />
+          <span id="bounty-claim-all-lbl">一键领取可领悬赏（${claimableN}）</span>
+        </button>
+      </div>
       <div class="bounty-grid">${rows}</div>
     </section>`;
 }
@@ -57,6 +66,11 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   ensureWeeklyBountyWeek(state, now);
   const wkEl = document.querySelector(".bounty-week-line strong");
   if (wkEl) wkEl.textContent = currentWeekKey(now);
+  const claimAllBtn = document.getElementById("btn-bounty-claim-all") as HTMLButtonElement | null;
+  const claimAllLbl = document.getElementById("bounty-claim-all-lbl");
+  const cn = countClaimableWeeklyBounties(state, now);
+  if (claimAllBtn) claimAllBtn.disabled = cn <= 0;
+  if (claimAllLbl) claimAllLbl.textContent = `一键领取可领悬赏（${cn}）`;
   for (const t of WEEKLY_BOUNTY_TASKS) {
     const prog = weeklyBountyProgress(state, t);
     const done = isWeeklyBountyComplete(state, t);

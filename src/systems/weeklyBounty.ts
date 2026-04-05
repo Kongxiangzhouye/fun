@@ -193,3 +193,40 @@ export function claimWeeklyBountyTask(state: GameState, taskId: string, now: num
   if (def.rewardEssence > 0) state.summonEssence += def.rewardEssence;
   return true;
 }
+
+/** 当前周可一键领取的条目数（已达成且未领） */
+export function countClaimableWeeklyBounties(state: GameState, now: number): number {
+  ensureWeeklyBountyWeek(state, now);
+  let n = 0;
+  for (const def of WEEKLY_BOUNTY_TASKS) {
+    if (isWeeklyBountyClaimed(state, def.id)) continue;
+    if (isWeeklyBountyComplete(state, def)) n += 1;
+  }
+  return n;
+}
+
+/** 一键领取全部可领悬赏；返回领取条数与奖励合计（用于 UI 提示） */
+export function claimAllCompletableWeeklyBounties(
+  state: GameState,
+  now: number,
+): { claimed: number; rewardStones: number; rewardEssence: number } {
+  ensureWeeklyBountyWeek(state, now);
+  let claimed = 0;
+  let rewardStones = 0;
+  let rewardEssence = 0;
+  for (const def of WEEKLY_BOUNTY_TASKS) {
+    if (state.weeklyBounty.claimed.includes(def.id)) continue;
+    if (!isWeeklyBountyComplete(state, def)) continue;
+    state.weeklyBounty.claimed.push(def.id);
+    if (def.rewardStones > 0) {
+      addStones(state, def.rewardStones);
+      rewardStones += def.rewardStones;
+    }
+    if (def.rewardEssence > 0) {
+      state.summonEssence += def.rewardEssence;
+      rewardEssence += def.rewardEssence;
+    }
+    claimed += 1;
+  }
+  return { claimed, rewardStones, rewardEssence };
+}

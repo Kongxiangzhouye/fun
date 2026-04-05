@@ -129,7 +129,11 @@ import {
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
 import { tryBuyDaoMeridian } from "./systems/daoMeridian";
-import { claimWeeklyBountyTask, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
+import {
+  claimAllCompletableWeeklyBounties,
+  claimWeeklyBountyTask,
+  noteWeeklyBountyBreakthrough,
+} from "./systems/weeklyBounty";
 import {
   plantCrop,
   harvestPlot,
@@ -3015,6 +3019,22 @@ function bindEvents(rb: Decimal, _slots: number): void {
         toast("无法领取：未达成或本周已领过。");
       }
     });
+  });
+
+  document.getElementById("btn-bounty-claim-all")?.addEventListener("click", () => {
+    const t = nowMs();
+    const r = claimAllCompletableWeeklyBounties(state, t);
+    if (r.claimed <= 0) {
+      toast("当前没有可领取的悬赏。");
+      return;
+    }
+    tryCompleteAchievements(state);
+    saveGame(state);
+    toast(
+      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}`,
+    );
+    updateTopResourcePillsAndVigor(totalCardsInPool());
+    render();
   });
 
   document.body.addEventListener("click", (ev) => {
