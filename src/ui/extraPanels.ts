@@ -54,6 +54,7 @@ import {
   UI_DUNGEON_FOOT_TIMER_DECO,
   UI_DUNGEON_PANEL_LIVE_STRIP,
   UI_DUNGEON_ENTER_DECO,
+  UI_DUNGEON_LEAVE_DECO,
   UI_DUEL_BOSS_BADGE,
   UI_DUNGEON_AFFIX_DECO,
   ELEMENT_ICON,
@@ -167,7 +168,10 @@ function renderDungeonMapHtml(state: GameState): string {
     </div>`;
   return `
     <div class="dungeon-map-frame">
-      <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
+      <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">
+        <img class="dungeon-map-leave-ico" src="${UI_DUNGEON_LEAVE_DECO}" alt="" width="16" height="16" loading="lazy" />
+        <span>暂离</span>
+      </button>
       <div class="dungeon-map-wrap">
         <div class="dungeon-map dungeon-duel-stage is-aoe in-combat" id="dungeon-map" aria-label="幻域阵线对决" style="--dungeon-player-hit-interval:${hitIntSec}s">
           <div class="dungeon-duel-frame-corners" aria-hidden="true">
@@ -350,7 +354,10 @@ export function renderDungeonPanel(state: GameState): string {
           ? interWaveWait
             ? `<div class="dungeon-active-stack">
             <div class="dungeon-viewport dungeon-inter-wave">
-            <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
+            <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">
+              <img class="dungeon-map-leave-ico" src="${UI_DUNGEON_LEAVE_DECO}" alt="" width="16" height="16" loading="lazy" />
+              <span>暂离</span>
+            </button>
             <div class="dungeon-inter-wave-inner">
               <div class="dungeon-inter-wave-art" aria-hidden="true">
                 <img class="dungeon-inter-wave-deco" src="${UI_DUNGEON_INTER_WAVE_DECO}" alt="" width="80" height="80" loading="lazy" />
@@ -362,13 +369,13 @@ export function renderDungeonPanel(state: GameState): string {
               </div>
             </div>
           </div>
-          <p class="dungeon-active-meta hint sm" id="dungeon-active-meta">${formatDungeonInterMeta()}</p>
+          <p class="dungeon-active-meta hint sm dungeon-active-meta--inter" id="dungeon-active-meta">${formatDungeonInterMeta()}</p>
         </div>`
             : `<div class="dungeon-active-stack">
           <div class="dungeon-viewport dungeon-live-combat" id="dungeon-live-root">
           ${renderDungeonMapHtml(state)}
           </div>
-          <p class="dungeon-active-meta hint sm" id="dungeon-active-meta">${formatDungeonActiveMeta(state, now)}</p>
+          <p class="dungeon-active-meta hint sm dungeon-active-meta--combat" id="dungeon-active-meta">${formatDungeonActiveMeta(state, now)}</p>
         </div>`
           : sanctuaryIdle
             ? `<div class="dungeon-idle-sanctuary dungeon-stage-fill">

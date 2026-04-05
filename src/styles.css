@@ -479,6 +479,10 @@ body {
   left: 8px;
   top: 8px;
   z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   min-width: 44px;
   min-height: 44px;
   padding: 4px 10px;
@@ -490,6 +494,13 @@ body {
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   touch-action: manipulation;
+}
+
+.dungeon-map-leave-ico {
+  flex-shrink: 0;
+  display: block;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 4px rgba(160, 190, 255, 0.35));
 }
 
 /* 幻域·阵线对决：左右对阵条（我方 | VS | 敌方），与中央意象、底部读条分层 */
@@ -892,6 +903,22 @@ body {
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(124, 156, 255, 0.15);
   color: var(--muted);
+}
+
+.dungeon-active-meta--combat {
+  border-left: 3px solid rgba(130, 175, 255, 0.55);
+  padding-left: 12px;
+  background: linear-gradient(90deg, rgba(36, 58, 110, 0.28), rgba(0, 0, 0, 0.2));
+  border-color: rgba(124, 156, 255, 0.22);
+  color: rgba(200, 210, 235, 0.92);
+}
+
+.dungeon-active-meta--inter {
+  border-left: 3px solid rgba(210, 175, 120, 0.5);
+  padding-left: 12px;
+  background: linear-gradient(90deg, rgba(90, 65, 38, 0.22), rgba(0, 0, 0, 0.2));
+  border-color: rgba(160, 140, 100, 0.22);
+  color: rgba(210, 200, 185, 0.9);
 }
 
 .dungeon-map-help-btn {
