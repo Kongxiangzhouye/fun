@@ -46,6 +46,7 @@ import {
 } from "./gacha";
 import { CARDS, getCard } from "./data/cards";
 import { tryCompleteAchievements, drainAchievementToastQueue, ACHIEVEMENTS, type AchievementDef } from "./achievements";
+import { countUniqueOwned } from "./state";
 import {
   canReincarnate,
   daoEssenceGainOnReincarnate,
@@ -126,6 +127,7 @@ import {
   UI_OFFLINE_SUMMARY_DECO,
   UI_SAVE_DOWNLOAD_DECO,
   UI_UI_PREFS_DECO,
+  UI_DATA_OVERVIEW_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -298,7 +300,15 @@ type CultivateSub =
   | "chronicle"
   | "daily"
   | "stash";
-type CharacterSub = "stats" | "cards" | "gear" | "guides" | "settings" | "archive" | "meridian";
+type CharacterSub =
+  | "stats"
+  | "cards"
+  | "gear"
+  | "guides"
+  | "settings"
+  | "data"
+  | "archive"
+  | "meridian";
 
 let activeHub: HubId = "estate";
 let estateSub: EstateSub = "idle";
@@ -1828,6 +1838,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
       mkCharUnlock("meridian", "道韵·灵窍", u.tabDaoMeridian, characterSub === "meridian"),
       mkChar("guides", "功能·指引", characterSub === "guides"),
       mkChar("settings", "偏好·设置", characterSub === "settings"),
+      mkChar("data", "数据·总览", characterSub === "data"),
       mkChar("archive", "存档·管理", characterSub === "archive"),
     ].join("");
   }
@@ -1884,6 +1895,8 @@ function renderDiscoverabilityHint(): string {
       text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在「角色→存档·管理」。";
     } else if (characterSub === "settings") {
       text = "常用入口：动效与灵石数字显示偏好写在本页；备份与导入在「存档·管理」。";
+    } else if (characterSub === "data") {
+      text = "常用入口：汇总历程与唤引等统计；详细规则见「养成→图鉴」，奖励见「成就」。";
     } else if (characterSub === "archive") {
       text = "常用入口：这里集中管理保存/导出/导入与重置存档。";
     } else if (characterSub === "meridian") {
@@ -1928,6 +1941,9 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
   }
   if (characterSub === "settings") {
     return `<div class="character-hub-root">${renderUiPrefsPanel()}</div>`;
+  }
+  if (characterSub === "data") {
+    return `<div class="character-hub-root">${renderDataOverviewPanel()}</div>`;
   }
   if (characterSub === "archive") {
     return `<div class="character-hub-root">${renderSaveToolsPanel()}</div>`;
@@ -1989,6 +2005,122 @@ function renderUiPrefsPanel(): string {
       </li>
     </ul>
   </section>`;
+}
+
+const GEAR_FORGE_RARITY_RANK_LABELS = ["N", "R", "SR", "SSR", "UR"] as const;
+
+function renderDataOverviewPanel(): string {
+  const st = state;
+  const d = st.dungeon;
+  const lt = st.lifetimeStats;
+  const pool = totalCardsInPool();
+  const codex = st.codexUnlocked.size;
+  const owned = countUniqueOwned(st);
+  const gearN = Object.keys(st.gearInventory).length;
+  const rarityPeak =
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_FORGE_RARITY_RANK_LABELS.length
+      ? GEAR_FORGE_RARITY_RANK_LABELS[lt.maxGearRarityRankForged]
+      : "—";
+  const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
+
+  return `<section class="panel data-overview-panel">
+    <div class="panel-title-art-row">
+      <img class="panel-title-art-icon" src="${UI_DATA_OVERVIEW_DECO}" alt="" width="28" height="28" loading="lazy" />
+      <h2>数据总览</h2>
+    </div>
+    <p class="hint">只读汇总：历程、唤引、幻域与终身统计；在线时长随挂机累计。</p>
+
+    <div class="data-overview-section">
+      <h3>历程与境界</h3>
+      <div class="data-overview-grid">
+        <div class="data-overview-cell"><span class="d-label">累计入世时长</span><strong class="d-val" id="data-overview-playtime">${fmtPlaytimeSec(st.playtimeSec)}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">本轮回第几日</span><strong class="d-val" id="data-overview-life-day">第 ${lifeDay} 日</strong></div>
+        <div class="data-overview-cell"><span class="d-label">境界</span><strong class="d-val" id="data-overview-realm">${st.realmLevel}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">轮回次数</span><strong class="d-val" id="data-overview-reinc">${st.reincarnations}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">本轮灵石峰值</span><strong class="d-val" id="data-overview-peak-stone">${fmtDecimal(new Decimal(st.peakSpiritStonesThisLife || "0"))}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵息连签</span><strong class="d-val" id="data-overview-streak">${st.dailyStreak}</strong></div>
+      </div>
+    </div>
+
+    <div class="data-overview-section">
+      <h3>唤引与图鉴</h3>
+      <div class="data-overview-grid">
+        <div class="data-overview-cell"><span class="d-label">灵卡唤引总次数</span><strong class="d-val" id="data-overview-total-pulls">${st.totalPulls}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">本轮唤引次数</span><strong class="d-val" id="data-overview-pulls-life">${st.pullsThisLife ?? 0}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵宠唤引累计</span><strong class="d-val" id="data-overview-pet-pulls">${st.petPullsTotal}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">图鉴解锁</span><strong class="d-val" id="data-overview-codex">${codex} / ${pool}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">持有不同灵卡</span><strong class="d-val" id="data-overview-owned">${owned}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">成就</span><strong class="d-val" id="data-overview-ach">${st.achievementsDone.size} / ${ACHIEVEMENTS.length}</strong></div>
+      </div>
+    </div>
+
+    <div class="data-overview-section">
+      <h3>幻域</h3>
+      <div class="data-overview-grid">
+        <div class="data-overview-cell"><span class="d-label">历史最高波次</span><strong class="d-val" id="data-overview-max-wave">${d.maxWaveRecord}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">累计清波次数</span><strong class="d-val" id="data-overview-waves-cleared">${d.totalWavesCleared}</strong></div>
+      </div>
+    </div>
+
+    <div class="data-overview-section">
+      <h3>终身累计</h3>
+      <div class="data-overview-grid">
+        <div class="data-overview-cell"><span class="d-label">幻域累计获得唤灵髓（整数）</span><strong class="d-val" id="data-overview-lt-dungeon-ess">${lt.dungeonEssenceIntGained}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">天机匣兑换次数</span><strong class="d-val" id="data-overview-lt-stash">${lt.celestialStashBuys}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">蓄灵池收取次数</span><strong class="d-val" id="data-overview-lt-reservoir">${lt.spiritReservoirClaims}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">心斋卦象刷新次数</span><strong class="d-val" id="data-overview-lt-fortune">${lt.dailyFortuneRolls}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">铸灵累计次数</span><strong class="d-val" id="data-overview-lt-forge">${lt.gearForgesTotal}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">历史最高铸灵稀有度</span><strong class="d-val" id="data-overview-lt-rarity">${rarityPeak}</strong></div>
+      </div>
+    </div>
+
+    <div class="data-overview-section">
+      <h3>其他</h3>
+      <div class="data-overview-grid">
+        <div class="data-overview-cell"><span class="d-label">行囊装备件数</span><strong class="d-val" id="data-overview-gear-count">${gearN}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵田累计收获</span><strong class="d-val" id="data-overview-harvests">${st.spiritGarden.totalHarvests}</strong></div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function updateDataOverviewReadouts(): void {
+  if (!document.getElementById("data-overview-playtime")) return;
+  const st = state;
+  const d = st.dungeon;
+  const lt = st.lifetimeStats;
+  const pool = totalCardsInPool();
+  const set = (id: string, text: string) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+  set("data-overview-playtime", fmtPlaytimeSec(st.playtimeSec));
+  const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
+  set("data-overview-life-day", `第 ${lifeDay} 日`);
+  set("data-overview-realm", String(st.realmLevel));
+  set("data-overview-reinc", String(st.reincarnations));
+  set("data-overview-peak-stone", fmtDecimal(new Decimal(st.peakSpiritStonesThisLife || "0")));
+  set("data-overview-streak", String(st.dailyStreak));
+  set("data-overview-total-pulls", String(st.totalPulls));
+  set("data-overview-pulls-life", String(st.pullsThisLife ?? 0));
+  set("data-overview-pet-pulls", String(st.petPullsTotal));
+  set("data-overview-codex", `${st.codexUnlocked.size} / ${pool}`);
+  set("data-overview-owned", String(countUniqueOwned(st)));
+  set("data-overview-ach", `${st.achievementsDone.size} / ${ACHIEVEMENTS.length}`);
+  set("data-overview-max-wave", String(d.maxWaveRecord));
+  set("data-overview-waves-cleared", String(d.totalWavesCleared));
+  set("data-overview-lt-dungeon-ess", String(lt.dungeonEssenceIntGained));
+  set("data-overview-lt-stash", String(lt.celestialStashBuys));
+  set("data-overview-lt-reservoir", String(lt.spiritReservoirClaims));
+  set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
+  set("data-overview-lt-forge", String(lt.gearForgesTotal));
+  const rarityPeak =
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_FORGE_RARITY_RANK_LABELS.length
+      ? GEAR_FORGE_RARITY_RANK_LABELS[lt.maxGearRarityRankForged]
+      : "—";
+  set("data-overview-lt-rarity", rarityPeak);
+  set("data-overview-gear-count", String(Object.keys(st.gearInventory).length));
+  set("data-overview-harvests", String(st.spiritGarden.totalHarvests));
 }
 
 function renderSaveToolsPanel(): string {
@@ -2743,6 +2875,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
         s !== "gear" &&
         s !== "guides" &&
         s !== "settings" &&
+        s !== "data" &&
         s !== "archive" &&
         s !== "meridian"
       )
@@ -4222,6 +4355,9 @@ function loop(): void {
   const pPetN = document.getElementById("ps-pet-n");
   if (pPetN && petSystemUnlocked(state)) {
     pPetN.textContent = `${ownedPetIds(state).length} 只`;
+  }
+  if (activeHub === "character" && characterSub === "data") {
+    updateDataOverviewReadouts();
   }
 }
 
