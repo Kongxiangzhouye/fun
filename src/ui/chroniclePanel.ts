@@ -58,6 +58,10 @@ export function renderChroniclePanel(state: GameState): string {
           <strong class="chronicle-stat-val">${ls.celestialStashBuys} 次</strong>
         </div>
         <div class="chronicle-stat-card">
+          <span class="chronicle-stat-lbl">蓄灵池收取</span>
+          <strong class="chronicle-stat-val">${ls.spiritReservoirClaims} 次</strong>
+        </div>
+        <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">当前灵石</span>
           <strong class="chronicle-stat-val">${fmtDecimal(stones(state))}</strong>
         </div>

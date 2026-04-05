@@ -18,6 +18,7 @@ import { tryAutoSalvageInventory } from "./systems/salvage";
 import { ensureWeeklyBountyWeek, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
 import { ensureCelestialStashWeek } from "./systems/celestialStash";
 import { tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
+import { spiritReservoirUnlocked, tickSpiritReservoir } from "./systems/spiritReservoir";
 
 const TICK_MAX_DT = 120;
 let autoSalvageAccumSec = 0;
@@ -75,6 +76,7 @@ export function applyTick(state: GameState, now: number): void {
   tickCombatHpRegen(state, dt);
   tickDungeon(state, dt, tickNow);
   const ips = incomePerSecond(state, totalCardsInPool());
+  if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips);
   addStones(state, ips.mul(dt));
   tryAutoRealm(state);
   tryAutoTuna(state, tickNow);
@@ -100,6 +102,7 @@ export function catchUpOffline(state: GameState, now: number): Decimal {
   const ips = incomePerSecond(state, totalCardsInPool());
   const mult = earthOfflineIncomeMult(state);
   const gained = ips.mul(dt).mul(mult);
+  if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips.mul(mult));
   addStones(state, gained);
   state.lastTick = now;
   state.playtimeSec += dt;
@@ -119,6 +122,7 @@ export function fastForward(state: GameState, seconds: number): Decimal {
   const ips = incomePerSecond(state, totalCardsInPool());
   const mult = earthOfflineIncomeMult(state);
   const gained = ips.mul(dt).mul(mult);
+  if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips.mul(mult));
   addStones(state, gained);
   state.playtimeSec += dt;
   tickInGameClock(state, dt);

@@ -12,7 +12,7 @@ export function normalizePullChronicle(st: GameState): void {
 
 export function normalizeLifetimeStats(st: GameState): void {
   if (!st.lifetimeStats || typeof st.lifetimeStats !== "object") {
-    st.lifetimeStats = { dungeonEssenceIntGained: 0, celestialStashBuys: 0 };
+    st.lifetimeStats = { dungeonEssenceIntGained: 0, celestialStashBuys: 0, spiritReservoirClaims: 0 };
     return;
   }
   const n = st.lifetimeStats.dungeonEssenceIntGained;
@@ -21,6 +21,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   const cb = st.lifetimeStats.celestialStashBuys;
   if (cb == null || !Number.isFinite(cb)) st.lifetimeStats.celestialStashBuys = 0;
   else st.lifetimeStats.celestialStashBuys = Math.max(0, Math.floor(cb));
+  const rc = st.lifetimeStats.spiritReservoirClaims;
+  if (rc == null || !Number.isFinite(rc)) st.lifetimeStats.spiritReservoirClaims = 0;
+  else st.lifetimeStats.spiritReservoirClaims = Math.max(0, Math.floor(rc));
 }
 
 export function pushPullChronicle(

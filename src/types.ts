@@ -49,6 +49,8 @@ export interface LifetimeStatsState {
   dungeonEssenceIntGained: number;
   /** 天机匣累计成功兑换次数 */
   celestialStashBuys: number;
+  /** 蓄灵池累计收取次数 */
+  spiritReservoirClaims: number;
 }
 
 /** 灵田作物 id */
@@ -411,6 +413,11 @@ export interface GameState {
 
   /** 天机匣：周限购资源兑换 */
   celestialStash: CelestialStashState;
+
+  /**
+   * 蓄灵池：额外比例灵石蓄存（与每秒灵石挂钩，收取时并入灵石）
+   */
+  spiritReservoirStored: string;
 
   /**
    * 道韵灵窍：0–5 已解锁层数（消耗道韵；轮回不重置）

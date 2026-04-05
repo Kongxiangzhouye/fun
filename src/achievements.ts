@@ -167,6 +167,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 120,
     rewardEssence: 8,
   },
+  {
+    id: "spirit_reservoir_1",
+    title: "蓄灵初收",
+    desc: "从蓄灵池收取 1 次灵石",
+    rewardStones: 150,
+    rewardEssence: 0,
+  },
 ];
 
 function hasUr(state: GameState): boolean {
@@ -240,6 +247,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dailyStreak >= 7;
     case "celestial_stash_1":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
+    case "spirit_reservoir_1":
+      return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 1;
     default:
       return false;
   }

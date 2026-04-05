@@ -66,6 +66,7 @@ export interface SerializedState {
   lastLoginCalendarDate?: string | null;
   dailyLoginTickDay?: string | null;
   dailyLoginClaimedDate?: string | null;
+  spiritReservoirStored?: string;
   lastTunaMs?: number;
   vein?: VeinSave;
   pullsThisLife?: number;
@@ -252,6 +253,7 @@ export function serialize(state: GameState): string {
     lastLoginCalendarDate: state.lastLoginCalendarDate,
     dailyLoginTickDay: state.dailyLoginTickDay,
     dailyLoginClaimedDate: state.dailyLoginClaimedDate,
+    spiritReservoirStored: state.spiritReservoirStored,
     lastTunaMs: state.lastTunaMs,
     vein: { ...state.vein },
     pullsThisLife: state.pullsThisLife,
@@ -358,6 +360,10 @@ export function deserialize(json: string): GameState {
   st.lastLoginCalendarDate = data.lastLoginCalendarDate ?? null;
   st.dailyLoginTickDay = data.dailyLoginTickDay ?? null;
   st.dailyLoginClaimedDate = data.dailyLoginClaimedDate ?? null;
+  st.spiritReservoirStored =
+    data.spiritReservoirStored !== undefined && data.spiritReservoirStored !== null
+      ? String(data.spiritReservoirStored)
+      : "0";
   st.lastTunaMs = data.lastTunaMs ?? 0;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0, ...(data.vein ?? {}) };
   if (st.vein.gongMing == null || !Number.isFinite(st.vein.gongMing)) st.vein.gongMing = 0;
@@ -474,6 +480,7 @@ export function deserialize(json: string): GameState {
     st.lifetimeStats = {
       dungeonEssenceIntGained: Math.max(0, Math.floor(data.lifetimeStats.dungeonEssenceIntGained ?? 0)),
       celestialStashBuys: Math.max(0, Math.floor(data.lifetimeStats.celestialStashBuys ?? 0)),
+      spiritReservoirClaims: Math.max(0, Math.floor(data.lifetimeStats.spiritReservoirClaims ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

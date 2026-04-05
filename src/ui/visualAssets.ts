@@ -69,6 +69,8 @@ export const UI_HEAD_CHRONICLE = asset("deco-chronicle-header.svg");
 export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 /** 天机匣（周轮换商店）页标题 */
 export const UI_HEAD_CELESTIAL_STASH = asset("deco-celestial-stash.svg");
+/** 蓄灵池（灵府灵脉）标题装饰 */
+export const UI_HEAD_SPIRIT_RESERVOIR = asset("deco-spirit-reservoir.svg");
 export const UI_EMPTY_GEAR = asset("art-empty-gear.svg");
 export const UI_EMPTY_PET = asset("art-empty-pet.svg");
 export const UI_EMPTY_UNLOCK = asset("art-empty-unlock.svg");

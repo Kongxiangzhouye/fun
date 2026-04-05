@@ -6,7 +6,7 @@ import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 
-export const SAVE_VERSION = 28;
+export const SAVE_VERSION = 29;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -135,9 +135,10 @@ export function createInitialState(): GameState {
     spiritGarden: { plots: emptyGardenPlots(), totalHarvests: 0 },
     weeklyBounty: emptyWeeklyBounty(currentWeekKey(now)),
     celestialStash: emptyCelestialStash(currentWeekKey(now)),
+    spiritReservoirStored: "0",
     daoMeridian: 0,
     pullChronicle: [],
-    lifetimeStats: { dungeonEssenceIntGained: 0, celestialStashBuys: 0 },
+    lifetimeStats: { dungeonEssenceIntGained: 0, celestialStashBuys: 0, spiritReservoirClaims: 0 },
     combatHpCurrent: 100,
     dungeonSanctuaryMode: false,
     dungeonPortalTargetWave: 0,

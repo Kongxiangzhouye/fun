@@ -6048,3 +6048,31 @@ header h1 {
 .celestial-reward {
   margin: 4px 0 0;
 }
+
+/* —— 灵府 · 蓄灵池 —— */
+.spirit-reservoir-panel {
+  margin-bottom: 12px;
+}
+
+.spirit-reservoir-bar-wrap {
+  margin: 10px 0 8px;
+}
+
+.spirit-reservoir-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid rgba(100, 180, 200, 0.35);
+}
+
+.spirit-reservoir-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4a9ec4, #7ee0d0);
+  transition: width 0.25s ease;
+}
+
+.spirit-reservoir-readout {
+  margin-top: 6px;
+}

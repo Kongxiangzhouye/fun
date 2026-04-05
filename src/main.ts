@@ -103,6 +103,7 @@ import {
   UI_PANEL_RUNES,
   UI_HEAD_STATS,
   UI_HEAD_COMBAT,
+  UI_HEAD_SPIRIT_RESERVOIR,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderBountyPanel, updateBountyPanelReadouts } from "./ui/bountyPanel";
@@ -110,6 +111,13 @@ import { renderDailyLoginPanel, updateDailyLoginPanelReadouts } from "./ui/daily
 import { claimDailyLoginReward, tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
 import { renderCelestialStashPanel, updateCelestialStashPanelReadouts } from "./ui/celestialStashPanel";
 import { tryBuyCelestialOffer } from "./systems/celestialStash";
+import {
+  reservoirCap,
+  reservoirFillRatio,
+  reservoirStored,
+  canClaimSpiritReservoir,
+  claimSpiritReservoir,
+} from "./systems/spiritReservoir";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
 import { tryBuyDaoMeridian } from "./systems/daoMeridian";
@@ -1087,6 +1095,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabDailyLogin) {
     unlockLines.push("「<strong>养成→灵息·日历</strong>」解锁条件：抽卡≥1，或境界≥2。");
   }
+  if (!u.tabSpiritReservoir) {
+    unlockLines.push("「<strong>灵府→灵脉·蓄灵池</strong>」解锁条件：境界≥3，或抽卡≥3。");
+  }
   if (!u.tabCelestialStash) {
     unlockLines.push("「<strong>养成→天机·匣</strong>」解锁条件：境界≥5，或抽卡≥6。");
   }
@@ -2001,6 +2012,25 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       ? `<div class="explore-block"><strong class="explore-title">下一探索</strong><ul class="explore-list">${nextExplore.map((h) => `<li>${h}</li>`).join("")}</ul></div>`
       : "";
 
+  const rs = reservoirStored(state);
+  const rc = reservoirCap(state);
+  const rPct = reservoirFillRatio(state) * 100;
+  const canRs = canClaimSpiritReservoir(state);
+  const reservoirBlock = u.tabSpiritReservoir
+    ? `<section class="panel spirit-reservoir-panel">
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_SPIRIT_RESERVOIR}" alt="" width="28" height="28" loading="lazy" />
+        <h2>蓄灵池</h2>
+      </div>
+      <p class="hint">额外积蓄约 <strong>9%</strong> 当前每秒灵石等效的灵流（与上方主收益并行）；达上限后不再累积。</p>
+      <div class="spirit-reservoir-bar-wrap">
+        <div class="spirit-reservoir-bar"><div class="spirit-reservoir-bar-fill" id="spirit-reservoir-bar-fill" style="width:${rPct}%"></div></div>
+        <p class="hint sm spirit-reservoir-readout"><span id="spirit-reservoir-stored">${fmtDecimal(rs)}</span> / <span id="spirit-reservoir-cap">${fmtDecimal(rc)}</span> 灵石</p>
+      </div>
+      <button type="button" class="btn ${canRs ? "btn-primary" : ""}" id="btn-spirit-reservoir-claim" ${canRs ? "" : "disabled"}>${canRs ? "收取蓄灵" : "暂无蓄灵"}</button>
+    </section>`
+    : "";
+
   const core = `
     <section class="panel">
       <h2>灵脉汇聚</h2>
@@ -2044,7 +2074,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       <p class="hint">图鉴收集 ${unique} / ${codex}${deckRealmPct > 0.001 ? ` · 卡组境界加成 ${deckRealmPct.toFixed(2)}%` : ""}</p>
     </section>`;
 
-  if (!u.privilegePanel) return core;
+  if (!u.privilegePanel) return reservoirBlock + core;
 
   const bulkRow =
     state.qoL.bulkLevel
@@ -2065,6 +2095,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       : "";
 
   return (
+    reservoirBlock +
     core +
     `
     <section class="panel">
@@ -2968,6 +2999,29 @@ function bindEvents(rb: Decimal, _slots: number): void {
     }
   });
 
+  document.body.addEventListener("click", (ev) => {
+    const b = (ev.target as HTMLElement | null)?.closest?.("#btn-spirit-reservoir-claim") as HTMLElement | null;
+    if (!b) return;
+    if (!canClaimSpiritReservoir(state)) {
+      toast("暂无蓄灵可收。");
+      return;
+    }
+    const got = claimSpiritReservoir(state);
+    if (got.lte(0)) return;
+    tryCompleteAchievements(state);
+    saveGame(state);
+    toast(`收取蓄灵 ${fmtDecimal(got)} 灵石`);
+    updateTopResourcePillsAndVigor(totalCardsInPool());
+    const pAch = document.getElementById("ps-ach");
+    if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+    const t = nowMs();
+    if (activeHub === "estate" && estateSub === "idle") {
+      updateEstateIdleLiveReadouts(t);
+    } else {
+      render();
+    }
+  });
+
   const readEntryWave = (): number => {
     const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
     const raw = inp?.valueAsNumber;
@@ -3372,6 +3426,24 @@ function updateEstateIdleLiveReadouts(now: number): void {
   if (bgBar) {
     const left = Math.max(0, state.biGuanCooldownUntil - now);
     bgBar.style.width = `${left <= 0 ? 100 : Math.min(100, 100 - (100 * left) / BI_GUAN_COOLDOWN_MS)}%`;
+  }
+  if (uIdle.tabSpiritReservoir) {
+    const rs = reservoirStored(state);
+    const rc = reservoirCap(state);
+    const rPct = reservoirFillRatio(state) * 100;
+    const canRs = canClaimSpiritReservoir(state);
+    const elS = document.getElementById("spirit-reservoir-stored");
+    const elC = document.getElementById("spirit-reservoir-cap");
+    const bar = document.getElementById("spirit-reservoir-bar-fill") as HTMLElement | null;
+    const btn = document.getElementById("btn-spirit-reservoir-claim") as HTMLButtonElement | null;
+    if (elS) elS.textContent = fmtDecimal(rs);
+    if (elC) elC.textContent = fmtDecimal(rc);
+    if (bar) bar.style.width = `${rPct}%`;
+    if (btn) {
+      btn.disabled = !canRs;
+      btn.className = `btn ${canRs ? "btn-primary" : ""}`;
+      btn.textContent = canRs ? "收取蓄灵" : "暂无蓄灵";
+    }
   }
 }
 
