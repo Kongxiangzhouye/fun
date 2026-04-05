@@ -69,6 +69,8 @@ export const UI_HEAD_DAO_MERIDIAN = asset("deco-dao-meridian.svg");
 export const UI_HEAD_CHRONICLE = asset("deco-chronicle-header.svg");
 /** 通鉴页「最近铸灵」小标题旁装饰（与灵卡卷轴区分） */
 export const UI_GEAR_CHRONICLE_DECO = asset("deco-chronicle-gear.svg");
+/** 成就列表 · 铸灵系条目左侧小标 */
+export const UI_ACH_FORGE_DECO = asset("ach-forge-deco.svg");
 /** 灵息日历（每日签到）页标题 */
 export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 /** 天机匣（周轮换商店）页标题 */

@@ -20,7 +20,12 @@ import {
   ensureWeeklyBountyWeek,
 } from "./systems/weeklyBounty";
 import { normalizeDaoMeridian } from "./systems/daoMeridian";
-import { normalizeGearPullChronicle, normalizeLifetimeStats, normalizePullChronicle } from "./systems/pullChronicle";
+import {
+  normalizeGearPullChronicle,
+  normalizeLifetimeStats,
+  normalizePullChronicle,
+  syncMaxGearRarityFromInventoryAndChronicle,
+} from "./systems/pullChronicle";
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
 
@@ -515,9 +520,14 @@ export function deserialize(json: string): GameState {
       spiritReservoirClaims: Math.max(0, Math.floor(data.lifetimeStats.spiritReservoirClaims ?? 0)),
       dailyFortuneRolls: Math.max(0, Math.floor(data.lifetimeStats.dailyFortuneRolls ?? 0)),
       gearForgesTotal: Math.max(0, Math.floor(data.lifetimeStats.gearForgesTotal ?? 0)),
+      maxGearRarityRankForged: Math.max(
+        0,
+        Math.min(4, Math.floor(data.lifetimeStats.maxGearRarityRankForged ?? 0)),
+      ),
     };
   }
   normalizeLifetimeStats(st);
+  syncMaxGearRarityFromInventoryAndChronicle(st);
   st.combatHpCurrent =
     data.combatHpCurrent !== undefined && data.combatHpCurrent !== null && Number.isFinite(data.combatHpCurrent)
       ? data.combatHpCurrent

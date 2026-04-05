@@ -108,6 +108,7 @@ import {
   UI_HEAD_COMBAT,
   UI_HEAD_SPIRIT_RESERVOIR,
   UI_HEAD_DAILY_FORTUNE,
+  UI_ACH_FORGE_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -2492,11 +2493,18 @@ function renderAch(): string {
   let html = "";
   for (const a of ACHIEVEMENTS) {
     const done = state.achievementsDone.has(a.id);
+    const deco =
+      a.listDeco === "forge"
+        ? `<img class="ach-deco-icon" src="${UI_ACH_FORGE_DECO}" alt="" width="22" height="22" loading="lazy" />`
+        : "";
     html += `
-      <div class="ach-item ${done ? "done" : ""}">
-        <div>
-          <strong>${a.title}</strong>
-          <p class="hint" style="margin:4px 0 0">${a.desc}</p>
+      <div class="ach-item ${done ? "done" : ""} ${a.listDeco ? `ach-item--${a.listDeco}` : ""}">
+        <div class="ach-item-main">
+          ${deco}
+          <div>
+            <strong>${a.title}</strong>
+            <p class="hint" style="margin:4px 0 0">${a.desc}</p>
+          </div>
         </div>
         <div class="inv-meta">
           ${done ? "已完成" : "进行中"}

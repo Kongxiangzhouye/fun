@@ -64,6 +64,8 @@ export interface LifetimeStatsState {
   dailyFortuneRolls: number;
   /** 累计铸灵次数（铸灵池成功产出装备） */
   gearForgesTotal: number;
+  /** 历史铸灵达到过的最高稀有度阶位 0–4（N…UR），用于成就，不因分解降低） */
+  maxGearRarityRankForged: number;
 }
 
 /** 灵田作物 id */

@@ -10,6 +10,8 @@ export interface AchievementDef {
   rewardStones: number;
   /** 唤灵髓 */
   rewardEssence: number;
+  /** 成就列表左侧小装饰（铸灵系等） */
+  listDeco?: "forge";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -188,6 +190,46 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 600,
     rewardEssence: 15,
   },
+  {
+    id: "forge_1",
+    title: "铸灵初鸣",
+    desc: "完成第 1 次铸灵",
+    rewardStones: 80,
+    rewardEssence: 6,
+    listDeco: "forge",
+  },
+  {
+    id: "forge_50",
+    title: "百锻千锤",
+    desc: "累计铸灵 50 次",
+    rewardStones: 400,
+    rewardEssence: 28,
+    listDeco: "forge",
+  },
+  {
+    id: "forge_200",
+    title: "铸灵通神",
+    desc: "累计铸灵 200 次",
+    rewardStones: 1800,
+    rewardEssence: 85,
+    listDeco: "forge",
+  },
+  {
+    id: "forge_treasure",
+    title: "珍品显形",
+    desc: "铸灵曾达到珍品及以上稀有度",
+    rewardStones: 350,
+    rewardEssence: 18,
+    listDeco: "forge",
+  },
+  {
+    id: "forge_celestial",
+    title: "天工开物",
+    desc: "铸灵曾达到天极稀有度",
+    rewardStones: 2200,
+    rewardEssence: 55,
+    listDeco: "forge",
+  },
 ];
 
 function hasUr(state: GameState): boolean {
@@ -267,6 +309,16 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
+    case "forge_1":
+      return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 1;
+    case "forge_50":
+      return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 50;
+    case "forge_200":
+      return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 200;
+    case "forge_treasure":
+      return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 2;
+    case "forge_celestial":
+      return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 4;
     default:
       return false;
   }
