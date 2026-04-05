@@ -45,6 +45,9 @@ import {
   UI_EMPTY_UNLOCK,
   UI_HEAD_DUNGEON,
   UI_DUNGEON_DUEL_DECO,
+  UI_DUEL_GAUGE_SWORD,
+  UI_DUEL_GAUGE_THREAT,
+  UI_DUNGEON_IDLE_MIST,
   UI_DUNGEON_AFFIX_DECO,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
@@ -209,11 +212,11 @@ function renderDungeonMapHtml(state: GameState): string {
           <p class="dungeon-duel-dodge-chip hint sm" id="dungeon-duel-dodge-chip">点击战场 · 化劲闪避</p>
           <div class="dungeon-duel-gauge-row">
             <div class="dungeon-duel-gauge">
-              <span class="dungeon-duel-gauge-lbl">剑气</span>
+              <span class="dungeon-duel-gauge-lbl"><img class="dungeon-duel-gauge-ico" src="${UI_DUEL_GAUGE_SWORD}" alt="" width="16" height="16" loading="lazy" />剑气</span>
               <div class="progress-track dungeon duel-gauge"><div class="progress-fill player" id="dungeon-duel-pl-gauge" style="width:0%"></div></div>
             </div>
             <div class="dungeon-duel-gauge">
-              <span class="dungeon-duel-gauge-lbl">凶煞</span>
+              <span class="dungeon-duel-gauge-lbl"><img class="dungeon-duel-gauge-ico" src="${UI_DUEL_GAUGE_THREAT}" alt="" width="16" height="16" loading="lazy" />凶煞</span>
               <div class="progress-track dungeon duel-gauge"><div class="progress-fill enemy" id="dungeon-duel-en-gauge" style="width:0%"></div></div>
             </div>
           </div>
@@ -259,7 +262,7 @@ function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): stri
 }
 
 function renderIdlePreviewMap(): string {
-  return `<div class="dungeon-idle-preview-map" aria-hidden="true"><div class="dungeon-idle-preview-grid"></div></div>`;
+  return `<div class="dungeon-idle-preview-map dungeon-idle-preview-map--mist" style="--dungeon-idle-mist:url('${UI_DUNGEON_IDLE_MIST}')" aria-hidden="true"><div class="dungeon-idle-preview-grid"></div></div>`;
 }
 
 export function renderDungeonPanel(state: GameState): string {

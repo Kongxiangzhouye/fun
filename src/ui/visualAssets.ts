@@ -97,6 +97,12 @@ export const UI_BOUNTY_CLAIM_ALL_DECO = asset("bounty-claim-all-deco.svg");
 export const UI_DUNGEON_AFFIX_DECO = asset("deco-dungeon-affix.svg");
 /** 幻域·阵线对决舞台中央装饰 */
 export const UI_DUNGEON_DUEL_DECO = asset("deco-dungeon-duel.svg");
+/** 阵线对决 · 剑气读条旁小标 */
+export const UI_DUEL_GAUGE_SWORD = asset("deco-duel-gauge-sword.svg");
+/** 阵线对决 · 凶煞读条旁小标 */
+export const UI_DUEL_GAUGE_THREAT = asset("deco-duel-gauge-threat.svg");
+/** 幻域未进本 · 预览区灵雾装饰（叠于格线之上） */
+export const UI_DUNGEON_IDLE_MIST = asset("deco-dungeon-idle-mist.svg");
 /** 经典幻域模式单选项图标 */
 export const UI_DUNGEON_REALM_CLASSIC = asset("deco-dungeon-realm-classic.svg");
 /** 星漩乱域模式单选项图标 */

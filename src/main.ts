@@ -352,6 +352,8 @@ let toastTimer = 0;
 let flyCreditsDismissed = false;
 const deferredDungeonToasts: string[] = [];
 let lastDungeonActive = false;
+/** 幻域飘字爆发时刻（用于决斗舞台短促亮度反馈） */
+let duelFloatBurstAtMs = 0;
 const reducedMotionQuery =
   typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 let prefersReducedMotion = reducedMotionQuery?.matches ?? false;
@@ -4405,6 +4407,7 @@ function loop(): void {
   }
   const floatPopups = drainDungeonDamageFloats();
   if (floatPopups.length && typeof document !== "undefined") {
+    if (state.dungeon.active) duelFloatBurstAtMs = Date.now();
     const layer = document.getElementById("dungeon-float-layer");
     if (layer) {
       for (const f of floatPopups) {
@@ -4571,6 +4574,10 @@ function loop(): void {
       mapEl.classList.toggle("duel-mood-fervor", duelMood === "fervor");
       mapEl.classList.toggle("duel-boss-telegraph", d.bossDodgeVisual);
       mapEl.classList.toggle("duel-combo-high", d.duelComboStacks >= 7);
+      mapEl.classList.toggle(
+        "duel-fx-hit",
+        !prefersReducedMotion && Date.now() - duelFloatBurstAtMs < 140,
+      );
       const comboPill = document.getElementById("duel-combo-pill");
       const tierEl = document.getElementById("duel-combo-tier");
       const weakPill = document.getElementById("duel-weak-pill");
