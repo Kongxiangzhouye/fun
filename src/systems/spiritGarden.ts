@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import type { GameState, GardenCropId } from "../types";
 import { addStones, canAfford, subStones } from "../stones";
+import { noteWeeklyBountyGardenHarvest } from "./weeklyBounty";
 
 export const GARDEN_PLOT_COUNT = 3;
 
@@ -111,6 +112,7 @@ export function harvestPlot(state: GameState, plotIndex: number, now: number): H
   plot.crop = null;
   plot.plantedAtMs = 0;
   state.spiritGarden.totalHarvests += 1;
+  noteWeeklyBountyGardenHarvest(state);
   state.lingSha += def.harvestLingSha;
   addStones(state, def.harvestStones);
   let essence = 0;

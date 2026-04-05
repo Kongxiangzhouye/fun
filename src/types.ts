@@ -45,6 +45,17 @@ export interface SpiritGardenState {
   totalHarvests: number;
 }
 
+/** 周常悬赏：按自然周（本地周一）重置 */
+export interface WeeklyBountyState {
+  weekKey: string;
+  waves: number;
+  cardPulls: number;
+  gardenHarvests: number;
+  tuna: number;
+  breakthroughs: number;
+  claimed: string[];
+}
+
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */
 export type GearStatKey =
   | "life_flat"
@@ -367,6 +378,9 @@ export interface GameState {
 
   /** 灵府·灵田（种植收获，持久养成） */
   spiritGarden: SpiritGardenState;
+
+  /** 周常悬赏进度与领取记录 */
+  weeklyBounty: WeeklyBountyState;
 }
 
 export const DECK_SIZE = 6;

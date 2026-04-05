@@ -5,6 +5,7 @@ import { nextRand01 } from "./rng";
 import { addStones } from "./stones";
 import { metalGachaBonusStones } from "./deckSynergy";
 import { generateRandomGear } from "./systems/gearCraft";
+import { noteWeeklyBountyCardPulls } from "./systems/weeklyBounty";
 
 /** 基础概率（单抽），会被 meta.gachaLuck 略微提升高稀有 */
 const BASE_WEIGHT: Record<Rarity, number> = {
@@ -121,6 +122,7 @@ function applyPullToState(state: GameState, card: CardDef): PullResult {
     }
   }
   state.totalPulls += 1;
+  noteWeeklyBountyCardPulls(state, 1);
   state.pityUr += 1;
   state.pitySsrSoft += 1;
   if (card.rarity === "UR") {

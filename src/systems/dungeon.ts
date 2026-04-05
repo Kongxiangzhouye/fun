@@ -36,6 +36,7 @@ import {
   dungeonPlayerMoveSpeedMult,
 } from "./battleSkills";
 import { petDungeonAtkAdditive } from "./pets";
+import { noteWeeklyBountyWave } from "./weeklyBounty";
 import {
   DUNGEON_MAP_H,
   DUNGEON_MAP_W,
@@ -1261,6 +1262,7 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
   d.maxWaveRecord = Math.max(d.maxWaveRecord, clearedWave);
   d.entryWave = Math.min(d.maxWaveRecord + 1, clearedWave + 1);
   d.totalWavesCleared += 1;
+  noteWeeklyBountyWave(state);
   d.wave = clearedWave + 1;
   d.playerMax = playerMaxHp(state);
   d.playerHp = Math.min(d.playerHp, d.playerMax);

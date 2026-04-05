@@ -13,6 +13,12 @@ import { ALL_PET_IDS } from "./data/pets";
 import { MAX_PET_LEVEL } from "./systems/pets";
 import { clampCombatHpToMax } from "./systems/combatHp";
 import { normalizeSpiritGarden } from "./systems/spiritGarden";
+import {
+  emptyWeeklyBounty,
+  currentWeekKey,
+  normalizeWeeklyBounty,
+  ensureWeeklyBountyWeek,
+} from "./systems/weeklyBounty";
 
 const KEY = "idle-gacha-realm-v1";
 
@@ -75,6 +81,7 @@ export interface SerializedState {
   pets?: GameState["pets"];
   petPullsTotal?: number;
   spiritGarden?: GameState["spiritGarden"];
+  weeklyBounty?: GameState["weeklyBounty"];
   combatHpCurrent?: number;
   dungeonSanctuaryMode?: boolean;
   dungeonPortalTargetWave?: number;
@@ -256,6 +263,15 @@ export function serialize(state: GameState): string {
       plots: state.spiritGarden.plots.map((p) => ({ ...p })),
       totalHarvests: state.spiritGarden.totalHarvests,
     },
+    weeklyBounty: {
+      weekKey: state.weeklyBounty.weekKey,
+      waves: state.weeklyBounty.waves,
+      cardPulls: state.weeklyBounty.cardPulls,
+      gardenHarvests: state.weeklyBounty.gardenHarvests,
+      tuna: state.weeklyBounty.tuna,
+      breakthroughs: state.weeklyBounty.breakthroughs,
+      claimed: [...state.weeklyBounty.claimed],
+    },
     combatHpCurrent: state.combatHpCurrent,
     dungeonSanctuaryMode: state.dungeonSanctuaryMode,
     dungeonPortalTargetWave: state.dungeonPortalTargetWave,
@@ -397,6 +413,21 @@ export function deserialize(json: string): GameState {
     };
   }
   normalizeSpiritGarden(st);
+  if (data.weeklyBounty && typeof data.weeklyBounty.weekKey === "string") {
+    st.weeklyBounty = {
+      weekKey: data.weeklyBounty.weekKey,
+      waves: data.weeklyBounty.waves ?? 0,
+      cardPulls: data.weeklyBounty.cardPulls ?? 0,
+      gardenHarvests: data.weeklyBounty.gardenHarvests ?? 0,
+      tuna: data.weeklyBounty.tuna ?? 0,
+      breakthroughs: data.weeklyBounty.breakthroughs ?? 0,
+      claimed: Array.isArray(data.weeklyBounty.claimed) ? [...data.weeklyBounty.claimed] : [],
+    };
+  } else {
+    st.weeklyBounty = emptyWeeklyBounty(currentWeekKey(st.lastTick));
+  }
+  normalizeWeeklyBounty(st);
+  ensureWeeklyBountyWeek(st, Date.now());
   st.combatHpCurrent =
     data.combatHpCurrent !== undefined && data.combatHpCurrent !== null && Number.isFinite(data.combatHpCurrent)
       ? data.combatHpCurrent

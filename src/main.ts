@@ -105,6 +105,8 @@ import {
   UI_HEAD_COMBAT,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
+import { renderBountyPanel, updateBountyPanelReadouts } from "./ui/bountyPanel";
+import { claimWeeklyBountyTask, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
 import {
   plantCrop,
   harvestPlot,
@@ -227,7 +229,7 @@ let veinHelpDocListenerBound = false;
 /** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
 type EstateSub = "idle" | "vein" | "garden";
-type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach";
+type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach" | "bounty";
 type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive";
 
 let activeHub: HubId = "estate";
@@ -1061,6 +1063,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabCodex && u.tabVein) {
     unlockLines.push("「<strong>养成→图鉴</strong>」解锁条件：抽卡≥5，或境界≥4。");
   }
+  if (!u.tabBounty) {
+    unlockLines.push("「<strong>养成→周常悬赏</strong>」解锁条件：境界≥5，或抽卡≥5。");
+  }
   if (!u.tabMeta && u.tabCodex) {
     unlockLines.push("「<strong>养成→轮回</strong>」解锁条件：境界≥18，或已轮回。");
   }
@@ -1635,6 +1640,8 @@ function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
         return u.tabMeta;
       case "ach":
         return u.tabAch;
+      case "bounty":
+        return u.tabBounty;
       default:
         return false;
     }
@@ -1679,6 +1686,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
     right = [
       mkCult("codex", "图鉴·规则说明", u.tabCodex, cultivateSub === "codex", false),
       mkCult("meta", "轮回·永久强化", u.tabMeta, cultivateSub === "meta", false),
+      mkCult("bounty", "周常·悬赏", u.tabBounty, cultivateSub === "bounty", false),
       mkCult("ach", "成就·奖励", u.tabAch, cultivateSub === "ach", false),
     ].join("");
   } else if (activeHub === "character") {
@@ -1715,6 +1723,9 @@ function renderDiscoverabilityHint(): string {
         break;
       case "ach":
         text = "常用入口：奖励自动发放；若不清楚玩法入口，先看「角色→功能预览·导航」。";
+        break;
+      case "bounty":
+        text = "常用入口：周常悬赏按本地每周一刷新；幻域、唤引、灵田、吐纳与破境均可推进条目。";
         break;
       case "pets":
         text = "常用入口：灵宠是全局加成；唤灵入口在底部「抽卡」，成长进度在本页查看。";
@@ -1824,6 +1835,8 @@ function renderHubContent(
           return renderMeta();
         case "ach":
           return renderAch();
+        case "bounty":
+          return renderBountyPanel(state, nowMs());
         default:
           return "";
       }
@@ -2400,7 +2413,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
         s !== "pets" &&
         s !== "codex" &&
         s !== "meta" &&
-        s !== "ach"
+        s !== "ach" &&
+        s !== "bounty"
       )
         return;
       cultivateSub = s;
@@ -2437,6 +2451,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.getElementById("btn-realm")?.addEventListener("click", () => {
     if (canAfford(state, rb) && subStones(state, rb)) {
       state.realmLevel += 1;
+      noteWeeklyBountyBreakthrough(state);
       if (state.tutorialStep === 7) {
         state.tutorialStep = 0;
         toast("破境成功。新手引导已完成。");
@@ -2807,6 +2822,23 @@ function bindEvents(rb: Decimal, _slots: number): void {
       updateTopResourcePillsAndVigor(totalCardsInPool());
       for (const a of newly) toastAchievement(a);
       render();
+    });
+  });
+
+  document.querySelectorAll("[data-bounty-claim]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = (el as HTMLElement).dataset.bountyClaim;
+      if (!id) return;
+      const t = nowMs();
+      if (claimWeeklyBountyTask(state, id, t)) {
+        tryCompleteAchievements(state);
+        saveGame(state);
+        toast("悬赏奖励已领取");
+        updateTopResourcePillsAndVigor(totalCardsInPool());
+        render();
+      } else {
+        toast("无法领取：未达成或本周已领过。");
+      }
     });
   });
 
@@ -3391,6 +3423,9 @@ function loop(): void {
     if (bsr) bsr.textContent = `当前：${describeBattleSkillLevels(state)}`;
     const btnPull = document.getElementById("btn-pull-battle-skill") as HTMLButtonElement | null;
     if (btnPull) btnPull.disabled = state.summonEssence < battleSkillPullCost();
+  }
+  if (activeHub === "cultivate" && cultivateSub === "bounty") {
+    updateBountyPanelReadouts(state, now);
   }
   if (getUiUnlocks(state).tabDungeon && state.dungeon.active) {
     const d = state.dungeon;

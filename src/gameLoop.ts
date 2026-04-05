@@ -15,6 +15,7 @@ import { tickSkillTraining } from "./systems/skillTraining";
 import { tryTuna, tunaCooldownLeftMs } from "./systems/tuna";
 import { checkTrueEnding } from "./trueEnding";
 import { tryAutoSalvageInventory } from "./systems/salvage";
+import { ensureWeeklyBountyWeek, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
 
 const TICK_MAX_DT = 120;
 let autoSalvageAccumSec = 0;
@@ -30,6 +31,7 @@ function tryAutoRealm(state: GameState): void {
   if (!canAfford(state, rb)) return;
   if (!subStones(state, rb)) return;
   state.realmLevel += 1;
+  noteWeeklyBountyBreakthrough(state);
 }
 
 function tryAutoTuna(state: GameState, now: number): void {
@@ -55,6 +57,7 @@ export function applyTick(state: GameState, now: number): void {
     state.lastTick = now;
     return;
   }
+  ensureWeeklyBountyWeek(state, now);
   const elapsedSec = Math.max(0, (now - state.lastTick) / 1000);
   if (elapsedSec <= 0) return;
   const dt = Math.min(TICK_MAX_DT, elapsedSec);

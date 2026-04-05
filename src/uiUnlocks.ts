@@ -16,6 +16,8 @@ export function getUiUnlocks(state: GameState): {
   tabCodex: boolean;
   tabMeta: boolean;
   tabAch: boolean;
+  /** 周常悬赏 */
+  tabBounty: boolean;
   /** 幻域累计通关 ≥15 波 */
   tabPets: boolean;
   topTide: boolean;
@@ -51,6 +53,7 @@ export function getUiUnlocks(state: GameState): {
     tabCodex: pulls >= 5 || rl >= 4,
     tabMeta: rl >= 18 || state.reincarnations >= 1,
     tabAch: rl >= 6 || pulls >= 15,
+    tabBounty: rl >= 5 || pulls >= 5,
     tabPets: state.dungeon.totalWavesCleared >= 15,
     topTide: tutDone,
     statDao: state.reincarnations >= 1 || state.daoEssence > 0 || rl >= 20,

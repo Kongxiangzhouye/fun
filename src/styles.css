@@ -5661,3 +5661,92 @@ header h1 {
 .spirit-garden-plot .garden-eta-line {
   margin-bottom: 8px;
 }
+
+/* —— 养成 · 周常悬赏 —— */
+.bounty-panel .bounty-week-line {
+  margin-top: 4px;
+}
+
+.bounty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.bounty-card {
+  padding: 12px 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(200, 160, 90, 0.35);
+  background: linear-gradient(165deg, rgba(28, 22, 16, 0.94), rgba(12, 10, 8, 0.98));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.bounty-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.bounty-card-head h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #f2e6c8;
+  letter-spacing: 0.05em;
+}
+
+.bounty-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.bounty-status.prog {
+  color: #a8b8e0;
+  background: rgba(80, 100, 160, 0.2);
+}
+.bounty-status.done {
+  color: #b8f0c8;
+  background: rgba(60, 140, 90, 0.25);
+}
+.bounty-status.claimed {
+  color: #c0c0c0;
+  background: rgba(60, 60, 60, 0.35);
+}
+
+.bounty-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.bounty-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid rgba(200, 160, 90, 0.25);
+}
+
+.bounty-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b8893a, #e8c88a);
+  transition: width 0.35s ease;
+}
+
+.bounty-bar-lbl {
+  font-size: 0.78rem;
+  color: #c9b898;
+  min-width: 4.5em;
+  text-align: right;
+}
+
+.bounty-reward {
+  margin: 6px 0 10px;
+}
