@@ -50,6 +50,8 @@ export const UI_GEAR_PITY_SIGIL = asset("gear-pity-sigil.svg");
 export const UI_TITLE_SPIRIT = asset("title-spirit.svg");
 export const UI_PANEL_CORNER = asset("panel-corner.svg");
 export const UI_BG_SPARKLES = asset("bg-sparkles.svg");
+/** 离线收益摘要条左侧装饰 */
+export const UI_OFFLINE_SUMMARY_DECO = asset("offline-summary-deco.svg");
 export const UI_PANEL_RUNES = asset("bg-panel-runes.svg");
 
 /** 分区标题与空状态插画（自绘 SVG） */

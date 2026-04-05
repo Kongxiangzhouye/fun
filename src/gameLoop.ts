@@ -25,8 +25,19 @@ const TICK_MAX_DT = 120;
 let autoSalvageAccumSec = 0;
 const OFFLINE_RESONANCE_GAIN_MULT = 0.28;
 
-function maxOfflineSec(state: GameState): number {
+/** 当前存档离线收益秒上限（土系等可抬高） */
+export function maxOfflineSec(state: GameState): number {
   return MAX_OFFLINE_SEC_BASE * earthOfflineCapMult(state);
+}
+
+/** `catchUpOffline` 返回值：用于离线摘要 UI */
+export interface OfflineCatchUpSummary {
+  stoneGain: Decimal;
+  /** 实际参与结算的秒数（已 cap） */
+  settledSec: number;
+  /** 离开时长秒（未 cap） */
+  rawAwaySec: number;
+  wasCapped: boolean;
 }
 
 function tryAutoRealm(state: GameState): void {
@@ -92,15 +103,21 @@ export function applyTick(state: GameState, now: number): void {
   checkTrueEnding(state);
 }
 
-export function catchUpOffline(state: GameState, now: number): Decimal {
+export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSummary {
+  const empty = (rawAway: number): OfflineCatchUpSummary => ({
+    stoneGain: new Decimal(0),
+    settledSec: 0,
+    rawAwaySec: Math.max(0, rawAway),
+    wasCapped: false,
+  });
   if (now < state.lastTick) {
     state.lastTick = now;
-    return new Decimal(0);
+    return empty(0);
   }
   const raw = (now - state.lastTick) / 1000;
   const cap = maxOfflineSec(state);
   const dt = Math.min(cap, Math.max(0, raw));
-  if (dt < 1) return new Decimal(0);
+  if (dt < 1) return empty(raw);
   const ips = incomePerSecond(state, totalCardsInPool());
   const mult = earthOfflineIncomeMult(state);
   const gained = ips.mul(dt).mul(mult);
@@ -114,7 +131,12 @@ export function catchUpOffline(state: GameState, now: number): Decimal {
   if (!state.dungeon.active) tickCombatHpRegen(state, dt);
   tryCompleteAchievements(state);
   checkTrueEnding(state);
-  return gained;
+  return {
+    stoneGain: gained,
+    settledSec: dt,
+    rawAwaySec: raw,
+    wasCapped: raw > cap + 1e-6,
+  };
 }
 
 /** 闭关令 / 合法跳时：按离线规则瞬间结算 */

@@ -25,7 +25,13 @@ import {
   deckRealmBonusSum,
   effectiveDeckSlots,
 } from "./economy";
-import { catchUpOffline, applyTick, fastForward } from "./gameLoop";
+import {
+  catchUpOffline,
+  applyTick,
+  fastForward,
+  maxOfflineSec,
+  type OfflineCatchUpSummary,
+} from "./gameLoop";
 import {
   pullOne,
   pullTen,
@@ -110,6 +116,7 @@ import {
   UI_HEAD_SPIRIT_RESERVOIR,
   UI_HEAD_DAILY_FORTUNE,
   UI_ACH_FORGE_DECO,
+  UI_OFFLINE_SUMMARY_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -231,6 +238,17 @@ function fmtDungeonDur(sec: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+/** 离线结算时长展示 */
+function fmtOfflineDurationSec(sec: number): string {
+  const s = Math.max(0, Math.floor(sec));
+  if (s < 60) return `${s} 秒`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} 分`;
+  const h = Math.floor(m / 60);
+  const mr = m % 60;
+  return `${h} 小时 ${mr} 分`;
+}
+
 function fmtSkillEta(sec: number | null): string {
   if (sec == null) return "—";
   if (sec <= 0) return "即将突破";
@@ -255,6 +273,8 @@ let gearDetailSlot: "weapon" | "body" | "ring" | null = null;
 let gearInvSortMode: GearInvSortMode = "rarity";
 /** 聚灵阵：灵卡池 / 铸灵池 */
 let gachaPool: "cards" | "gear" = "cards";
+/** 本次启动时若有离线灵石结算，展示摘要条直至玩家关闭 */
+let pendingOfflineSummary: OfflineCatchUpSummary | null = null;
 let autoEnterPromptHandled = false;
 let veinHelpDocListenerBound = false;
 /** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
@@ -1973,6 +1993,25 @@ function renderHubContent(
   }
 }
 
+function renderOfflineSummaryBanner(): string {
+  if (!pendingOfflineSummary || !pendingOfflineSummary.stoneGain.gt(0.01)) return "";
+  const s = pendingOfflineSummary;
+  const dur = fmtOfflineDurationSec(s.settledSec);
+  const capSec = maxOfflineSec(state);
+  const capHint = s.wasCapped
+    ? ` · 已超过离线收益上限，按 <strong>${fmtOfflineDurationSec(capSec)}</strong> 结算`
+    : "";
+  return `<aside class="offline-summary-banner" id="offline-summary-banner" role="status" aria-live="polite">
+    <img class="offline-summary-deco" src="${UI_OFFLINE_SUMMARY_DECO}" alt="" width="36" height="36" loading="lazy" />
+    <div class="offline-summary-text">
+      <strong class="offline-summary-title">离线收益</strong>
+      <p class="hint sm offline-summary-line">结算时长约 <strong>${dur}</strong>${capHint}</p>
+      <p class="offline-summary-stones">灵石 <strong>${fmtDecimal(s.stoneGain)}</strong></p>
+    </div>
+    <button type="button" class="btn offline-summary-dismiss" id="btn-offline-summary-dismiss">知道了</button>
+  </aside>`;
+}
+
 function render(): void {
   const app = document.getElementById("app");
   if (!app) return;
@@ -1994,6 +2033,7 @@ function render(): void {
     <div class="app-visual-bg" style="--ui-sparkles:url('${UI_BG_SPARKLES}')" aria-hidden="true"></div>
     <div class="app-visual-aurora" aria-hidden="true"></div>
     <div class="app-root-content" style="--ui-panel-runes:url('${UI_PANEL_RUNES}')">
+    ${renderOfflineSummaryBanner()}
     <div class="app-head">
     <div class="app-brand-row">
       <div class="app-title-cluster">
@@ -2580,6 +2620,11 @@ function bindEvents(rb: Decimal, _slots: number): void {
 
   document.getElementById("btn-topbar-more")?.addEventListener("click", () => {
     topBarExtrasExpanded = !topBarExtrasExpanded;
+    render();
+  });
+
+  document.getElementById("btn-offline-summary-dismiss")?.addEventListener("click", () => {
+    pendingOfflineSummary = null;
     render();
   });
 
@@ -4090,9 +4135,9 @@ function init(): void {
   const offline = catchUpOffline(state, t);
   tickDailyLoginCalendar(state, t);
   tickDailyFortune(state, t);
-  if (offline.gt(0.01)) {
+  if (offline.stoneGain.gt(0.01)) {
+    pendingOfflineSummary = offline;
     saveGame(state);
-    queueMicrotask(() => toast(`离线收益：约 ${fmtDecimal(offline)} 灵石`));
   }
   tryCompleteAchievements(state);
   for (const a of drainAchievementToastQueue()) {
