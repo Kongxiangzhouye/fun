@@ -300,6 +300,8 @@ export interface GameState {
   pityUr: number;
   /** 距离 SSR+ 软保底的计数 */
   pitySsrSoft: number;
+  /** 铸灵池：连续未出珍品+（SR 及以上）的计数，用于珍品保底 */
+  gearPityPulls: number;
   owned: Record<string, OwnedCard>;
   /** 卡组槽位：最多 6 张，存 defId 或 null */
   deck: (string | null)[];

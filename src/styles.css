@@ -5314,6 +5314,17 @@ header h1 {
   box-shadow: 0 0 14px rgba(255, 200, 100, 0.35);
 }
 
+.pity-meter-fill--gear {
+  background: linear-gradient(90deg, #1e4a66, #3a8ec2, #a8e6ff);
+  background-size: 200% 100%;
+  animation: pity-fill-flow 3s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(100, 190, 255, 0.35);
+}
+
+.pity-meter-block--gear .pity-meter-track {
+  border-color: rgba(120, 200, 255, 0.2);
+}
+
 @keyframes pity-fill-flow {
   0%,
   100% {
@@ -5380,7 +5391,8 @@ header h1 {
   .resonance-core-img {
     animation: none;
   }
-  .pity-meter-fill {
+  .pity-meter-fill,
+  .pity-meter-fill--gear {
     animation: none;
   }
   .progress-fill::after {

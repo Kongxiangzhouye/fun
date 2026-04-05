@@ -93,6 +93,7 @@ export function performReincarnate(state: GameState): void {
   state.lastTunaMs = 0;
   state.pityUr = 0;
   state.pitySsrSoft = 0;
+  state.gearPityPulls = 0;
   state.pullsThisLife = 0;
   state.wishResonance = 0;
   state.combatHpCurrent = playerMaxHp(state);

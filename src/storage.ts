@@ -39,6 +39,7 @@ export interface SerializedState {
   totalPulls: number;
   pityUr: number;
   pitySsrSoft: number;
+  gearPityPulls?: number;
   owned: Record<string, { defId: string; stars: number; level: number }>;
   deck: (string | null)[];
   codexUnlocked: string[];
@@ -231,6 +232,7 @@ export function serialize(state: GameState): string {
     totalPulls: state.totalPulls,
     pityUr: state.pityUr,
     pitySsrSoft: state.pitySsrSoft,
+    gearPityPulls: state.gearPityPulls,
     owned: state.owned,
     deck: state.deck,
     codexUnlocked: [...state.codexUnlocked],
@@ -349,6 +351,10 @@ export function deserialize(json: string): GameState {
   st.totalPulls = data.totalPulls ?? 0;
   st.pityUr = data.pityUr ?? 0;
   st.pitySsrSoft = data.pitySsrSoft ?? 0;
+  st.gearPityPulls =
+    data.gearPityPulls != null && Number.isFinite(data.gearPityPulls)
+      ? Math.max(0, Math.floor(data.gearPityPulls))
+      : 0;
   st.owned = data.owned ?? {};
   st.deck = data.deck?.length ? [...data.deck] : st.deck;
   while (st.deck.length < DECK_SIZE) st.deck.push(null);
@@ -538,6 +544,10 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.totalPulls = data.totalPulls ?? 0;
   st.pityUr = data.pityUr ?? 0;
   st.pitySsrSoft = data.pitySsrSoft ?? 0;
+  st.gearPityPulls =
+    data.gearPityPulls != null && Number.isFinite(data.gearPityPulls)
+      ? Math.max(0, Math.floor(data.gearPityPulls))
+      : 0;
   st.owned = data.owned ?? {};
   st.deck = data.deck?.length ? [...data.deck] : st.deck;
   while (st.deck.length < DECK_SIZE) st.deck.push(null);

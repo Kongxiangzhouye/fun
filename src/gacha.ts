@@ -20,6 +20,8 @@ const BASE_WEIGHT: Record<Rarity, number> = {
 
 /** 天极保底计数上限（与 UI 保底条一致） */
 export const UR_PITY_MAX = 90;
+/** 铸灵池：连续未出珍品+（SR 及以上）时触发；与灵卡天极计数独立 */
+export const GEAR_SR_PITY_MAX = 36;
 const SSR_SOFT_START = 65;
 
 function luckFactor(state: GameState): number {
@@ -147,13 +149,18 @@ export function pullOne(state: GameState): PullResult {
   return applyPullToState(state, card);
 }
 
-/** 铸灵池单抽：仅装备，不占灵卡 UR/SSR 保底计数 */
+/** 铸灵池单抽：仅装备，不占灵卡 UR/SSR 保底计数；另有珍品+独立保底 */
 export function pullGearOne(state: GameState): { ok: true; gear: GearItem } | { ok: false; msg: string } {
   if (Object.keys(state.gearInventory).length >= 80) {
     return { ok: false, msg: "背包装备已满" };
   }
-  const g = generateRandomGear(state);
+  const forceSrPlus = state.gearPityPulls >= GEAR_SR_PITY_MAX - 1;
+  const g = forceSrPlus ? generateRandomGear(state, pickPityGearRarity(state)) : generateRandomGear(state);
   state.gearInventory[g.instanceId] = g;
+  state.gearPityPulls += 1;
+  if (rarityRank(g.rarity) >= rarityRank("SR")) {
+    state.gearPityPulls = 0;
+  }
   return { ok: true, gear: g };
 }
 
@@ -186,4 +193,23 @@ export function pullTen(state: GameState): PullResult[] {
 
 export function urPityRemaining(state: GameState): number {
   return Math.max(0, UR_PITY_MAX - state.pityUr);
+}
+
+/** 铸灵池距珍品+保底剩余唤数（与 gearPityPulls 同步） */
+export function gearSrPityRemaining(state: GameState): number {
+  return Math.max(0, GEAR_SR_PITY_MAX - state.gearPityPulls);
+}
+
+/** 保底触发时在 SR/SSR/UR 间加权（与灵卡高稀有权重比例相近） */
+function pickPityGearRarity(state: GameState): Rarity {
+  const wSr = 120;
+  const wSsr = 68;
+  const wUr = 12;
+  const t = wSr + wSsr + wUr;
+  let r = nextRand01(state) * t;
+  r -= wUr;
+  if (r <= 0) return "UR";
+  r -= wSsr;
+  if (r <= 0) return "SSR";
+  return "SR";
 }

@@ -33,6 +33,8 @@ import {
   pullGearTen,
   urPityRemaining,
   UR_PITY_MAX,
+  gearSrPityRemaining,
+  GEAR_SR_PITY_MAX,
   highestRarityInPulls,
   type PullResult,
 } from "./gacha";
@@ -98,6 +100,7 @@ import {
   UI_GACHA_DECOR,
   UI_RESONANCE_CORE,
   UI_PITY_SIGIL,
+  UI_GEAR_PITY_SIGIL,
   UI_TITLE_SPIRIT,
   UI_BG_SPARKLES,
   UI_PANEL_RUNES,
@@ -2158,6 +2161,11 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
 function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string {
   const resFrac = ((state.wishResonance % 100) + 100) % 100;
   const pityProgressPct = Math.min(100, Math.max(0, ((UR_PITY_MAX - pityUr) / UR_PITY_MAX) * 100));
+  const gearPityRem = gearSrPityRemaining(state);
+  const gearPityProgressPct = Math.min(
+    100,
+    Math.max(0, ((GEAR_SR_PITY_MAX - gearPityRem) / GEAR_SR_PITY_MAX) * 100),
+  );
   const tenUnlocked = u.gachaTenUnlocked;
   const tenDisabled = !tenUnlocked || state.summonEssence < ESSENCE_COST_TEN;
   const gearTenDisabled = !tenUnlocked || state.summonEssence < ESSENCE_COST_GEAR_TEN;
@@ -2244,7 +2252,19 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
 
   const gearSection = `
     <div class="gacha-pool-panel" ${gachaPool === "gear" ? "" : 'hidden'} id="gacha-panel-gear">
-      <p class="pity-info">铸灵池 · 仅产<strong>装备</strong>，<strong>不占灵卡保底</strong>；背包上限 80 件。</p>
+      <div class="pity-meter-block pity-meter-block--gear" aria-label="铸灵珍品保底进度">
+        <div class="pity-meter-head">
+          <img class="pity-sigil-img" src="${UI_GEAR_PITY_SIGIL}" alt="" width="22" height="22" loading="lazy" />
+          <div class="pity-meter-titles">
+            <span class="pity-meter-title">铸灵池 · 珍品显化</span>
+            <span class="pity-meter-sub">距珍品+保底约余 <strong id="pity-remain-gear-txt">${gearPityRem}</strong> 唤</span>
+          </div>
+        </div>
+        <div class="pity-meter-track" role="progressbar" aria-valuenow="${Math.round(gearPityProgressPct)}" aria-valuemin="0" aria-valuemax="100" aria-label="铸灵珍品保底进度">
+          <div class="pity-meter-fill pity-meter-fill--gear" id="pity-fill-gear" style="width:${gearPityProgressPct}%"></div>
+        </div>
+      </div>
+      <p class="pity-info">铸灵池 · 仅产<strong>装备</strong>，<strong>不占灵卡天极保底</strong>；<strong>${GEAR_SR_PITY_MAX} 唤</strong>内至少一件珍品及以上；背包上限 80 件。</p>
       <p class="hint">词条与强化规则在底部「<strong>角色 → 行囊</strong>」查看；天极可精炼。</p>
       <div class="gacha-actions">
         <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.summonEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 唤灵髓）</button>
@@ -3878,6 +3898,12 @@ function loop(): void {
     const pityTxt = document.getElementById("pity-remain-txt");
     if (pityFill) pityFill.style.width = `${pityPct}%`;
     if (pityTxt) pityTxt.textContent = String(pityRem);
+    const gearRem = gearSrPityRemaining(state);
+    const gearPct = Math.min(100, Math.max(0, ((GEAR_SR_PITY_MAX - gearRem) / GEAR_SR_PITY_MAX) * 100));
+    const pityFillGear = document.getElementById("pity-fill-gear");
+    const pityTxtGear = document.getElementById("pity-remain-gear-txt");
+    if (pityFillGear) pityFillGear.style.width = `${gearPct}%`;
+    if (pityTxtGear) pityTxtGear.textContent = String(gearRem);
   }
   if (getUiUnlocks(state).tabDungeon && activeHub === "battle") {
     const d = state.dungeon;
