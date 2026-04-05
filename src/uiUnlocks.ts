@@ -22,6 +22,8 @@ export function getUiUnlocks(state: GameState): {
   tabBounty: boolean;
   /** 养成 → 灵息日历 */
   tabDailyLogin: boolean;
+  /** 养成 → 天机匣 */
+  tabCelestialStash: boolean;
   /** 角色 → 道韵灵窍 */
   tabDaoMeridian: boolean;
   /** 幻域累计通关 ≥15 波 */
@@ -62,6 +64,7 @@ export function getUiUnlocks(state: GameState): {
     tabAch: rl >= 6 || pulls >= 15,
     tabBounty: rl >= 5 || pulls >= 5,
     tabDailyLogin: pulls >= 1 || rl >= 2,
+    tabCelestialStash: rl >= 5 || pulls >= 6,
     tabDaoMeridian: state.reincarnations >= 1 || state.daoEssence >= 15 || state.daoMeridian > 0,
     tabPets: state.dungeon.totalWavesCleared >= 15,
     topTide: tutDone,

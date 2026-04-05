@@ -108,6 +108,8 @@ import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderBountyPanel, updateBountyPanelReadouts } from "./ui/bountyPanel";
 import { renderDailyLoginPanel, updateDailyLoginPanelReadouts } from "./ui/dailyLoginPanel";
 import { claimDailyLoginReward, tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
+import { renderCelestialStashPanel, updateCelestialStashPanelReadouts } from "./ui/celestialStashPanel";
+import { tryBuyCelestialOffer } from "./systems/celestialStash";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
 import { tryBuyDaoMeridian } from "./systems/daoMeridian";
@@ -235,7 +237,17 @@ let veinHelpDocListenerBound = false;
 /** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
 type EstateSub = "idle" | "vein" | "garden";
-type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach" | "bounty" | "chronicle" | "daily";
+type CultivateSub =
+  | "deck"
+  | "train"
+  | "pets"
+  | "codex"
+  | "meta"
+  | "ach"
+  | "bounty"
+  | "chronicle"
+  | "daily"
+  | "stash";
 type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive" | "meridian";
 
 let activeHub: HubId = "estate";
@@ -1075,6 +1087,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabDailyLogin) {
     unlockLines.push("「<strong>养成→灵息·日历</strong>」解锁条件：抽卡≥1，或境界≥2。");
   }
+  if (!u.tabCelestialStash) {
+    unlockLines.push("「<strong>养成→天机·匣</strong>」解锁条件：境界≥5，或抽卡≥6。");
+  }
   if (!u.tabDaoMeridian) {
     unlockLines.push("「<strong>角色→道韵·灵窍</strong>」解锁条件：已轮回，或道韵≥15，或曾贯通灵窍。");
   }
@@ -1661,6 +1676,8 @@ function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
         return u.tabChronicle;
       case "daily":
         return u.tabDailyLogin;
+      case "stash":
+        return u.tabCelestialStash;
       default:
         return false;
     }
@@ -1708,6 +1725,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
       mkCult("chronicle", "唤灵·通鉴", u.tabChronicle, cultivateSub === "chronicle", false),
       mkCult("meta", "轮回·永久强化", u.tabMeta, cultivateSub === "meta", false),
       mkCult("bounty", "周常·悬赏", u.tabBounty, cultivateSub === "bounty", false),
+      mkCult("stash", "天机·匣", u.tabCelestialStash, cultivateSub === "stash", false),
       mkCult("daily", "灵息·日历", u.tabDailyLogin, cultivateSub === "daily", false),
       mkCult("ach", "成就·奖励", u.tabAch, cultivateSub === "ach", false),
     ].join("");
@@ -1759,6 +1777,9 @@ function renderDiscoverabilityHint(): string {
         break;
       case "daily":
         text = "常用入口：灵息日历按本地日结算连签；每日可领灵石与唤灵髓，与周常悬赏不同轨。";
+        break;
+      case "stash":
+        text = "常用入口：天机匣按自然周刷新限购兑换；与周常悬赏共用周次，资源种类不同。";
         break;
       case "pets":
         text = "常用入口：灵宠是全局加成；唤灵入口在底部「抽卡」，成长进度在本页查看。";
@@ -1879,6 +1900,8 @@ function renderHubContent(
           return renderChroniclePanel(state);
         case "daily":
           return renderDailyLoginPanel(state, nowMs());
+        case "stash":
+          return renderCelestialStashPanel(state, nowMs());
         default:
           return "";
       }
@@ -2921,6 +2944,30 @@ function bindEvents(rb: Decimal, _slots: number): void {
     }
   });
 
+  document.body.addEventListener("click", (ev) => {
+    const el = (ev.target as HTMLElement | null)?.closest?.("[data-celestial-buy]") as HTMLElement | null;
+    if (!el) return;
+    const id = el.dataset.celestialBuy;
+    if (!id) return;
+    const t = nowMs();
+    const err = tryBuyCelestialOffer(state, id, t);
+    if (err) {
+      toast(err);
+      return;
+    }
+    tryCompleteAchievements(state);
+    saveGame(state);
+    toast("天机匣兑换成功");
+    updateTopResourcePillsAndVigor(totalCardsInPool());
+    const pAch = document.getElementById("ps-ach");
+    if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+    if (activeHub === "cultivate" && cultivateSub === "stash") {
+      updateCelestialStashPanelReadouts(state, t);
+    } else {
+      render();
+    }
+  });
+
   const readEntryWave = (): number => {
     const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
     const raw = inp?.valueAsNumber;
@@ -3508,6 +3555,9 @@ function loop(): void {
   }
   if (activeHub === "cultivate" && cultivateSub === "daily") {
     updateDailyLoginPanelReadouts(state, now);
+  }
+  if (activeHub === "cultivate" && cultivateSub === "stash") {
+    updateCelestialStashPanelReadouts(state, now);
   }
   if (getUiUnlocks(state).tabDungeon && state.dungeon.active) {
     const d = state.dungeon;

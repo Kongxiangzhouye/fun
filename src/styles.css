@@ -5996,3 +5996,55 @@ header h1 {
   color: #b8e8f0;
   letter-spacing: 0.04em;
 }
+
+/* —— 养成 · 天机匣 —— */
+.celestial-stash-panel .celestial-week-line {
+  margin-top: 4px;
+}
+
+.celestial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.celestial-card {
+  padding: 12px 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 140, 200, 0.38);
+  background: linear-gradient(165deg, rgba(18, 22, 40, 0.94), rgba(10, 12, 24, 0.98));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.celestial-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.celestial-card-head h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #d8e4ff;
+  letter-spacing: 0.05em;
+}
+
+.celestial-status.ready {
+  color: #8fd4b8;
+}
+
+.celestial-status.bought {
+  color: #a8b0c8;
+}
+
+.celestial-status.lock {
+  color: #c8a878;
+}
+
+.celestial-cost,
+.celestial-reward {
+  margin: 4px 0 0;
+}

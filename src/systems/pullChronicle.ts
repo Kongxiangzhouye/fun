@@ -12,12 +12,15 @@ export function normalizePullChronicle(st: GameState): void {
 
 export function normalizeLifetimeStats(st: GameState): void {
   if (!st.lifetimeStats || typeof st.lifetimeStats !== "object") {
-    st.lifetimeStats = { dungeonEssenceIntGained: 0 };
+    st.lifetimeStats = { dungeonEssenceIntGained: 0, celestialStashBuys: 0 };
     return;
   }
   const n = st.lifetimeStats.dungeonEssenceIntGained;
   if (n == null || !Number.isFinite(n)) st.lifetimeStats.dungeonEssenceIntGained = 0;
   else st.lifetimeStats.dungeonEssenceIntGained = Math.max(0, Math.floor(n));
+  const cb = st.lifetimeStats.celestialStashBuys;
+  if (cb == null || !Number.isFinite(cb)) st.lifetimeStats.celestialStashBuys = 0;
+  else st.lifetimeStats.celestialStashBuys = Math.max(0, Math.floor(cb));
 }
 
 export function pushPullChronicle(

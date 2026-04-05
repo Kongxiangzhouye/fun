@@ -21,6 +21,7 @@ import {
 } from "./systems/weeklyBounty";
 import { normalizeDaoMeridian } from "./systems/daoMeridian";
 import { normalizeLifetimeStats, normalizePullChronicle } from "./systems/pullChronicle";
+import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 
 const KEY = "idle-gacha-realm-v1";
 
@@ -86,6 +87,7 @@ export interface SerializedState {
   petPullsTotal?: number;
   spiritGarden?: GameState["spiritGarden"];
   weeklyBounty?: GameState["weeklyBounty"];
+  celestialStash?: GameState["celestialStash"];
   daoMeridian?: number;
   pullChronicle?: GameState["pullChronicle"];
   lifetimeStats?: GameState["lifetimeStats"];
@@ -281,6 +283,10 @@ export function serialize(state: GameState): string {
       breakthroughs: state.weeklyBounty.breakthroughs,
       claimed: [...state.weeklyBounty.claimed],
     },
+    celestialStash: {
+      weekKey: state.celestialStash.weekKey,
+      purchased: [...state.celestialStash.purchased],
+    },
     daoMeridian: state.daoMeridian,
     pullChronicle: state.pullChronicle.map((e) => ({ ...e })),
     lifetimeStats: { ...state.lifetimeStats },
@@ -442,6 +448,15 @@ export function deserialize(json: string): GameState {
   }
   normalizeWeeklyBounty(st);
   ensureWeeklyBountyWeek(st, Date.now());
+  if (data.celestialStash && typeof data.celestialStash.weekKey === "string") {
+    st.celestialStash = {
+      weekKey: data.celestialStash.weekKey,
+      purchased: Array.isArray(data.celestialStash.purchased) ? [...data.celestialStash.purchased] : [],
+    };
+  } else {
+    st.celestialStash = emptyCelestialStash(currentWeekKey(st.lastTick));
+  }
+  ensureCelestialStashWeek(st, Date.now());
   if (data.daoMeridian != null && Number.isFinite(data.daoMeridian)) {
     st.daoMeridian = Math.floor(data.daoMeridian);
   }
@@ -458,6 +473,7 @@ export function deserialize(json: string): GameState {
   if (data.lifetimeStats && typeof data.lifetimeStats === "object") {
     st.lifetimeStats = {
       dungeonEssenceIntGained: Math.max(0, Math.floor(data.lifetimeStats.dungeonEssenceIntGained ?? 0)),
+      celestialStashBuys: Math.max(0, Math.floor(data.lifetimeStats.celestialStashBuys ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

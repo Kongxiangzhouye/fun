@@ -160,6 +160,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 280,
     rewardEssence: 20,
   },
+  {
+    id: "celestial_stash_1",
+    title: "天机初启",
+    desc: "在天机匣完成 1 次兑换",
+    rewardStones: 120,
+    rewardEssence: 8,
+  },
 ];
 
 function hasUr(state: GameState): boolean {
@@ -231,6 +238,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.spiritGarden?.totalHarvests ?? 0) >= 30;
     case "login_streak_7":
       return state.dailyStreak >= 7;
+    case "celestial_stash_1":
+      return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
     default:
       return false;
   }

@@ -47,6 +47,8 @@ export interface PullChronicleEntry {
 export interface LifetimeStatsState {
   /** 自幻域入包累计的整数唤灵髓（与背包总髓不同，不含抽卡/成就等来源） */
   dungeonEssenceIntGained: number;
+  /** 天机匣累计成功兑换次数 */
+  celestialStashBuys: number;
 }
 
 /** 灵田作物 id */
@@ -68,6 +70,13 @@ export interface WeeklyBountyState {
   tuna: number;
   breakthroughs: number;
   claimed: string[];
+}
+
+/** 天机匣：每周轮换限购兑换（与周悬赏同周 key） */
+export interface CelestialStashState {
+  weekKey: string;
+  /** 本周已兑换的 offer id */
+  purchased: string[];
 }
 
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */
@@ -399,6 +408,9 @@ export interface GameState {
 
   /** 周常悬赏进度与领取记录 */
   weeklyBounty: WeeklyBountyState;
+
+  /** 天机匣：周限购资源兑换 */
+  celestialStash: CelestialStashState;
 
   /**
    * 道韵灵窍：0–5 已解锁层数（消耗道韵；轮回不重置）

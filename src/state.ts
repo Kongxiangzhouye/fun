@@ -4,8 +4,9 @@ import { initRng, rollNewRngSeed } from "./rng";
 import { playerMaxHp } from "./systems/playerCombat";
 import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
+import { emptyCelestialStash } from "./systems/celestialStash";
 
-export const SAVE_VERSION = 27;
+export const SAVE_VERSION = 28;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -133,9 +134,10 @@ export function createInitialState(): GameState {
     petPullsTotal: 0,
     spiritGarden: { plots: emptyGardenPlots(), totalHarvests: 0 },
     weeklyBounty: emptyWeeklyBounty(currentWeekKey(now)),
+    celestialStash: emptyCelestialStash(currentWeekKey(now)),
     daoMeridian: 0,
     pullChronicle: [],
-    lifetimeStats: { dungeonEssenceIntGained: 0 },
+    lifetimeStats: { dungeonEssenceIntGained: 0, celestialStashBuys: 0 },
     combatHpCurrent: 100,
     dungeonSanctuaryMode: false,
     dungeonPortalTargetWave: 0,
