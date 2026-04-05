@@ -53,6 +53,8 @@ import {
   UI_DUNGEON_INTER_WAVE_DECO,
   UI_DUNGEON_FOOT_TIMER_DECO,
   UI_DUNGEON_PANEL_LIVE_STRIP,
+  UI_DUNGEON_ENTER_DECO,
+  UI_DUEL_BOSS_BADGE,
   UI_DUNGEON_AFFIX_DECO,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
@@ -158,6 +160,8 @@ function renderDungeonMapHtml(state: GameState): string {
   const em = frontMob ? frontMob.element : ("metal" as Element);
   const mulOut = elementDamageMultiplier(pEl, em);
   const mulIn = elementDamageMultiplier(em, pEl);
+  const liveMob = d.mobs.find((m) => m.hp > 0);
+  const isBossFight = !!(liveMob?.isBoss);
   const floatOverlay = `<div class="dungeon-map-hud-overlay" aria-hidden="true">
       <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
     </div>`;
@@ -200,7 +204,10 @@ function renderDungeonMapHtml(state: GameState): string {
             <div class="dungeon-duel-side dungeon-duel-side--enemy">
               <span class="dungeon-duel-side-tag">敌方</span>
               <div class="dungeon-boss-strip dungeon-boss-strip--duel" id="dungeon-boss-hud">
-                <div class="dungeon-boss-strip-title" id="dungeon-boss-name">${title}</div>
+                <div class="dungeon-boss-strip-title-wrap${isBossFight ? " dungeon-boss-strip-title-wrap--boss" : ""}" id="dungeon-boss-name-wrap">
+                  ${isBossFight ? `<img class="dungeon-boss-crown-ico" src="${UI_DUEL_BOSS_BADGE}" alt="" width="18" height="18" loading="lazy" />` : ""}
+                  <div class="dungeon-boss-strip-title" id="dungeon-boss-name">${title}</div>
+                </div>
                 <div class="dungeon-boss-strip-bar-wrap">
                   <div class="dungeon-boss-strip-bar-bg" aria-hidden="true"></div>
                   <div class="dungeon-boss-strip-bar-fill" id="dungeon-boss-bar" style="width:${mobPct}%"></div>
@@ -385,8 +392,9 @@ export function renderDungeonPanel(state: GameState): string {
               <div class="progress-track cd"><div class="progress-fill cd" id="dungeon-cd-bar-fill" style="width:${cdPct}%"></div></div>
           </div>
           <p class="hint" id="dungeon-idle-ready-hint" ${cd > 0 ? "hidden" : ""}>可进入幻域</p>
-          <button class="btn btn-primary" type="button" id="btn-dungeon-enter" ${canEnter ? "" : "disabled"}>
-            ${canEnter ? "进入副本" : cd > 0 ? "冷却中" : "无法进入"}
+          <button class="btn btn-primary btn-dungeon-enter" type="button" id="btn-dungeon-enter" ${canEnter ? "" : "disabled"}>
+            <img class="btn-dungeon-enter-ico" src="${UI_DUNGEON_ENTER_DECO}" alt="" width="18" height="18" loading="lazy" />
+            <span id="btn-dungeon-enter-label">${canEnter ? "进入副本" : cd > 0 ? "冷却中" : "无法进入"}</span>
           </button>
         </div>`
       }

@@ -4716,9 +4716,12 @@ function loop(): void {
     if (barEl) barEl.style.width = `${cdPct}%`;
     if (cdBlock) cdBlock.hidden = cd <= 0;
     if (readyHint) readyHint.hidden = cd > 0;
+    const btnEnterLbl = document.getElementById("btn-dungeon-enter-label");
     if (btnEnter) {
       btnEnter.disabled = !canEnter;
-      btnEnter.textContent = canEnter ? "进入副本" : cd > 0 ? "冷却中" : "无法进入";
+      const t = canEnter ? "进入副本" : cd > 0 ? "冷却中" : "无法进入";
+      if (btnEnterLbl) btnEnterLbl.textContent = t;
+      else btnEnter.textContent = t;
     }
   }
   if (getUiUnlocks(state).tabDungeon && state.dungeonSanctuaryMode && !state.dungeon.active) {

@@ -113,6 +113,10 @@ export const UI_DUNGEON_INTER_WAVE_DECO = asset("deco-dungeon-inter-wave.svg");
 export const UI_DUNGEON_FOOT_TIMER_DECO = asset("deco-dungeon-foot-timer.svg");
 /** 幻域面板 · 进本进行中顶缘装饰条（CSS 平铺） */
 export const UI_DUNGEON_PANEL_LIVE_STRIP = asset("deco-dungeon-panel-live.svg");
+/** 幻域 · 进入副本主按钮内图标 */
+export const UI_DUNGEON_ENTER_DECO = asset("deco-dungeon-enter-btn.svg");
+/** 阵线对决 · 首领名条旁徽记 */
+export const UI_DUEL_BOSS_BADGE = asset("deco-duel-boss-badge.svg");
 /** 经典幻域模式单选项图标 */
 export const UI_DUNGEON_REALM_CLASSIC = asset("deco-dungeon-realm-classic.svg");
 /** 星漩乱域模式单选项图标 */
