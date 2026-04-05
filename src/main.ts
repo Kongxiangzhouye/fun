@@ -143,6 +143,7 @@ import {
   UI_DATA_OVERVIEW_DECO,
   UI_SOUND_PREFS_DECO,
   UI_SAVE_SLOTS_DECO,
+  UI_KEYBOARD_HELP_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -330,6 +331,8 @@ let estateSub: EstateSub = "idle";
 let cultivateSub: CultivateSub = "deck";
 let characterSub: CharacterSub = "stats";
 let topBarExtrasExpanded = false;
+/** 快捷键说明浮层（? / 偏好页按钮） */
+let showKeyboardHelpModal = false;
 /** 主循环间隔：过小会增加 CPU，过大则幻域位移像「瞬移」跨格 */
 const LOOP_INTERVAL_MS = 50;
 
@@ -1909,7 +1912,7 @@ function renderDiscoverabilityHint(): string {
     } else if (characterSub === "guides") {
       text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在「角色→存档·管理」。";
     } else if (characterSub === "settings") {
-      text = "常用入口：动效与灵石数字显示偏好写在本页；备份与导入在「存档·管理」。";
+      text = "常用入口：动效、数字与音频偏好在此；按 ? 打开快捷键说明；备份与导入在「存档·管理」。";
     } else if (characterSub === "data") {
       text = "常用入口：汇总历程与唤引等统计；详细规则见「养成→图鉴」，奖励见「成就」。";
     } else if (characterSub === "archive") {
@@ -2046,7 +2049,95 @@ function renderUiPrefsPanel(): string {
         <p class="hint sm ui-pref-desc">使用 Web Audio 生成短促提示音（无额外资源包）；后续若加入音效将统一走主音量与静音。</p>
       </li>
     </ul>
+    <div class="ui-pref-keyboard-cta">
+      <button type="button" class="btn" id="btn-open-keyboard-help">快捷键说明</button>
+      <p class="hint sm">按 <kbd class="kbd-inline">?</kbd> 或 <kbd class="kbd-inline">Shift</kbd> + <kbd class="kbd-inline">/</kbd> 打开/关闭。</p>
+    </div>
   </section>`;
+}
+
+function renderKeyboardHelpModal(): string {
+  if (!showKeyboardHelpModal) return "";
+  return `<div class="keyboard-help-layer" id="keyboard-help-layer">
+    <button type="button" class="keyboard-help-backdrop" id="keyboard-help-backdrop" aria-label="关闭说明"></button>
+    <div class="keyboard-help-dialog" role="dialog" aria-modal="true" aria-labelledby="keyboard-help-title">
+      <div class="keyboard-help-head">
+        <img class="keyboard-help-ico" src="${UI_KEYBOARD_HELP_DECO}" alt="" width="28" height="28" loading="lazy" />
+        <h2 id="keyboard-help-title" class="keyboard-help-title">快捷键</h2>
+        <button type="button" class="btn keyboard-help-close" id="btn-keyboard-help-close" aria-label="关闭">×</button>
+      </div>
+      <ul class="keyboard-help-list">
+        <li><span class="kbd-pill">1</span> … <span class="kbd-pill">5</span> 切换底部主栏：<strong>角色</strong> / <strong>养成</strong> / <strong>幻域</strong> / <strong>抽卡</strong> / <strong>灵府</strong>（小键盘 1–5 亦可）</li>
+        <li><span class="kbd-pill">?</span> 或 <span class="kbd-pill">Shift</span> + <span class="kbd-pill">/</span> 打开或关闭本说明</li>
+        <li><span class="kbd-pill">Esc</span> 关闭本说明</li>
+        <li class="keyboard-help-note">幻域未解锁时按 <span class="kbd-pill">3</span> 会提示不可用。</li>
+        <li class="keyboard-help-note">在输入框内输入时，数字键不会切换页面。</li>
+      </ul>
+    </div>
+  </div>`;
+}
+
+function parseHubDigitKey(e: KeyboardEvent): HubId | null {
+  let d: string | null = null;
+  if (/^[1-5]$/.test(e.key)) d = e.key;
+  else {
+    const n = { Numpad1: "1", Numpad2: "2", Numpad3: "3", Numpad4: "4", Numpad5: "5" }[e.code];
+    if (n) d = n;
+  }
+  if (!d) return null;
+  const map: Record<string, HubId> = {
+    "1": "character",
+    "2": "cultivate",
+    "3": "battle",
+    "4": "gacha",
+    "5": "estate",
+  };
+  return map[d] ?? null;
+}
+
+function handleGlobalKeyboardShortcuts(e: KeyboardEvent): void {
+  const t = e.target as HTMLElement | null;
+  const inTextField =
+    t &&
+    (t.tagName === "INPUT" ||
+      t.tagName === "TEXTAREA" ||
+      t.tagName === "SELECT" ||
+      (t as HTMLElement).isContentEditable);
+
+  if (e.key === "Escape") {
+    if (!showKeyboardHelpModal) return;
+    e.preventDefault();
+    showKeyboardHelpModal = false;
+    render();
+    return;
+  }
+
+  const isQuestionMark = e.key === "?" || (e.code === "Slash" && e.shiftKey);
+  if (isQuestionMark) {
+    if (inTextField) return;
+    e.preventDefault();
+    if (e.repeat) return;
+    showKeyboardHelpModal = !showKeyboardHelpModal;
+    render();
+    return;
+  }
+
+  if (showKeyboardHelpModal) return;
+  if (inTextField) return;
+
+  const hub = parseHubDigitKey(e);
+  if (!hub) return;
+  if (e.repeat) return;
+  const u = getUiUnlocks(state);
+  if (hub === "battle" && !u.tabDungeon) {
+    e.preventDefault();
+    toast("幻域尚未解锁。");
+    return;
+  }
+  e.preventDefault();
+  activeHub = hub;
+  normalizeHubNavigation(u);
+  render();
 }
 
 const GEAR_FORGE_RARITY_RANK_LABELS = ["N", "R", "SR", "SSR", "UR"] as const;
@@ -2336,6 +2427,7 @@ function render(): void {
     ${renderFlyOverlay()}
     ${renderBottomNav(u)}
     </div>
+    ${renderKeyboardHelpModal()}
   `;
 
   bindEvents(rb, slots);
@@ -2984,6 +3076,18 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.getElementById("btn-audio-test")?.addEventListener("click", () => {
     void resumeAudioContext().then(() => playUiBlip(state));
   });
+
+  document.getElementById("btn-open-keyboard-help")?.addEventListener("click", () => {
+    showKeyboardHelpModal = true;
+    render();
+  });
+  const closeKeyboardHelp = (): void => {
+    if (!showKeyboardHelpModal) return;
+    showKeyboardHelpModal = false;
+    render();
+  };
+  document.getElementById("btn-keyboard-help-close")?.addEventListener("click", closeKeyboardHelp);
+  document.getElementById("keyboard-help-backdrop")?.addEventListener("click", closeKeyboardHelp);
 
   document.getElementById("btn-tutorial-claim")?.addEventListener("click", () => {
     state.tutorialStep = 2;
@@ -4508,10 +4612,12 @@ function init(): void {
   bindKonamiEasterEgg(() => {
     toast("秘传心法已领悟……开玩笑的，继续挂机吧。");
   });
+  document.addEventListener("keydown", handleGlobalKeyboardShortcuts);
   document.addEventListener(
     "keydown",
     (e) => {
       if (e.code !== "Space" && e.key !== " ") return;
+      if (showKeyboardHelpModal) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       if (t?.closest("button, a, select, label, [role='button'], [tabindex]")) return;

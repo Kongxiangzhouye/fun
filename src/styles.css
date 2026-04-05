@@ -2624,6 +2624,122 @@ h1 {
   margin: 0 0 4px 28px;
 }
 
+.ui-prefs-panel .ui-pref-keyboard-cta {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ui-prefs-panel .ui-pref-keyboard-cta .hint {
+  margin: 8px 0 0;
+}
+
+.ui-prefs-panel .kbd-inline {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.82em;
+  font-family: ui-monospace, monospace;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.08);
+}
+
+.keyboard-help-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.keyboard-help-layer .keyboard-help-backdrop {
+  pointer-events: auto;
+}
+
+.keyboard-help-backdrop {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: rgba(6, 10, 22, 0.55);
+}
+
+.keyboard-help-dialog {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+  max-height: min(88vh, 520px);
+  overflow: auto;
+  padding: 16px 18px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg1);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.keyboard-help-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.keyboard-help-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.keyboard-help-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.1rem;
+  font-family: var(--font-display);
+}
+
+.keyboard-help-close {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.keyboard-help-list {
+  margin: 0;
+  padding-left: 1.1em;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.keyboard-help-list li {
+  margin-bottom: 8px;
+}
+
+.keyboard-help-note {
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.kbd-pill {
+  display: inline-block;
+  min-width: 1.65em;
+  padding: 2px 6px;
+  margin: 0 2px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.82em;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.12);
+}
+
 html.ui-reduce-motion .app-visual-aurora,
 html.ui-reduce-motion .app-visual-bg {
   animation: none !important;
