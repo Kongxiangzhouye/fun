@@ -50,6 +50,7 @@ import {
   UI_HEAD_GEAR,
   UI_HEAD_PET,
   UI_HEAD_TRAIN,
+  UI_HEAD_COMBAT,
 } from "./visualAssets";
 import { formatMobDisplayName } from "../data/dungeonMobs";
 import { PET_DEFS } from "../data/pets";
@@ -399,7 +400,16 @@ export function renderTrainPanel(state: GameState): string {
       </div>
       <div class="skill-list">${rows}</div>
       <button class="btn" type="button" id="btn-skill-none" ${state.activeSkillId === null ? "disabled" : ""}>暂停修炼</button>
-      <h3 class="sub-h">心法</h3>
+    </section>`;
+}
+
+export function renderBattleSkillPanel(state: GameState): string {
+  return `
+    <section class="panel battle-skill-panel">
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_COMBAT}" alt="" width="28" height="28" loading="lazy" />
+        <h2>心法</h2>
+      </div>
       <p class="hint">消耗唤灵髓随机获得或升级心法，同名最高 Lv.20。</p>
       <div class="battle-skill-catalog" aria-label="心法说明">
         ${BATTLE_SKILLS.map((def) => {

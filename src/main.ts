@@ -105,6 +105,7 @@ import {
   formatDungeonActiveMeta,
   renderDungeonPanel,
   renderTrainPanel,
+  renderBattleSkillPanel,
   renderGearPanel,
   renderPetPanel,
 } from "./ui/extraPanels";
@@ -313,7 +314,8 @@ type CultivateSub =
   | "bounty"
   | "chronicle"
   | "daily"
-  | "stash";
+  | "stash"
+  | "xinfa";
 type CharacterSub =
   | "stats"
   | "cards"
@@ -1170,6 +1172,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabDungeon) {
     unlockLines.push("「<strong>幻域</strong>」解锁条件：抽卡≥1，或境界≥2，或曾通关幻域。");
   }
+  if (!u.tabBattleSkills) {
+    unlockLines.push("「<strong>养成→心法·领悟</strong>」与「幻域」同步解锁。");
+  }
   if (!u.tabTrain) {
     unlockLines.push("「<strong>修炼</strong>」解锁条件：幻域通关 1 波，或境界≥3，或抽卡≥6。");
   }
@@ -1816,6 +1821,8 @@ function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
         return u.tabDailyLogin;
       case "stash":
         return u.tabCelestialStash;
+      case "xinfa":
+        return u.tabBattleSkills;
       default:
         return false;
     }
@@ -1859,6 +1866,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
         state.tutorialStep >= 4 && state.tutorialStep <= 5,
       ),
       mkCult("train", "修炼·自动收益", u.tabTrain, cultivateSub === "train", false),
+      mkCult("xinfa", "心法·领悟", u.tabBattleSkills, cultivateSub === "xinfa", false),
       mkCult("pets", "灵宠·全局加成", u.tabPets, cultivateSub === "pets", false),
     ].join("");
     right = [
@@ -1901,7 +1909,10 @@ function renderDiscoverabilityHint(): string {
         text = "常用入口：布阵在「养成→卡组」点阵位；升阶/分解在「角色→灵卡」；装备在「角色→行囊」。";
         break;
       case "train":
-        text = "常用入口：这里只负责挂机修炼；灵卡与装备请去「养成→卡组」或「角色」页。";
+        text = "常用入口：这里只负责挂机修炼；心法在「养成→心法·领悟」；灵卡与装备请去「卡组」或「角色」页。";
+        break;
+      case "xinfa":
+        text = "常用入口：消耗唤灵髓领悟/升级心法；唤灵髓来自共鸣与幻域等，规则见「图鉴·札记」。";
         break;
       case "codex":
         text = "常用入口：规则说明看「养成→图鉴·札记」；若找不到功能，去「角色→功能预览·导航」。";
@@ -2515,6 +2526,8 @@ function renderHubContent(
           return renderDeck(slots);
         case "train":
           return renderTrainPanel(state);
+        case "xinfa":
+          return renderBattleSkillPanel(state);
         case "pets":
           return renderPetPanel(state);
         case "codex":
@@ -3182,11 +3195,13 @@ function bindEvents(rb: Decimal, _slots: number): void {
         s !== "bounty" &&
         s !== "chronicle" &&
         s !== "daily" &&
-        s !== "stash"
+        s !== "stash" &&
+        s !== "xinfa"
       )
         return;
       const uNav = getUiUnlocks(state);
       if (s === "train" && !uNav.tabTrain) return;
+      if (s === "xinfa" && !uNav.tabBattleSkills) return;
       if (s === "pets" && !uNav.tabPets) return;
       if (s === "codex" && !uNav.tabCodex) return;
       if (s === "meta" && !uNav.tabMeta) return;
@@ -4485,6 +4500,8 @@ function loop(): void {
       if (br) br.textContent = skillXpPerSecond(sk.level).toFixed(1);
       if (be) be.textContent = fmtSkillEta(secondsToNextLevel(sk));
     }
+  }
+  if (activeHub === "cultivate" && cultivateSub === "xinfa") {
     const bsr = document.getElementById("battle-skills-readout");
     if (bsr) bsr.textContent = `当前：${describeBattleSkillLevels(state)}`;
     const btnPull = document.getElementById("btn-pull-battle-skill") as HTMLButtonElement | null;

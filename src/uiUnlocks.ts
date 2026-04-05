@@ -34,6 +34,8 @@ export function getUiUnlocks(state: GameState): {
   tabDaoMeridian: boolean;
   /** 幻域累计通关 ≥15 波 */
   tabPets: boolean;
+  /** 养成 → 心法（与幻域入口同步解锁，需唤灵髓） */
+  tabBattleSkills: boolean;
   topTide: boolean;
   statDao: boolean;
   statZao: boolean;
@@ -76,6 +78,7 @@ export function getUiUnlocks(state: GameState): {
     tabDailyFortune: rl >= 4 || pulls >= 5,
     tabDaoMeridian: state.reincarnations >= 1 || state.daoEssence >= 15 || state.daoMeridian > 0,
     tabPets: state.dungeon.totalWavesCleared >= 15,
+    tabBattleSkills: dungeonUnlocked,
     topTide: tutDone,
     statDao: state.reincarnations >= 1 || state.daoEssence > 0 || rl >= 20,
     statZao: state.zaoHuaYu > 0 || rl >= 24 || state.trueEndingSeen,
