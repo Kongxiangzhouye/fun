@@ -12,6 +12,7 @@ import {
   DUNGEON_DEATH_CD_MS,
   DUNGEON_INTER_WAVE_CD_MS,
   PLAYER_DUNGEON_HIT_INTERVAL_SEC,
+  DUNGEON_MONSTER_HIT_INTERVAL,
   DUNGEON_STAMINA_MAX,
   DUNGEON_DODGE_STAMINA_COST,
 } from "./types";
@@ -210,16 +211,12 @@ import {
   dungeonFrontierWave,
   dungeonEntryFeeEssence,
   computeDungeonRepeatMode,
-  pickCombatTargetMob,
   drainDungeonDamageFloats,
   bossDisplayTitle,
   currentBossMob,
   playerEngageRadiusNorm,
-  playerAttackDiskOuterRadiusNormForUi,
   queueDungeonDodge,
   totalAliveMobHpSum,
-  playerExpectedDpsDungeonRealm,
-  starVortexLeylineLabel,
 } from "./systems/dungeon";
 import {
   ownedPetIds,
@@ -229,6 +226,7 @@ import {
   petDungeonDefenseFlat,
   petEssenceFindMult,
 } from "./systems/pets";
+import { playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
 import { pullPet } from "./systems/petGacha";
 import { secondsToNextLevel, skillXpPerSecond, xpToNextLevel } from "./systems/skillTraining";
 import { enhanceGear, equipGear, tryRefineUr, unequipGear } from "./systems/gearCraft";
@@ -3823,19 +3821,6 @@ function bindEvents(rb: Decimal, _slots: number): void {
     return Math.max(1, Math.min(cap, Math.floor(raw)));
   };
 
-  document.querySelectorAll('input[name="dungeon-realm"]').forEach((el) => {
-    el.addEventListener("change", () => {
-      const inp = el as HTMLInputElement;
-      if (!inp.checked) return;
-      const v = inp.value;
-      if (v === "classic" || v === "star_vortex") {
-        state.dungeonRealm = v;
-        saveGame(state);
-        render();
-      }
-    });
-  });
-
   document.getElementById("btn-dungeon-entry-frontier")?.addEventListener("click", () => {
     const n = dungeonFrontierWave(state);
     const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
@@ -4530,96 +4515,24 @@ function loop(): void {
       if (barEl) barEl.style.width = `${pct}%`;
     }
     const mapEl = document.getElementById("dungeon-map");
-    let mapOutOfSync = false;
-    if (mapEl) {
-      const domIds = [...mapEl.querySelectorAll(".dungeon-mob-stack")]
-        .map((el) => el.getAttribute("data-mob-id") ?? "")
-        .sort()
-        .join(",");
-      const stIds = d.mobs
-        .map((m) => String(m.id))
-        .sort()
-        .join(",");
-      mapOutOfSync = domIds !== stIds;
-    }
-    if (activeHub === "battle" && mapOutOfSync) {
-      render();
-    } else if (activeHub === "battle") {
-      const pst = document.getElementById("dungeon-player-stack");
-      if (pst) {
-        pst.style.left = `${d.playerX * 100}%`;
-        pst.style.top = `${d.playerY * 100}%`;
+    if (activeHub === "battle" && mapEl) {
+      mapEl.classList.toggle("is-aoe", d.inMelee && d.attackVisualMode === "aoe");
+      mapEl.classList.toggle("is-single", false);
+      mapEl.classList.toggle("in-combat", d.inMelee);
+      const atkSpd = playerDungeonAttackSpeedMult(state);
+      const playerHitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
+      mapEl.style.setProperty("--dungeon-player-hit-interval", `${playerHitIntSec}s`);
+      const tgt = d.mobs.find((m) => m.hp > 0);
+      const pPl = document.getElementById("dungeon-duel-pl-gauge");
+      const pEn = document.getElementById("dungeon-duel-en-gauge");
+      if (tgt && pPl) {
+        const pct = Math.min(100, (100 * d.playerAttackAccum) / playerHitIntSec);
+        pPl.style.width = `${pct}%`;
       }
-      const pl = document.getElementById("dungeon-player");
-      if (pl) {
-        pl.classList.toggle("attacking", d.inMelee);
-        pl.classList.toggle("dungeon-player-dodge", d.bossDodgeVisual);
-        pl.classList.toggle("dungeon-player-iframes", now < d.dodgeIframesUntil);
-        pl.classList.toggle(
-          "dungeon-player-rooted",
-          now < d.playerMoveLockUntil && now >= d.dodgeIframesUntil,
-        );
-      }
-      if (mapEl) {
-        mapEl.classList.toggle("is-aoe", d.inMelee && d.attackVisualMode === "aoe");
-        mapEl.classList.toggle("is-single", d.inMelee && d.attackVisualMode === "single");
-        mapEl.classList.toggle("in-combat", d.inMelee);
-        const atkSpd = playerDungeonAttackSpeedMult(state);
-        const hitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
-        mapEl.style.setProperty("--dungeon-player-hit-interval", `${hitIntSec}s`);
-        /** 接战光圈与命中判定同一公式，禁止固定 px，否则会出现「视觉上进圈却不普攻」 */
-        const ring = mapEl.querySelector(".dungeon-engage-ring") as HTMLElement | null;
-        if (ring) {
-          const rNorm = playerAttackDiskOuterRadiusNormForUi(state, d);
-          const rect = mapEl.getBoundingClientRect();
-          const rx = rNorm * rect.width;
-          const ry = rNorm * rect.height;
-          ring.style.width = `${2 * rx}px`;
-          ring.style.height = `${2 * ry}px`;
-          ring.style.marginLeft = `${-rx}px`;
-          ring.style.marginTop = `${-ry}px`;
-        }
-      }
-      const prot = document.getElementById("dungeon-player-rot");
-      const nearMob = pickCombatTargetMob(d, playerEngageRadiusNorm(state));
-      if (prot && nearMob) {
-        const deg = (Math.atan2(nearMob.y - d.playerY, nearMob.x - d.playerX) * 180) / Math.PI;
-        prot.style.transform = `rotate(${deg}deg)`;
-      } else if (prot) {
-        prot.style.transform = "";
-      }
-      if (state.dungeonRealm === "star_vortex") {
-        const elS = document.getElementById("dungeon-vortex-streak-val");
-        const elL = document.getElementById("dungeon-vortex-ley-txt");
-        if (elS) elS.textContent = String(d.vortexKillStreak);
-        if (elL) elL.textContent = starVortexLeylineLabel(d.vortexLeylineKind);
-        const ley = document.querySelector(".dungeon-vortex-leyline") as HTMLElement | null;
-        if (ley) {
-          const lw = Math.max(8, 2 * d.vortexLeylineRadiusNorm * 100);
-          ley.style.left = `${d.vortexLeylineX * 100}%`;
-          ley.style.top = `${d.vortexLeylineY * 100}%`;
-          ley.style.width = `${lw}%`;
-          ley.classList.toggle("fury", d.vortexLeylineKind === "fury");
-          ley.classList.toggle("flow", d.vortexLeylineKind === "flow");
-        }
-      }
-      const nearestId = pickCombatTargetMob(d, playerEngageRadiusNorm(state))?.id;
-      for (const m of d.mobs) {
-        const el = document.querySelector(`.dungeon-mob-stack[data-mob-id="${m.id}"]`) as HTMLElement | null;
-        if (el) {
-          el.style.left = `${m.x * 100}%`;
-          el.style.top = `${m.y * 100}%`;
-          el.classList.toggle("mob-target", d.inMelee && m.id === nearestId && m.hp > 0);
-          const fill = el.querySelector(".mob-hp-fill") as HTMLElement | null;
-          if (fill && m.maxHp > 0) {
-            fill.style.width = `${Math.min(100, (100 * Math.max(0, m.hp)) / m.maxHp)}%`;
-          }
-          const dot = el.querySelector(".dungeon-entity.mob");
-          if (dot) {
-            const sk = ((m.mobKind % 8) + 8) % 8;
-            dot.className = `dungeon-entity mob mob-skin-${sk}${m.isBoss ? " mob-boss" : ""} ${m.hp <= 0 ? "mob-dead" : ""}`;
-          }
-        }
+      if (tgt && pEn) {
+        const hi = Math.max(0.35, tgt.attackInterval ?? DUNGEON_MONSTER_HIT_INTERVAL);
+        const phase = ((d.monsterAttackAccum % hi) + hi) % hi;
+        pEn.style.width = `${Math.min(100, (100 * phase) / hi)}%`;
       }
     }
     const mobPct = d.monsterMax > 0 ? Math.min(100, (100 * Math.max(0, d.monsterHp)) / d.monsterMax) : 0;
@@ -4645,7 +4558,7 @@ function loop(): void {
     if (bb) bb.style.width = `${mobPct}%`;
     if (btxt) btxt.textContent = `${fmtN(Math.max(0, d.monsterHp))} / ${fmtN(d.monsterMax)}`;
     const bname = document.getElementById("dungeon-boss-name");
-    const bm = currentBossMob(d);
+    const bm = currentBossMob(d) ?? d.mobs.find((m) => m.hp > 0) ?? d.mobs[0];
     if (bname && bm) bname.textContent = bossDisplayTitle(bm);
   }
   if (getUiUnlocks(state).tabDungeon && !state.dungeon.active) {
@@ -4711,14 +4624,14 @@ function loop(): void {
     const footEdps = document.getElementById("dungeon-foot-edps");
     if (footChp) footChp.textContent = fmtNumZh(Math.max(0, chp));
     if (footPmax) footPmax.textContent = fmtNumZh(pmax);
-    if (footEdps) footEdps.textContent = fmtNumZh(playerExpectedDpsDungeonRealm(state, now));
+    if (footEdps) footEdps.textContent = fmtNumZh(playerExpectedDpsDungeonAffix(state, now));
     const elElapsed = document.getElementById("dungeon-session-elapsed");
     const elEta = document.getElementById("dungeon-eta-remaining");
     if (d.active && d.sessionEnterAtMs > 0) {
       const elapsedSec = (now - d.sessionEnterAtMs) / 1000;
       if (elElapsed) elElapsed.textContent = fmtDungeonDur(elapsedSec);
       const poolHp = totalAliveMobHpSum(d);
-      const edps = playerExpectedDpsDungeonRealm(state, now);
+      const edps = playerExpectedDpsDungeonAffix(state, now);
       if (elEta) {
         if (poolHp <= 0) elEta.textContent = "—";
         else if (edps <= 1e-9) elEta.textContent = "∞";

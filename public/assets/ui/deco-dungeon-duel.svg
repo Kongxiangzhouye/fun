@@ -1,0 +1,18 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="duelA" x1="18" y1="22" x2="82" y2="78" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8EB8FF"/>
+      <stop offset="0.55" stop-color="#4A6BC8"/>
+      <stop offset="1" stop-color="#E85D6C"/>
+    </linearGradient>
+    <filter id="duelGlow" x="8" y="8" width="84" height="84" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="50" cy="50" r="38" fill="#0B101E" stroke="url(#duelA)" stroke-width="2.5" opacity="0.95"/>
+  <path d="M50 18 L58 42 L82 46 L64 62 L68 88 L50 76 L32 88 L36 62 L18 46 L42 42 Z" fill="url(#duelA)" opacity="0.22" filter="url(#duelGlow)"/>
+  <path d="M28 52 L50 28 L72 52" stroke="url(#duelA)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9"/>
+  <path d="M28 58 L50 82 L72 58" stroke="url(#duelA)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.55"/>
+  <circle cx="50" cy="52" r="6" fill="#E8EEFF" opacity="0.95"/>
+</svg>

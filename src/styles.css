@@ -4406,6 +4406,68 @@ html.ui-reduce-motion *::after {
   -webkit-tap-highlight-color: rgba(124, 156, 255, 0.15);
 }
 
+/* 幻域·阵线对决：无走位，中央意象 + 双读条 */
+.dungeon-map.dungeon-duel-stage {
+  cursor: default;
+  aspect-ratio: 16 / 9;
+  max-height: min(48vh, 420px);
+}
+
+.dungeon-duel-center {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  text-align: center;
+}
+
+.dungeon-duel-deco {
+  filter: drop-shadow(0 4px 18px rgba(100, 160, 255, 0.35));
+  opacity: 0.92;
+}
+
+.dungeon-duel-tagline {
+  max-width: 22em;
+  margin: 0;
+  color: rgba(180, 200, 230, 0.88);
+}
+
+.dungeon-duel-gauge-row {
+  position: absolute;
+  left: 50%;
+  bottom: 9%;
+  transform: translateX(-50%);
+  width: min(92%, 440px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dungeon-duel-gauge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dungeon-duel-gauge-lbl {
+  flex: 0 0 2.5em;
+  font-size: 0.78rem;
+  color: rgba(200, 210, 230, 0.9);
+  letter-spacing: 0.12em;
+}
+
+.progress-track.duel-gauge {
+  flex: 1;
+  height: 10px;
+}
+
 .dungeon-map.dungeon-map--vortex {
   background: radial-gradient(ellipse 88% 78% at 48% 36%, #1a2438 0%, #070910 76%);
   box-shadow:
