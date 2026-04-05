@@ -62,6 +62,8 @@ export const UI_SAVE_SLOTS_DECO = asset("save-slots-deco.svg");
 export const UI_SAVE_SLOT_LABEL_DECO = asset("save-slot-label-deco.svg");
 /** 快捷键说明浮层标题图标 */
 export const UI_KEYBOARD_HELP_DECO = asset("keyboard-help-deco.svg");
+/** 关于游戏浮层标题图标 */
+export const UI_ABOUT_GAME_DECO = asset("about-game-deco.svg");
 /** 数据总览 · 复制统计摘要按钮图标 */
 export const UI_DATA_EXPORT_DECO = asset("data-export-deco.svg");
 /** 数据总览 · 下载统计摘要为 .txt 按钮图标 */
