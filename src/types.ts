@@ -275,6 +275,14 @@ export interface DungeonState {
   sessionEnterAtMs: number;
 }
 
+/** 界面偏好（写入存档；不影响玩法数值） */
+export interface UiPrefs {
+  /** 减弱装饰性过渡与动画（根节点 CSS 类） */
+  reduceMotion: boolean;
+  /** true：灵石等使用 K/M/B 缩写；false：尽量完整数字 */
+  compactNumbers: boolean;
+}
+
 /** 造化玉解锁的 QoL（文档 §5） */
 export interface QoLFlags {
   /** 【天道酬勤】一键十连 */
@@ -385,6 +393,9 @@ export interface GameState {
   featureGuideDismissed: string[];
   /** 勾选后不再弹出任何功能说明 */
   suppressFeatureGuides: boolean;
+
+  /** 显示与舒适度偏好 */
+  uiPrefs: UiPrefs;
 
   /** 洞府蕴灵（卡组外持久养成，轮回不重置） */
   vein: {

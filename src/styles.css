@@ -2439,6 +2439,60 @@ h1 {
   opacity: 0.92;
 }
 
+.ui-prefs-panel .ui-prefs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ui-prefs-panel .ui-pref-row {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.04);
+}
+
+.ui-prefs-panel .ui-pref-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ui-prefs-panel .ui-pref-input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #6b9cff;
+}
+
+.ui-prefs-panel .ui-pref-title {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.ui-prefs-panel .ui-pref-desc {
+  margin: 6px 0 0 28px;
+}
+
+html.ui-reduce-motion .app-visual-aurora,
+html.ui-reduce-motion .app-visual-bg {
+  animation: none !important;
+}
+
+html.ui-reduce-motion *,
+html.ui-reduce-motion *::before,
+html.ui-reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 .vigor-line {
   font-size: 0.86rem;
   color: var(--muted);

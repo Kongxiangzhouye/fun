@@ -1,4 +1,4 @@
-import type { GameState, PetId, PetProgress, QoLFlags, SkillId } from "./types";
+import type { GameState, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
 
 type VeinSave = GameState["vein"];
 type SkillsSave = GameState["skills"];
@@ -99,6 +99,7 @@ export interface SerializedState {
   gearInventorySort?: GameState["gearInventorySort"];
   featureGuideDismissed?: string[];
   suppressFeatureGuides?: boolean;
+  uiPrefs?: Partial<UiPrefs>;
   pets?: GameState["pets"];
   petPullsTotal?: number;
   spiritGarden?: GameState["spiritGarden"];
@@ -290,6 +291,7 @@ export function serialize(state: GameState): string {
     gearInventorySort: state.gearInventorySort,
     featureGuideDismissed: [...state.featureGuideDismissed],
     suppressFeatureGuides: state.suppressFeatureGuides,
+    uiPrefs: { ...state.uiPrefs },
     pets: { ...state.pets },
     petPullsTotal: state.petPullsTotal,
     spiritGarden: {
@@ -461,6 +463,10 @@ export function deserialize(json: string): GameState {
     ? [...data.featureGuideDismissed]
     : [];
   st.suppressFeatureGuides = data.suppressFeatureGuides ?? false;
+  st.uiPrefs = {
+    reduceMotion: !!data.uiPrefs?.reduceMotion,
+    compactNumbers: data.uiPrefs?.compactNumbers !== false,
+  };
 
   if (data.pets && typeof data.pets === "object") {
     st.pets = { ...st.pets, ...data.pets };

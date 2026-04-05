@@ -69,7 +69,7 @@ import {
   type VeinKind,
 } from "./systems/veinCultivation";
 import { tryTuna, tunaCooldownLeftMs, tunaStoneReward } from "./systems/tuna";
-import { fmtDecimal, stones, addStones, canAfford, subStones } from "./stones";
+import { fmtDecimal, stones, addStones, canAfford, subStones, syncDecimalFormatFromState } from "./stones";
 import { fireSynergyActive, deckSynergySummary } from "./deckSynergy";
 import { tryFenTianBurst } from "./fenTian";
 import { buyQoL, bulkUpgradeAllCards, qoLCost } from "./qoL";
@@ -125,6 +125,7 @@ import {
   UI_ACH_FORGE_DECO,
   UI_OFFLINE_SUMMARY_DECO,
   UI_SAVE_DOWNLOAD_DECO,
+  UI_UI_PREFS_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -297,7 +298,7 @@ type CultivateSub =
   | "chronicle"
   | "daily"
   | "stash";
-type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive" | "meridian";
+type CharacterSub = "stats" | "cards" | "gear" | "guides" | "settings" | "archive" | "meridian";
 
 let activeHub: HubId = "estate";
 let estateSub: EstateSub = "idle";
@@ -1826,6 +1827,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
       mkChar("gear", "装备·背包", characterSub === "gear"),
       mkCharUnlock("meridian", "道韵·灵窍", u.tabDaoMeridian, characterSub === "meridian"),
       mkChar("guides", "功能·指引", characterSub === "guides"),
+      mkChar("settings", "偏好·设置", characterSub === "settings"),
       mkChar("archive", "存档·管理", characterSub === "archive"),
     ].join("");
   }
@@ -1880,6 +1882,8 @@ function renderDiscoverabilityHint(): string {
       text = "常用入口：装备产出在底部「抽卡→铸灵池」；强化/精炼/卸下在本页行囊。";
     } else if (characterSub === "guides") {
       text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在「角色→存档·管理」。";
+    } else if (characterSub === "settings") {
+      text = "常用入口：动效与灵石数字显示偏好写在本页；备份与导入在「存档·管理」。";
     } else if (characterSub === "archive") {
       text = "常用入口：这里集中管理保存/导出/导入与重置存档。";
     } else if (characterSub === "meridian") {
@@ -1922,6 +1926,9 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
   if (characterSub === "guides") {
     return `<div class="character-hub-root">${featureGuidePanelHtml(state, u)}</div>`;
   }
+  if (characterSub === "settings") {
+    return `<div class="character-hub-root">${renderUiPrefsPanel()}</div>`;
+  }
   if (characterSub === "archive") {
     return `<div class="character-hub-root">${renderSaveToolsPanel()}</div>`;
   }
@@ -1951,6 +1958,37 @@ function triggerDownloadSaveBackup(): void {
   a.remove();
   URL.revokeObjectURL(url);
   toast("已下载备份文件（与导出字符串相同格式，可导入还原）。");
+}
+
+function syncComfortDomFromState(): void {
+  document.documentElement.classList.toggle("ui-reduce-motion", state.uiPrefs.reduceMotion);
+}
+
+function renderUiPrefsPanel(): string {
+  const p = state.uiPrefs;
+  return `<section class="panel ui-prefs-panel">
+    <div class="panel-title-art-row">
+      <img class="panel-title-art-icon" src="${UI_UI_PREFS_DECO}" alt="" width="28" height="28" loading="lazy" />
+      <h2>偏好设置</h2>
+    </div>
+    <p class="hint">与玩法数值无关，写入存档；可随时调整。</p>
+    <ul class="ui-prefs-list">
+      <li class="ui-pref-row">
+        <label class="ui-pref-label">
+          <input type="checkbox" class="ui-pref-input" data-ui-pref="reduceMotion" ${p.reduceMotion ? "checked" : ""} />
+          <span class="ui-pref-title">减弱界面动效</span>
+        </label>
+        <p class="hint sm ui-pref-desc">关闭大部分过渡与装饰动画，减轻眩晕与设备负担。</p>
+      </li>
+      <li class="ui-pref-row">
+        <label class="ui-pref-label">
+          <input type="checkbox" class="ui-pref-input" data-ui-pref="compactNumbers" ${p.compactNumbers ? "checked" : ""} />
+          <span class="ui-pref-title">灵石数字使用紧凑缩写</span>
+        </label>
+        <p class="hint sm ui-pref-desc">开启：K / M / B 等缩写；关闭：尽量显示完整整数（极大值仍用科学计数）。</p>
+      </li>
+    </ul>
+  </section>`;
 }
 
 function renderSaveToolsPanel(): string {
@@ -2048,6 +2086,9 @@ function renderOfflineSummaryBanner(): string {
 function render(): void {
   const app = document.getElementById("app");
   if (!app) return;
+
+  syncDecimalFormatFromState(state);
+  syncComfortDomFromState();
 
   const u = getUiUnlocks(state);
   normalizeHubNavigation(u);
@@ -2696,11 +2737,31 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.querySelectorAll("[data-character-sub]").forEach((el) => {
     el.addEventListener("click", () => {
       const s = (el as HTMLElement).dataset.characterSub as CharacterSub | undefined;
-      if (s !== "stats" && s !== "cards" && s !== "gear" && s !== "guides" && s !== "archive" && s !== "meridian")
+      if (
+        s !== "stats" &&
+        s !== "cards" &&
+        s !== "gear" &&
+        s !== "guides" &&
+        s !== "settings" &&
+        s !== "archive" &&
+        s !== "meridian"
+      )
         return;
       if (s === "meridian" && !getUiUnlocks(state).tabDaoMeridian) return;
       characterSub = s;
       if (s !== "gear") gearDetailSlot = null;
+      render();
+    });
+  });
+
+  document.querySelectorAll("input[data-ui-pref]").forEach((el) => {
+    el.addEventListener("change", (ev) => {
+      const t = (ev.target as HTMLInputElement).dataset.uiPref;
+      const checked = (ev.target as HTMLInputElement).checked;
+      if (t === "reduceMotion") state.uiPrefs.reduceMotion = checked;
+      else if (t === "compactNumbers") state.uiPrefs.compactNumbers = checked;
+      else return;
+      saveGame(state);
       render();
     });
   });
@@ -3570,6 +3631,7 @@ function updateCombatPowerTip(power: number): void {
 
 /** 顶栏灵石/髓等 + 道韵行：局部操作后调用，避免整页 innerHTML 重绘 */
 function updateTopResourcePillsAndVigor(pool: number): void {
+  syncDecimalFormatFromState(state);
   const u = getUiUnlocks(state);
   const ipsLoop = incomePerSecond(state, pool);
   setPillStrong("pill-stones", fmtDecimal(stones(state)));
@@ -3702,6 +3764,7 @@ function updateEstateGardenLiveReadouts(now: number): void {
 }
 
 function loop(): void {
+  syncDecimalFormatFromState(state);
   const now = nowMs();
   applyTick(state, now);
   if (!mobileLiteFx) updateModernVisualFx(now);
