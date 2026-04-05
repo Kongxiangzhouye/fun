@@ -62,6 +62,8 @@ export const UI_SAVE_SLOTS_DECO = asset("save-slots-deco.svg");
 export const UI_KEYBOARD_HELP_DECO = asset("keyboard-help-deco.svg");
 /** 数据总览 · 复制统计摘要按钮图标 */
 export const UI_DATA_EXPORT_DECO = asset("data-export-deco.svg");
+/** 数据总览 · 下载统计摘要为 .txt 按钮图标 */
+export const UI_DATA_STATS_DOWNLOAD_DECO = asset("data-stats-download-deco.svg");
 export const UI_PANEL_CORNER = asset("panel-corner.svg");
 export const UI_BG_SPARKLES = asset("bg-sparkles.svg");
 /** 离线收益摘要条左侧装饰 */
