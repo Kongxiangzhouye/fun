@@ -56,6 +56,8 @@ export const UI_UI_PREFS_DECO = asset("ui-prefs-panel-deco.svg");
 export const UI_DATA_OVERVIEW_DECO = asset("data-overview-deco.svg");
 /** 偏好设置 · 音频小节图标 */
 export const UI_SOUND_PREFS_DECO = asset("ui-sound-prefs-deco.svg");
+/** 存档管理 · 多存档位区块图标 */
+export const UI_SAVE_SLOTS_DECO = asset("save-slots-deco.svg");
 export const UI_PANEL_CORNER = asset("panel-corner.svg");
 export const UI_BG_SPARKLES = asset("bg-sparkles.svg");
 /** 离线收益摘要条左侧装饰 */
