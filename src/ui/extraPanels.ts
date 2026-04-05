@@ -48,6 +48,8 @@ import {
   UI_DUEL_GAUGE_SWORD,
   UI_DUEL_GAUGE_THREAT,
   UI_DUNGEON_IDLE_MIST,
+  UI_DUEL_WAVE_BADGE,
+  UI_DUEL_FRAME_CORNER,
   UI_DUNGEON_AFFIX_DECO,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
@@ -161,6 +163,18 @@ function renderDungeonMapHtml(state: GameState): string {
       <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
       <div class="dungeon-map-wrap">
         <div class="dungeon-map dungeon-duel-stage is-aoe in-combat" id="dungeon-map" aria-label="幻域阵线对决" style="--dungeon-player-hit-interval:${hitIntSec}s">
+          <div class="dungeon-duel-frame-corners" aria-hidden="true">
+            <img class="duel-corner duel-corner--tl" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
+            <img class="duel-corner duel-corner--tr" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
+            <img class="duel-corner duel-corner--bl" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
+            <img class="duel-corner duel-corner--br" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
+          </div>
+          <div class="dungeon-duel-top-hud" aria-hidden="true">
+            <div class="dungeon-duel-wave-pill" id="duel-wave-pill-wrap">
+              <img class="dungeon-duel-wave-ico" src="${UI_DUEL_WAVE_BADGE}" alt="" width="18" height="18" loading="lazy" />
+              <span id="duel-wave-pill-txt">第 ${d.wave} 波</span>
+            </div>
+          </div>
           <div class="dungeon-duel-vs-bar" aria-hidden="true">
             <div class="dungeon-duel-side dungeon-duel-side--player">
               <span class="dungeon-duel-side-tag">我方</span>

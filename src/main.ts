@@ -345,6 +345,8 @@ let topBarExtrasExpanded = false;
 let showKeyboardHelpModal = false;
 /** 关于游戏浮层（偏好页按钮） */
 let showAboutModal = false;
+/** 上一次完整 render 对应的主内容视图（用于同页操作时恢复 .hub-page-scroll 滚动） */
+let lastMainContentViewKey = "";
 /** 主循环间隔：过小会增加 CPU，过大则幻域位移像「瞬移」跨格 */
 const LOOP_INTERVAL_MS = 50;
 
@@ -1806,6 +1808,11 @@ function renderTopBar(
   </div>`;
 }
 
+/** 与 renderHubContent 强相关的导航状态；变化时主列表应回到顶部而非保留滚动 */
+function mainContentViewKey(): string {
+  return `${activeHub}|${estateSub}|${cultivateSub}|${characterSub}|${gachaPool}`;
+}
+
 function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
   if (activeHub === "battle" && !u.tabDungeon) activeHub = "estate";
   if (activeHub === "estate" && estateSub === "vein" && !u.tabVein) estateSub = "idle";
@@ -2575,6 +2582,12 @@ function render(): void {
 
   const u = getUiUnlocks(state);
   normalizeHubNavigation(u);
+
+  const hubScrollEl = document.querySelector(".hub-page-scroll") as HTMLElement | null;
+  const preservedHubScrollTop = hubScrollEl?.scrollTop ?? 0;
+  const viewKeyNow = mainContentViewKey();
+  const restoreHubScroll =
+    lastMainContentViewKey !== "" && viewKeyNow === lastMainContentViewKey && preservedHubScrollTop > 0;
 
   const ui = describeInGameUi(state);
   const ips = incomePerSecond(state, totalCardsInPool());
@@ -4578,6 +4591,13 @@ function loop(): void {
         "duel-fx-hit",
         !prefersReducedMotion && Date.now() - duelFloatBurstAtMs < 140,
       );
+      mapEl.classList.toggle(
+        "duel-hp-low",
+        d.playerMax > 0 && d.playerHp / d.playerMax < 0.28,
+      );
+      mapEl.classList.toggle("duel-is-boss", !!(tgt?.isBoss));
+      const waveTxt = document.getElementById("duel-wave-pill-txt");
+      if (waveTxt) waveTxt.textContent = `第 ${d.wave} 波`;
       const comboPill = document.getElementById("duel-combo-pill");
       const tierEl = document.getElementById("duel-combo-tier");
       const weakPill = document.getElementById("duel-weak-pill");
