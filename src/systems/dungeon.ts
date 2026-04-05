@@ -1321,7 +1321,7 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
     state.lingSha += ls;
     extra = ` · 灵砂 +${ls}（复刷助养成）`;
   }
-  d.pendingToast = `第 ${clearedWave} 关完成！本关唤灵髓 +${waveEss.toFixed(2)}（已入背包）${extra}`;
+  d.pendingToast = `破阵胜利 · 第 ${clearedWave} 关\n本关唤灵髓 +${waveEss.toFixed(2)} 已入背包${extra ? `\n${extra.replace(/^ · /, "")}` : ""}`;
   refreshRewardModeRepeat(state);
 }
 

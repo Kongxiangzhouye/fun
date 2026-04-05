@@ -143,7 +143,7 @@ function renderDungeonMapHtml(state: GameState): string {
   return `
     <div class="dungeon-map-frame">
       <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
-      <div class="dungeon-map-hud-bl" aria-hidden="true">
+      <div class="dungeon-map-hud-tr" aria-hidden="true">
         <div class="dungeon-hud-mini-row"><span>生命</span><span id="dungeon-pl-txt">${fmtNum(Math.max(0, d.playerHp))} / ${fmtNum(d.playerMax)}</span></div>
         <div class="progress-track dungeon slim hud-mini"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
         <div class="dungeon-hud-mini-row"><span>体力</span><span id="dungeon-stamina-txt">${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}</span></div>

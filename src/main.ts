@@ -41,13 +41,7 @@ import {
   deckRealmBonusSum,
   effectiveDeckSlots,
 } from "./economy";
-import {
-  catchUpOffline,
-  applyTick,
-  fastForward,
-  maxOfflineSec,
-  type OfflineCatchUpSummary,
-} from "./gameLoop";
+import { catchUpOffline, applyTick, fastForward, maxOfflineSec } from "./gameLoop";
 import {
   pullOne,
   pullTen,
@@ -142,7 +136,6 @@ import {
   UI_HEAD_SPIRIT_RESERVOIR,
   UI_HEAD_DAILY_FORTUNE,
   UI_ACH_FORGE_DECO,
-  UI_OFFLINE_SUMMARY_DECO,
   UI_SAVE_DOWNLOAD_DECO,
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
@@ -305,8 +298,6 @@ let refineTargetId: string | null = null;
 let gearDetailSlot: "weapon" | "body" | "ring" | null = null;
 /** 聚灵阵：灵卡池 / 铸灵池 */
 let gachaPool: "cards" | "gear" = "cards";
-/** 本次启动时若有离线灵石结算，展示摘要条直至玩家关闭 */
-let pendingOfflineSummary: OfflineCatchUpSummary | null = null;
 let autoEnterPromptHandled = false;
 let veinHelpDocListenerBound = false;
 /** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
@@ -543,6 +534,31 @@ function tryToast(msg: string): void {
   toast(msg);
 }
 
+const TOAST_DUNGEON_VICTORY_MS = 6000;
+
+function toastDungeonVictory(msg: string): void {
+  const w = document.getElementById("toast-wrap");
+  if (!w) return;
+  const el = document.createElement("div");
+  el.className = "toast toast-dungeon-victory";
+  const body = document.createElement("div");
+  body.className = "toast-msg";
+  body.textContent = msg;
+  el.appendChild(body);
+  appendToastProgress(el, TOAST_DUNGEON_VICTORY_MS);
+  w.appendChild(el);
+  window.setTimeout(() => el.remove(), TOAST_DUNGEON_VICTORY_MS);
+  void resumeAudioContext().then(() => playUiBlip(state));
+}
+
+function tryToastDungeonVictory(msg: string): void {
+  if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+    deferredDungeonToasts.push(msg);
+    return;
+  }
+  toastDungeonVictory(msg);
+}
+
 function nowMs(): number {
   return Date.now();
 }
@@ -606,6 +622,7 @@ function toast(msg: string): void {
   const body = document.createElement("div");
   body.className = "toast-msg";
   body.textContent = msg;
+  if (msg.includes("\n")) body.style.whiteSpace = "pre-line";
   el.appendChild(body);
   appendToastProgress(el, TOAST_DURATION_MS);
   w.appendChild(el);
@@ -2524,25 +2541,6 @@ function renderHubContent(
   }
 }
 
-function renderOfflineSummaryBanner(): string {
-  if (!pendingOfflineSummary || !pendingOfflineSummary.stoneGain.gt(0.01)) return "";
-  const s = pendingOfflineSummary;
-  const dur = fmtOfflineDurationSec(s.settledSec);
-  const capSec = maxOfflineSec(state);
-  const capHint = s.wasCapped
-    ? ` · 已超过离线收益上限，按 <strong>${fmtOfflineDurationSec(capSec)}</strong> 结算`
-    : "";
-  return `<aside class="offline-summary-banner" id="offline-summary-banner" role="status" aria-live="polite">
-    <img class="offline-summary-deco" src="${UI_OFFLINE_SUMMARY_DECO}" alt="" width="36" height="36" loading="lazy" />
-    <div class="offline-summary-text">
-      <strong class="offline-summary-title">离线收益</strong>
-      <p class="hint sm offline-summary-line">结算时长约 <strong>${dur}</strong>${capHint}</p>
-      <p class="offline-summary-stones">灵石 <strong>${fmtDecimal(s.stoneGain)}</strong></p>
-    </div>
-    <button type="button" class="btn offline-summary-dismiss" id="btn-offline-summary-dismiss">知道了</button>
-  </aside>`;
-}
-
 function render(): void {
   const app = document.getElementById("app");
   if (!app) return;
@@ -2567,7 +2565,6 @@ function render(): void {
     <div class="app-visual-bg" style="--ui-sparkles:url('${UI_BG_SPARKLES}')" aria-hidden="true"></div>
     <div class="app-visual-aurora" aria-hidden="true"></div>
     <div class="app-root-content" style="--ui-panel-runes:url('${UI_PANEL_RUNES}')">
-    ${renderOfflineSummaryBanner()}
     <div class="app-head">
     <div class="app-brand-row">
       <div class="app-title-cluster">
@@ -3159,18 +3156,14 @@ function bindEvents(rb: Decimal, _slots: number): void {
     render();
   });
 
-  document.getElementById("btn-offline-summary-dismiss")?.addEventListener("click", () => {
-    pendingOfflineSummary = null;
-    render();
-  });
-
   document.querySelectorAll("[data-estate-sub]").forEach((el) => {
     el.addEventListener("click", () => {
       const s = (el as HTMLElement).dataset.estateSub as EstateSub | undefined;
-      if (s !== "idle" && s !== "vein" && s !== "garden") return;
+      if (s !== "idle" && s !== "vein" && s !== "garden" && s !== "array") return;
       const uNav = getUiUnlocks(state);
       if (s === "vein" && !uNav.tabVein) return;
       if (s === "garden" && !uNav.tabGarden) return;
+      if (s === "array" && !uNav.tabSpiritArray) return;
       estateSub = s;
       render();
     });
@@ -3187,9 +3180,21 @@ function bindEvents(rb: Decimal, _slots: number): void {
         s !== "meta" &&
         s !== "ach" &&
         s !== "bounty" &&
-        s !== "chronicle"
+        s !== "chronicle" &&
+        s !== "daily" &&
+        s !== "stash"
       )
         return;
+      const uNav = getUiUnlocks(state);
+      if (s === "train" && !uNav.tabTrain) return;
+      if (s === "pets" && !uNav.tabPets) return;
+      if (s === "codex" && !uNav.tabCodex) return;
+      if (s === "meta" && !uNav.tabMeta) return;
+      if (s === "ach" && !uNav.tabAch) return;
+      if (s === "bounty" && !uNav.tabBounty) return;
+      if (s === "chronicle" && !uNav.tabChronicle) return;
+      if (s === "daily" && !uNav.tabDailyLogin) return;
+      if (s === "stash" && !uNav.tabCelestialStash) return;
       cultivateSub = s;
       if (s !== "deck") deckModalSlot = null;
       render();
@@ -4391,7 +4396,8 @@ function loop(): void {
   if (state.dungeon.pendingToast) {
     const m = state.dungeon.pendingToast;
     state.dungeon.pendingToast = null;
-    tryToast(m);
+    if (m.startsWith("破阵胜利")) tryToastDungeonVictory(m);
+    else tryToast(m);
     saveGame(state);
   }
   /** 阵亡/暂离出本：仍在幻域页时整页重绘，避免底部生命/地图卡在进本前状态 */
@@ -4757,7 +4763,10 @@ function init(): void {
   tickDailyLoginCalendar(state, t);
   tickDailyFortune(state, t);
   if (offline.stoneGain.gt(0.01)) {
-    pendingOfflineSummary = offline;
+    const dur = fmtOfflineDurationSec(offline.settledSec);
+    const capSec = maxOfflineSec(state);
+    const capLine = offline.wasCapped ? `\n已超过离线收益上限，按 ${fmtOfflineDurationSec(capSec)} 结算` : "";
+    tryToast(`离线收益已结算\n时长约 ${dur}${capLine}\n灵石 +${fmtDecimal(offline.stoneGain)}`);
     saveGame(state);
   }
   tryCompleteAchievements(state);
