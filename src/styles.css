@@ -5716,6 +5716,19 @@ header h1 {
   margin-bottom: 4px;
 }
 
+.bounty-card-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.bounty-task-deco {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .bounty-card-head h3 {
   margin: 0;
   font-size: 0.98rem;

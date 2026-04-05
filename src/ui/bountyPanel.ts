@@ -7,7 +7,7 @@ import {
   currentWeekKey,
   ensureWeeklyBountyWeek,
 } from "../systems/weeklyBounty";
-import { UI_HEAD_BOUNTY } from "./visualAssets";
+import { UI_BOUNTY_FORGE_DECO, UI_HEAD_BOUNTY } from "./visualAssets";
 
 export function renderBountyPanel(state: GameState, now: number): string {
   const wk = currentWeekKey(now);
@@ -17,10 +17,17 @@ export function renderBountyPanel(state: GameState, now: number): string {
     const claimed = isWeeklyBountyClaimed(state, t.id);
     const pct = Math.min(100, (100 * prog) / t.target);
     const canClaim = done && !claimed;
+    const deco =
+      t.cardDeco === "forge"
+        ? `<img class="bounty-task-deco" src="${UI_BOUNTY_FORGE_DECO}" alt="" width="22" height="22" loading="lazy" />`
+        : "";
     return `
       <div class="bounty-card" data-bounty-task="${t.id}">
         <div class="bounty-card-head">
-          <h3>${t.title}</h3>
+          <div class="bounty-card-head-left">
+            ${deco}
+            <h3>${t.title}</h3>
+          </div>
           <span class="bounty-status ${claimed ? "claimed" : done ? "done" : "prog"}">${claimed ? "已领" : done ? "可领" : "进行中"}</span>
         </div>
         <p class="hint sm">${t.desc}</p>

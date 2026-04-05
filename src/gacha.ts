@@ -5,7 +5,7 @@ import { nextRand01 } from "./rng";
 import { addStones } from "./stones";
 import { metalGachaBonusStones } from "./deckSynergy";
 import { generateRandomGear } from "./systems/gearCraft";
-import { noteWeeklyBountyCardPulls } from "./systems/weeklyBounty";
+import { noteWeeklyBountyCardPulls, noteWeeklyBountyGearForges } from "./systems/weeklyBounty";
 import {
   pushGearPullChronicle,
   pushPullChronicle,
@@ -167,6 +167,7 @@ export function pullGearOne(state: GameState): { ok: true; gear: GearItem } | { 
     state.gearPityPulls = 0;
   }
   noteGearForgePull(state, 1);
+  noteWeeklyBountyGearForges(state, 1);
   recordMaxGearForgedRarity(state, g.rarity);
   pushGearPullChronicle(state, {
     baseId: g.baseId,

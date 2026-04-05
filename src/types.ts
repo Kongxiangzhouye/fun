@@ -83,6 +83,8 @@ export interface WeeklyBountyState {
   weekKey: string;
   waves: number;
   cardPulls: number;
+  /** 本周铸灵池成功产出次数 */
+  gearForges: number;
   gardenHarvests: number;
   tuna: number;
   breakthroughs: number;

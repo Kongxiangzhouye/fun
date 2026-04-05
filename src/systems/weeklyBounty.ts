@@ -10,7 +10,7 @@ export function currentWeekKey(now: number): string {
   return `${mon.getFullYear()}-${String(mon.getMonth() + 1).padStart(2, "0")}-${String(mon.getDate()).padStart(2, "0")}`;
 }
 
-export type WeeklyBountyKind = "waves" | "cardPulls" | "gardenHarvests" | "tuna" | "breakthroughs";
+export type WeeklyBountyKind = "waves" | "cardPulls" | "gearForges" | "gardenHarvests" | "tuna" | "breakthroughs";
 
 export interface WeeklyBountyTaskDef {
   id: string;
@@ -20,6 +20,8 @@ export interface WeeklyBountyTaskDef {
   kind: WeeklyBountyKind;
   rewardStones: number;
   rewardEssence: number;
+  /** 悬赏卡片标题旁小图标 */
+  cardDeco?: "forge";
 }
 
 export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
@@ -40,6 +42,16 @@ export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
     kind: "cardPulls",
     rewardStones: 220,
     rewardEssence: 12,
+  },
+  {
+    id: "wb_forge",
+    title: "铸灵功课",
+    desc: "本周铸灵 8 次",
+    target: 8,
+    kind: "gearForges",
+    rewardStones: 200,
+    rewardEssence: 14,
+    cardDeco: "forge",
   },
   {
     id: "wb_garden",
@@ -75,6 +87,7 @@ export function emptyWeeklyBounty(weekKey: string): GameState["weeklyBounty"] {
     weekKey,
     waves: 0,
     cardPulls: 0,
+    gearForges: 0,
     gardenHarvests: 0,
     tuna: 0,
     breakthroughs: 0,
@@ -89,7 +102,7 @@ export function normalizeWeeklyBounty(st: GameState): void {
     st.weeklyBounty = emptyWeeklyBounty(wk);
     return;
   }
-  for (const k of ["waves", "cardPulls", "gardenHarvests", "tuna", "breakthroughs"] as const) {
+  for (const k of ["waves", "cardPulls", "gearForges", "gardenHarvests", "tuna", "breakthroughs"] as const) {
     const v = st.weeklyBounty[k];
     if (v == null || !Number.isFinite(v) || v < 0) st.weeklyBounty[k] = 0;
     else st.weeklyBounty[k] = Math.floor(v);
@@ -113,6 +126,8 @@ function countForKind(state: GameState, kind: WeeklyBountyKind): number {
       return state.weeklyBounty.waves;
     case "cardPulls":
       return state.weeklyBounty.cardPulls;
+    case "gearForges":
+      return state.weeklyBounty.gearForges;
     case "gardenHarvests":
       return state.weeklyBounty.gardenHarvests;
     case "tuna":
@@ -144,6 +159,11 @@ export function noteWeeklyBountyWave(state: GameState): void {
 export function noteWeeklyBountyCardPulls(state: GameState, n: number): void {
   ensureWeeklyBountyWeek(state, Date.now());
   state.weeklyBounty.cardPulls += Math.max(0, Math.floor(n));
+}
+
+export function noteWeeklyBountyGearForges(state: GameState, n: number): void {
+  ensureWeeklyBountyWeek(state, Date.now());
+  state.weeklyBounty.gearForges += Math.max(0, Math.floor(n));
 }
 
 export function noteWeeklyBountyGardenHarvest(state: GameState): void {
