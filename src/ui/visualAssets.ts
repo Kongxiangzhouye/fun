@@ -58,6 +58,8 @@ export const UI_DATA_OVERVIEW_DECO = asset("data-overview-deco.svg");
 export const UI_SOUND_PREFS_DECO = asset("ui-sound-prefs-deco.svg");
 /** 存档管理 · 多存档位区块图标 */
 export const UI_SAVE_SLOTS_DECO = asset("save-slots-deco.svg");
+/** 存档管理 · 槽位备注（本机标签） */
+export const UI_SAVE_SLOT_LABEL_DECO = asset("save-slot-label-deco.svg");
 /** 快捷键说明浮层标题图标 */
 export const UI_KEYBOARD_HELP_DECO = asset("keyboard-help-deco.svg");
 /** 数据总览 · 复制统计摘要按钮图标 */
