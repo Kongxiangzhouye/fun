@@ -20,7 +20,7 @@ import {
   ensureWeeklyBountyWeek,
 } from "./systems/weeklyBounty";
 import { normalizeDaoMeridian } from "./systems/daoMeridian";
-import { normalizeLifetimeStats, normalizePullChronicle } from "./systems/pullChronicle";
+import { normalizeGearPullChronicle, normalizeLifetimeStats, normalizePullChronicle } from "./systems/pullChronicle";
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
 
@@ -95,6 +95,7 @@ export interface SerializedState {
   celestialStash?: GameState["celestialStash"];
   daoMeridian?: number;
   pullChronicle?: GameState["pullChronicle"];
+  gearPullChronicle?: GameState["gearPullChronicle"];
   lifetimeStats?: GameState["lifetimeStats"];
   combatHpCurrent?: number;
   dungeonSanctuaryMode?: boolean;
@@ -298,6 +299,7 @@ export function serialize(state: GameState): string {
     },
     daoMeridian: state.daoMeridian,
     pullChronicle: state.pullChronicle.map((e) => ({ ...e })),
+    gearPullChronicle: state.gearPullChronicle.map((e) => ({ ...e })),
     lifetimeStats: { ...state.lifetimeStats },
     combatHpCurrent: state.combatHpCurrent,
     dungeonSanctuaryMode: state.dungeonSanctuaryMode,
@@ -497,12 +499,22 @@ export function deserialize(json: string): GameState {
     }));
   }
   normalizePullChronicle(st);
+  if (data.gearPullChronicle && Array.isArray(data.gearPullChronicle)) {
+    st.gearPullChronicle = data.gearPullChronicle.map((e) => ({
+      atMs: e.atMs ?? 0,
+      baseId: e.baseId ?? "",
+      rarity: e.rarity ?? "N",
+      displayName: e.displayName ?? "",
+    }));
+  }
+  normalizeGearPullChronicle(st);
   if (data.lifetimeStats && typeof data.lifetimeStats === "object") {
     st.lifetimeStats = {
       dungeonEssenceIntGained: Math.max(0, Math.floor(data.lifetimeStats.dungeonEssenceIntGained ?? 0)),
       celestialStashBuys: Math.max(0, Math.floor(data.lifetimeStats.celestialStashBuys ?? 0)),
       spiritReservoirClaims: Math.max(0, Math.floor(data.lifetimeStats.spiritReservoirClaims ?? 0)),
       dailyFortuneRolls: Math.max(0, Math.floor(data.lifetimeStats.dailyFortuneRolls ?? 0)),
+      gearForgesTotal: Math.max(0, Math.floor(data.lifetimeStats.gearForgesTotal ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

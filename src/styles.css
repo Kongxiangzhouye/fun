@@ -5897,6 +5897,18 @@ header h1 {
   margin-top: 4px;
 }
 
+.chronicle-sub-h--gear {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.chronicle-gear-deco {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
 .chronicle-table-wrap {
   overflow-x: auto;
   border-radius: 12px;

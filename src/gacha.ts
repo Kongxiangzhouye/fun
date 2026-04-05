@@ -6,7 +6,7 @@ import { addStones } from "./stones";
 import { metalGachaBonusStones } from "./deckSynergy";
 import { generateRandomGear } from "./systems/gearCraft";
 import { noteWeeklyBountyCardPulls } from "./systems/weeklyBounty";
-import { pushPullChronicle } from "./systems/pullChronicle";
+import { pushGearPullChronicle, pushPullChronicle, noteGearForgePull } from "./systems/pullChronicle";
 import { daoMeridianLuckFlat } from "./systems/daoMeridian";
 
 /** 基础概率（单抽），会被 meta.gachaLuck 略微提升高稀有 */
@@ -161,6 +161,12 @@ export function pullGearOne(state: GameState): { ok: true; gear: GearItem } | { 
   if (rarityRank(g.rarity) >= rarityRank("SR")) {
     state.gearPityPulls = 0;
   }
+  noteGearForgePull(state, 1);
+  pushGearPullChronicle(state, {
+    baseId: g.baseId,
+    rarity: g.rarity,
+    displayName: g.displayName,
+  });
   return { ok: true, gear: g };
 }
 

@@ -43,6 +43,15 @@ export interface PullChronicleEntry {
   isNew: boolean;
 }
 
+/** 铸灵池产出通鉴单条（与灵卡分表） */
+export interface GearPullChronicleEntry {
+  atMs: number;
+  baseId: string;
+  rarity: Rarity;
+  /** 产出时的展示名快照 */
+  displayName: string;
+}
+
 /** 终身统计（部分由事件累加） */
 export interface LifetimeStatsState {
   /** 自幻域入包累计的整数唤灵髓（与背包总髓不同，不含抽卡/成就等来源） */
@@ -53,6 +62,8 @@ export interface LifetimeStatsState {
   spiritReservoirClaims: number;
   /** 心斋卦象累计刷新次数（跨日计数） */
   dailyFortuneRolls: number;
+  /** 累计铸灵次数（铸灵池成功产出装备） */
+  gearForgesTotal: number;
 }
 
 /** 灵田作物 id */
@@ -445,6 +456,8 @@ export interface GameState {
 
   /** 最近灵卡唤引记录（轮替 FIFO） */
   pullChronicle: PullChronicleEntry[];
+  /** 最近铸灵池产出记录（轮替 FIFO） */
+  gearPullChronicle: GearPullChronicleEntry[];
   /** 终身统计 */
   lifetimeStats: LifetimeStatsState;
 }

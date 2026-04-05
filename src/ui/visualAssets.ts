@@ -67,6 +67,8 @@ export const UI_DUNGEON_AFFIX_DECO = asset("deco-dungeon-affix.svg");
 export const UI_HEAD_DAO_MERIDIAN = asset("deco-dao-meridian.svg");
 /** 唤灵通鉴页标题 */
 export const UI_HEAD_CHRONICLE = asset("deco-chronicle-header.svg");
+/** 通鉴页「最近铸灵」小标题旁装饰（与灵卡卷轴区分） */
+export const UI_GEAR_CHRONICLE_DECO = asset("deco-chronicle-gear.svg");
 /** 灵息日历（每日签到）页标题 */
 export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 /** 天机匣（周轮换商店）页标题 */
