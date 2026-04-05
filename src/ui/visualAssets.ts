@@ -58,6 +58,8 @@ export const UI_HEAD_TRAIN = asset("deco-train-header.svg");
 export const UI_HEAD_GEAR = asset("deco-gear-header.svg");
 /** 行囊背包排序条左侧小标 */
 export const UI_GEAR_SORT_DECO = asset("gear-sort-deco.svg");
+/** 装备锁定 / 解锁按钮内小锁 */
+export const UI_GEAR_LOCK_DECO = asset("gear-lock-deco.svg");
 export const UI_HEAD_PET = asset("deco-pet-header.svg");
 export const UI_HEAD_STATS = asset("deco-stats-header.svg");
 export const UI_HEAD_COMBAT = asset("deco-combat-header.svg");

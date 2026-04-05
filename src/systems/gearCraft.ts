@@ -144,6 +144,7 @@ export function generateRandomGear(state: GameState, forceRarity?: Rarity): Gear
     refineLevel: 0,
     prefixes,
     suffixes,
+    locked: false,
   };
 }
 
@@ -159,6 +160,7 @@ export function tryRefineUr(
   if (!a || !b) return { ok: false, msg: "装备不存在" };
   if (a.rarity !== "UR" || b.rarity !== "UR") return { ok: false, msg: "仅天极可精炼" };
   if (a.baseId !== b.baseId) return { ok: false, msg: "需同基底资质" };
+  if (b.locked) return { ok: false, msg: "消耗件已锁定，请先解锁" };
   delete state.gearInventory[consumeId];
   if (state.equippedGear.weapon === consumeId) state.equippedGear.weapon = null;
   if (state.equippedGear.body === consumeId) state.equippedGear.body = null;

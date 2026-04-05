@@ -26,10 +26,19 @@ export function salvageCard(state: GameState, defId: string): { ok: boolean; msg
   return { ok: true, msg: `分解获得灵砂 +${gain}`, gain };
 }
 
+/** 切换装备锁定（会话内持久于存档） */
+export function toggleGearLock(state: GameState, instanceId: string): { ok: boolean; msg: string } {
+  const g = state.gearInventory[instanceId];
+  if (!g) return { ok: false, msg: "无此装备" };
+  g.locked = !g.locked;
+  return { ok: true, msg: g.locked ? "已锁定" : "已解锁" };
+}
+
 /** 分解装备：移除背包中的实例 */
 export function salvageGear(state: GameState, instanceId: string): { ok: boolean; msg: string; gain?: number } {
   const g = state.gearInventory[instanceId];
   if (!g) return { ok: false, msg: "无此装备" };
+  if (g.locked) return { ok: false, msg: "已锁定，请先解锁再分解" };
   if (
     state.equippedGear.weapon === instanceId ||
     state.equippedGear.body === instanceId ||
@@ -70,6 +79,7 @@ export function tryAutoSalvageInventory(state: GameState): void {
       if (isGearEquipped(state, id)) continue;
       const g = state.gearInventory[id];
       if (!g) continue;
+      if (g.locked) continue;
       if (g.rarity === "N" && p.gearN) salvageGear(state, id);
       else if (g.rarity === "R" && p.gearR) salvageGear(state, id);
     }

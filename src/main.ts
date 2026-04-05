@@ -189,7 +189,7 @@ import {
 import { pullPet } from "./systems/petGacha";
 import { secondsToNextLevel, skillXpPerSecond, xpToNextLevel } from "./systems/skillTraining";
 import { enhanceGear, equipGear, tryRefineUr, unequipGear } from "./systems/gearCraft";
-import { salvageCard, salvageGear } from "./systems/salvage";
+import { salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
 import { pullBattleSkill, battleSkillPullCost, describeBattleSkillLevels } from "./systems/battleSkills";
 const EL_ZH: Record<string, string> = {
   metal: "金",
@@ -1307,6 +1307,19 @@ function handleGearPanelClick(e: MouseEvent): void {
     const m = (sortEl as HTMLElement).dataset.gearInvSort as GearInvSortMode | undefined;
     if (m === "rarity" || m === "ilvl" || m === "slot" || m === "name") {
       gearInvSortMode = m;
+      refreshGearPanel();
+    }
+    return;
+  }
+
+  const lockEl = t.closest("[data-gear-toggle-lock]");
+  if (lockEl) {
+    const id = (lockEl as HTMLElement).dataset.gearToggleLock;
+    if (!id) return;
+    const r = toggleGearLock(state, id);
+    toast(r.msg);
+    if (r.ok) {
+      saveGame(state);
       refreshGearPanel();
     }
     return;

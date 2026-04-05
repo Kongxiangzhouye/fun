@@ -45,6 +45,7 @@ import {
   UI_EMPTY_UNLOCK,
   UI_HEAD_DUNGEON,
   UI_DUNGEON_AFFIX_DECO,
+  UI_GEAR_LOCK_DECO,
   UI_GEAR_SORT_DECO,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
@@ -525,22 +526,26 @@ export function renderGearPanel(
         ? `<button class="btn ${picked ? "btn-primary" : ""}" type="button" data-gear-refine="${g.instanceId}">${picked ? "取消精炼" : "精炼"}</button>`
         : "";
     const xt = xuanTieEnhanceCost(g.enhanceLevel);
+    const locked = !!g.locked;
     inv += `
-      <div class="gear-row ${eq ? "equipped" : ""} ${picked ? "refine-picked" : ""}">
+      <div class="gear-row ${eq ? "equipped" : ""} ${picked ? "refine-picked" : ""} ${locked ? "is-locked" : ""}">
         <div class="gear-row-visual">
           <div class="gear-icon-wrap rarity-${g.rarity}">
             <img src="${GEAR_SLOT_ICON[g.slot]}" alt="" width="32" height="32" loading="lazy" class="gear-slot-icon" />
           </div>
           <div>
           <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · ilvl ${g.itemLevel}
-          <p class="inv-meta">强化 ${g.enhanceLevel}${g.rarity === "UR" ? ` · 精炼 ${g.refineLevel}` : ""}</p>
+          <p class="inv-meta">强化 ${g.enhanceLevel}${g.rarity === "UR" ? ` · 精炼 ${g.refineLevel}` : ""}${locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
           <div class="affix-block">${pre}${suf}</div>
           </div>
         </div>
         <div class="gear-actions">
           <button class="btn btn-primary" type="button" data-gear-equip="${g.instanceId}" ${eq ? "disabled" : ""}>装备</button>
           <button class="btn" type="button" data-gear-enhance="${g.instanceId}">强化（${xt} 玄铁）</button>
-          <button class="btn" type="button" data-gear-salvage="${g.instanceId}" ${eq ? "disabled" : ""}>分解</button>
+          <button class="btn gear-lock-toggle-btn ${locked ? "is-locked" : ""}" type="button" data-gear-toggle-lock="${g.instanceId}">
+            <img src="${UI_GEAR_LOCK_DECO}" alt="" width="16" height="16" class="gear-lock-ico" loading="lazy" />${locked ? "解锁" : "锁定"}
+          </button>
+          <button class="btn" type="button" data-gear-salvage="${g.instanceId}" ${eq || locked ? "disabled" : ""}>分解</button>
           ${refineBtn}
         </div>
       </div>`;
@@ -590,13 +595,16 @@ export function renderGearPanel(
           </div>
           <div>
             <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · ilvl ${g.itemLevel}
-            <p class="inv-meta">已装备于 ${slotLabel[s]} · 强化 ${g.enhanceLevel}${g.rarity === "UR" ? ` · 精炼 ${g.refineLevel}` : ""}</p>
+            <p class="inv-meta">已装备于 ${slotLabel[s]} · 强化 ${g.enhanceLevel}${g.rarity === "UR" ? ` · 精炼 ${g.refineLevel}` : ""}${g.locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
           </div>
         </div>
         <div class="affix-block">${pre}${suf}</div>
         <div class="gear-equipped-detail-actions">
           <button class="btn btn-danger" type="button" data-gear-unequip-detail="${s}">卸下</button>
           <button class="btn btn-primary" type="button" data-gear-enhance="${g.instanceId}">强化（${xt} 玄铁）</button>
+          <button class="btn gear-lock-toggle-btn ${g.locked ? "is-locked" : ""}" type="button" data-gear-toggle-lock="${g.instanceId}">
+            <img src="${UI_GEAR_LOCK_DECO}" alt="" width="16" height="16" class="gear-lock-ico" loading="lazy" />${g.locked ? "解锁" : "锁定"}
+          </button>
           ${refineBtn}
           <button type="button" class="btn" id="btn-gear-detail-close">关闭</button>
         </div>
@@ -611,6 +619,7 @@ export function renderGearPanel(
       </div>
       <p class="hint">装备来自抽卡的铸灵池。强化消耗玄铁（分解装备获得）；天极可精炼。</p>
       <p class="hint">点武器/衣甲/指环查看详情，可卸下或强化。背包中的未装备件也能强化。</p>
+      <p class="hint sm">锁定装备不可分解，也不会被自动分解；精炼时不可锁定消耗件。</p>
       ${refineHint}
       <h3 class="sub-h">已装备</h3>
       ${slotHtml}

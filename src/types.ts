@@ -139,6 +139,8 @@ export interface GearItem {
   refineLevel: number;
   prefixes: GearAffixRoll[];
   suffixes: GearAffixRoll[];
+  /** 锁定后不可分解，且不能作为自动分解与精炼消耗（可手动解锁） */
+  locked?: boolean;
 }
 
 /** 幻域地图上的单只魔物（位置 0–1 归一化，对应格子中心） */
