@@ -52,6 +52,8 @@ export const UI_TITLE_SPIRIT = asset("title-spirit.svg");
 export const UI_SAVE_DOWNLOAD_DECO = asset("save-download-deco.svg");
 /** 角色 · 偏好设置面板标题装饰 */
 export const UI_UI_PREFS_DECO = asset("ui-prefs-panel-deco.svg");
+/** 角色 · 数据总览面板标题装饰 */
+export const UI_DATA_OVERVIEW_DECO = asset("data-overview-deco.svg");
 export const UI_PANEL_CORNER = asset("panel-corner.svg");
 export const UI_BG_SPARKLES = asset("bg-sparkles.svg");
 /** 离线收益摘要条左侧装饰 */
