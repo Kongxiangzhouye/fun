@@ -61,7 +61,8 @@ import {
 } from "./gacha";
 import { CARDS, getCard } from "./data/cards";
 import { tryCompleteAchievements, drainAchievementToastQueue, ACHIEVEMENTS, type AchievementDef } from "./achievements";
-import { countUniqueOwned } from "./state";
+import { countUniqueOwned, SAVE_VERSION } from "./state";
+import pkg from "../package.json";
 import { playUiBlip, resumeAudioContext } from "./audio";
 import {
   canReincarnate,
@@ -148,6 +149,7 @@ import {
   UI_SAVE_SLOTS_DECO,
   UI_SAVE_SLOT_LABEL_DECO,
   UI_KEYBOARD_HELP_DECO,
+  UI_ABOUT_GAME_DECO,
   UI_DATA_EXPORT_DECO,
   UI_DATA_STATS_DOWNLOAD_DECO,
 } from "./ui/visualAssets";
@@ -339,6 +341,8 @@ let characterSub: CharacterSub = "stats";
 let topBarExtrasExpanded = false;
 /** 快捷键说明浮层（? / 偏好页按钮） */
 let showKeyboardHelpModal = false;
+/** 关于游戏浮层（偏好页按钮） */
+let showAboutModal = false;
 /** 主循环间隔：过小会增加 CPU，过大则幻域位移像「瞬移」跨格 */
 const LOOP_INTERVAL_MS = 50;
 
@@ -2082,6 +2086,10 @@ function renderUiPrefsPanel(): string {
       <button type="button" class="btn" id="btn-open-keyboard-help">快捷键说明</button>
       <p class="hint sm">按 <kbd class="kbd-inline">?</kbd> 或 <kbd class="kbd-inline">Shift</kbd> + <kbd class="kbd-inline">/</kbd> 打开/关闭。</p>
     </div>
+    <div class="ui-pref-about-cta">
+      <button type="button" class="btn" id="btn-open-about-game">关于游戏</button>
+      <p class="hint sm">客户端版本、致谢与第三方库说明。</p>
+    </div>
   </section>`;
 }
 
@@ -2098,10 +2106,34 @@ function renderKeyboardHelpModal(): string {
       <ul class="keyboard-help-list">
         <li><span class="kbd-pill">1</span> … <span class="kbd-pill">5</span> 切换底部主栏：<strong>角色</strong> / <strong>养成</strong> / <strong>幻域</strong> / <strong>抽卡</strong> / <strong>灵府</strong>（小键盘 1–5 亦可）</li>
         <li><span class="kbd-pill">?</span> 或 <span class="kbd-pill">Shift</span> + <span class="kbd-pill">/</span> 打开或关闭本说明</li>
-        <li><span class="kbd-pill">Esc</span> 关闭本说明</li>
+        <li><span class="kbd-pill">Esc</span> 关闭最上层浮层（先「关于游戏」，再本说明）</li>
         <li class="keyboard-help-note">幻域未解锁时按 <span class="kbd-pill">3</span> 会提示不可用。</li>
         <li class="keyboard-help-note">在输入框内输入时，数字键不会切换页面。</li>
       </ul>
+    </div>
+  </div>`;
+}
+
+function renderAboutModal(): string {
+  if (!showAboutModal) return "";
+  return `<div class="keyboard-help-layer" id="about-game-layer">
+    <button type="button" class="keyboard-help-backdrop" id="about-game-backdrop" aria-label="关闭关于"></button>
+    <div class="keyboard-help-dialog about-game-dialog" role="dialog" aria-modal="true" aria-labelledby="about-game-title">
+      <div class="keyboard-help-head">
+        <img class="keyboard-help-ico" src="${UI_ABOUT_GAME_DECO}" alt="" width="28" height="28" loading="lazy" />
+        <h2 id="about-game-title" class="keyboard-help-title">关于游戏</h2>
+        <button type="button" class="btn keyboard-help-close" id="btn-about-game-close" aria-label="关闭">×</button>
+      </div>
+      <div class="about-game-body">
+        <p class="about-game-lead"><strong>万象唤灵</strong> · 单机网页增量挂机。进度保存在本机浏览器；清除站点数据或隐私模式可能导致存档丢失。</p>
+        <dl class="about-game-meta">
+          <dt>客户端版本</dt>
+          <dd>${escapeHtmlAttr(pkg.version)}</dd>
+          <dt>存档数据格式版本</dt>
+          <dd>${SAVE_VERSION}</dd>
+        </dl>
+        <p class="hint sm about-game-tech">使用 Decimal.js、GSAP、Motion、Pixi.js、seedrandom 等开源库；部分界面图标基于 Twemoji（CC-BY 4.0）。</p>
+      </div>
     </div>
   </div>`;
 }
@@ -2134,6 +2166,12 @@ function handleGlobalKeyboardShortcuts(e: KeyboardEvent): void {
       (t as HTMLElement).isContentEditable);
 
   if (e.key === "Escape") {
+    if (showAboutModal) {
+      e.preventDefault();
+      showAboutModal = false;
+      render();
+      return;
+    }
     if (!showKeyboardHelpModal) return;
     e.preventDefault();
     showKeyboardHelpModal = false;
@@ -2146,12 +2184,18 @@ function handleGlobalKeyboardShortcuts(e: KeyboardEvent): void {
     if (inTextField) return;
     e.preventDefault();
     if (e.repeat) return;
+    if (showAboutModal) {
+      showAboutModal = false;
+      showKeyboardHelpModal = true;
+      render();
+      return;
+    }
     showKeyboardHelpModal = !showKeyboardHelpModal;
     render();
     return;
   }
 
-  if (showKeyboardHelpModal) return;
+  if (showKeyboardHelpModal || showAboutModal) return;
   if (inTextField) return;
 
   const hub = parseHubDigitKey(e);
@@ -2550,6 +2594,7 @@ function render(): void {
     ${renderBottomNav(u)}
     </div>
     ${renderKeyboardHelpModal()}
+    ${renderAboutModal()}
   `;
 
   bindEvents(rb, slots);
@@ -3200,6 +3245,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
   });
 
   document.getElementById("btn-open-keyboard-help")?.addEventListener("click", () => {
+    showAboutModal = false;
     showKeyboardHelpModal = true;
     render();
   });
@@ -3210,6 +3256,19 @@ function bindEvents(rb: Decimal, _slots: number): void {
   };
   document.getElementById("btn-keyboard-help-close")?.addEventListener("click", closeKeyboardHelp);
   document.getElementById("keyboard-help-backdrop")?.addEventListener("click", closeKeyboardHelp);
+
+  document.getElementById("btn-open-about-game")?.addEventListener("click", () => {
+    showKeyboardHelpModal = false;
+    showAboutModal = true;
+    render();
+  });
+  const closeAboutGame = (): void => {
+    if (!showAboutModal) return;
+    showAboutModal = false;
+    render();
+  };
+  document.getElementById("btn-about-game-close")?.addEventListener("click", closeAboutGame);
+  document.getElementById("about-game-backdrop")?.addEventListener("click", closeAboutGame);
 
   document.getElementById("btn-data-overview-copy")?.addEventListener("click", () => {
     const text = buildDataOverviewExportText(state);
@@ -4766,7 +4825,7 @@ function init(): void {
     "keydown",
     (e) => {
       if (e.code !== "Space" && e.key !== " ") return;
-      if (showKeyboardHelpModal) return;
+      if (showKeyboardHelpModal || showAboutModal) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       if (t?.closest("button, a, select, label, [role='button'], [tabindex]")) return;

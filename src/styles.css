@@ -2676,6 +2676,61 @@ h1 {
   margin: 8px 0 0;
 }
 
+.ui-prefs-panel .ui-pref-about-cta {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ui-prefs-panel .ui-pref-about-cta .hint {
+  margin: 8px 0 0;
+}
+
+.about-game-dialog {
+  width: min(100%, 440px);
+  max-height: min(88vh, 560px);
+}
+
+.about-game-body {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.about-game-lead {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+}
+
+.about-game-meta {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.06);
+  font-size: 0.88rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  align-items: baseline;
+}
+
+.about-game-meta dt {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.about-game-meta dd {
+  margin: 0;
+  font-family: ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-game-tech {
+  margin: 0;
+}
+
 .ui-prefs-panel .kbd-inline {
   display: inline-block;
   padding: 1px 6px;
