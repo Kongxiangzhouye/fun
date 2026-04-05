@@ -10,6 +10,7 @@
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
+  <circle cx="50" cy="50" r="44" fill="none" stroke="url(#duelA)" stroke-width="1.2" opacity="0.35"/>
   <circle cx="50" cy="50" r="38" fill="#0B101E" stroke="url(#duelA)" stroke-width="2.5" opacity="0.95"/>
   <path d="M50 18 L58 42 L82 46 L64 62 L68 88 L50 76 L32 88 L36 62 L18 46 L42 42 Z" fill="url(#duelA)" opacity="0.22" filter="url(#duelGlow)"/>
   <path d="M28 52 L50 28 L72 52" stroke="url(#duelA)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9"/>
