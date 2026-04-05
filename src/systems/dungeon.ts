@@ -281,7 +281,7 @@ function restoreWaveFromCheckpoint(state: GameState, ck: WaveCheckpoint): void {
 
 /** 阵线对决趣味层：连击、破绽、战意、克制灵脉（期望 DPS 小幅上浮，偏保守） */
 const DUEL_COMBO_MAX = 12;
-const DUEL_COMBO_PER_STACK = 0.016;
+const DUEL_COMBO_PER_STACK = 0.02;
 const DUEL_WEAK_DMG_MULT = 1.17;
 const DUEL_WEAK_MS = 2300;
 const DUEL_FERVOR_PER_HIT = 7;
@@ -1585,7 +1585,7 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
     if (d.duelWeakNextAtMs <= 0) d.duelWeakNextAtMs = now + 800 + nextRand01(state) * 2800;
     if (now >= d.duelWeakNextAtMs) {
       d.duelWeakNextAtMs = now + 7200 + nextRand01(state) * 5200;
-      if (nextRand01(state) < 0.35) {
+      if (nextRand01(state) < 0.42) {
         d.duelWeakUntilMs = now + DUEL_WEAK_MS;
         pushDamageFloat(0.52, 0.35, "破绽", "dmg-special");
       }
@@ -1634,6 +1634,9 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
       }
       target.hp -= hitDmg;
       d.duelFervor = Math.min(DUEL_FERVOR_MAX, d.duelFervor + DUEL_FERVOR_PER_HIT);
+      if (critRoll > 1) {
+        d.duelFervor = Math.min(DUEL_FERVOR_MAX, d.duelFervor + 6);
+      }
       pushDamageFloat(fx, fy, String(Math.max(1, Math.round(hitDmg))), "dmg-out");
       if (target.hp <= 0) {
         if (registerDungeonKill(state, d, target, now)) {

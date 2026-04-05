@@ -221,6 +221,8 @@ import {
   petEssenceFindMult,
 } from "./systems/pets";
 import { playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
+import { elementDamageMultiplier } from "./systems/elementCombat";
+import { playerBattleElement } from "./systems/playerElement";
 import { pullPet } from "./systems/petGacha";
 import { secondsToNextLevel, skillXpPerSecond, xpToNextLevel } from "./systems/skillTraining";
 import { enhanceGear, equipGear, tryRefineUr, unequipGear } from "./systems/gearCraft";
@@ -264,6 +266,14 @@ function fmtDungeonDur(sec: number): string {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60);
   return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function duelComboTierLabel(stacks: number): string {
+  if (stacks <= 0) return "蓄势";
+  if (stacks <= 3) return "连斩";
+  if (stacks <= 7) return "破军";
+  if (stacks <= 11) return "贯虹";
+  return "无双";
 }
 
 /** 离线结算时长展示 */
@@ -4543,16 +4553,53 @@ function loop(): void {
       mapEl.classList.toggle("is-single", false);
       mapEl.classList.toggle("in-combat", d.inMelee);
       mapEl.classList.toggle("duel-weak-active", now < d.duelWeakUntilMs);
+      const tgt = d.mobs.find((m) => m.hp > 0);
+      const hi =
+        tgt && tgt.hp > 0 ? Math.max(0.35, tgt.attackInterval ?? DUNGEON_MONSTER_HIT_INTERVAL) : 1;
+      const hitPhase =
+        tgt && tgt.hp > 0 ? (((d.monsterAttackAccum % hi) + hi) % hi) / hi : 0;
+      const duelMood =
+        now < d.dodgeIframesUntil
+          ? "iframe"
+          : d.duelFervor >= 100
+            ? "fervor"
+            : hitPhase > 0.5
+              ? "windup"
+              : "none";
+      mapEl.classList.toggle("duel-mood-iframe", duelMood === "iframe");
+      mapEl.classList.toggle("duel-mood-windup", duelMood === "windup");
+      mapEl.classList.toggle("duel-mood-fervor", duelMood === "fervor");
+      mapEl.classList.toggle("duel-boss-telegraph", d.bossDodgeVisual);
+      mapEl.classList.toggle("duel-combo-high", d.duelComboStacks >= 7);
       const comboPill = document.getElementById("duel-combo-pill");
+      const tierEl = document.getElementById("duel-combo-tier");
       const weakPill = document.getElementById("duel-weak-pill");
       const fervPct = document.getElementById("duel-fervor-pct");
       if (comboPill) comboPill.textContent = `连击 ${d.duelComboStacks}`;
+      if (tierEl) {
+        tierEl.textContent = duelComboTierLabel(d.duelComboStacks);
+        tierEl.classList.toggle("is-hot", d.duelComboStacks >= 7);
+      }
       if (weakPill) weakPill.hidden = now >= d.duelWeakUntilMs;
       if (fervPct) fervPct.textContent = String(Math.min(100, Math.floor(d.duelFervor)));
       const atkSpd = playerDungeonAttackSpeedMult(state);
       const playerHitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
       mapEl.style.setProperty("--dungeon-player-hit-interval", `${playerHitIntSec}s`);
-      const tgt = d.mobs.find((m) => m.hp > 0);
+      const pEl = playerBattleElement(state);
+      const mulOutEl = document.getElementById("duel-elem-out-pill");
+      const mulInEl = document.getElementById("duel-elem-in-pill");
+      if (tgt && mulOutEl && mulInEl) {
+        mulOutEl.textContent = `绽 ×${elementDamageMultiplier(pEl, tgt.element).toFixed(2)}`;
+        mulInEl.textContent = `承 ×${elementDamageMultiplier(tgt.element, pEl).toFixed(2)}`;
+      }
+      const dodgeChip = document.getElementById("dungeon-duel-dodge-chip");
+      if (dodgeChip) {
+        if (now < d.dodgeIframesUntil) dodgeChip.textContent = "化劲中 · 无敌帧";
+        else if (d.stamina < DUNGEON_DODGE_STAMINA_COST)
+          dodgeChip.textContent = `体力不足（需 ${DUNGEON_DODGE_STAMINA_COST}）`;
+        else if (now < d.playerMoveLockUntil) dodgeChip.textContent = "硬直中 · 稍后可闪";
+        else dodgeChip.textContent = "点击战场 · 化劲闪避";
+      }
       const pPl = document.getElementById("dungeon-duel-pl-gauge");
       const pEn = document.getElementById("dungeon-duel-en-gauge");
       if (tgt && pPl) {
@@ -4560,7 +4607,6 @@ function loop(): void {
         pPl.style.width = `${pct}%`;
       }
       if (tgt && pEn) {
-        const hi = Math.max(0.35, tgt.attackInterval ?? DUNGEON_MONSTER_HIT_INTERVAL);
         const phase = ((d.monsterAttackAccum % hi) + hi) % hi;
         pEn.style.width = `${Math.min(100, (100 * phase) / hi)}%`;
       }

@@ -1,4 +1,4 @@
-import type { GameState, GearInventorySortMode, GearItem, Rarity, SkillId } from "../types";
+import type { Element, GameState, GearInventorySortMode, GearItem, Rarity, SkillId } from "../types";
 import {
   DUNGEON_DEATH_CD_MS,
   DUNGEON_DODGE_IFRAMES_MS,
@@ -21,6 +21,8 @@ import {
   playerMaxHp,
 } from "../systems/playerCombat";
 import { getDungeonAffixForNow, playerExpectedDpsDungeonAffix } from "../systems/dungeonAffix";
+import { elementDamageMultiplier } from "../systems/elementCombat";
+import { playerBattleElement } from "../systems/playerElement";
 import { currentWeekKey } from "../systems/weeklyBounty";
 import {
   SKILL_HINT,
@@ -44,6 +46,7 @@ import {
   UI_HEAD_DUNGEON,
   UI_DUNGEON_DUEL_DECO,
   UI_DUNGEON_AFFIX_DECO,
+  ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
   UI_GEAR_SORT_DECO,
   UI_GEAR_SORT_PINNED_DECO,
@@ -67,6 +70,14 @@ import {
 
 /** 灵宠列表：稀有度天极 → 凡品 */
 const PET_RARITY_ORDER_DESC: Rarity[] = ["UR", "SSR", "SR", "R", "N"];
+
+const EL_ZH: Record<Element, string> = {
+  metal: "金",
+  wood: "木",
+  water: "水",
+  fire: "火",
+  earth: "土",
+};
 
 function fmtNum(n: number): string {
   if (n >= 1e4) return (n / 1e4).toFixed(1) + "万";
@@ -96,8 +107,13 @@ export function formatDungeonActiveMeta(state: GameState, now: number): string {
   const lockLine = tgt
     ? `敌阵灵压 ${fmtN(Math.max(0, tgt.hp))} / ${fmtN(tgt.maxHp)}${tgt.isBoss ? " · 首领" : ""}`
     : "—";
+  const pEl = playerBattleElement(state);
+  const elemLine = tgt
+    ? `五行 ${EL_ZH[pEl]}→${EL_ZH[tgt.element]} · 绽×${elementDamageMultiplier(pEl, tgt.element).toFixed(2)} · 承×${elementDamageMultiplier(tgt.element, pEl).toFixed(2)}`
+    : "五行 —";
   const lines = [
     `本次击溃 ${d.sessionKills} · 本次髓 +${fmtSessEss(d.sessionEssence)} · 累计通关 ${d.totalWavesCleared} 波`,
+    elemLine,
     `第 ${d.wave} 波 · ${lockLine} · 本关清完约 ${waveEssF.toFixed(2)} 髓 · 下波灵压档参考 ${nPk}`,
   ];
   const iframesLeft = now < d.dodgeIframesUntil ? Math.ceil((d.dodgeIframesUntil - now) / 1000) : 0;
@@ -130,6 +146,10 @@ function renderDungeonMapHtml(state: GameState): string {
   const hpPct = d.playerMax > 0 ? Math.min(100, (100 * Math.max(0, d.playerHp)) / d.playerMax) : 0;
   const staPct = DUNGEON_STAMINA_MAX > 0 ? Math.min(100, (100 * Math.max(0, d.stamina)) / DUNGEON_STAMINA_MAX) : 0;
   const hitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / playerDungeonAttackSpeedMult(state));
+  const pEl = playerBattleElement(state);
+  const em = frontMob ? frontMob.element : ("metal" as Element);
+  const mulOut = elementDamageMultiplier(pEl, em);
+  const mulIn = elementDamageMultiplier(em, pEl);
   const floatOverlay = `<div class="dungeon-map-hud-overlay" aria-hidden="true">
       <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
     </div>`;
@@ -146,7 +166,17 @@ function renderDungeonMapHtml(state: GameState): string {
               <div class="dungeon-hud-mini-row"><span>体力</span><span id="dungeon-stamina-txt">${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}</span></div>
               <div class="progress-track dungeon slim stamina-track hud-mini"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
             </div>
-            <div class="dungeon-duel-vs-mid">VS</div>
+            <div class="dungeon-duel-vs-mid">
+              <div class="dungeon-duel-elem-icons">
+                <img class="dungeon-duel-elem-ico" src="${ELEMENT_ICON[pEl]}" alt="" width="22" height="22" loading="lazy" />
+                <span class="dungeon-duel-vs-core">VS</span>
+                <img class="dungeon-duel-elem-ico" src="${ELEMENT_ICON[em]}" alt="" width="22" height="22" loading="lazy" />
+              </div>
+              <div class="dungeon-duel-elem-pills">
+                <span class="duel-elem-pill duel-elem-pill--out" id="duel-elem-out-pill" title="对敌伤害五行倍率">绽 ×${mulOut.toFixed(2)}</span>
+                <span class="duel-elem-pill duel-elem-pill--in" id="duel-elem-in-pill" title="敌对你造成伤害倍率">承 ×${mulIn.toFixed(2)}</span>
+              </div>
+            </div>
             <div class="dungeon-duel-side dungeon-duel-side--enemy">
               <span class="dungeon-duel-side-tag">敌方</span>
               <div class="dungeon-boss-strip dungeon-boss-strip--duel" id="dungeon-boss-hud">
@@ -159,16 +189,24 @@ function renderDungeonMapHtml(state: GameState): string {
               </div>
             </div>
           </div>
+          <div class="dungeon-duel-fx-core" aria-hidden="true">
+            <div class="dungeon-player-fx">
+              <div class="dungeon-engage-ring dungeon-duel-engage-ring"></div>
+              <div class="fx-aoe-ring"></div>
+            </div>
+          </div>
           ${floatOverlay}
           <div class="dungeon-duel-center">
             <img class="dungeon-duel-deco" src="${UI_DUNGEON_DUEL_DECO}" alt="" width="100" height="100" loading="lazy" />
-            <p class="hint sm dungeon-duel-tagline">连击叠伤 · 随机破绽 · 战意爆发 · 克制灵脉 — 与剑气/凶煞同帧验证</p>
+            <p class="hint sm dungeon-duel-tagline">连击叠伤 · 随机破绽 · 战意爆发 · 灵脉共鸣 — 剑气/凶煞与结算同帧</p>
           </div>
           <div class="dungeon-duel-momentum" id="dungeon-duel-momentum" aria-live="polite">
+            <span class="duel-mom-pill duel-mom-pill--tier" id="duel-combo-tier">蓄势</span>
             <span class="duel-mom-pill" id="duel-combo-pill">连击 0</span>
             <span class="duel-mom-pill duel-weak-pill" id="duel-weak-pill" hidden>破绽</span>
             <span class="duel-mom-pill">战意 <span id="duel-fervor-pct">0</span>%</span>
           </div>
+          <p class="dungeon-duel-dodge-chip hint sm" id="dungeon-duel-dodge-chip">点击战场 · 化劲闪避</p>
           <div class="dungeon-duel-gauge-row">
             <div class="dungeon-duel-gauge">
               <span class="dungeon-duel-gauge-lbl">剑气</span>

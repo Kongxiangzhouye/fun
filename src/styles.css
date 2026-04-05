@@ -437,12 +437,141 @@ body {
 .dungeon-duel-vs-mid {
   flex: 0 0 auto;
   align-self: center;
-  margin-top: 18px;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-display);
   font-size: clamp(0.85rem, 3.2vw, 1.05rem);
   letter-spacing: 0.12em;
   color: rgba(220, 200, 160, 0.45);
   text-shadow: 0 0 12px rgba(0, 0, 0, 0.85);
+}
+
+.dungeon-duel-elem-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.dungeon-duel-vs-core {
+  font-size: clamp(0.75rem, 2.8vw, 0.95rem);
+  letter-spacing: 0.2em;
+  color: rgba(230, 200, 150, 0.5);
+}
+
+.dungeon-duel-elem-ico {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px rgba(120, 160, 255, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.dungeon-duel-elem-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-width: 140px;
+}
+
+.duel-elem-pill {
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(8, 12, 22, 0.78);
+  border: 1px solid rgba(100, 140, 200, 0.3);
+  color: rgba(200, 215, 240, 0.92);
+  white-space: nowrap;
+}
+
+.duel-elem-pill--out {
+  border-color: rgba(120, 200, 255, 0.38);
+}
+
+.duel-elem-pill--in {
+  border-color: rgba(255, 150, 120, 0.42);
+}
+
+.dungeon-duel-fx-core {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.dungeon-duel-stage .dungeon-duel-engage-ring {
+  width: 128px;
+  height: 128px;
+  margin: -64px 0 0 -64px;
+  transform-origin: center center;
+}
+
+.dungeon-duel-stage .fx-aoe-ring {
+  width: 108px;
+  height: 108px;
+  margin: -54px 0 0 -54px;
+}
+
+.dungeon-map.dungeon-duel-stage.duel-mood-windup {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 110, 90, 0.42),
+    inset 0 0 60px rgba(255, 70, 50, 0.14);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-mood-iframe {
+  box-shadow:
+    inset 0 0 0 1px rgba(90, 210, 255, 0.45),
+    inset 0 0 52px rgba(40, 160, 255, 0.12);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-mood-fervor {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 210, 120, 0.45),
+    inset 0 0 56px rgba(255, 180, 70, 0.14);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-boss-telegraph {
+  filter: brightness(1.05) saturate(1.06);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-combo-high .dungeon-duel-engage-ring {
+  border-color: rgba(255, 210, 150, 0.55) !important;
+  box-shadow: 0 0 24px rgba(255, 170, 90, 0.38) !important;
+}
+
+.dungeon-duel-dodge-chip {
+  position: absolute;
+  left: 50%;
+  bottom: 19.5%;
+  transform: translateX(-50%);
+  z-index: 6;
+  margin: 0;
+  max-width: min(92%, 320px);
+  text-align: center;
+  color: rgba(165, 198, 235, 0.9);
+  pointer-events: none;
+  line-height: 1.35;
+}
+
+.duel-mom-pill--tier {
+  border-color: rgba(150, 190, 255, 0.38);
+}
+
+.duel-mom-pill--tier.is-hot {
+  color: #ffd8a8;
+  border-color: rgba(255, 200, 130, 0.55);
+  box-shadow: 0 0 14px rgba(255, 160, 70, 0.22);
 }
 
 .dungeon-boss-strip.dungeon-boss-strip--duel {
@@ -4490,7 +4619,7 @@ html.ui-reduce-motion *::after {
 .dungeon-duel-momentum {
   position: absolute;
   left: 50%;
-  bottom: 26%;
+  bottom: 27.5%;
   transform: translateX(-50%);
   z-index: 6;
   display: flex;
@@ -4518,9 +4647,8 @@ html.ui-reduce-motion *::after {
 }
 
 .dungeon-map.dungeon-duel-stage.duel-weak-active {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 190, 120, 0.28),
-    inset 0 0 48px rgba(255, 160, 80, 0.08);
+  outline: 1px solid rgba(255, 190, 120, 0.42);
+  outline-offset: -1px;
 }
 
 .dungeon-duel-gauge-row {
