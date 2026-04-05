@@ -124,6 +124,7 @@ import {
   UI_HEAD_DAILY_FORTUNE,
   UI_ACH_FORGE_DECO,
   UI_OFFLINE_SUMMARY_DECO,
+  UI_SAVE_DOWNLOAD_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -1930,6 +1931,28 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
   return `<div class="character-hub-root">${gearBlock}</div>`;
 }
 
+function triggerDownloadSaveBackup(): void {
+  const s = exportSave(state);
+  const ts = new Date();
+  const y = ts.getFullYear();
+  const mo = String(ts.getMonth() + 1).padStart(2, "0");
+  const d = String(ts.getDate()).padStart(2, "0");
+  const h = String(ts.getHours()).padStart(2, "0");
+  const mi = String(ts.getMinutes()).padStart(2, "0");
+  const name = `idle-gacha-realm-backup-${y}${mo}${d}-${h}${mi}.txt`;
+  const blob = new Blob([s], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast("已下载备份文件（与导出字符串相同格式，可导入还原）。");
+}
+
 function renderSaveToolsPanel(): string {
   return `<section class="panel save-tools-panel">
     <h2>存档管理</h2>
@@ -1937,6 +1960,10 @@ function renderSaveToolsPanel(): string {
     <div class="footer-tools">
       <button class="btn" type="button" id="btn-save">保存到本机</button>
       <button class="btn" type="button" id="btn-export">导出存档字符串</button>
+      <button class="btn btn-save-download" type="button" id="btn-save-download">
+        <img src="${UI_SAVE_DOWNLOAD_DECO}" alt="" width="18" height="18" class="btn-save-download-ico" loading="lazy" />
+        下载备份文件
+      </button>
       <input type="text" id="import-input" class="import-input" placeholder="粘贴存档字符串" />
       <button class="btn" type="button" id="btn-import">导入存档</button>
     </div>
@@ -3386,6 +3413,10 @@ function bindEvents(rb: Decimal, _slots: number): void {
         }
       },
     );
+  });
+
+  document.getElementById("btn-save-download")?.addEventListener("click", () => {
+    triggerDownloadSaveBackup();
   });
 
   document.getElementById("btn-import")?.addEventListener("click", () => {

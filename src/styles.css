@@ -2428,6 +2428,17 @@ h1 {
   margin-top: 8px;
 }
 
+.btn-save-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-save-download .btn-save-download-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
 .vigor-line {
   font-size: 0.86rem;
   color: var(--muted);
