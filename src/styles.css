@@ -342,10 +342,51 @@ body {
 .dungeon-inter-wave-inner {
   flex: 1;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  min-height: 0;
+  padding: 10px 12px 10px 56px;
+}
+
+.dungeon-inter-wave-art {
+  flex: 0 0 auto;
+}
+
+.dungeon-inter-wave-deco {
+  display: block;
+  width: 80px;
+  height: 80px;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 14px rgba(100, 160, 255, 0.35));
+}
+
+.dungeon-inter-wave-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 0;
-  padding: 0 4px 0 52px;
+  gap: 2px;
+}
+
+@media (max-width: 480px) {
+  .dungeon-inter-wave-inner {
+    flex-direction: column;
+    align-items: center;
+    padding-left: 12px;
+    padding-right: 12px;
+    text-align: center;
+  }
+
+  .dungeon-inter-wave-copy {
+    width: 100%;
+    align-items: center;
+  }
+
+  .dungeon-inter-wave-copy .bar-label {
+    width: 100%;
+  }
 }
 
 .dungeon-viewport .dungeon-inter-title {
@@ -813,10 +854,10 @@ body {
 }
 
 .dungeon-foot-timer {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: baseline;
   gap: 6px 10px;
   margin-top: 8px;
   padding: 0 4px;
@@ -825,6 +866,13 @@ body {
   margin-right: auto;
   text-align: center;
   line-height: 1.45;
+}
+
+.dungeon-foot-timer-ico {
+  flex-shrink: 0;
+  display: block;
+  opacity: 0.82;
+  filter: drop-shadow(0 0 4px rgba(130, 170, 255, 0.35));
 }
 
 .dungeon-foot-timer-sep {
@@ -3731,6 +3779,16 @@ html.ui-reduce-motion *::after {
 .progress-fill.stamina {
   background: linear-gradient(90deg, #2d5a48, #5cbf8f);
   box-shadow: 0 0 10px rgba(80, 200, 140, 0.35);
+}
+
+#dungeon-pl-hp-wrap.duel-bar-low .progress-fill.player {
+  background: linear-gradient(90deg, #4a1820 0%, #b03038 48%, #e09070 100%);
+  box-shadow: 0 0 12px rgba(255, 90, 70, 0.38);
+}
+
+#dungeon-stamina-wrap.duel-stamina-low .progress-fill.stamina {
+  background: linear-gradient(90deg, #4a3820 0%, #8a6020 50%, #c89840 100%);
+  box-shadow: 0 0 10px rgba(200, 130, 50, 0.42);
 }
 
 .dungeon-inter-wave {

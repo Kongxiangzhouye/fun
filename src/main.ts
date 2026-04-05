@@ -2632,6 +2632,16 @@ function render(): void {
   `;
 
   bindEvents(rb, slots);
+
+  lastMainContentViewKey = viewKeyNow;
+  if (restoreHubScroll) {
+    requestAnimationFrame(() => {
+      const el = document.querySelector(".hub-page-scroll") as HTMLElement | null;
+      if (!el) return;
+      const maxTop = Math.max(0, el.scrollHeight - el.clientHeight);
+      el.scrollTop = Math.min(preservedHubScrollTop, maxTop);
+    });
+  }
 }
 
 function qoLRow(label: string, kind: keyof QoLFlags, desc: string): string {
@@ -4598,6 +4608,17 @@ function loop(): void {
       mapEl.classList.toggle("duel-is-boss", !!(tgt?.isBoss));
       const waveTxt = document.getElementById("duel-wave-pill-txt");
       if (waveTxt) waveTxt.textContent = `第 ${d.wave} 波`;
+      const plHpWrap = document.getElementById("dungeon-pl-hp-wrap");
+      if (plHpWrap) {
+        plHpWrap.classList.toggle(
+          "duel-bar-low",
+          d.playerMax > 0 && d.playerHp / d.playerMax < 0.28,
+        );
+      }
+      const stWrap = document.getElementById("dungeon-stamina-wrap");
+      if (stWrap) {
+        stWrap.classList.toggle("duel-stamina-low", d.stamina < DUNGEON_STAMINA_MAX * 0.22);
+      }
       const comboPill = document.getElementById("duel-combo-pill");
       const tierEl = document.getElementById("duel-combo-tier");
       const weakPill = document.getElementById("duel-weak-pill");

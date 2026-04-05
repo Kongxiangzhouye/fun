@@ -107,6 +107,10 @@ export const UI_DUNGEON_IDLE_MIST = asset("deco-dungeon-idle-mist.svg");
 export const UI_DUEL_WAVE_BADGE = asset("deco-duel-wave-badge.svg");
 /** 阵线对决 · 地图四角装饰（同一素材旋转/镜像） */
 export const UI_DUEL_FRAME_CORNER = asset("deco-duel-corner.svg");
+/** 幻域 · 关间休整画面中央意象 */
+export const UI_DUNGEON_INTER_WAVE_DECO = asset("deco-dungeon-inter-wave.svg");
+/** 幻域底部栏 · 本局用时旁小标 */
+export const UI_DUNGEON_FOOT_TIMER_DECO = asset("deco-dungeon-foot-timer.svg");
 /** 经典幻域模式单选项图标 */
 export const UI_DUNGEON_REALM_CLASSIC = asset("deco-dungeon-realm-classic.svg");
 /** 星漩乱域模式单选项图标 */

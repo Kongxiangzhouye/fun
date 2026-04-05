@@ -50,6 +50,8 @@ import {
   UI_DUNGEON_IDLE_MIST,
   UI_DUEL_WAVE_BADGE,
   UI_DUEL_FRAME_CORNER,
+  UI_DUNGEON_INTER_WAVE_DECO,
+  UI_DUNGEON_FOOT_TIMER_DECO,
   UI_DUNGEON_AFFIX_DECO,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
@@ -179,9 +181,9 @@ function renderDungeonMapHtml(state: GameState): string {
             <div class="dungeon-duel-side dungeon-duel-side--player">
               <span class="dungeon-duel-side-tag">我方</span>
               <div class="dungeon-hud-mini-row"><span>生命</span><span id="dungeon-pl-txt">${fmtNum(Math.max(0, d.playerHp))} / ${fmtNum(d.playerMax)}</span></div>
-              <div class="progress-track dungeon slim hud-mini"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
+              <div class="progress-track dungeon slim hud-mini" id="dungeon-pl-hp-wrap"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
               <div class="dungeon-hud-mini-row"><span>体力</span><span id="dungeon-stamina-txt">${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}</span></div>
-              <div class="progress-track dungeon slim stamina-track hud-mini"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
+              <div class="progress-track dungeon slim stamina-track hud-mini" id="dungeon-stamina-wrap"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
             </div>
             <div class="dungeon-duel-vs-mid">
               <div class="dungeon-duel-elem-icons">
@@ -332,12 +334,17 @@ export function renderDungeonPanel(state: GameState): string {
         d.active
           ? interWaveWait
             ? `<div class="dungeon-active-stack">
-          <div class="dungeon-viewport dungeon-inter-wave">
+            <div class="dungeon-viewport dungeon-inter-wave">
             <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
             <div class="dungeon-inter-wave-inner">
+              <div class="dungeon-inter-wave-art" aria-hidden="true">
+                <img class="dungeon-inter-wave-deco" src="${UI_DUNGEON_INTER_WAVE_DECO}" alt="" width="80" height="80" loading="lazy" />
+              </div>
+              <div class="dungeon-inter-wave-copy">
               <p class="dungeon-inter-title">休整中 · 即将进入第 <strong>${d.wave}</strong> 关</p>
               <div class="bar-label"><span>下一关就绪</span><span id="dungeon-inter-sec">${interSec} 秒</span></div>
               <div class="progress-track cd"><div class="progress-fill cd" id="dungeon-inter-bar-fill" style="width:${interPct}%"></div></div>
+              </div>
             </div>
           </div>
           <p class="dungeon-active-meta hint sm" id="dungeon-active-meta">${formatDungeonInterMeta()}</p>
@@ -388,6 +395,7 @@ export function renderDungeonPanel(state: GameState): string {
           }
         </div>
         <div class="dungeon-foot-timer hint sm" id="dungeon-foot-timer-row" aria-live="polite">
+          <img class="dungeon-foot-timer-ico" src="${UI_DUNGEON_FOOT_TIMER_DECO}" alt="" width="15" height="15" loading="lazy" />
           <span>本局用时 <strong id="dungeon-session-elapsed">—</strong></span>
           <span class="dungeon-foot-timer-sep">·</span>
           <span>预计剩余 <strong id="dungeon-eta-remaining">—</strong></span>
