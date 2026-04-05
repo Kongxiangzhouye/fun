@@ -5943,3 +5943,56 @@ header h1 {
 .chronicle-tr.rarity-SR .chronicle-td-r {
   color: #a8d4ff;
 }
+
+/* —— 养成 · 灵息日历 —— */
+.daily-login-panel .daily-login-streak-line {
+  margin-top: 6px;
+}
+
+.daily-login-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 12px 0 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(80, 160, 180, 0.35);
+  background: linear-gradient(165deg, rgba(12, 28, 36, 0.92), rgba(8, 16, 22, 0.98));
+}
+
+.daily-login-day {
+  flex: 1;
+  text-align: center;
+  font-size: 0.78rem;
+  padding: 6px 0;
+  border-radius: 8px;
+  color: #7a9aa8;
+  border: 1px solid transparent;
+}
+
+.daily-login-day.today {
+  color: #c8f0ff;
+  border-color: rgba(100, 200, 220, 0.55);
+  background: rgba(30, 80, 100, 0.35);
+  box-shadow: 0 0 12px rgba(80, 200, 220, 0.15);
+}
+
+.daily-login-day.today.claimed {
+  border-color: rgba(120, 220, 180, 0.45);
+  background: rgba(30, 90, 70, 0.35);
+}
+
+.daily-login-reward-card {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(70, 140, 160, 0.4);
+  background: linear-gradient(165deg, rgba(14, 32, 40, 0.94), rgba(8, 18, 24, 0.98));
+}
+
+.daily-login-reward-title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  color: #b8e8f0;
+  letter-spacing: 0.04em;
+}

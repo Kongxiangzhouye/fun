@@ -16,6 +16,7 @@ import { tryTuna, tunaCooldownLeftMs } from "./systems/tuna";
 import { checkTrueEnding } from "./trueEnding";
 import { tryAutoSalvageInventory } from "./systems/salvage";
 import { ensureWeeklyBountyWeek, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
+import { tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
 
 const TICK_MAX_DT = 120;
 let autoSalvageAccumSec = 0;
@@ -58,6 +59,7 @@ export function applyTick(state: GameState, now: number): void {
     return;
   }
   ensureWeeklyBountyWeek(state, now);
+  tickDailyLoginCalendar(state, now);
   const elapsedSec = Math.max(0, (now - state.lastTick) / 1000);
   if (elapsedSec <= 0) return;
   const dt = Math.min(TICK_MAX_DT, elapsedSec);

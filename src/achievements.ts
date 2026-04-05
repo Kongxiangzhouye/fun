@@ -153,6 +153,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 450,
     rewardEssence: 22,
   },
+  {
+    id: "login_streak_7",
+    title: "灵息不辍",
+    desc: "登录连签达到 7 日",
+    rewardStones: 280,
+    rewardEssence: 20,
+  },
 ];
 
 function hasUr(state: GameState): boolean {
@@ -222,6 +229,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.spiritGarden?.totalHarvests ?? 0) >= 1;
     case "garden_harvest_30":
       return (state.spiritGarden?.totalHarvests ?? 0) >= 30;
+    case "login_streak_7":
+      return state.dailyStreak >= 7;
     default:
       return false;
   }

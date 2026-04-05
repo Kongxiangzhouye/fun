@@ -63,6 +63,8 @@ export interface SerializedState {
   firstOpenTodayMs?: number;
   dailyStreak?: number;
   lastLoginCalendarDate?: string | null;
+  dailyLoginTickDay?: string | null;
+  dailyLoginClaimedDate?: string | null;
   lastTunaMs?: number;
   vein?: VeinSave;
   pullsThisLife?: number;
@@ -246,6 +248,8 @@ export function serialize(state: GameState): string {
     firstOpenTodayMs: state.firstOpenTodayMs,
     dailyStreak: state.dailyStreak,
     lastLoginCalendarDate: state.lastLoginCalendarDate,
+    dailyLoginTickDay: state.dailyLoginTickDay,
+    dailyLoginClaimedDate: state.dailyLoginClaimedDate,
     lastTunaMs: state.lastTunaMs,
     vein: { ...state.vein },
     pullsThisLife: state.pullsThisLife,
@@ -346,6 +350,8 @@ export function deserialize(json: string): GameState {
   st.firstOpenTodayMs = data.firstOpenTodayMs ?? Date.now();
   st.dailyStreak = data.dailyStreak ?? 1;
   st.lastLoginCalendarDate = data.lastLoginCalendarDate ?? null;
+  st.dailyLoginTickDay = data.dailyLoginTickDay ?? null;
+  st.dailyLoginClaimedDate = data.dailyLoginClaimedDate ?? null;
   st.lastTunaMs = data.lastTunaMs ?? 0;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0, ...(data.vein ?? {}) };
   if (st.vein.gongMing == null || !Number.isFinite(st.vein.gongMing)) st.vein.gongMing = 0;

@@ -5,7 +5,7 @@ import { playerMaxHp } from "./systems/playerCombat";
 import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 
-export const SAVE_VERSION = 26;
+export const SAVE_VERSION = 27;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -120,6 +120,8 @@ export function createInitialState(): GameState {
     firstOpenTodayMs: now,
     dailyStreak: 1,
     lastLoginCalendarDate: day,
+    dailyLoginTickDay: null,
+    dailyLoginClaimedDate: null,
     lastTunaMs: 0,
     skills: emptySkills(),
     activeSkillId: "combat" as SkillId | null,

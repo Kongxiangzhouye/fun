@@ -371,6 +371,10 @@ export interface GameState {
   firstOpenTodayMs: number;
   dailyStreak: number;
   lastLoginCalendarDate: string | null;
+  /** 上次执行灵息日历跨日逻辑的本机日 YYYY-MM-DD */
+  dailyLoginTickDay: string | null;
+  /** 上次领取灵息日历礼的本机日 */
+  dailyLoginClaimedDate: string | null;
 
   /** 吐纳：上次点击时间 ms，0 表示从未 */
   lastTunaMs: number;

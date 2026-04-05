@@ -65,6 +65,8 @@ export const UI_DUNGEON_AFFIX_DECO = asset("deco-dungeon-affix.svg");
 export const UI_HEAD_DAO_MERIDIAN = asset("deco-dao-meridian.svg");
 /** 唤灵通鉴页标题 */
 export const UI_HEAD_CHRONICLE = asset("deco-chronicle-header.svg");
+/** 灵息日历（每日签到）页标题 */
+export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 export const UI_EMPTY_GEAR = asset("art-empty-gear.svg");
 export const UI_EMPTY_PET = asset("art-empty-pet.svg");
 export const UI_EMPTY_UNLOCK = asset("art-empty-unlock.svg");

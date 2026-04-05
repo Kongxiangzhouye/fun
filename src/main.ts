@@ -106,6 +106,8 @@ import {
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderBountyPanel, updateBountyPanelReadouts } from "./ui/bountyPanel";
+import { renderDailyLoginPanel, updateDailyLoginPanelReadouts } from "./ui/dailyLoginPanel";
+import { claimDailyLoginReward, tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
 import { tryBuyDaoMeridian } from "./systems/daoMeridian";
@@ -233,7 +235,7 @@ let veinHelpDocListenerBound = false;
 /** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
 type EstateSub = "idle" | "vein" | "garden";
-type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach" | "bounty" | "chronicle";
+type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach" | "bounty" | "chronicle" | "daily";
 type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive" | "meridian";
 
 let activeHub: HubId = "estate";
@@ -1070,6 +1072,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabBounty) {
     unlockLines.push("「<strong>养成→周常悬赏</strong>」解锁条件：境界≥5，或抽卡≥5。");
   }
+  if (!u.tabDailyLogin) {
+    unlockLines.push("「<strong>养成→灵息·日历</strong>」解锁条件：抽卡≥1，或境界≥2。");
+  }
   if (!u.tabDaoMeridian) {
     unlockLines.push("「<strong>角色→道韵·灵窍</strong>」解锁条件：已轮回，或道韵≥15，或曾贯通灵窍。");
   }
@@ -1654,6 +1659,8 @@ function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
         return u.tabBounty;
       case "chronicle":
         return u.tabChronicle;
+      case "daily":
+        return u.tabDailyLogin;
       default:
         return false;
     }
@@ -1701,6 +1708,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
       mkCult("chronicle", "唤灵·通鉴", u.tabChronicle, cultivateSub === "chronicle", false),
       mkCult("meta", "轮回·永久强化", u.tabMeta, cultivateSub === "meta", false),
       mkCult("bounty", "周常·悬赏", u.tabBounty, cultivateSub === "bounty", false),
+      mkCult("daily", "灵息·日历", u.tabDailyLogin, cultivateSub === "daily", false),
       mkCult("ach", "成就·奖励", u.tabAch, cultivateSub === "ach", false),
     ].join("");
   } else if (activeHub === "character") {
@@ -1748,6 +1756,9 @@ function renderDiscoverabilityHint(): string {
         break;
       case "chronicle":
         text = "常用入口：唤灵通鉴记录最近灵卡唤引；铸灵池不计入列表。";
+        break;
+      case "daily":
+        text = "常用入口：灵息日历按本地日结算连签；每日可领灵石与唤灵髓，与周常悬赏不同轨。";
         break;
       case "pets":
         text = "常用入口：灵宠是全局加成；唤灵入口在底部「抽卡」，成长进度在本页查看。";
@@ -1866,6 +1877,8 @@ function renderHubContent(
           return renderBountyPanel(state, nowMs());
         case "chronicle":
           return renderChroniclePanel(state);
+        case "daily":
+          return renderDailyLoginPanel(state, nowMs());
         default:
           return "";
       }
@@ -2885,6 +2898,29 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   });
 
+  document.body.addEventListener("click", (ev) => {
+    const t0 = (ev.target as HTMLElement | null)?.closest?.("#btn-daily-login-claim") as HTMLElement | null;
+    if (!t0) return;
+    const t = nowMs();
+    if (!claimDailyLoginReward(state, t)) {
+      toast("今日已领取过灵息礼。");
+      return;
+    }
+    tryCompleteAchievements(state);
+    saveGame(state);
+    toast("灵息礼已领取");
+    updateTopResourcePillsAndVigor(totalCardsInPool());
+    const pStr = document.getElementById("ps-streak");
+    if (pStr) pStr.textContent = String(state.dailyStreak);
+    const pAch = document.getElementById("ps-ach");
+    if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+    if (activeHub === "cultivate" && cultivateSub === "daily") {
+      updateDailyLoginPanelReadouts(state, t);
+    } else {
+      render();
+    }
+  });
+
   const readEntryWave = (): number => {
     const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
     const raw = inp?.valueAsNumber;
@@ -3470,6 +3506,9 @@ function loop(): void {
   if (activeHub === "cultivate" && cultivateSub === "bounty") {
     updateBountyPanelReadouts(state, now);
   }
+  if (activeHub === "cultivate" && cultivateSub === "daily") {
+    updateDailyLoginPanelReadouts(state, now);
+  }
   if (getUiUnlocks(state).tabDungeon && state.dungeon.active) {
     const d = state.dungeon;
     /** 仅当正在查看「幻域」页时才补挂载地图；否则地图本就不在 DOM，会误判为缺失而每帧 render */
@@ -3772,6 +3811,7 @@ function init(): void {
   bindMotionUiFx();
   updateModernVisualFx(t);
   const offline = catchUpOffline(state, t);
+  tickDailyLoginCalendar(state, t);
   if (offline.gt(0.01)) {
     saveGame(state);
     queueMicrotask(() => toast(`离线收益：约 ${fmtDecimal(offline)} 灵石`));
