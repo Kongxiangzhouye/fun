@@ -4658,6 +4658,22 @@ function loop(): void {
         const phase = ((d.monsterAttackAccum % hi) + hi) % hi;
         pEn.style.width = `${Math.min(100, (100 * phase) / hi)}%`;
       }
+      const plTrack = document.getElementById("dungeon-duel-pl-gauge-track");
+      const enTrack = document.getElementById("dungeon-duel-en-gauge-track");
+      if (plTrack && tgt && playerHitIntSec > 0) {
+        plTrack.classList.toggle(
+          "duel-gauge-primed",
+          (d.playerAttackAccum / playerHitIntSec) >= 0.82,
+        );
+      } else if (plTrack) {
+        plTrack.classList.remove("duel-gauge-primed");
+      }
+      if (enTrack && tgt && hi > 0) {
+        const ph = ((d.monsterAttackAccum % hi) + hi) % hi;
+        enTrack.classList.toggle("duel-gauge-windup", ph / hi > 0.5);
+      } else if (enTrack) {
+        enTrack.classList.remove("duel-gauge-windup");
+      }
     }
     const mobPct = d.monsterMax > 0 ? Math.min(100, (100 * Math.max(0, d.monsterHp)) / d.monsterMax) : 0;
     const hpPct = d.playerMax > 0 ? Math.min(100, (100 * Math.max(0, d.playerHp)) / d.playerMax) : 0;

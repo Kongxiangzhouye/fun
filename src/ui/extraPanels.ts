@@ -52,6 +52,7 @@ import {
   UI_DUEL_FRAME_CORNER,
   UI_DUNGEON_INTER_WAVE_DECO,
   UI_DUNGEON_FOOT_TIMER_DECO,
+  UI_DUNGEON_PANEL_LIVE_STRIP,
   UI_DUNGEON_AFFIX_DECO,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
@@ -229,11 +230,11 @@ function renderDungeonMapHtml(state: GameState): string {
           <div class="dungeon-duel-gauge-row">
             <div class="dungeon-duel-gauge">
               <span class="dungeon-duel-gauge-lbl"><img class="dungeon-duel-gauge-ico" src="${UI_DUEL_GAUGE_SWORD}" alt="" width="16" height="16" loading="lazy" />剑气</span>
-              <div class="progress-track dungeon duel-gauge"><div class="progress-fill player" id="dungeon-duel-pl-gauge" style="width:0%"></div></div>
+              <div class="progress-track dungeon duel-gauge" id="dungeon-duel-pl-gauge-track"><div class="progress-fill player" id="dungeon-duel-pl-gauge" style="width:0%"></div></div>
             </div>
             <div class="dungeon-duel-gauge">
               <span class="dungeon-duel-gauge-lbl"><img class="dungeon-duel-gauge-ico" src="${UI_DUEL_GAUGE_THREAT}" alt="" width="16" height="16" loading="lazy" />凶煞</span>
-              <div class="progress-track dungeon duel-gauge"><div class="progress-fill enemy" id="dungeon-duel-en-gauge" style="width:0%"></div></div>
+              <div class="progress-track dungeon duel-gauge" id="dungeon-duel-en-gauge-track"><div class="progress-fill enemy" id="dungeon-duel-en-gauge" style="width:0%"></div></div>
             </div>
           </div>
         </div>
@@ -314,8 +315,15 @@ export function renderDungeonPanel(state: GameState): string {
     <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
   </div>`;
 
+  const panelRunClass = d.active
+    ? interWaveWait
+      ? " dungeon-panel--run dungeon-panel--inter-wave"
+      : " dungeon-panel--run dungeon-panel--live-fight"
+    : "";
+  const panelRunStyle = d.active ? ` style="--dungeon-live-strip:url('${UI_DUNGEON_PANEL_LIVE_STRIP}')"` : "";
+
   return `
-    <section class="panel dungeon-strip-panel">
+    <section class="panel dungeon-strip-panel${panelRunClass}"${panelRunStyle}>
       <div class="panel-title-art-row">
         <img class="panel-title-art-icon" src="${UI_HEAD_DUNGEON}" alt="" width="28" height="28" loading="lazy" />
         <h2>幻域</h2>

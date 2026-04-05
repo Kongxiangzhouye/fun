@@ -307,6 +307,72 @@ body {
   border-radius: 14px;
 }
 
+.dungeon-strip-panel.dungeon-panel--run {
+  position: relative;
+  border: 1px solid rgba(100, 140, 200, 0.28);
+  background: linear-gradient(180deg, rgba(26, 34, 54, 0.42) 0%, transparent 52px);
+  box-shadow:
+    0 0 0 1px rgba(80, 120, 200, 0.12),
+    0 10px 36px rgba(0, 0, 0, 0.28);
+}
+
+.dungeon-strip-panel.dungeon-panel--run::before {
+  content: "";
+  display: block;
+  height: 5px;
+  margin: -2px -12px 10px -12px;
+  border-radius: 14px 14px 0 0;
+  background-image:
+    var(--dungeon-live-strip, none),
+    linear-gradient(90deg, transparent, rgba(130, 170, 255, 0.22), transparent);
+  background-size: 100% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  opacity: 0.92;
+}
+
+.dungeon-strip-panel.dungeon-panel--live-fight {
+  animation: dungeon-panel-live-glow 2.8s ease-in-out infinite;
+}
+
+.dungeon-strip-panel.dungeon-panel--inter-wave {
+  animation: dungeon-panel-inter-glow 3.6s ease-in-out infinite;
+}
+
+@keyframes dungeon-panel-live-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(100, 140, 220, 0.22),
+      0 8px 28px rgba(0, 0, 0, 0.22);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(130, 180, 255, 0.4),
+      0 12px 42px rgba(40, 90, 180, 0.2);
+  }
+}
+
+@keyframes dungeon-panel-inter-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(120, 160, 200, 0.2),
+      0 6px 24px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(160, 195, 235, 0.32),
+      0 10px 34px rgba(60, 100, 160, 0.14);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dungeon-strip-panel.dungeon-panel--live-fight,
+  .dungeon-strip-panel.dungeon-panel--inter-wave {
+    animation: none;
+  }
+}
+
 .dungeon-map-stage {
   position: relative;
   margin: 0 auto;
@@ -4901,6 +4967,24 @@ html.ui-reduce-motion *::after {
 .progress-track.duel-gauge {
   flex: 1;
   height: 10px;
+}
+
+.progress-track.duel-gauge.duel-gauge-primed {
+  box-shadow: 0 0 10px rgba(255, 200, 120, 0.35);
+  border-radius: 4px;
+}
+
+.progress-track.duel-gauge.duel-gauge-primed .progress-fill.player {
+  box-shadow: 0 0 12px rgba(255, 210, 140, 0.55);
+}
+
+.progress-track.duel-gauge.duel-gauge-windup {
+  box-shadow: 0 0 10px rgba(255, 120, 90, 0.32);
+  border-radius: 4px;
+}
+
+.progress-track.duel-gauge.duel-gauge-windup .progress-fill.enemy {
+  box-shadow: 0 0 12px rgba(255, 100, 80, 0.48);
 }
 
 .dungeon-map.dungeon-map--vortex {

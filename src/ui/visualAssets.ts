@@ -111,6 +111,8 @@ export const UI_DUEL_FRAME_CORNER = asset("deco-duel-corner.svg");
 export const UI_DUNGEON_INTER_WAVE_DECO = asset("deco-dungeon-inter-wave.svg");
 /** 幻域底部栏 · 本局用时旁小标 */
 export const UI_DUNGEON_FOOT_TIMER_DECO = asset("deco-dungeon-foot-timer.svg");
+/** 幻域面板 · 进本进行中顶缘装饰条（CSS 平铺） */
+export const UI_DUNGEON_PANEL_LIVE_STRIP = asset("deco-dungeon-panel-live.svg");
 /** 经典幻域模式单选项图标 */
 export const UI_DUNGEON_REALM_CLASSIC = asset("deco-dungeon-realm-classic.svg");
 /** 星漩乱域模式单选项图标 */
