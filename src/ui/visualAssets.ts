@@ -48,6 +48,8 @@ export const UI_GEAR_PITY_SIGIL = asset("gear-pity-sigil.svg");
 
 /** 顶栏标题旁灵息球、面板角饰、全页星点底（自绘 SVG） */
 export const UI_TITLE_SPIRIT = asset("title-spirit.svg");
+/** 存档页 · 下载备份文件按钮 */
+export const UI_SAVE_DOWNLOAD_DECO = asset("save-download-deco.svg");
 export const UI_PANEL_CORNER = asset("panel-corner.svg");
 export const UI_BG_SPARKLES = asset("bg-sparkles.svg");
 /** 离线收益摘要条左侧装饰 */
