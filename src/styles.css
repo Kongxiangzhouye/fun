@@ -416,6 +416,43 @@ body {
   max-width: 480px;
 }
 
+/* 战斗中：底栏不再重复「生命」（对阵条与战报已足够） */
+.dungeon-panel--live-fight .dungeon-foot-chip--hp {
+  display: none;
+}
+
+/* 宽屏：战场 + 战报双栏，避免中间一条、两侧空 */
+@media (min-width: 900px) {
+  .dungeon-strip-panel.dungeon-panel--run {
+    max-width: min(980px, 96vw);
+  }
+
+  .dungeon-map-stage {
+    max-width: min(980px, 100%);
+  }
+
+  .dungeon-active-stack--live {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(260px, 360px);
+    gap: 14px 20px;
+    align-items: start;
+  }
+
+  .dungeon-active-stack--live .dungeon-viewport.dungeon-live-combat {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .dungeon-active-stack--live .dungeon-active-meta--detail,
+  .dungeon-active-stack--live .dungeon-active-meta--brief {
+    grid-column: 2;
+    margin-top: 0 !important;
+    max-height: min(72vh, 560px);
+    overflow-y: auto;
+    align-self: stretch;
+  }
+}
+
 /* 战斗中 / 休整：固定视口高度，避免换波时整块区域跳动 */
 .dungeon-active-stack {
   width: 100%;
@@ -903,16 +940,6 @@ body {
   text-align: right;
 }
 
-@media (max-width: 420px) {
-  .dungeon-duel-vs-mid {
-    font-size: 0.72rem;
-    margin-top: 22px;
-  }
-  .dungeon-duel-side-tag {
-    letter-spacing: 0.18em;
-  }
-}
-
 .dungeon-hud-mini-row {
   display: flex;
   justify-content: space-between;
@@ -956,6 +983,233 @@ body {
   background: linear-gradient(90deg, rgba(90, 65, 38, 0.22), rgba(0, 0, 0, 0.2));
   border-color: rgba(160, 140, 100, 0.22);
   color: rgba(210, 200, 185, 0.9);
+}
+
+.dungeon-active-meta--brief {
+  display: none;
+}
+
+/* 机制说明在战场外，避免与中央特效/飘字叠在一起 */
+.dungeon-duel-tagline-outside .dungeon-duel-tagline-compact {
+  display: none;
+}
+
+/* 幻域·阵线对决：手机竖屏 — 纵向信息优先级、可读战报、加大触控与条带高度 */
+@media (max-width: 640px) {
+  .hub-page-scroll {
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+  }
+
+  .dungeon-strip-panel {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .dungeon-strip-panel.dungeon-panel--live-fight {
+    --dungeon-viewport-h: min(48vh, 440px);
+  }
+
+  .dungeon-map-stage {
+    max-width: none;
+  }
+
+  .dungeon-map-wrap {
+    padding: 8px;
+  }
+
+  .dungeon-map.dungeon-duel-stage {
+    aspect-ratio: 10 / 15;
+    max-height: min(58vh, 520px);
+    min-height: 280px;
+  }
+
+  .dungeon-duel-vs-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 48px 5px 6px 5px;
+    max-height: none;
+  }
+
+  .dungeon-duel-side {
+    max-width: none;
+    padding: 8px 10px;
+  }
+
+  .dungeon-duel-side-tag {
+    font-size: 0.65rem;
+    margin-bottom: 3px;
+  }
+
+  .dungeon-hud-mini-row {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(210, 218, 240, 0.95);
+  }
+
+  .progress-track.hud-mini {
+    height: 7px;
+  }
+
+  .dungeon-duel-vs-mid {
+    margin-top: 0;
+    align-self: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 2px;
+  }
+
+  .dungeon-duel-elem-pills {
+    max-width: none;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .duel-elem-pill {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+  }
+
+  .dungeon-duel-elem-ico {
+    width: 26px;
+    height: 26px;
+  }
+
+  .dungeon-duel-center {
+    top: 54%;
+  }
+
+  .dungeon-duel-fx-core {
+    top: 54%;
+  }
+
+  .dungeon-duel-stage .dungeon-duel-engage-ring {
+    width: 108px;
+    height: 108px;
+    margin: -54px 0 0 -54px;
+  }
+
+  .dungeon-duel-stage .fx-aoe-ring {
+    width: 92px;
+    height: 92px;
+    margin: -46px 0 0 -46px;
+  }
+
+  .dungeon-duel-deco {
+    width: 72px !important;
+    height: auto !important;
+  }
+
+  .dungeon-duel-tagline-outside .dungeon-duel-tagline-full {
+    display: none;
+  }
+
+  .dungeon-duel-tagline-outside .dungeon-duel-tagline-compact {
+    display: block;
+    max-width: none;
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .dungeon-duel-momentum {
+    bottom: 21%;
+    gap: 6px;
+    max-width: 98%;
+  }
+
+  .duel-mom-pill {
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    min-height: 36px;
+    box-sizing: border-box;
+    align-items: center;
+    display: inline-flex;
+  }
+
+  .dungeon-duel-dodge-chip {
+    bottom: 12%;
+    font-size: 0.78rem;
+    max-width: 96%;
+    font-weight: 600;
+  }
+
+  .dungeon-duel-gauge-row {
+    bottom: 1%;
+    width: 96%;
+    gap: 6px;
+  }
+
+  .dungeon-duel-gauge-lbl {
+    font-size: 0.82rem;
+    min-width: 3em;
+  }
+
+  .progress-track.duel-gauge {
+    height: 12px;
+  }
+
+  .dungeon-map-leave-btn {
+    left: 6px;
+    top: 6px;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 0.82rem;
+    padding: 6px 12px;
+  }
+
+  .dungeon-duel-wave-pill {
+    font-size: 0.78rem;
+    padding: 5px 12px 5px 9px;
+  }
+
+  .dungeon-active-meta--detail.dungeon-active-meta--combat {
+    display: none !important;
+  }
+
+  .dungeon-active-meta--brief.dungeon-active-meta--combat {
+    display: block !important;
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    font-weight: 500;
+    color: rgba(210, 218, 240, 0.95);
+  }
+
+  .dungeon-foot-bar-inner {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .dungeon-foot-chip {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+
+  .dungeon-affix-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .dungeon-panel-title-cluster {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .dungeon-panel-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .dungeon-battle-readiness {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .dungeon-map-help-btn {
@@ -4977,7 +5231,7 @@ html.ui-reduce-motion *::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   pointer-events: none;
   text-align: center;
 }
@@ -4987,10 +5241,18 @@ html.ui-reduce-motion *::after {
   opacity: 0.92;
 }
 
-.dungeon-duel-tagline {
-  max-width: 22em;
-  margin: 0;
-  color: rgba(180, 200, 230, 0.88);
+.dungeon-duel-tagline-outside {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(6, 10, 18, 0.92);
+  border: 1px solid rgba(72, 92, 128, 0.5);
+  color: rgba(185, 200, 230, 0.95);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dungeon-duel-momentum {

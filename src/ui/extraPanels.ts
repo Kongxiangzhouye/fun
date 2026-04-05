@@ -135,6 +135,22 @@ export function formatDungeonActiveMeta(state: GameState, now: number): string {
   return lines.join("\n");
 }
 
+/** 手机端战报：少行、字号可读，与 formatDungeonActiveMeta 数据一致 */
+export function formatDungeonActiveMetaBrief(state: GameState, now: number): string {
+  const d = state.dungeon;
+  const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
+  const fmtSessEss = (n: number) => (n >= 200 ? n.toFixed(1) : n.toFixed(2));
+  const waveEssF = essenceRewardTotalFloat(d.wave, state, d.wave % 5 === 0, d.rewardModeRepeat);
+  const tgt = d.mobs.find((m) => m.hp > 0);
+  const iframesLeft = now < d.dodgeIframesUntil ? Math.ceil((d.dodgeIframesUntil - now) / 1000) : 0;
+  const dodgeTip = `点屏闪避 · 耗体${DUNGEON_DODGE_STAMINA_COST} · 化劲${(DUNGEON_DODGE_IFRAMES_MS / 1000).toFixed(1)}秒${iframesLeft > 0 ? ` · 余${iframesLeft}秒` : ""}`;
+  const line1 = `第${d.wave}波 · 击溃${d.sessionKills} · 髓+${fmtSessEss(d.sessionEssence)} · 累计${d.totalWavesCleared}波`;
+  const line2 = tgt
+    ? `灵压 ${fmtN(Math.max(0, tgt.hp))}/${fmtN(tgt.maxHp)}${tgt.isBoss ? " · 首领" : ""} · 本关髓≈${waveEssF.toFixed(1)}`
+    : "";
+  return [line1, line2, dodgeTip].filter((s) => s.length > 0).join("\n");
+}
+
 export function formatDungeonInterMeta(): string {
   return "本关结算完成。休整后进入下一关。剑气/凶煞双轴读条，出手与受击会有短暂硬直。";
 }
@@ -230,7 +246,6 @@ function renderDungeonMapHtml(state: GameState): string {
           ${floatOverlay}
           <div class="dungeon-duel-center">
             <img class="dungeon-duel-deco" src="${UI_DUNGEON_DUEL_DECO}" alt="" width="100" height="100" loading="lazy" />
-            <p class="hint sm dungeon-duel-tagline">连击叠伤 · 随机破绽 · 战意爆发 · 灵脉共鸣 — 剑气/凶煞与结算同帧</p>
           </div>
           <div class="dungeon-duel-momentum" id="dungeon-duel-momentum" aria-live="polite">
             <span class="duel-mom-pill duel-mom-pill--tier" id="duel-combo-tier">蓄势</span>
@@ -250,6 +265,10 @@ function renderDungeonMapHtml(state: GameState): string {
             </div>
           </div>
         </div>
+        <p class="hint sm dungeon-duel-tagline-outside" role="note">
+          <span class="dungeon-duel-tagline-full">连击叠伤 · 随机破绽 · 战意爆发 · 灵脉共鸣 — 剑气/凶煞与结算同帧</span>
+          <span class="dungeon-duel-tagline-compact">连击 · 破绽 · 战意 · 剑气/凶煞同帧</span>
+        </p>
       </div>
     </div>`;
 }
@@ -390,11 +409,12 @@ export function renderDungeonPanel(state: GameState): string {
           </div>
           <p class="dungeon-active-meta hint sm dungeon-active-meta--inter" id="dungeon-active-meta">${formatDungeonInterMeta()}</p>
         </div>`
-            : `<div class="dungeon-active-stack">
+            : `<div class="dungeon-active-stack dungeon-active-stack--live">
           <div class="dungeon-viewport dungeon-live-combat" id="dungeon-live-root">
           ${renderDungeonMapHtml(state)}
           </div>
-          <p class="dungeon-active-meta hint sm dungeon-active-meta--combat" id="dungeon-active-meta">${formatDungeonActiveMeta(state, now)}</p>
+          <p class="dungeon-active-meta hint sm dungeon-active-meta--combat dungeon-active-meta--detail" id="dungeon-active-meta">${formatDungeonActiveMeta(state, now)}</p>
+          <p class="dungeon-active-meta hint sm dungeon-active-meta--combat dungeon-active-meta--brief" id="dungeon-active-meta-brief">${formatDungeonActiveMetaBrief(state, now)}</p>
         </div>`
           : sanctuaryIdle
             ? `<div class="dungeon-idle-sanctuary dungeon-stage-fill">
