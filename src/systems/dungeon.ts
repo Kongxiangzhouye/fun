@@ -238,6 +238,11 @@ function saveWaveCheckpoint(state: GameState): void {
     spawnX: d.waveEntrySpawnX,
     spawnY: d.waveEntrySpawnY,
     rewardModeRepeat: d.rewardModeRepeat,
+    duelComboStacks: d.duelComboStacks,
+    duelWeakUntilMs: d.duelWeakUntilMs,
+    duelWeakNextAtMs: d.duelWeakNextAtMs,
+    duelFervor: d.duelFervor,
+    duelElemSurgeCounter: d.duelElemSurgeCounter,
   };
 }
 
@@ -265,7 +270,34 @@ function restoreWaveFromCheckpoint(state: GameState, ck: WaveCheckpoint): void {
   d.waveEntrySpawnX = ck.spawnX;
   d.waveEntrySpawnY = ck.spawnY;
   d.rewardModeRepeat = ck.rewardModeRepeat ?? false;
+  d.duelComboStacks = ck.duelComboStacks ?? 0;
+  d.duelWeakUntilMs = ck.duelWeakUntilMs ?? 0;
+  d.duelWeakNextAtMs = ck.duelWeakNextAtMs ?? 0;
+  d.duelFervor = ck.duelFervor ?? 0;
+  d.duelElemSurgeCounter = ck.duelElemSurgeCounter ?? 0;
+  if (d.duelWeakNextAtMs <= 0) d.duelWeakNextAtMs = Date.now() + 1500;
   syncBars(state, d);
+}
+
+/** 阵线对决趣味层：连击、破绽、战意、克制灵脉（期望 DPS 小幅上浮，偏保守） */
+const DUEL_COMBO_MAX = 12;
+const DUEL_COMBO_PER_STACK = 0.016;
+const DUEL_WEAK_DMG_MULT = 1.17;
+const DUEL_WEAK_MS = 2300;
+const DUEL_FERVOR_PER_HIT = 7;
+const DUEL_FERVOR_MAX = 100;
+const DUEL_FERVOR_MULT = 1.22;
+const DUEL_ELEM_ADV = 1.27;
+const DUEL_SURGE_EVERY = 4;
+const DUEL_SURGE_RATIO = 0.11;
+
+function initDuelBattleState(state: GameState, now: number): void {
+  const d = state.dungeon;
+  d.duelComboStacks = 0;
+  d.duelWeakUntilMs = 0;
+  d.duelFervor = 0;
+  d.duelElemSurgeCounter = 0;
+  d.duelWeakNextAtMs = now + 900 + nextRand01(state) * 3200;
 }
 
 function playerMoveSpeed(state: GameState): number {
@@ -521,7 +553,7 @@ export interface DungeonDamageFloat {
   nx: number;
   ny: number;
   text: string;
-  cls: "dmg-out" | "dmg-in" | "dmg-miss";
+  cls: "dmg-out" | "dmg-in" | "dmg-miss" | "dmg-special";
 }
 
 const damageFloatQueue: DungeonDamageFloat[] = [];
@@ -532,7 +564,7 @@ function pushDamageFloat(
   nx: number,
   ny: number,
   text: string,
-  cls: "dmg-out" | "dmg-in" | "dmg-miss",
+  cls: "dmg-out" | "dmg-in" | "dmg-miss" | "dmg-special",
 ): void {
   damageFloatQueue.push({ nx, ny, text, cls });
 }
@@ -1369,6 +1401,7 @@ function spawnMobsForWave(state: GameState): void {
   d.waveEntrySpawnX = d.playerX;
   d.waveEntrySpawnY = d.playerY;
   syncBars(state, d);
+  initDuelBattleState(state, Date.now());
 }
 
 export function canEnterDungeon(state: GameState, now: number): boolean {
@@ -1543,6 +1576,22 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
     d.dodgeQueued = false;
   }
 
+  if (d.playerAttackTargetMobId !== 0 && d.playerAttackTargetMobId !== target.id) {
+    d.duelComboStacks = 0;
+    d.duelElemSurgeCounter = 0;
+  }
+
+  if (d.duelWeakUntilMs <= now) {
+    if (d.duelWeakNextAtMs <= 0) d.duelWeakNextAtMs = now + 800 + nextRand01(state) * 2800;
+    if (now >= d.duelWeakNextAtMs) {
+      d.duelWeakNextAtMs = now + 7200 + nextRand01(state) * 5200;
+      if (nextRand01(state) < 0.35) {
+        d.duelWeakUntilMs = now + DUEL_WEAK_MS;
+        pushDamageFloat(0.52, 0.35, "破绽", "dmg-special");
+      }
+    }
+  }
+
   d.playerAttackTargetMobId = target.id;
   const hitInterval = Math.max(0.35, target.attackInterval ?? DUNGEON_MONSTER_HIT_INTERVAL);
 
@@ -1560,10 +1609,31 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
     const fy = 0.42;
     if (nextRand01(state) < mobDodge) {
       pushDamageFloat(fx, fy, "偏斜", "dmg-miss");
+      d.duelComboStacks = 0;
+      d.duelElemSurgeCounter = 0;
     } else {
       const critRoll = nextRand01(state) < cc ? cm : 1;
-      const hitDmg = baseAtk * mdMul * critRoll;
+      const weakMul = now < d.duelWeakUntilMs ? DUEL_WEAK_DMG_MULT : 1;
+      d.duelComboStacks = Math.min(DUEL_COMBO_MAX, d.duelComboStacks + 1);
+      const comboMul = 1 + DUEL_COMBO_PER_STACK * d.duelComboStacks;
+      let fervorMul = 1;
+      if (d.duelFervor >= DUEL_FERVOR_MAX) {
+        d.duelFervor -= DUEL_FERVOR_MAX;
+        fervorMul = DUEL_FERVOR_MULT;
+        pushDamageFloat(0.44, 0.33, "战意", "dmg-special");
+      }
+      let hitDmg = baseAtk * mdMul * critRoll * comboMul * weakMul * fervorMul;
+      if (mdMul >= DUEL_ELEM_ADV) {
+        d.duelElemSurgeCounter += 1;
+        if (d.duelElemSurgeCounter % DUEL_SURGE_EVERY === 0) {
+          hitDmg += baseAtk * mdMul * critRoll * DUEL_SURGE_RATIO;
+          pushDamageFloat(0.46, 0.52, "灵脉", "dmg-special");
+        }
+      } else {
+        d.duelElemSurgeCounter = 0;
+      }
       target.hp -= hitDmg;
+      d.duelFervor = Math.min(DUEL_FERVOR_MAX, d.duelFervor + DUEL_FERVOR_PER_HIT);
       pushDamageFloat(fx, fy, String(Math.max(1, Math.round(hitDmg))), "dmg-out");
       if (target.hp <= 0) {
         if (registerDungeonKill(state, d, target, now)) {

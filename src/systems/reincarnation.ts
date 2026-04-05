@@ -86,6 +86,11 @@ export function performReincarnate(state: GameState): void {
     rewardModeRepeat: false,
     autoEnterConsumed: false,
     sessionEnterAtMs: 0,
+    duelComboStacks: 0,
+    duelWeakUntilMs: 0,
+    duelWeakNextAtMs: 0,
+    duelFervor: 0,
+    duelElemSurgeCounter: 0,
   };
   state.lingSha = 0;
   state.xuanTie = 0;

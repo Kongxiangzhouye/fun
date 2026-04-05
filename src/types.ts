@@ -193,6 +193,12 @@ export interface WaveCheckpoint {
   spawnY: number;
   /** 接续时是否复刷关（影响唤灵髓倍率） */
   rewardModeRepeat?: boolean;
+  /** 阵线对决暂离：连击/破绽/战意（与 DungeonState 同名场一致） */
+  duelComboStacks?: number;
+  duelWeakUntilMs?: number;
+  duelWeakNextAtMs?: number;
+  duelFervor?: number;
+  duelElemSurgeCounter?: number;
 }
 
 export interface DungeonState {
@@ -273,6 +279,16 @@ export interface DungeonState {
   autoEnterConsumed: boolean;
   /** 本次进本时刻（ms），用于本局用时；进本时写入，暂离/阵亡出本后保留至下次进本覆盖 */
   sessionEnterAtMs: number;
+  /** 阵线对决：连击层数（命中累加，偏斜或换目标清零） */
+  duelComboStacks: number;
+  /** 破绽窗口结束时间（ms）；≤now 表示未激活 */
+  duelWeakUntilMs: number;
+  /** 下次尝试触发破绽的时间（ms） */
+  duelWeakNextAtMs: number;
+  /** 战意 0–100，满额下一击消耗并增伤 */
+  duelFervor: number;
+  /** 克制命中计数，用于灵脉共鸣 */
+  duelElemSurgeCounter: number;
 }
 
 /** 界面偏好（写入存档；不影响玩法数值） */

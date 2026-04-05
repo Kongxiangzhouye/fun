@@ -154,7 +154,12 @@ function renderDungeonMapHtml(state: GameState): string {
           ${bossHud}
           <div class="dungeon-duel-center">
             <img class="dungeon-duel-deco" src="${UI_DUNGEON_DUEL_DECO}" alt="" width="100" height="100" loading="lazy" />
-            <p class="hint sm dungeon-duel-tagline">剑气满则出伤 · 凶煞满则承击 · 数值与期望 DPS 对齐</p>
+            <p class="hint sm dungeon-duel-tagline">连击叠伤 · 随机破绽 · 战意爆发 · 克制灵脉 — 与剑气/凶煞同帧验证</p>
+          </div>
+          <div class="dungeon-duel-momentum" id="dungeon-duel-momentum" aria-live="polite">
+            <span class="duel-mom-pill" id="duel-combo-pill">连击 0</span>
+            <span class="duel-mom-pill duel-weak-pill" id="duel-weak-pill" hidden>破绽</span>
+            <span class="duel-mom-pill">战意 <span id="duel-fervor-pct">0</span>%</span>
           </div>
           <div class="dungeon-duel-gauge-row">
             <div class="dungeon-duel-gauge">

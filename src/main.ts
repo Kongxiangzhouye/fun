@@ -4519,6 +4519,13 @@ function loop(): void {
       mapEl.classList.toggle("is-aoe", d.inMelee && d.attackVisualMode === "aoe");
       mapEl.classList.toggle("is-single", false);
       mapEl.classList.toggle("in-combat", d.inMelee);
+      mapEl.classList.toggle("duel-weak-active", now < d.duelWeakUntilMs);
+      const comboPill = document.getElementById("duel-combo-pill");
+      const weakPill = document.getElementById("duel-weak-pill");
+      const fervPct = document.getElementById("duel-fervor-pct");
+      if (comboPill) comboPill.textContent = `连击 ${d.duelComboStacks}`;
+      if (weakPill) weakPill.hidden = now >= d.duelWeakUntilMs;
+      if (fervPct) fervPct.textContent = String(Math.min(100, Math.floor(d.duelFervor)));
       const atkSpd = playerDungeonAttackSpeedMult(state);
       const playerHitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
       mapEl.style.setProperty("--dungeon-player-hit-interval", `${playerHitIntSec}s`);

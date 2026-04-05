@@ -243,6 +243,14 @@ function normalizeDungeonState(st: GameState): void {
   if (d.sessionEnterAtMs == null || !Number.isFinite(d.sessionEnterAtMs)) d.sessionEnterAtMs = 0;
   /** 旧存档进本中无计时：从当前时刻起算，避免本局用时为 0 */
   if (d.active && d.sessionEnterAtMs <= 0) d.sessionEnterAtMs = Date.now();
+  if (d.duelComboStacks == null || !Number.isFinite(d.duelComboStacks)) d.duelComboStacks = 0;
+  d.duelComboStacks = Math.max(0, Math.floor(d.duelComboStacks));
+  if (d.duelWeakUntilMs == null || !Number.isFinite(d.duelWeakUntilMs)) d.duelWeakUntilMs = 0;
+  if (d.duelWeakNextAtMs == null || !Number.isFinite(d.duelWeakNextAtMs)) d.duelWeakNextAtMs = 0;
+  if (d.duelFervor == null || !Number.isFinite(d.duelFervor)) d.duelFervor = 0;
+  d.duelFervor = Math.max(0, Math.min(100, d.duelFervor));
+  if (d.duelElemSurgeCounter == null || !Number.isFinite(d.duelElemSurgeCounter)) d.duelElemSurgeCounter = 0;
+  d.duelElemSurgeCounter = Math.max(0, Math.floor(d.duelElemSurgeCounter));
 }
 
 function normalizePetsState(st: GameState): void {
