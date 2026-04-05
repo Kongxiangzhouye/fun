@@ -11,6 +11,8 @@ export function getUiUnlocks(state: GameState): {
   /** 首次唤引后再开放十连，减轻开局信息量 */
   gachaTenUnlocked: boolean;
   tabVein: boolean;
+  /** 灵府·灵田：境界与唤引达一定进度 */
+  tabGarden: boolean;
   tabCodex: boolean;
   tabMeta: boolean;
   tabAch: boolean;
@@ -45,6 +47,7 @@ export function getUiUnlocks(state: GameState): {
     gachaTenUnlocked: pulls >= 1 || rl >= 3 || state.qoL.tenPull,
     /** 首次唤引或破境二重即可见；引导步骤 6–7 也必须可见（勿依赖 tutorialStep===0） */
     tabVein: inVeinTutorial || pulls >= 1 || rl >= 2,
+    tabGarden: pulls >= 1 && rl >= 4,
     tabCodex: pulls >= 5 || rl >= 4,
     tabMeta: rl >= 18 || state.reincarnations >= 1,
     tabAch: rl >= 6 || pulls >= 15,

@@ -139,6 +139,20 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 120,
     rewardEssence: 25,
   },
+  {
+    id: "garden_first_harvest",
+    title: "灵田初收",
+    desc: "在灵府灵田完成 1 次收获",
+    rewardStones: 100,
+    rewardEssence: 8,
+  },
+  {
+    id: "garden_harvest_30",
+    title: "畦间熟手",
+    desc: "灵田累计收获 30 次",
+    rewardStones: 450,
+    rewardEssence: 22,
+  },
 ];
 
 function hasUr(state: GameState): boolean {
@@ -204,6 +218,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dungeon.totalWavesCleared >= 40;
     case "pet_first_feed":
       return anyPetOwned(state);
+    case "garden_first_harvest":
+      return (state.spiritGarden?.totalHarvests ?? 0) >= 1;
+    case "garden_harvest_30":
+      return (state.spiritGarden?.totalHarvests ?? 0) >= 30;
     default:
       return false;
   }

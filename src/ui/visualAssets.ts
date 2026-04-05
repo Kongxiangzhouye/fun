@@ -2,7 +2,7 @@
  * 本地 PNG（public/assets/ui），构建后由 Vite 原样输出。
  * 图标来源：Twemoji（CC-BY 4.0）https://github.com/twitter/twemoji
  */
-import type { Element, PetId, Rarity } from "../types";
+import type { Element, GardenCropId, PetId, Rarity } from "../types";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -57,9 +57,17 @@ export const UI_HEAD_GEAR = asset("deco-gear-header.svg");
 export const UI_HEAD_PET = asset("deco-pet-header.svg");
 export const UI_HEAD_STATS = asset("deco-stats-header.svg");
 export const UI_HEAD_COMBAT = asset("deco-combat-header.svg");
+export const UI_HEAD_GARDEN = asset("deco-garden-header.svg");
 export const UI_EMPTY_GEAR = asset("art-empty-gear.svg");
 export const UI_EMPTY_PET = asset("art-empty-pet.svg");
 export const UI_EMPTY_UNLOCK = asset("art-empty-unlock.svg");
+
+/** 灵田作物图标（自绘 SVG） */
+export const GARDEN_CROP_IMG: Record<GardenCropId, string> = {
+  qing_grass: asset("garden-crop-qing.svg"),
+  cloud_shroom: asset("garden-crop-cloud.svg"),
+  jade_mist: asset("garden-crop-jade.svg"),
+};
 
 /** 灵宠立绘（SVG） */
 export const PET_PORTRAIT: Record<PetId, string> = {

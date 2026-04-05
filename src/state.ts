@@ -2,8 +2,9 @@ import type { GameState, OwnedCard, SkillId } from "./types";
 import { DECK_SIZE, DUNGEON_STAMINA_MAX } from "./types";
 import { initRng, rollNewRngSeed } from "./rng";
 import { playerMaxHp } from "./systems/playerCombat";
+import { emptyGardenPlots } from "./systems/spiritGarden";
 
-export const SAVE_VERSION = 22;
+export const SAVE_VERSION = 23;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -127,6 +128,7 @@ export function createInitialState(): GameState {
     nextGearInstanceId: 1,
     pets: {},
     petPullsTotal: 0,
+    spiritGarden: { plots: emptyGardenPlots(), totalHarvests: 0 },
     combatHpCurrent: 100,
     dungeonSanctuaryMode: false,
     dungeonPortalTargetWave: 0,

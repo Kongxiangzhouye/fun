@@ -5563,3 +5563,101 @@ header h1 {
     opacity: 1;
   }
 }
+
+/* —— 灵府 · 灵田 —— */
+.spirit-garden-panel .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.spirit-garden-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.spirit-garden-plot {
+  padding: 12px 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(90, 160, 120, 0.35);
+  background: linear-gradient(165deg, rgba(18, 32, 28, 0.92), rgba(10, 16, 14, 0.98));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.spirit-garden-plot-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  margin-bottom: 8px;
+}
+
+.spirit-garden-plot-empty {
+  opacity: 0.85;
+}
+
+.spirit-garden-plot .garden-plot-soil {
+  opacity: 0.55;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
+.spirit-garden-plot .garden-crop-art {
+  filter: drop-shadow(0 2px 8px rgba(40, 120, 80, 0.35));
+}
+
+.garden-crop-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: #d8f5e4;
+  letter-spacing: 0.06em;
+}
+
+.garden-grow-bar-wrap {
+  margin: 8px 0 6px;
+}
+
+.garden-grow-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid rgba(80, 140, 100, 0.35);
+}
+
+.garden-grow-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3fa87a, #8fe8b8);
+  transition: width 0.35s ease;
+}
+
+.spirit-garden-plant-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.garden-crop-select {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(80, 120, 100, 0.5);
+  background: rgba(8, 14, 12, 0.9);
+  color: #d0e8dc;
+  font-size: 0.82rem;
+}
+
+.spirit-garden-plot .garden-eta-line {
+  margin-bottom: 8px;
+}

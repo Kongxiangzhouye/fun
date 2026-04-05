@@ -35,6 +35,16 @@ export interface PetProgress {
   xp: number;
 }
 
+/** 灵田作物 id */
+export type GardenCropId = "qing_grass" | "cloud_shroom" | "jade_mist";
+
+/** 洞府灵田：时间制种植，轮回不重置 */
+export interface SpiritGardenState {
+  plots: Array<{ crop: GardenCropId | null; plantedAtMs: number }>;
+  /** 累计收获次数（成就） */
+  totalHarvests: number;
+}
+
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */
 export type GearStatKey =
   | "life_flat"
@@ -354,6 +364,9 @@ export interface GameState {
   pets: Partial<Record<PetId, PetProgress>>;
   /** 累计唤灵次数（统计） */
   petPullsTotal: number;
+
+  /** 灵府·灵田（种植收获，持久养成） */
+  spiritGarden: SpiritGardenState;
 }
 
 export const DECK_SIZE = 6;

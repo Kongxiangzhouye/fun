@@ -65,7 +65,7 @@ import { fmtDecimal, stones, addStones, canAfford, subStones } from "./stones";
 import { fireSynergyActive, deckSynergySummary } from "./deckSynergy";
 import { tryFenTianBurst } from "./fenTian";
 import { buyQoL, bulkUpgradeAllCards, qoLCost } from "./qoL";
-import type { QoLFlags, Rarity, SkillId, GearItem, Element } from "./types";
+import type { QoLFlags, Rarity, SkillId, GearItem, Element, GardenCropId } from "./types";
 import Decimal from "decimal.js";
 import { gsap } from "gsap";
 import { Application, Container, Graphics, type Ticker } from "pixi.js";
@@ -104,6 +104,15 @@ import {
   UI_HEAD_STATS,
   UI_HEAD_COMBAT,
 } from "./ui/visualAssets";
+import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
+import {
+  plantCrop,
+  harvestPlot,
+  GARDEN_CROPS,
+  GARDEN_PLOT_COUNT,
+  plotGrowRemainingMs,
+  isPlotReady,
+} from "./systems/spiritGarden";
 import {
   playerAttack,
   playerMaxHp,
@@ -217,7 +226,7 @@ let autoEnterPromptHandled = false;
 let veinHelpDocListenerBound = false;
 /** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
-type EstateSub = "idle" | "vein";
+type EstateSub = "idle" | "vein" | "garden";
 type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach";
 type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive";
 
@@ -1046,6 +1055,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabVein && state.tutorialStep !== 6 && state.tutorialStep !== 7) {
     unlockLines.push("「<strong>灵府→洞府</strong>」解锁条件：抽卡 1 次，或境界≥2。");
   }
+  if (!u.tabGarden && u.tabVein) {
+    unlockLines.push("「<strong>灵府→灵田</strong>」解锁条件：抽卡≥1 且 境界≥4。");
+  }
   if (!u.tabCodex && u.tabVein) {
     unlockLines.push("「<strong>养成→图鉴</strong>」解锁条件：抽卡≥5，或境界≥4。");
   }
@@ -1608,6 +1620,7 @@ function renderTopBar(
 function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
   if (activeHub === "battle" && !u.tabDungeon) activeHub = "estate";
   if (activeHub === "estate" && estateSub === "vein" && !u.tabVein) estateSub = "idle";
+  if (activeHub === "estate" && estateSub === "garden" && !u.tabGarden) estateSub = "idle";
   const subOk = (s: CultivateSub): boolean => {
     switch (s) {
       case "deck":
@@ -1643,8 +1656,14 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
   let left = "";
   let right = "";
   if (activeHub === "estate" && u.tabVein) {
-    left = mkEstate("idle", "灵脉·境界升级", estateSub === "idle", state.tutorialStep === 7);
-    right = mkEstate("vein", "洞府·长期加成", estateSub === "vein", state.tutorialStep === 6);
+    const gTabs = [
+      mkEstate("idle", "灵脉·境界升级", estateSub === "idle", state.tutorialStep === 7),
+      mkEstate("vein", "洞府·长期加成", estateSub === "vein", state.tutorialStep === 6),
+    ];
+    if (u.tabGarden) {
+      gTabs.push(mkEstate("garden", "灵田·灵草", estateSub === "garden", false));
+    }
+    left = gTabs.join("");
   } else if (activeHub === "cultivate") {
     left = [
       mkCult(
@@ -1716,7 +1735,7 @@ function renderDiscoverabilityHint(): string {
   } else if (activeHub === "gacha") {
     text = "常用入口：灵卡池=卡牌，铸灵池=装备；自动分解开关在本页底部。";
   } else if (activeHub === "estate") {
-    text = "常用入口：灵脉=升级境界，洞府=长期加成；两条线可并行。";
+    text = "常用入口：灵脉=升级境界，洞府=长期加成，灵田=种植收获灵砂；可并行推进。";
   } else if (activeHub === "battle") {
     text = "常用入口：这里就是副本（幻域）；进本与复刷都在此页。";
   }
@@ -1786,7 +1805,9 @@ function renderHubContent(
         ? renderDungeonPanel(state)
         : `<section class="panel"><p class="hint">完成 1 次抽卡后开放底部「<strong>幻域</strong>」。</p></section>`;
     case "estate":
-      return estateSub === "idle" ? renderIdle(ips, rb, canBreak, u) : renderVeinPage();
+      if (estateSub === "idle") return renderIdle(ips, rb, canBreak, u);
+      if (estateSub === "vein") return renderVeinPage();
+      return renderSpiritGardenPage(state, nowMs());
     case "gacha":
       return renderGacha(pityUr, u);
     case "cultivate":
@@ -2361,7 +2382,10 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.querySelectorAll("[data-estate-sub]").forEach((el) => {
     el.addEventListener("click", () => {
       const s = (el as HTMLElement).dataset.estateSub as EstateSub | undefined;
-      if (s !== "idle" && s !== "vein") return;
+      if (s !== "idle" && s !== "vein" && s !== "garden") return;
+      const uNav = getUiUnlocks(state);
+      if (s === "vein" && !uNav.tabVein) return;
+      if (s === "garden" && !uNav.tabGarden) return;
       estateSub = s;
       render();
     });
@@ -2744,6 +2768,45 @@ function bindEvents(rb: Decimal, _slots: number): void {
       } else {
         toast("资源不足或已达上限");
       }
+    });
+  });
+
+  document.querySelectorAll("[data-garden-plant]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const raw = (el as HTMLElement).dataset.gardenPlant;
+      const idx = raw !== undefined ? Number(raw) : NaN;
+      if (!Number.isFinite(idx) || idx < 0 || idx >= GARDEN_PLOT_COUNT) return;
+      const sel = document.getElementById(`garden-crop-${idx}`) as HTMLSelectElement | null;
+      const crop = sel?.value as GardenCropId | undefined;
+      if (!crop || !GARDEN_CROPS[crop]) return;
+      const t = nowMs();
+      if (plantCrop(state, idx, crop, t)) {
+        saveGame(state);
+        toast(`已种下 ${GARDEN_CROPS[crop].name}`);
+        render();
+      } else {
+        toast("无法播种：灵石不足，或该地块已有作物。");
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-garden-harvest]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const raw = (el as HTMLElement).dataset.gardenHarvest;
+      const idx = raw !== undefined ? Number(raw) : NaN;
+      if (!Number.isFinite(idx) || idx < 0 || idx >= GARDEN_PLOT_COUNT) return;
+      const t = nowMs();
+      const res = harvestPlot(state, idx, t);
+      if (!res) {
+        toast("尚未成熟。");
+        return;
+      }
+      const newly = tryCompleteAchievements(state);
+      saveGame(state);
+      toast(res.message);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      for (const a of newly) toastAchievement(a);
+      render();
     });
   });
 
@@ -3154,6 +3217,32 @@ function updateEstateIdleLiveReadouts(now: number): void {
   }
 }
 
+/** 灵府·灵田：生长条与收获按钮（仅在该子页时 DOM 存在） */
+function updateEstateGardenLiveReadouts(now: number): void {
+  const totalEl = document.getElementById("garden-total-harvests");
+  if (totalEl) totalEl.textContent = String(state.spiritGarden.totalHarvests);
+  for (let i = 0; i < GARDEN_PLOT_COUNT; i++) {
+    const p = state.spiritGarden.plots[i];
+    if (!p.crop) continue;
+    const rem = plotGrowRemainingMs(state, i, now);
+    const ready = isPlotReady(state, i, now);
+    const eta = document.getElementById(`garden-eta-${i}`);
+    if (eta) eta.textContent = ready ? "已成熟，可收获" : `约 ${Math.ceil(rem / 1000)} 息后成熟`;
+    const fill = document.getElementById(`garden-bar-fill-${i}`);
+    if (fill && p.crop) {
+      const def = GARDEN_CROPS[p.crop];
+      const pct = ready ? 100 : Math.min(100, 100 - (100 * rem) / (def.growSec * 1000));
+      fill.style.width = `${pct}%`;
+    }
+    const btn = document.querySelector(`button[data-garden-harvest="${i}"]`) as HTMLButtonElement | null;
+    if (btn) {
+      btn.disabled = !ready;
+      btn.className = ready ? "btn btn-primary" : "btn";
+      btn.textContent = ready ? "收获" : "生长中";
+    }
+  }
+}
+
 function loop(): void {
   const now = nowMs();
   applyTick(state, now);
@@ -3268,6 +3357,9 @@ function loop(): void {
       const fill = document.querySelector(`.vein-lv-fill-${k}`) as HTMLElement | null;
       if (fill) fill.style.width = `${(v[k] / VEIN_MAX_LEVEL) * 100}%`;
     }
+  }
+  if (activeHub === "estate" && estateSub === "garden") {
+    updateEstateGardenLiveReadouts(now);
   }
   if (activeHub === "cultivate" && cultivateSub === "train") {
     for (const id of ["combat", "gathering", "arcana"] as const) {

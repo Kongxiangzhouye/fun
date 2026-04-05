@@ -12,6 +12,7 @@ import { initRng, rollNewRngSeed, syncRngFromState } from "./rng";
 import { ALL_PET_IDS } from "./data/pets";
 import { MAX_PET_LEVEL } from "./systems/pets";
 import { clampCombatHpToMax } from "./systems/combatHp";
+import { normalizeSpiritGarden } from "./systems/spiritGarden";
 
 const KEY = "idle-gacha-realm-v1";
 
@@ -73,6 +74,7 @@ export interface SerializedState {
   suppressFeatureGuides?: boolean;
   pets?: GameState["pets"];
   petPullsTotal?: number;
+  spiritGarden?: GameState["spiritGarden"];
   combatHpCurrent?: number;
   dungeonSanctuaryMode?: boolean;
   dungeonPortalTargetWave?: number;
@@ -250,6 +252,10 @@ export function serialize(state: GameState): string {
     suppressFeatureGuides: state.suppressFeatureGuides,
     pets: { ...state.pets },
     petPullsTotal: state.petPullsTotal,
+    spiritGarden: {
+      plots: state.spiritGarden.plots.map((p) => ({ ...p })),
+      totalHarvests: state.spiritGarden.totalHarvests,
+    },
     combatHpCurrent: state.combatHpCurrent,
     dungeonSanctuaryMode: state.dungeonSanctuaryMode,
     dungeonPortalTargetWave: state.dungeonPortalTargetWave,
@@ -381,6 +387,16 @@ export function deserialize(json: string): GameState {
     st.pets = { ...st.pets, ...data.pets };
   }
   st.petPullsTotal = data.petPullsTotal ?? 0;
+  if (data.spiritGarden && Array.isArray(data.spiritGarden.plots)) {
+    st.spiritGarden = {
+      plots: data.spiritGarden.plots.map((p) => ({
+        crop: p.crop ?? null,
+        plantedAtMs: p.plantedAtMs ?? 0,
+      })),
+      totalHarvests: Math.max(0, Math.floor(data.spiritGarden.totalHarvests ?? 0)),
+    };
+  }
+  normalizeSpiritGarden(st);
   st.combatHpCurrent =
     data.combatHpCurrent !== undefined && data.combatHpCurrent !== null && Number.isFinite(data.combatHpCurrent)
       ? data.combatHpCurrent
