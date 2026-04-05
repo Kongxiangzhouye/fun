@@ -107,12 +107,14 @@ import {
   UI_HEAD_DAILY_FORTUNE,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
+import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
 import { renderBountyPanel, updateBountyPanelReadouts } from "./ui/bountyPanel";
 import { renderDailyLoginPanel, updateDailyLoginPanelReadouts } from "./ui/dailyLoginPanel";
 import { claimDailyLoginReward, tickDailyLoginCalendar, toLocalYMD } from "./systems/dailyLoginCalendar";
 import { getActiveFortuneDef, tickDailyFortune } from "./systems/dailyFortune";
 import { renderCelestialStashPanel, updateCelestialStashPanelReadouts } from "./ui/celestialStashPanel";
 import { tryBuyCelestialOffer } from "./systems/celestialStash";
+import { tryUpgradeSpiritArray } from "./systems/spiritArray";
 import {
   reservoirCap,
   reservoirFillRatio,
@@ -246,7 +248,7 @@ let autoEnterPromptHandled = false;
 let veinHelpDocListenerBound = false;
 /** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
-type EstateSub = "idle" | "vein" | "garden";
+type EstateSub = "idle" | "vein" | "array" | "garden";
 type CultivateSub =
   | "deck"
   | "train"
@@ -1103,6 +1105,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabDailyFortune) {
     unlockLines.push("「<strong>灵府→灵脉·心斋卦象</strong>」解锁条件：境界≥4，或抽卡≥5。");
   }
+  if (!u.tabSpiritArray) {
+    unlockLines.push("「<strong>灵府→阵图·纳灵</strong>」解锁条件：境界≥5 且 抽卡≥2。");
+  }
   if (!u.tabCelestialStash) {
     unlockLines.push("「<strong>养成→天机·匣</strong>」解锁条件：境界≥5，或抽卡≥6。");
   }
@@ -1672,6 +1677,7 @@ function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
   if (activeHub === "battle" && !u.tabDungeon) activeHub = "estate";
   if (activeHub === "estate" && estateSub === "vein" && !u.tabVein) estateSub = "idle";
   if (activeHub === "estate" && estateSub === "garden" && !u.tabGarden) estateSub = "idle";
+  if (activeHub === "estate" && estateSub === "array" && !u.tabSpiritArray) estateSub = "idle";
   const subOk = (s: CultivateSub): boolean => {
     switch (s) {
       case "deck":
@@ -1720,6 +1726,9 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
       mkEstate("idle", "灵脉·境界升级", estateSub === "idle", state.tutorialStep === 7),
       mkEstate("vein", "洞府·长期加成", estateSub === "vein", state.tutorialStep === 6),
     ];
+    if (u.tabSpiritArray) {
+      gTabs.push(mkEstate("array", "阵图·纳灵", estateSub === "array", false));
+    }
     if (u.tabGarden) {
       gTabs.push(mkEstate("garden", "灵田·灵草", estateSub === "garden", false));
     }
@@ -1818,7 +1827,8 @@ function renderDiscoverabilityHint(): string {
   } else if (activeHub === "gacha") {
     text = "常用入口：灵卡池=卡牌，铸灵池=装备；自动分解开关在本页底部。";
   } else if (activeHub === "estate") {
-    text = "常用入口：灵脉=升级境界，洞府=长期加成，灵田=种植收获灵砂；可并行推进。";
+    text =
+      "常用入口：灵脉=升级境界，洞府=长期加成，阵图=灵石全局乘区（轮回不重置），灵田=种植收获灵砂；可并行推进。";
   } else if (activeHub === "battle") {
     text = "常用入口：这里就是副本（幻域）；进本与复刷都在此页。";
   }
@@ -1893,6 +1903,7 @@ function renderHubContent(
     case "estate":
       if (estateSub === "idle") return renderIdle(ips, rb, canBreak, u);
       if (estateSub === "vein") return renderVeinPage();
+      if (estateSub === "array") return renderSpiritArrayPanel(state);
       return renderSpiritGardenPage(state, nowMs());
     case "gacha":
       return renderGacha(pityUr, u);
@@ -3048,6 +3059,26 @@ function bindEvents(rb: Decimal, _slots: number): void {
     }
   });
 
+  document.body.addEventListener("click", (ev) => {
+    const b = (ev.target as HTMLElement | null)?.closest?.("#btn-spirit-array-up") as HTMLElement | null;
+    if (!b) return;
+    if (!tryUpgradeSpiritArray(state)) {
+      toast("灵石或灵砂不足，或已达阵图上限。");
+      return;
+    }
+    tryCompleteAchievements(state);
+    saveGame(state);
+    toast("阵图精进一重");
+    updateTopResourcePillsAndVigor(totalCardsInPool());
+    const pAch = document.getElementById("ps-ach");
+    if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+    if (activeHub === "estate" && estateSub === "array") {
+      updateSpiritArrayPanelReadouts(state);
+    } else {
+      render();
+    }
+  });
+
   const readEntryWave = (): number => {
     const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
     const raw = inp?.valueAsNumber;
@@ -3631,6 +3662,9 @@ function loop(): void {
   }
   if (activeHub === "estate" && estateSub === "garden") {
     updateEstateGardenLiveReadouts(now);
+  }
+  if (activeHub === "estate" && estateSub === "array") {
+    updateSpiritArrayPanelReadouts(state);
   }
   if (activeHub === "cultivate" && cultivateSub === "train") {
     for (const id of ["combat", "gathering", "arcana"] as const) {

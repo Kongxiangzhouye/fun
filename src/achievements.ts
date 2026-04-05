@@ -181,6 +181,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 100,
     rewardEssence: 5,
   },
+  {
+    id: "spirit_array_10",
+    title: "阵图小成",
+    desc: "纳灵阵图达到 10 重",
+    rewardStones: 600,
+    rewardEssence: 15,
+  },
 ];
 
 function hasUr(state: GameState): boolean {
@@ -258,6 +265,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 1;
     case "daily_fortune_1":
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
+    case "spirit_array_10":
+      return state.spiritArrayLevel >= 10;
     default:
       return false;
   }

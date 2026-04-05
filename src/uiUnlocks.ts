@@ -13,6 +13,8 @@ export function getUiUnlocks(state: GameState): {
   tabVein: boolean;
   /** 灵府·灵田：境界与唤引达一定进度 */
   tabGarden: boolean;
+  /** 灵府·纳灵阵图 */
+  tabSpiritArray: boolean;
   tabCodex: boolean;
   /** 养成 → 唤灵通鉴 */
   tabChronicle: boolean;
@@ -62,6 +64,7 @@ export function getUiUnlocks(state: GameState): {
     /** 首次唤引或破境二重即可见；引导步骤 6–7 也必须可见（勿依赖 tutorialStep===0） */
     tabVein: inVeinTutorial || pulls >= 1 || rl >= 2,
     tabGarden: pulls >= 1 && rl >= 4,
+    tabSpiritArray: rl >= 5 && pulls >= 2,
     tabCodex: pulls >= 5 || rl >= 4,
     tabChronicle: pulls >= 1,
     tabMeta: rl >= 18 || state.reincarnations >= 1,

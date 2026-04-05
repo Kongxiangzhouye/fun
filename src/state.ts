@@ -6,7 +6,7 @@ import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 
-export const SAVE_VERSION = 30;
+export const SAVE_VERSION = 31;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -137,6 +137,7 @@ export function createInitialState(): GameState {
     celestialStash: emptyCelestialStash(currentWeekKey(now)),
     spiritReservoirStored: "0",
     dailyFortune: { calendarDay: "", fortuneId: "fd_he" },
+    spiritArrayLevel: 0,
     daoMeridian: 0,
     pullChronicle: [],
     lifetimeStats: {

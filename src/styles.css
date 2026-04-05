@@ -6099,3 +6099,12 @@ header h1 {
 .daily-fortune-bonuses strong {
   color: #9fe8c8;
 }
+
+/* —— 灵府 · 纳灵阵图 —— */
+.spirit-array-panel .spirit-array-readout {
+  margin-top: 6px;
+}
+
+.spirit-array-actions {
+  margin-top: 12px;
+}

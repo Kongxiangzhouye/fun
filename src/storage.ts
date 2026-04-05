@@ -22,6 +22,7 @@ import {
 import { normalizeDaoMeridian } from "./systems/daoMeridian";
 import { normalizeLifetimeStats, normalizePullChronicle } from "./systems/pullChronicle";
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
+import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
 
 const KEY = "idle-gacha-realm-v1";
 
@@ -68,6 +69,7 @@ export interface SerializedState {
   dailyLoginClaimedDate?: string | null;
   spiritReservoirStored?: string;
   dailyFortune?: GameState["dailyFortune"];
+  spiritArrayLevel?: number;
   lastTunaMs?: number;
   vein?: VeinSave;
   pullsThisLife?: number;
@@ -256,6 +258,7 @@ export function serialize(state: GameState): string {
     dailyLoginClaimedDate: state.dailyLoginClaimedDate,
     spiritReservoirStored: state.spiritReservoirStored,
     dailyFortune: { ...state.dailyFortune },
+    spiritArrayLevel: state.spiritArrayLevel,
     lastTunaMs: state.lastTunaMs,
     vein: { ...state.vein },
     pullsThisLife: state.pullsThisLife,
@@ -372,6 +375,10 @@ export function deserialize(json: string): GameState {
       fortuneId: data.dailyFortune.fortuneId,
     };
   }
+  if (data.spiritArrayLevel != null && Number.isFinite(data.spiritArrayLevel)) {
+    st.spiritArrayLevel = Math.floor(data.spiritArrayLevel);
+  }
+  normalizeSpiritArrayLevel(st);
   st.lastTunaMs = data.lastTunaMs ?? 0;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0, ...(data.vein ?? {}) };
   if (st.vein.gongMing == null || !Number.isFinite(st.vein.gongMing)) st.vein.gongMing = 0;

@@ -432,6 +432,11 @@ export interface GameState {
   dailyFortune: DailyFortuneState;
 
   /**
+   * 纳灵阵图等级（灵府；轮回不重置）：提升全局灵石收益乘区
+   */
+  spiritArrayLevel: number;
+
+  /**
    * 道韵灵窍：0–5 已解锁层数（消耗道韵；轮回不重置）
    */
   daoMeridian: number;
