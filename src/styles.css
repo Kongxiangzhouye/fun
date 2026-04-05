@@ -4497,11 +4497,12 @@ html.ui-reduce-motion *::after {
   background: rgba(22, 34, 56, 0.78);
 }
 
+.dungeon-realm-option--classic,
 .dungeon-realm-option--vortex {
   padding-left: 40px;
 }
 
-.dungeon-realm-vortex-ico {
+.dungeon-realm-option-ico {
   position: absolute;
   left: 10px;
   top: 50%;

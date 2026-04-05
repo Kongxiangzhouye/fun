@@ -48,6 +48,7 @@ import {
   UI_EMPTY_PET,
   UI_EMPTY_UNLOCK,
   UI_HEAD_DUNGEON,
+  UI_DUNGEON_REALM_CLASSIC,
   UI_DUNGEON_REALM_VORTEX,
   UI_DUNGEON_AFFIX_DECO,
   UI_GEAR_LOCK_DECO,
@@ -350,14 +351,15 @@ export function renderDungeonPanel(state: GameState): string {
           <p class="hint sm">可选下一关或已通关关卡复刷。入场约 <strong>${entryFeeShow}</strong> 髓；阵亡损失灵石 <strong>5%</strong>（至少 1）。</p>
           <div class="dungeon-realm-pick" role="radiogroup" aria-label="幻域类型">
             <span class="dungeon-realm-pick-label">副本类型</span>
-            <label class="dungeon-realm-option">
+            <label class="dungeon-realm-option dungeon-realm-option--classic">
               <input type="radio" name="dungeon-realm" value="classic" ${state.dungeonRealm === "classic" ? "checked" : ""} />
+              <img class="dungeon-realm-option-ico" src="${UI_DUNGEON_REALM_CLASSIC}" alt="" width="22" height="22" loading="lazy" />
               <span class="dungeon-realm-option-body">经典幻域</span>
               <span class="hint sm">原网格战斗</span>
             </label>
             <label class="dungeon-realm-option dungeon-realm-option--vortex">
               <input type="radio" name="dungeon-realm" value="star_vortex" ${state.dungeonRealm === "star_vortex" ? "checked" : ""} />
-              <img class="dungeon-realm-vortex-ico" src="${UI_DUNGEON_REALM_VORTEX}" alt="" width="22" height="22" loading="lazy" />
+              <img class="dungeon-realm-option-ico" src="${UI_DUNGEON_REALM_VORTEX}" alt="" width="22" height="22" loading="lazy" />
               <span class="dungeon-realm-option-body">星漩乱域</span>
               <span class="hint sm">连斩 + 灵脉场地 · 髓 +7%</span>
             </label>
