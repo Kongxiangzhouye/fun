@@ -1,4 +1,4 @@
-import type { GameState, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
+import type { GameState, DungeonRealmId, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
 
 type VeinSave = GameState["vein"];
 type SkillsSave = GameState["skills"];
@@ -94,6 +94,7 @@ export interface SerializedState {
   daoEssence: number;
   zaoHuaYu?: number;
   realmLevel: number;
+  dungeonRealm?: DungeonRealmId;
   totalPulls: number;
   pityUr: number;
   pitySsrSoft: number;
@@ -241,6 +242,17 @@ function normalizeDungeonState(st: GameState): void {
   if (d.playerAttackAccum == null || !Number.isFinite(d.playerAttackAccum)) d.playerAttackAccum = 0;
   if (d.playerAttackTargetMobId == null || !Number.isFinite(d.playerAttackTargetMobId)) d.playerAttackTargetMobId = 0;
   if (d.sessionEnterAtMs == null || !Number.isFinite(d.sessionEnterAtMs)) d.sessionEnterAtMs = 0;
+  if (d.vortexKillStreak == null || !Number.isFinite(d.vortexKillStreak)) d.vortexKillStreak = 0;
+  d.vortexKillStreak = Math.max(0, Math.floor(d.vortexKillStreak));
+  if (d.vortexStreakExpireAt == null || !Number.isFinite(d.vortexStreakExpireAt)) d.vortexStreakExpireAt = 0;
+  if (d.vortexLeylineX == null || !Number.isFinite(d.vortexLeylineX)) d.vortexLeylineX = 0.5;
+  if (d.vortexLeylineY == null || !Number.isFinite(d.vortexLeylineY)) d.vortexLeylineY = 0.5;
+  if (d.vortexLeylineRadiusNorm == null || !Number.isFinite(d.vortexLeylineRadiusNorm)) {
+    d.vortexLeylineRadiusNorm = 0.088;
+  }
+  d.vortexLeylineRadiusNorm = Math.max(0.04, Math.min(0.2, d.vortexLeylineRadiusNorm));
+  if (d.vortexLeylineKind !== "fury" && d.vortexLeylineKind !== "flow") d.vortexLeylineKind = "fury";
+  if (d.vortexLeylineMoveAt == null || !Number.isFinite(d.vortexLeylineMoveAt)) d.vortexLeylineMoveAt = 0;
   /** 旧存档进本中无计时：从当前时刻起算，避免本局用时为 0 */
   if (d.active && d.sessionEnterAtMs <= 0) d.sessionEnterAtMs = Date.now();
 }
@@ -290,6 +302,7 @@ export function serialize(state: GameState): string {
     daoEssence: state.daoEssence,
     zaoHuaYu: state.zaoHuaYu,
     realmLevel: state.realmLevel,
+    dungeonRealm: state.dungeonRealm,
     totalPulls: state.totalPulls,
     pityUr: state.pityUr,
     pitySsrSoft: state.pitySsrSoft,
@@ -413,6 +426,8 @@ export function deserialize(json: string): GameState {
   st.daoEssence = data.daoEssence ?? 0;
   st.zaoHuaYu = data.zaoHuaYu ?? 0;
   st.realmLevel = Math.max(1, data.realmLevel ?? 1);
+  st.dungeonRealm =
+    data.dungeonRealm === "star_vortex" || data.dungeonRealm === "classic" ? data.dungeonRealm : "classic";
   st.totalPulls = data.totalPulls ?? 0;
   st.pityUr = data.pityUr ?? 0;
   st.pitySsrSoft = data.pitySsrSoft ?? 0;

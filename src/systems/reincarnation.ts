@@ -86,6 +86,13 @@ export function performReincarnate(state: GameState): void {
     rewardModeRepeat: false,
     autoEnterConsumed: false,
     sessionEnterAtMs: 0,
+    vortexKillStreak: 0,
+    vortexStreakExpireAt: 0,
+    vortexLeylineX: 0.5,
+    vortexLeylineY: 0.5,
+    vortexLeylineRadiusNorm: 0.088,
+    vortexLeylineKind: "fury",
+    vortexLeylineMoveAt: 0,
   };
   state.lingSha = 0;
   state.xuanTie = 0;

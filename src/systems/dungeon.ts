@@ -1,4 +1,4 @@
-import type { GameState, DungeonMob, DungeonState, Element, WaveCheckpoint } from "../types";
+import type { GameState, DungeonMob, DungeonState, DungeonRealmId, Element, WaveCheckpoint } from "../types";
 import {
   DUNGEON_DEATH_CD_MS,
   DUNGEON_DODGE_IFRAMES_MS,
@@ -44,6 +44,7 @@ import {
   dungeonAffixPlayerAtkMult,
 } from "./dungeonAffix";
 import { daoMeridianDungeonAtkMult, daoMeridianDungeonEssenceMult } from "./daoMeridian";
+import { playerExpectedDpsDungeonAffix } from "./dungeonAffix";
 import { noteDungeonEssenceIntGained } from "./pullChronicle";
 import {
   DUNGEON_MAP_H,
@@ -69,6 +70,20 @@ const BOSS_CHASE_VS_PLAYER = 0.8;
 const BOSS_CHASE_PULSE_AMP = 0.12;
 /** 新波次/进本短保护：避免刷怪瞬间互殴导致“刚进图就掉血” */
 const WAVE_START_GRACE_MS = 700;
+
+/** 星漩乱域：限时连斩窗口（秒→毫秒在逻辑内） */
+const VORTEX_STREAK_WINDOW_MS = 4500;
+const VORTEX_STREAK_MAX = 8;
+/** 每层连斩额外伤害（乘算基数 1 + stack × 此值） */
+const VORTEX_STREAK_DMG_PER_STACK = 0.042;
+/** 灵脉·狂岚：圈内对魔物伤害乘数 */
+const VORTEX_FURY_ATK_MULT = 1.16;
+/** 灵脉换位间隔 */
+const VORTEX_LEYLINE_MOVE_MS = 12_000;
+/** 灵脉·流息：额外体力回复 / 秒 */
+const VORTEX_FLOW_STAMINA_PER_SEC = 2.85;
+/** 星漩乱域唤灵髓结算加成（鼓励选用） */
+const STAR_VORTEX_ESSENCE_MULT = 1.07;
 /** 刷怪与玩家出生点的最小格距（曼哈顿）；降低贴脸刷怪感 */
 const SPAWN_MIN_CELL_DIST = 3;
 /** 过渡波（每段第 4 波）稍降压，缓冲到下一波节点 */
@@ -574,6 +589,67 @@ function normToCell(x: number, y: number, w: number, h: number): [number, number
   const cx = clamp(Math.floor(x * w), 0, w - 1);
   const cy = clamp(Math.floor(y * h), 0, h - 1);
   return [cx, cy];
+}
+
+function playerInVortexLeyline(d: DungeonState): boolean {
+  const r = d.vortexLeylineRadiusNorm > 0 ? d.vortexLeylineRadiusNorm : 0.088;
+  return dist(d.playerX, d.playerY, d.vortexLeylineX, d.vortexLeylineY) <= r + 0.014;
+}
+
+function initStarVortexLeyline(state: GameState, d: DungeonState, now: number): void {
+  if (state.dungeonRealm !== "star_vortex") return;
+  if (d.mapW <= 0 || !d.walkable.length) return;
+  const [px, py] = normToCell(d.playerX, d.playerY, d.mapW, d.mapH);
+  const reach = bfsReachable(d.mapW, d.mapH, d.walkable, px, py);
+  const spot = pickRandomWalkableCell(state, d.walkable, d.mapW, d.mapH, reach, new Set<number>());
+  if (spot) {
+    d.vortexLeylineX = (spot.x + 0.5) / d.mapW;
+    d.vortexLeylineY = (spot.y + 0.5) / d.mapH;
+  } else {
+    d.vortexLeylineX = d.playerX;
+    d.vortexLeylineY = d.playerY;
+  }
+  d.vortexLeylineRadiusNorm = 0.088;
+  d.vortexLeylineKind = nextRand01(state) < 0.5 ? "fury" : "flow";
+  d.vortexLeylineMoveAt = now + VORTEX_LEYLINE_MOVE_MS;
+}
+
+function tickStarVortexRealm(state: GameState, d: DungeonState, dt: number, now: number): void {
+  if (state.dungeonRealm !== "star_vortex") return;
+  if (now > d.vortexStreakExpireAt && d.vortexKillStreak > 0) {
+    d.vortexKillStreak = 0;
+  }
+  if (now >= d.vortexLeylineMoveAt) {
+    initStarVortexLeyline(state, d, now);
+  }
+  if (d.vortexLeylineKind === "flow" && playerInVortexLeyline(d)) {
+    d.stamina = Math.min(DUNGEON_STAMINA_MAX, d.stamina + VORTEX_FLOW_STAMINA_PER_SEC * dt);
+  }
+}
+
+export function dungeonVortexDamageMult(state: GameState, d: DungeonState, now: number): number {
+  if (state.dungeonRealm !== "star_vortex" || !d.active) return 1;
+  let m = 1 + Math.min(VORTEX_STREAK_MAX, d.vortexKillStreak) * VORTEX_STREAK_DMG_PER_STACK;
+  if (d.vortexLeylineKind === "fury" && playerInVortexLeyline(d)) m *= VORTEX_FURY_ATK_MULT;
+  return m;
+}
+
+export function playerExpectedDpsDungeonRealm(state: GameState, now: number): number {
+  const base = playerExpectedDpsDungeonAffix(state, now);
+  if (state.dungeonRealm !== "star_vortex" || !state.dungeon.active) return base;
+  return base * dungeonVortexDamageMult(state, state.dungeon, now);
+}
+
+export function playerInStarVortexLeylineForUi(d: DungeonState): boolean {
+  return playerInVortexLeyline(d);
+}
+
+export function starVortexLeylineLabel(kind: "fury" | "flow"): string {
+  return kind === "fury" ? "狂岚" : "流息";
+}
+
+export function dungeonRealmLabel(id: DungeonRealmId): string {
+  return id === "star_vortex" ? "星漩乱域" : "经典幻域";
 }
 
 function canStand(x: number, y: number, d: DungeonState): boolean {
@@ -1119,6 +1195,9 @@ export function essenceRewardTotalFloat(
       v *= extraDecay;
     }
   }
+  if (state.dungeonRealm === "star_vortex") {
+    v *= STAR_VORTEX_ESSENCE_MULT;
+  }
   return v;
 }
 
@@ -1276,6 +1355,8 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
   d.wave = clearedWave + 1;
   d.playerMax = playerMaxHp(state);
   d.playerHp = Math.min(d.playerHp, d.playerMax);
+  d.vortexKillStreak = 0;
+  d.vortexStreakExpireAt = 0;
   d.mobs = [];
   d.packKilled = 0;
   d.packSize = 0;
@@ -1295,6 +1376,14 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
 /** 单只魔物阵亡结算；若本波清空则推进关卡并返回 true（调用方应结束本 tick） */
 function registerDungeonKill(state: GameState, d: DungeonState, mob: DungeonMob, now: number): boolean {
   resetDamageFloatAccum();
+  if (state.dungeonRealm === "star_vortex") {
+    if (now <= d.vortexStreakExpireAt && d.vortexKillStreak > 0) {
+      d.vortexKillStreak = Math.min(VORTEX_STREAK_MAX, d.vortexKillStreak + 1);
+    } else {
+      d.vortexKillStreak = 1;
+    }
+    d.vortexStreakExpireAt = now + VORTEX_STREAK_WINDOW_MS;
+  }
   const totalFloat = essenceRewardTotalFloat(d.wave, state, mob.isBoss, d.rewardModeRepeat);
   const share = totalFloat / Math.max(1, d.packSize);
   d.essenceRemainder += share;
@@ -1328,6 +1417,9 @@ function spawnMobsForWave(state: GameState): void {
   const ck = d.waveCheckpoint[d.wave];
   if (ck && ck.mobs.some((m) => m.hp > 0) && ck.walkable.length > 0 && ck.mapW > 0) {
     restoreWaveFromCheckpoint(state, ck);
+    if (state.dungeonRealm === "star_vortex") {
+      initStarVortexLeyline(state, d, Date.now());
+    }
     return;
   }
 
@@ -1396,6 +1488,9 @@ function spawnMobsForWave(state: GameState): void {
     });
     d.waveEntrySpawnX = d.playerX;
     d.waveEntrySpawnY = d.playerY;
+    if (state.dungeonRealm === "star_vortex") {
+      initStarVortexLeyline(state, d, Date.now());
+    }
     syncBars(state, d);
     return;
   }
@@ -1451,6 +1546,9 @@ function spawnMobsForWave(state: GameState): void {
   d.packSize = d.mobs.length;
   d.waveEntrySpawnX = d.playerX;
   d.waveEntrySpawnY = d.playerY;
+  if (state.dungeonRealm === "star_vortex") {
+    initStarVortexLeyline(state, d, Date.now());
+  }
   syncBars(state, d);
 }
 
@@ -1525,6 +1623,9 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   d.playerMoveLockUntil = 0;
   d.playerLastMoveNx = 0;
   d.playerLastMoveNy = 0;
+  d.vortexKillStreak = 0;
+  d.vortexStreakExpireAt = 0;
+  d.vortexLeylineMoveAt = 0;
   damageFloatQueue.length = 0;
   resetDamageFloatAccum();
   spawnMobsForWave(state);
@@ -1581,6 +1682,7 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
   d.playerMax = playerMaxHp(state);
   d.playerHp = Math.max(0, Math.min(d.playerMax, state.combatHpCurrent));
   d.stamina = Math.min(DUNGEON_STAMINA_MAX, d.stamina + DUNGEON_STAMINA_REGEN_PER_SEC * dt);
+  tickStarVortexRealm(state, d, dt, now);
   snapPlayerToNearestWalkable(d);
 
   if (d.interWaveCooldownUntil > 0 && now >= d.interWaveCooldownUntil && d.mobs.length === 0) {
@@ -1764,7 +1866,8 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
           pushDamageFloat(fx, fy, "偏斜", "dmg-miss");
         } else {
           const critRoll = nextRand01(state) < cc ? cm : 1;
-          const hitDmg = baseAtk * mdMul * critRoll;
+          const vortexMul = dungeonVortexDamageMult(state, d, now);
+          const hitDmg = baseAtk * mdMul * critRoll * vortexMul;
           landedHit = true;
           mob.hp -= hitDmg;
           const v = Math.max(1, Math.round(hitDmg));

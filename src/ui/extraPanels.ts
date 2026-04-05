@@ -16,13 +16,17 @@ import {
   packSizeForWave,
   pickCombatTargetMob,
   playerEngageRadiusNorm,
+  playerExpectedDpsDungeonRealm,
+  starVortexLeylineLabel,
+  playerInStarVortexLeylineForUi,
+  currentBossMob,
 } from "../systems/dungeon";
 import {
   playerAttack,
   playerDungeonAttackSpeedMult,
   playerMaxHp,
 } from "../systems/playerCombat";
-import { getDungeonAffixForNow, playerExpectedDpsDungeonAffix } from "../systems/dungeonAffix";
+import { getDungeonAffixForNow } from "../systems/dungeonAffix";
 import { currentWeekKey } from "../systems/weeklyBounty";
 import {
   SKILL_HINT,
@@ -44,6 +48,7 @@ import {
   UI_EMPTY_PET,
   UI_EMPTY_UNLOCK,
   UI_HEAD_DUNGEON,
+  UI_DUNGEON_REALM_VORTEX,
   UI_DUNGEON_AFFIX_DECO,
   UI_GEAR_LOCK_DECO,
   UI_GEAR_SORT_DECO,
@@ -53,7 +58,6 @@ import {
   UI_HEAD_TRAIN,
 } from "./visualAssets";
 import { formatMobDisplayName } from "../data/dungeonMobs";
-import { currentBossMob } from "../systems/dungeon";
 import { PET_DEFS } from "../data/pets";
 import {
   describePetBonusesSummary,
@@ -112,6 +116,12 @@ export function formatDungeonActiveMeta(state: GameState, now: number): string {
   lines.push(
     `点击地图闪避（空格） · 耗体 ${DUNGEON_DODGE_STAMINA_COST} · 化劲 ${(DUNGEON_DODGE_IFRAMES_MS / 1000).toFixed(1)} 秒${iframesLeft > 0 ? ` · 余 ${iframesLeft} 秒` : ""}`,
   );
+  if (state.dungeonRealm === "star_vortex") {
+    const inL = playerInStarVortexLeylineForUi(d);
+    lines.push(
+      `星漩：连斩 ${d.vortexKillStreak} 层 · 灵脉 ${starVortexLeylineLabel(d.vortexLeylineKind)}${inL ? "（你在圈内）" : ""}`,
+    );
+  }
   return lines.join("\n");
 }
 
@@ -149,6 +159,17 @@ function renderDungeonMapHtml(state: GameState): string {
   /** 幻域普攻与转圈剑气一致，不再用群怪爆发圈 */
   const fxAoe = "";
   const fxSingle = d.inMelee && d.attackVisualMode === "single" ? " is-single" : "";
+  const vortexOn = state.dungeonRealm === "star_vortex";
+  const leyW = vortexOn ? Math.max(8, 2 * d.vortexLeylineRadiusNorm * 100) : 0;
+  const leylineHtml = vortexOn
+    ? `<div class="dungeon-vortex-leyline ${d.vortexLeylineKind}" aria-hidden="true" style="left:${d.vortexLeylineX * 100}%;top:${d.vortexLeylineY * 100}%;width:${leyW}%;"></div>`
+    : "";
+  const vortexHudHtml = vortexOn
+    ? `<div class="dungeon-vortex-hud" id="dungeon-vortex-hud" aria-live="polite">
+        <span class="dungeon-vortex-hud-line">连斩 <strong id="dungeon-vortex-streak-val">${d.vortexKillStreak}</strong> 层</span>
+        <span class="dungeon-vortex-hud-line">灵脉 <strong id="dungeon-vortex-ley-txt">${starVortexLeylineLabel(d.vortexLeylineKind)}</strong></span>
+      </div>`
+    : "";
   const bossMob = currentBossMob(d);
   const bossAlive = !!bossMob;
   const mobPct = d.monsterMax > 0 ? Math.min(100, (100 * Math.max(0, d.monsterHp)) / d.monsterMax) : 0;
@@ -176,6 +197,7 @@ function renderDungeonMapHtml(state: GameState): string {
   return `
     <div class="dungeon-map-frame">
       <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
+      ${vortexHudHtml}
       <div class="dungeon-map-hud-bl" aria-hidden="true">
         <div class="dungeon-hud-mini-row"><span>生命</span><span id="dungeon-pl-txt">${fmtNum(Math.max(0, d.playerHp))} / ${fmtNum(d.playerMax)}</span></div>
         <div class="progress-track dungeon slim hud-mini"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
@@ -183,10 +205,11 @@ function renderDungeonMapHtml(state: GameState): string {
         <div class="progress-track dungeon slim stamina-track hud-mini"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
       </div>
       <div class="dungeon-map-wrap">
-        <div class="dungeon-map${fxAoe}${fxSingle}" id="dungeon-map" aria-label="幻域俯视" style="--gw:${d.mapW || 1};--gh:${d.mapH || 1};--dungeon-player-hit-interval:${hitIntSec}s">
+        <div class="dungeon-map${vortexOn ? " dungeon-map--vortex" : ""}${fxAoe}${fxSingle}" id="dungeon-map" aria-label="幻域俯视" style="--gw:${d.mapW || 1};--gh:${d.mapH || 1};--dungeon-player-hit-interval:${hitIntSec}s">
           ${bossHud}
           <div class="dungeon-cells">${cells}</div>
           <div class="dungeon-entities">
+          ${leylineHtml}
           <div class="dungeon-player-stack" id="dungeon-player-stack" style="left:${d.playerX * 100}%;top:${d.playerY * 100}%">
             <div class="dungeon-player-fx" aria-hidden="true">
               <div class="dungeon-engage-ring"></div>
@@ -250,7 +273,7 @@ export function renderDungeonPanel(state: GameState): string {
   const now = Date.now();
   const cd = Math.max(0, d.deathCooldownUntil - now);
   const canEnter = canEnterDungeon(state, now);
-  const edps = playerExpectedDpsDungeonAffix(state, now);
+  const edps = playerExpectedDpsDungeonRealm(state, now);
   const affix = getDungeonAffixForNow(now);
   const weekLine = currentWeekKey(now);
   const pmax = playerMaxHp(state);
@@ -325,6 +348,20 @@ export function renderDungeonPanel(state: GameState): string {
           <p class="dungeon-idle-stats">累计通关 <strong>${d.totalWavesCleared}</strong> 波 · 最高第 <strong>${d.maxWaveRecord}</strong> 波</p>
           <p class="hint sm">目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波：${nextWavePreview}</p>
           <p class="hint sm">可选下一关或已通关关卡复刷。入场约 <strong>${entryFeeShow}</strong> 髓；阵亡损失灵石 <strong>5%</strong>（至少 1）。</p>
+          <div class="dungeon-realm-pick" role="radiogroup" aria-label="幻域类型">
+            <span class="dungeon-realm-pick-label">副本类型</span>
+            <label class="dungeon-realm-option">
+              <input type="radio" name="dungeon-realm" value="classic" ${state.dungeonRealm === "classic" ? "checked" : ""} />
+              <span class="dungeon-realm-option-body">经典幻域</span>
+              <span class="hint sm">原网格战斗</span>
+            </label>
+            <label class="dungeon-realm-option dungeon-realm-option--vortex">
+              <input type="radio" name="dungeon-realm" value="star_vortex" ${state.dungeonRealm === "star_vortex" ? "checked" : ""} />
+              <img class="dungeon-realm-vortex-ico" src="${UI_DUNGEON_REALM_VORTEX}" alt="" width="22" height="22" loading="lazy" />
+              <span class="dungeon-realm-option-body">星漩乱域</span>
+              <span class="hint sm">连斩 + 灵脉场地 · 髓 +7%</span>
+            </label>
+          </div>
           <div class="dungeon-entry-tools">
             <label class="dungeon-entry-label">起始波次（1～${Math.max(1, d.maxWaveRecord + 1)}）
               <input type="number" id="dungeon-entry-wave" min="1" max="${Math.max(1, d.maxWaveRecord + 1)}" step="1" value="${d.entryWave}" />

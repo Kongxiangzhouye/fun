@@ -1,6 +1,9 @@
 /** 五行：用于元素共鸣与图鉴分组 */
 export type Element = "metal" | "wood" | "water" | "fire" | "earth";
 
+/** 幻域副本类型：经典 / 星漩乱域（连斩 + 灵脉场地） */
+export type DungeonRealmId = "classic" | "star_vortex";
+
 /** 稀有度：影响基础产出与抽卡权重 */
 export type Rarity = "N" | "R" | "SR" | "SSR" | "UR";
 
@@ -273,6 +276,20 @@ export interface DungeonState {
   autoEnterConsumed: boolean;
   /** 本次进本时刻（ms），用于本局用时；进本时写入，暂离/阵亡出本后保留至下次进本覆盖 */
   sessionEnterAtMs: number;
+
+  /** 星漩乱域：限时连斩层数（波次清空） */
+  vortexKillStreak: number;
+  /** 连斩维持截止时间（ms） */
+  vortexStreakExpireAt: number;
+  /** 灵脉涡旋中心 X/Y（0–1 归一化） */
+  vortexLeylineX: number;
+  vortexLeylineY: number;
+  /** 灵脉半径（归一化，与距离判定一致） */
+  vortexLeylineRadiusNorm: number;
+  /** 灵脉：狂岚（圈内加攻）/ 流息（圈内回体加快） */
+  vortexLeylineKind: "fury" | "flow";
+  /** 下次灵脉换位（ms 时间戳） */
+  vortexLeylineMoveAt: number;
 }
 
 /** 界面偏好（写入存档；不影响玩法数值） */
@@ -315,6 +332,8 @@ export interface GameState {
   zaoHuaYu: number;
   /** 境界等级 */
   realmLevel: number;
+  /** 幻域类型偏好（进本前可选） */
+  dungeonRealm: DungeonRealmId;
   /**
    * 幻域/战斗当前生命（不随进关重置；上限为 playerMaxHp）
    * 阵亡后为 0，随时间恢复。

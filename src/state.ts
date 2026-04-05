@@ -1,12 +1,12 @@
 import type { GameState, OwnedCard, SkillId } from "./types";
-import { DECK_SIZE, DUNGEON_STAMINA_MAX } from "./types";
+import { DECK_SIZE, DUNGEON_STAMINA_MAX, type DungeonRealmId } from "./types";
 import { initRng, rollNewRngSeed } from "./rng";
 import { playerMaxHp } from "./systems/playerCombat";
 import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 
-export const SAVE_VERSION = 39;
+export const SAVE_VERSION = 40;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -60,6 +60,13 @@ const emptyDungeon = (): GameState["dungeon"] => ({
   rewardModeRepeat: false,
   autoEnterConsumed: false,
   sessionEnterAtMs: 0,
+  vortexKillStreak: 0,
+  vortexStreakExpireAt: 0,
+  vortexLeylineX: 0.5,
+  vortexLeylineY: 0.5,
+  vortexLeylineRadiusNorm: 0.088,
+  vortexLeylineKind: "fury",
+  vortexLeylineMoveAt: 0,
 });
 
 export function createInitialState(): GameState {
@@ -74,6 +81,7 @@ export function createInitialState(): GameState {
     daoEssence: 0,
     zaoHuaYu: 0,
     realmLevel: 1,
+    dungeonRealm: "classic" as DungeonRealmId,
     totalPulls: 0,
     pityUr: 0,
     pitySsrSoft: 0,

@@ -201,7 +201,6 @@ import {
   playerDungeonAttackSpeedMult,
   playerDungeonSustainedDamageMult,
 } from "./systems/playerCombat";
-import { playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
 import {
   enterDungeon,
   leaveDungeon,
@@ -219,6 +218,8 @@ import {
   playerAttackDiskOuterRadiusNormForUi,
   queueDungeonDodge,
   totalAliveMobHpSum,
+  playerExpectedDpsDungeonRealm,
+  starVortexLeylineLabel,
 } from "./systems/dungeon";
 import {
   ownedPetIds,
@@ -3822,6 +3823,19 @@ function bindEvents(rb: Decimal, _slots: number): void {
     return Math.max(1, Math.min(cap, Math.floor(raw)));
   };
 
+  document.querySelectorAll('input[name="dungeon-realm"]').forEach((el) => {
+    el.addEventListener("change", () => {
+      const inp = el as HTMLInputElement;
+      if (!inp.checked) return;
+      const v = inp.value;
+      if (v === "classic" || v === "star_vortex") {
+        state.dungeonRealm = v;
+        saveGame(state);
+        render();
+      }
+    });
+  });
+
   document.getElementById("btn-dungeon-entry-frontier")?.addEventListener("click", () => {
     const n = dungeonFrontierWave(state);
     const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
@@ -4574,6 +4588,21 @@ function loop(): void {
       } else if (prot) {
         prot.style.transform = "";
       }
+      if (state.dungeonRealm === "star_vortex") {
+        const elS = document.getElementById("dungeon-vortex-streak-val");
+        const elL = document.getElementById("dungeon-vortex-ley-txt");
+        if (elS) elS.textContent = String(d.vortexKillStreak);
+        if (elL) elL.textContent = starVortexLeylineLabel(d.vortexLeylineKind);
+        const ley = document.querySelector(".dungeon-vortex-leyline") as HTMLElement | null;
+        if (ley) {
+          const lw = Math.max(8, 2 * d.vortexLeylineRadiusNorm * 100);
+          ley.style.left = `${d.vortexLeylineX * 100}%`;
+          ley.style.top = `${d.vortexLeylineY * 100}%`;
+          ley.style.width = `${lw}%`;
+          ley.classList.toggle("fury", d.vortexLeylineKind === "fury");
+          ley.classList.toggle("flow", d.vortexLeylineKind === "flow");
+        }
+      }
       const nearestId = pickCombatTargetMob(d, playerEngageRadiusNorm(state))?.id;
       for (const m of d.mobs) {
         const el = document.querySelector(`.dungeon-mob-stack[data-mob-id="${m.id}"]`) as HTMLElement | null;
@@ -4682,14 +4711,14 @@ function loop(): void {
     const footEdps = document.getElementById("dungeon-foot-edps");
     if (footChp) footChp.textContent = fmtNumZh(Math.max(0, chp));
     if (footPmax) footPmax.textContent = fmtNumZh(pmax);
-    if (footEdps) footEdps.textContent = fmtNumZh(playerExpectedDpsDungeonAffix(state, now));
+    if (footEdps) footEdps.textContent = fmtNumZh(playerExpectedDpsDungeonRealm(state, now));
     const elElapsed = document.getElementById("dungeon-session-elapsed");
     const elEta = document.getElementById("dungeon-eta-remaining");
     if (d.active && d.sessionEnterAtMs > 0) {
       const elapsedSec = (now - d.sessionEnterAtMs) / 1000;
       if (elElapsed) elElapsed.textContent = fmtDungeonDur(elapsedSec);
       const poolHp = totalAliveMobHpSum(d);
-      const edps = playerExpectedDpsDungeonAffix(state, now);
+      const edps = playerExpectedDpsDungeonRealm(state, now);
       if (elEta) {
         if (poolHp <= 0) elEta.textContent = "—";
         else if (edps <= 1e-9) elEta.textContent = "∞";

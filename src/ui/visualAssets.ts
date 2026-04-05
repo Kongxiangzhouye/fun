@@ -95,6 +95,8 @@ export const UI_BOUNTY_FORGE_DECO = asset("bounty-forge-deco.svg");
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset("bounty-claim-all-deco.svg");
 /** 幻域周常词缀条左侧装饰 */
 export const UI_DUNGEON_AFFIX_DECO = asset("deco-dungeon-affix.svg");
+/** 星漩乱域模式单选项图标 */
+export const UI_DUNGEON_REALM_VORTEX = asset("deco-dungeon-realm-vortex.svg");
 /** 道韵灵窍页标题装饰 */
 export const UI_HEAD_DAO_MERIDIAN = asset("deco-dao-meridian.svg");
 /** 唤灵通鉴页标题 */
