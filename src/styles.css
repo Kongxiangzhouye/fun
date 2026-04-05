@@ -2893,6 +2893,49 @@ h1 {
   box-shadow: 0 0 0 1px rgba(124, 156, 255, 0.2);
 }
 
+.gear-inv-sort-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 130, 180, 0.28);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.gear-inv-sort-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.gear-inv-sort-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.gear-inv-sort-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.gear-inv-sort-btn {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+}
+
+.gear-inv-sort-btn.is-active {
+  border-color: rgba(124, 156, 255, 0.55);
+  background: rgba(80, 100, 160, 0.22);
+}
+
 .gear-inv {
   display: flex;
   flex-direction: column;

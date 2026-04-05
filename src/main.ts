@@ -80,6 +80,7 @@ import {
   renderTrainPanel,
   renderGearPanel,
   renderPetPanel,
+  type GearInvSortMode,
 } from "./ui/extraPanels";
 import { featureGuidePanelHtml, type FeatureGuideId } from "./ui/featureGuides";
 import { renderGameLoreHtml } from "./ui/gameLore";
@@ -250,6 +251,8 @@ let deckModalSlot: number | null = null;
 let refineTargetId: string | null = null;
 /** 装备页：正在查看哪一栏位的已装备详情（卸下仅在此操作） */
 let gearDetailSlot: "weapon" | "body" | "ring" | null = null;
+/** 行囊背包排序（会话内，不写存档） */
+let gearInvSortMode: GearInvSortMode = "rarity";
 /** 聚灵阵：灵卡池 / 铸灵池 */
 let gachaPool: "cards" | "gear" = "cards";
 let autoEnterPromptHandled = false;
@@ -1289,7 +1292,7 @@ function refreshGearPanel(): void {
   const cur = document.getElementById("gear-panel-root");
   if (!cur || !getUiUnlocks(state).tabGear) return;
   const w = document.createElement("div");
-  w.innerHTML = renderGearPanel(state, refineTargetId, gearDetailSlot);
+  w.innerHTML = renderGearPanel(state, refineTargetId, gearDetailSlot, gearInvSortMode);
   const next = w.firstElementChild as HTMLElement | null;
   if (next) cur.replaceWith(next);
   updateTopResourcePillsAndVigor(totalCardsInPool());
@@ -1298,6 +1301,16 @@ function refreshGearPanel(): void {
 function handleGearPanelClick(e: MouseEvent): void {
   const t = e.target as HTMLElement;
   if (!t.closest("#gear-panel-root")) return;
+
+  const sortEl = t.closest("[data-gear-inv-sort]");
+  if (sortEl) {
+    const m = (sortEl as HTMLElement).dataset.gearInvSort as GearInvSortMode | undefined;
+    if (m === "rarity" || m === "ilvl" || m === "slot" || m === "name") {
+      gearInvSortMode = m;
+      refreshGearPanel();
+    }
+    return;
+  }
 
   const openSlot = t.closest("[data-gear-open-slot]");
   if (openSlot) {
@@ -1873,7 +1886,7 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
     return `<div class="character-hub-root">${renderSaveToolsPanel()}</div>`;
   }
   const gearBlock = u.tabGear
-    ? renderGearPanel(state, refineTargetId, gearDetailSlot)
+    ? renderGearPanel(state, refineTargetId, gearDetailSlot, gearInvSortMode)
     : `<section class="panel character-hub-gear-locked"><p class="hint">解锁条件：获得 1 件装备，或累计抽卡≥10。解锁后开放铸灵池和行囊装备管理。</p></section>`;
   return `<div class="character-hub-root">${gearBlock}</div>`;
 }

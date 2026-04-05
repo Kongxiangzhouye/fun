@@ -1,4 +1,4 @@
-import type { GameState, Rarity, SkillId } from "../types";
+import type { GameState, GearItem, Rarity, SkillId } from "../types";
 import {
   DUNGEON_DEATH_CD_MS,
   DUNGEON_DODGE_IFRAMES_MS,
@@ -45,6 +45,7 @@ import {
   UI_EMPTY_UNLOCK,
   UI_HEAD_DUNGEON,
   UI_DUNGEON_AFFIX_DECO,
+  UI_GEAR_SORT_DECO,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
   UI_HEAD_TRAIN,
@@ -458,20 +459,58 @@ export function renderTrainPanel(state: GameState): string {
     </section>`;
 }
 
+/** 行囊背包列表排序（仅影响展示，不写存档） */
+export type GearInvSortMode = "rarity" | "ilvl" | "slot" | "name";
+
+const RARITY_ORDER_SORT: Record<string, number> = { UR: 0, SSR: 1, SR: 2, R: 3, N: 4 };
+const SLOT_ORDER_SORT: Record<"weapon" | "body" | "ring", number> = { weapon: 0, body: 1, ring: 2 };
+
+function sortGearInventoryItems(items: GearItem[], mode: GearInvSortMode): GearItem[] {
+  const ro = RARITY_ORDER_SORT;
+  const so = SLOT_ORDER_SORT;
+  return [...items].sort((a, b) => {
+    if (mode === "rarity") {
+      const dr = (ro[a.rarity] ?? 9) - (ro[b.rarity] ?? 9);
+      if (dr !== 0) return dr;
+      if (b.itemLevel !== a.itemLevel) return b.itemLevel - a.itemLevel;
+      return a.displayName.localeCompare(b.displayName, "zh-Hans-CN");
+    }
+    if (mode === "ilvl") {
+      if (b.itemLevel !== a.itemLevel) return b.itemLevel - a.itemLevel;
+      const dr = (ro[a.rarity] ?? 9) - (ro[b.rarity] ?? 9);
+      if (dr !== 0) return dr;
+      return a.displayName.localeCompare(b.displayName, "zh-Hans-CN");
+    }
+    if (mode === "slot") {
+      const ds = (so[a.slot] ?? 9) - (so[b.slot] ?? 9);
+      if (ds !== 0) return ds;
+      const dr = (ro[a.rarity] ?? 9) - (ro[b.rarity] ?? 9);
+      if (dr !== 0) return dr;
+      return b.itemLevel - a.itemLevel;
+    }
+    const c = a.displayName.localeCompare(b.displayName, "zh-Hans-CN");
+    if (c !== 0) return c;
+    return (ro[a.rarity] ?? 9) - (ro[b.rarity] ?? 9);
+  });
+}
+
+const GEAR_SORT_LABELS: Record<GearInvSortMode, string> = {
+  rarity: "稀有度",
+  ilvl: "装等",
+  slot: "部位",
+  name: "名称",
+};
+
 export function renderGearPanel(
   state: GameState,
   refineTargetId: string | null = null,
   gearDetailSlot: "weapon" | "body" | "ring" | null = null,
+  gearInvSort: GearInvSortMode = "rarity",
 ): string {
   const refineHint = refineTargetId
     ? `<p class="hint refine-hint">精炼：已选主件，再点<strong>另一件</strong>同基底天极作为消耗；再点主件可取消。</p>`
     : "";
-  const rarityOrder: Record<string, number> = { UR: 0, SSR: 1, SR: 2, R: 3, N: 4 };
-  const items = Object.values(state.gearInventory).sort((a, b) => {
-    const dr = (rarityOrder[a.rarity] ?? 9) - (rarityOrder[b.rarity] ?? 9);
-    if (dr !== 0) return dr;
-    return a.displayName.localeCompare(b.displayName, "zh-Hans-CN");
-  });
+  const items = sortGearInventoryItems(Object.values(state.gearInventory), gearInvSort);
   let inv = "";
   for (const g of items) {
     const eq =
@@ -577,6 +616,24 @@ export function renderGearPanel(
       ${slotHtml}
       ${detailBlock}
       <h3 class="sub-h">背包</h3>
+      ${
+        items.length > 0
+          ? `<div class="gear-inv-sort-bar" role="toolbar" aria-label="背包排序">
+        <span class="gear-inv-sort-label">
+          <img src="${UI_GEAR_SORT_DECO}" class="gear-inv-sort-ico" alt="" width="18" height="18" loading="lazy" />
+          排序
+        </span>
+        <div class="gear-inv-sort-btns">
+          ${(["rarity", "ilvl", "slot", "name"] as const)
+            .map(
+              (m) =>
+                `<button type="button" class="btn gear-inv-sort-btn ${gearInvSort === m ? "is-active" : ""}" data-gear-inv-sort="${m}">${GEAR_SORT_LABELS[m]}</button>`,
+            )
+            .join("")}
+        </div>
+      </div>`
+          : ""
+      }
       <div class="gear-inv">${inv || `<div class="empty-art-wrap"><img src="${UI_EMPTY_GEAR}" alt="暂无装备" class="empty-art-img" width="320" height="160" loading="lazy" /></div>`}</div>
     </section>`;
 }
