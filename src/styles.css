@@ -5750,3 +5750,45 @@ header h1 {
 .bounty-reward {
   margin: 6px 0 10px;
 }
+
+/* —— 幻域 · 周常词缀 —— */
+.dungeon-affix-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 140, 220, 0.35);
+  background: linear-gradient(125deg, rgba(22, 32, 58, 0.92), rgba(12, 16, 28, 0.96));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+}
+
+.dungeon-affix-icon {
+  flex-shrink: 0;
+  opacity: 0.92;
+  filter: drop-shadow(0 2px 6px rgba(80, 120, 255, 0.25));
+}
+
+.dungeon-affix-text {
+  min-width: 0;
+}
+
+.dungeon-affix-title {
+  display: block;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  color: #d8e4ff;
+  margin-bottom: 4px;
+}
+
+.dungeon-affix-desc {
+  margin: 0;
+  color: #a8b8d8;
+}
+
+.dungeon-affix-wk {
+  margin-left: 6px;
+  opacity: 0.75;
+  font-size: 0.76rem;
+}

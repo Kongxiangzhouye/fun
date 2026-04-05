@@ -38,6 +38,12 @@ import {
 import { petDungeonAtkAdditive } from "./pets";
 import { noteWeeklyBountyWave } from "./weeklyBounty";
 import {
+  dungeonAffixEssenceMult,
+  dungeonAffixMobDamageMult,
+  dungeonAffixMobHpMult,
+  dungeonAffixPlayerAtkMult,
+} from "./dungeonAffix";
+import {
   DUNGEON_MAP_H,
   DUNGEON_MAP_W,
   bfsReachable,
@@ -1100,6 +1106,7 @@ export function essenceRewardTotalFloat(
   const base = 5 + wave * 2.1;
   let v = Math.max(0.05, base * essenceFindMult(state) * (1 + dungeonEssenceBonusFromSkills(state)));
   if (isBoss) v *= 1.45;
+  v *= dungeonAffixEssenceMult(Date.now());
   if (repeatMode) {
     v *= DUNGEON_REPEAT_ESSENCE_MULT;
     // 复刷若明显落后前沿波次，则再做温和衰减，避免长期低关稳定刷最优。
@@ -1343,7 +1350,8 @@ function spawnMobsForWave(state: GameState): void {
     d.walkable,
     bfsReachable(d.mapW, d.mapH, d.walkable, px, py),
   );
-  const totalHp0 = monsterMaxHpForWave(d.wave);
+  const hpAffix = dungeonAffixMobHpMult(Date.now());
+  const totalHp0 = Math.max(1, Math.floor(monsterMaxHpForWave(d.wave) * hpAffix));
   const bossWave = d.wave % 5 === 0;
 
   if (bossWave) {
@@ -1580,7 +1588,10 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
 
   const pEl = playerBattleElement(state);
   const skillAtk = dungeonAtkBonusFromSkills(state);
-  const baseAtk = playerAttack(state) * (1 + skillAtk + petDungeonAtkAdditive(state));
+  const baseAtk =
+    playerAttack(state) *
+    (1 + skillAtk + petDungeonAtkAdditive(state)) *
+    dungeonAffixPlayerAtkMult(now);
   const cc = playerCritChance(state);
   const cm = playerCritMult(state);
   const pDodge = playerDungeonDodgeChance(state);
@@ -1786,6 +1797,7 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
       md *= 0.52;
     }
     md *= playerIncomingDamageMult(state, d.wave);
+    md *= dungeonAffixMobDamageMult(now);
     while (d.monsterAttackAccum >= hitInterval) {
       d.monsterAttackAccum -= hitInterval;
       const pj = (nextRand01(state) - 0.5) * 0.04;

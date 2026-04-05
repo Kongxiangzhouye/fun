@@ -131,6 +131,7 @@ import {
   playerDungeonAttackSpeedMult,
   playerDungeonSustainedDamageMult,
 } from "./systems/playerCombat";
+import { playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
 import {
   enterDungeon,
   leaveDungeon,
@@ -3609,14 +3610,14 @@ function loop(): void {
     const footEdps = document.getElementById("dungeon-foot-edps");
     if (footChp) footChp.textContent = fmtNumZh(Math.max(0, chp));
     if (footPmax) footPmax.textContent = fmtNumZh(pmax);
-    if (footEdps) footEdps.textContent = fmtNumZh(playerExpectedDps(state));
+    if (footEdps) footEdps.textContent = fmtNumZh(playerExpectedDpsDungeonAffix(state, now));
     const elElapsed = document.getElementById("dungeon-session-elapsed");
     const elEta = document.getElementById("dungeon-eta-remaining");
     if (d.active && d.sessionEnterAtMs > 0) {
       const elapsedSec = (now - d.sessionEnterAtMs) / 1000;
       if (elElapsed) elElapsed.textContent = fmtDungeonDur(elapsedSec);
       const poolHp = totalAliveMobHpSum(d);
-      const edps = playerExpectedDps(state);
+      const edps = playerExpectedDpsDungeonAffix(state, now);
       if (elEta) {
         if (poolHp <= 0) elEta.textContent = "—";
         else if (edps <= 1e-9) elEta.textContent = "∞";

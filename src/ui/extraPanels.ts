@@ -20,9 +20,10 @@ import {
 import {
   playerAttack,
   playerDungeonAttackSpeedMult,
-  playerExpectedDps,
   playerMaxHp,
 } from "../systems/playerCombat";
+import { getDungeonAffixForNow, playerExpectedDpsDungeonAffix } from "../systems/dungeonAffix";
+import { currentWeekKey } from "../systems/weeklyBounty";
 import {
   SKILL_HINT,
   SKILL_LABEL,
@@ -43,6 +44,7 @@ import {
   UI_EMPTY_PET,
   UI_EMPTY_UNLOCK,
   UI_HEAD_DUNGEON,
+  UI_DUNGEON_AFFIX_DECO,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
   UI_HEAD_TRAIN,
@@ -245,7 +247,9 @@ export function renderDungeonPanel(state: GameState): string {
   const now = Date.now();
   const cd = Math.max(0, d.deathCooldownUntil - now);
   const canEnter = canEnterDungeon(state, now);
-  const edps = playerExpectedDps(state);
+  const edps = playerExpectedDpsDungeonAffix(state, now);
+  const affix = getDungeonAffixForNow(now);
+  const weekLine = currentWeekKey(now);
   const pmax = playerMaxHp(state);
   const chp = state.combatHpCurrent;
   const chpPctGlobal = pmax > 0 ? Math.min(100, (100 * Math.max(0, chp)) / pmax) : 0;
@@ -276,6 +280,13 @@ export function renderDungeonPanel(state: GameState): string {
       <div class="panel-title-art-row">
         <img class="panel-title-art-icon" src="${UI_HEAD_DUNGEON}" alt="" width="28" height="28" loading="lazy" />
         <h2>幻域</h2>
+      </div>
+      <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner">
+        <img class="dungeon-affix-icon" src="${UI_DUNGEON_AFFIX_DECO}" alt="" width="40" height="40" loading="lazy" />
+        <div class="dungeon-affix-text">
+          <strong class="dungeon-affix-title" id="dungeon-affix-title">本周词缀 · ${affix.title}</strong>
+          <p class="hint sm dungeon-affix-desc" id="dungeon-affix-desc">${affix.desc}<span class="dungeon-affix-wk">（周次 ${weekLine}）</span></p>
+        </div>
       </div>
       <div class="dungeon-map-stage">
         <button type="button" class="dungeon-map-help-btn" id="btn-dungeon-help" aria-expanded="false" aria-controls="dungeon-help-popover" aria-label="查看幻域说明" title="幻域说明">?</button>
