@@ -6076,3 +6076,26 @@ header h1 {
 .spirit-reservoir-readout {
   margin-top: 6px;
 }
+
+/* —— 灵府 · 心斋卦象 —— */
+.daily-fortune-panel {
+  margin-bottom: 12px;
+}
+
+.daily-fortune-name {
+  margin: 6px 0 4px;
+  font-size: 1.05rem;
+  color: #d4e8ff;
+  letter-spacing: 0.06em;
+}
+
+.daily-fortune-bonuses {
+  margin: 8px 0 0;
+  padding-left: 1.1rem;
+  color: #a8c4e0;
+  font-size: 0.88rem;
+}
+
+.daily-fortune-bonuses strong {
+  color: #9fe8c8;
+}

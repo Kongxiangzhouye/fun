@@ -2,6 +2,7 @@ import type { GameState } from "../types";
 import { daoMeridianDungeonAtkMult } from "./daoMeridian";
 import { currentWeekKey } from "./weeklyBounty";
 import { playerExpectedDps } from "./playerCombat";
+import { dailyFortuneDungeonMult } from "./dailyFortune";
 
 /** 与周常悬赏同一周界；词缀由周次确定性轮换 */
 export type DungeonAffixId = "jade_well" | "iron_march" | "keen_edge" | "storm_sigil";
@@ -92,5 +93,7 @@ export function dungeonAffixMobDamageMult(now: number): number {
 
 /** 幻域脚标期望秒伤：含本周「锐锋印」等攻击向词缀 */
 export function playerExpectedDpsDungeonAffix(state: GameState, now: number): number {
-  return playerExpectedDps(state) * dungeonAffixPlayerAtkMult(now) * daoMeridianDungeonAtkMult(state);
+  return (
+    playerExpectedDps(state) * dungeonAffixPlayerAtkMult(now) * daoMeridianDungeonAtkMult(state) * dailyFortuneDungeonMult(state)
+  );
 }

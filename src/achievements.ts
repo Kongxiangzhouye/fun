@@ -174,6 +174,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 150,
     rewardEssence: 0,
   },
+  {
+    id: "daily_fortune_1",
+    title: "心斋有象",
+    desc: "经历 1 次卦象日更替",
+    rewardStones: 100,
+    rewardEssence: 5,
+  },
 ];
 
 function hasUr(state: GameState): boolean {
@@ -249,6 +256,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
     case "spirit_reservoir_1":
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 1;
+    case "daily_fortune_1":
+      return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
     default:
       return false;
   }

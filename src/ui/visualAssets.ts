@@ -71,6 +71,8 @@ export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 export const UI_HEAD_CELESTIAL_STASH = asset("deco-celestial-stash.svg");
 /** 蓄灵池（灵府灵脉）标题装饰 */
 export const UI_HEAD_SPIRIT_RESERVOIR = asset("deco-spirit-reservoir.svg");
+/** 心斋卦象（每日运势）标题装饰 */
+export const UI_HEAD_DAILY_FORTUNE = asset("deco-daily-fortune.svg");
 export const UI_EMPTY_GEAR = asset("art-empty-gear.svg");
 export const UI_EMPTY_PET = asset("art-empty-pet.svg");
 export const UI_EMPTY_UNLOCK = asset("art-empty-unlock.svg");

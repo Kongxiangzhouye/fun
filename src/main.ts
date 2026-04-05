@@ -104,11 +104,13 @@ import {
   UI_HEAD_STATS,
   UI_HEAD_COMBAT,
   UI_HEAD_SPIRIT_RESERVOIR,
+  UI_HEAD_DAILY_FORTUNE,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderBountyPanel, updateBountyPanelReadouts } from "./ui/bountyPanel";
 import { renderDailyLoginPanel, updateDailyLoginPanelReadouts } from "./ui/dailyLoginPanel";
-import { claimDailyLoginReward, tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
+import { claimDailyLoginReward, tickDailyLoginCalendar, toLocalYMD } from "./systems/dailyLoginCalendar";
+import { getActiveFortuneDef, tickDailyFortune } from "./systems/dailyFortune";
 import { renderCelestialStashPanel, updateCelestialStashPanelReadouts } from "./ui/celestialStashPanel";
 import { tryBuyCelestialOffer } from "./systems/celestialStash";
 import {
@@ -1098,6 +1100,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabSpiritReservoir) {
     unlockLines.push("「<strong>灵府→灵脉·蓄灵池</strong>」解锁条件：境界≥3，或抽卡≥3。");
   }
+  if (!u.tabDailyFortune) {
+    unlockLines.push("「<strong>灵府→灵脉·心斋卦象</strong>」解锁条件：境界≥4，或抽卡≥5。");
+  }
   if (!u.tabCelestialStash) {
     unlockLines.push("「<strong>养成→天机·匣</strong>」解锁条件：境界≥5，或抽卡≥6。");
   }
@@ -2031,6 +2036,26 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
     </section>`
     : "";
 
+  const fd = getActiveFortuneDef(state);
+  const calDay = state.dailyFortune.calendarDay || toLocalYMD(nowMs());
+  const fortuneBlock =
+    u.tabDailyFortune && fd
+      ? `<section class="panel daily-fortune-panel">
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_DAILY_FORTUNE}" alt="" width="28" height="28" loading="lazy" />
+        <h2>心斋卦象</h2>
+      </div>
+      <p class="hint sm daily-fortune-day">本日 <strong id="daily-fortune-day">${calDay}</strong></p>
+      <h3 class="daily-fortune-name" id="daily-fortune-title">${fd.title}</h3>
+      <p class="hint daily-fortune-desc" id="daily-fortune-desc">${fd.desc}</p>
+      <ul class="daily-fortune-bonuses">
+        <li>灵石收益 <strong id="daily-fortune-stone">+${((fd.stoneMult - 1) * 100).toFixed(1)}%</strong></li>
+        <li>幻域伤害期望 <strong id="daily-fortune-dungeon">+${((fd.dungeonMult - 1) * 100).toFixed(1)}%</strong></li>
+      </ul>
+      <p class="hint sm">每日按本地历更替；与存档灵识共同决定当日卦象。</p>
+    </section>`
+      : "";
+
   const core = `
     <section class="panel">
       <h2>灵脉汇聚</h2>
@@ -2074,7 +2099,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       <p class="hint">图鉴收集 ${unique} / ${codex}${deckRealmPct > 0.001 ? ` · 卡组境界加成 ${deckRealmPct.toFixed(2)}%` : ""}</p>
     </section>`;
 
-  if (!u.privilegePanel) return reservoirBlock + core;
+  if (!u.privilegePanel) return reservoirBlock + fortuneBlock + core;
 
   const bulkRow =
     state.qoL.bulkLevel
@@ -2096,6 +2121,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
 
   return (
     reservoirBlock +
+    fortuneBlock +
     core +
     `
     <section class="panel">
@@ -3445,6 +3471,21 @@ function updateEstateIdleLiveReadouts(now: number): void {
       btn.textContent = canRs ? "收取蓄灵" : "暂无蓄灵";
     }
   }
+  if (uIdle.tabDailyFortune) {
+    const fd = getActiveFortuneDef(state);
+    const dayEl = document.getElementById("daily-fortune-day");
+    if (dayEl) dayEl.textContent = state.dailyFortune.calendarDay || toLocalYMD(now);
+    if (fd) {
+      const tEl = document.getElementById("daily-fortune-title");
+      const dEl = document.getElementById("daily-fortune-desc");
+      const sEl = document.getElementById("daily-fortune-stone");
+      const gEl = document.getElementById("daily-fortune-dungeon");
+      if (tEl) tEl.textContent = fd.title;
+      if (dEl) dEl.textContent = fd.desc;
+      if (sEl) sEl.textContent = `+${((fd.stoneMult - 1) * 100).toFixed(1)}%`;
+      if (gEl) gEl.textContent = `+${((fd.dungeonMult - 1) * 100).toFixed(1)}%`;
+    }
+  }
 }
 
 /** 灵府·灵田：生长条与收获按钮（仅在该子页时 DOM 存在） */
@@ -3934,6 +3975,7 @@ function init(): void {
   updateModernVisualFx(t);
   const offline = catchUpOffline(state, t);
   tickDailyLoginCalendar(state, t);
+  tickDailyFortune(state, t);
   if (offline.gt(0.01)) {
     saveGame(state);
     queueMicrotask(() => toast(`离线收益：约 ${fmtDecimal(offline)} 灵石`));

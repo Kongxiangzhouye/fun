@@ -51,6 +51,8 @@ export interface LifetimeStatsState {
   celestialStashBuys: number;
   /** 蓄灵池累计收取次数 */
   spiritReservoirClaims: number;
+  /** 心斋卦象累计刷新次数（跨日计数） */
+  dailyFortuneRolls: number;
 }
 
 /** 灵田作物 id */
@@ -79,6 +81,13 @@ export interface CelestialStashState {
   weekKey: string;
   /** 本周已兑换的 offer id */
   purchased: string[];
+}
+
+/** 心斋卦象：按本地日刷新的一条运势（影响灵石/幻域等乘区） */
+export interface DailyFortuneState {
+  /** 当前卦象对应的日历日 YYYY-MM-DD */
+  calendarDay: string;
+  fortuneId: string;
 }
 
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */
@@ -418,6 +427,9 @@ export interface GameState {
    * 蓄灵池：额外比例灵石蓄存（与每秒灵石挂钩，收取时并入灵石）
    */
   spiritReservoirStored: string;
+
+  /** 心斋卦象（每日运势） */
+  dailyFortune: DailyFortuneState;
 
   /**
    * 道韵灵窍：0–5 已解锁层数（消耗道韵；轮回不重置）
