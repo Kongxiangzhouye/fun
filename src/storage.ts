@@ -20,6 +20,7 @@ import {
   ensureWeeklyBountyWeek,
 } from "./systems/weeklyBounty";
 import { normalizeDaoMeridian } from "./systems/daoMeridian";
+import { normalizeLifetimeStats, normalizePullChronicle } from "./systems/pullChronicle";
 
 const KEY = "idle-gacha-realm-v1";
 
@@ -84,6 +85,8 @@ export interface SerializedState {
   spiritGarden?: GameState["spiritGarden"];
   weeklyBounty?: GameState["weeklyBounty"];
   daoMeridian?: number;
+  pullChronicle?: GameState["pullChronicle"];
+  lifetimeStats?: GameState["lifetimeStats"];
   combatHpCurrent?: number;
   dungeonSanctuaryMode?: boolean;
   dungeonPortalTargetWave?: number;
@@ -275,6 +278,8 @@ export function serialize(state: GameState): string {
       claimed: [...state.weeklyBounty.claimed],
     },
     daoMeridian: state.daoMeridian,
+    pullChronicle: state.pullChronicle.map((e) => ({ ...e })),
+    lifetimeStats: { ...state.lifetimeStats },
     combatHpCurrent: state.combatHpCurrent,
     dungeonSanctuaryMode: state.dungeonSanctuaryMode,
     dungeonPortalTargetWave: state.dungeonPortalTargetWave,
@@ -435,6 +440,21 @@ export function deserialize(json: string): GameState {
     st.daoMeridian = Math.floor(data.daoMeridian);
   }
   normalizeDaoMeridian(st);
+  if (data.pullChronicle && Array.isArray(data.pullChronicle)) {
+    st.pullChronicle = data.pullChronicle.map((e) => ({
+      atMs: e.atMs ?? 0,
+      defId: e.defId ?? "",
+      rarity: e.rarity ?? "N",
+      isNew: !!e.isNew,
+    }));
+  }
+  normalizePullChronicle(st);
+  if (data.lifetimeStats && typeof data.lifetimeStats === "object") {
+    st.lifetimeStats = {
+      dungeonEssenceIntGained: Math.max(0, Math.floor(data.lifetimeStats.dungeonEssenceIntGained ?? 0)),
+    };
+  }
+  normalizeLifetimeStats(st);
   st.combatHpCurrent =
     data.combatHpCurrent !== undefined && data.combatHpCurrent !== null && Number.isFinite(data.combatHpCurrent)
       ? data.combatHpCurrent

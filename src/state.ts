@@ -5,7 +5,7 @@ import { playerMaxHp } from "./systems/playerCombat";
 import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 
-export const SAVE_VERSION = 25;
+export const SAVE_VERSION = 26;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -132,6 +132,8 @@ export function createInitialState(): GameState {
     spiritGarden: { plots: emptyGardenPlots(), totalHarvests: 0 },
     weeklyBounty: emptyWeeklyBounty(currentWeekKey(now)),
     daoMeridian: 0,
+    pullChronicle: [],
+    lifetimeStats: { dungeonEssenceIntGained: 0 },
     combatHpCurrent: 100,
     dungeonSanctuaryMode: false,
     dungeonPortalTargetWave: 0,

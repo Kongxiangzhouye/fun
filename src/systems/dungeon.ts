@@ -44,6 +44,7 @@ import {
   dungeonAffixPlayerAtkMult,
 } from "./dungeonAffix";
 import { daoMeridianDungeonAtkMult, daoMeridianDungeonEssenceMult } from "./daoMeridian";
+import { noteDungeonEssenceIntGained } from "./pullChronicle";
 import {
   DUNGEON_MAP_H,
   DUNGEON_MAP_W,
@@ -1257,6 +1258,7 @@ function grantWaveEssenceToInventory(state: GameState): void {
     intGain += 1;
   }
   state.summonEssence += intGain;
+  noteDungeonEssenceIntGained(state, intGain);
   d.sessionEssence += d.essenceThisWave;
 }
 

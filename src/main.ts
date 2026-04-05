@@ -107,6 +107,7 @@ import {
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderBountyPanel, updateBountyPanelReadouts } from "./ui/bountyPanel";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
+import { renderChroniclePanel } from "./ui/chroniclePanel";
 import { tryBuyDaoMeridian } from "./systems/daoMeridian";
 import { claimWeeklyBountyTask, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
 import {
@@ -232,7 +233,7 @@ let veinHelpDocListenerBound = false;
 /** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
 type EstateSub = "idle" | "vein" | "garden";
-type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach" | "bounty";
+type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach" | "bounty" | "chronicle";
 type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive" | "meridian";
 
 let activeHub: HubId = "estate";
@@ -1072,6 +1073,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabDaoMeridian) {
     unlockLines.push("「<strong>角色→道韵·灵窍</strong>」解锁条件：已轮回，或道韵≥15，或曾贯通灵窍。");
   }
+  if (!u.tabChronicle) {
+    unlockLines.push("「<strong>养成→唤灵通鉴</strong>」解锁条件：完成至少 1 次灵卡唤引。");
+  }
   if (!u.tabMeta && u.tabCodex) {
     unlockLines.push("「<strong>养成→轮回</strong>」解锁条件：境界≥18，或已轮回。");
   }
@@ -1648,6 +1652,8 @@ function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
         return u.tabAch;
       case "bounty":
         return u.tabBounty;
+      case "chronicle":
+        return u.tabChronicle;
       default:
         return false;
     }
@@ -1692,6 +1698,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
     ].join("");
     right = [
       mkCult("codex", "图鉴·规则说明", u.tabCodex, cultivateSub === "codex", false),
+      mkCult("chronicle", "唤灵·通鉴", u.tabChronicle, cultivateSub === "chronicle", false),
       mkCult("meta", "轮回·永久强化", u.tabMeta, cultivateSub === "meta", false),
       mkCult("bounty", "周常·悬赏", u.tabBounty, cultivateSub === "bounty", false),
       mkCult("ach", "成就·奖励", u.tabAch, cultivateSub === "ach", false),
@@ -1738,6 +1745,9 @@ function renderDiscoverabilityHint(): string {
         break;
       case "bounty":
         text = "常用入口：周常悬赏按本地每周一刷新；幻域、唤引、灵田、吐纳与破境均可推进条目。";
+        break;
+      case "chronicle":
+        text = "常用入口：唤灵通鉴记录最近灵卡唤引；铸灵池不计入列表。";
         break;
       case "pets":
         text = "常用入口：灵宠是全局加成；唤灵入口在底部「抽卡」，成长进度在本页查看。";
@@ -1854,6 +1864,8 @@ function renderHubContent(
           return renderAch();
         case "bounty":
           return renderBountyPanel(state, nowMs());
+        case "chronicle":
+          return renderChroniclePanel(state);
         default:
           return "";
       }
@@ -2431,7 +2443,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
         s !== "codex" &&
         s !== "meta" &&
         s !== "ach" &&
-        s !== "bounty"
+        s !== "bounty" &&
+        s !== "chronicle"
       )
         return;
       cultivateSub = s;

@@ -14,6 +14,8 @@ export function getUiUnlocks(state: GameState): {
   /** 灵府·灵田：境界与唤引达一定进度 */
   tabGarden: boolean;
   tabCodex: boolean;
+  /** 养成 → 唤灵通鉴 */
+  tabChronicle: boolean;
   tabMeta: boolean;
   tabAch: boolean;
   /** 周常悬赏 */
@@ -53,6 +55,7 @@ export function getUiUnlocks(state: GameState): {
     tabVein: inVeinTutorial || pulls >= 1 || rl >= 2,
     tabGarden: pulls >= 1 && rl >= 4,
     tabCodex: pulls >= 5 || rl >= 4,
+    tabChronicle: pulls >= 1,
     tabMeta: rl >= 18 || state.reincarnations >= 1,
     tabAch: rl >= 6 || pulls >= 15,
     tabBounty: rl >= 5 || pulls >= 5,

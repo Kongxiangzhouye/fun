@@ -35,6 +35,20 @@ export interface PetProgress {
   xp: number;
 }
 
+/** 灵卡唤引通鉴单条 */
+export interface PullChronicleEntry {
+  atMs: number;
+  defId: string;
+  rarity: Rarity;
+  isNew: boolean;
+}
+
+/** 终身统计（部分由事件累加） */
+export interface LifetimeStatsState {
+  /** 自幻域入包累计的整数唤灵髓（与背包总髓不同，不含抽卡/成就等来源） */
+  dungeonEssenceIntGained: number;
+}
+
 /** 灵田作物 id */
 export type GardenCropId = "qing_grass" | "cloud_shroom" | "jade_mist";
 
@@ -386,6 +400,11 @@ export interface GameState {
    * 道韵灵窍：0–5 已解锁层数（消耗道韵；轮回不重置）
    */
   daoMeridian: number;
+
+  /** 最近灵卡唤引记录（轮替 FIFO） */
+  pullChronicle: PullChronicleEntry[];
+  /** 终身统计 */
+  lifetimeStats: LifetimeStatsState;
 }
 
 export const DECK_SIZE = 6;

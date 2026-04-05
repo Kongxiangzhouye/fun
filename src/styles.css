@@ -5852,3 +5852,94 @@ header h1 {
 .dao-meridian-actions {
   margin-top: 4px;
 }
+
+/* —— 养成 · 唤灵通鉴 —— */
+.chronicle-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+
+.chronicle-stat-card {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 130, 200, 0.28);
+  background: rgba(14, 18, 30, 0.65);
+}
+
+.chronicle-stat-lbl {
+  display: block;
+  font-size: 0.76rem;
+  color: #9aa8c8;
+  margin-bottom: 4px;
+}
+
+.chronicle-stat-val {
+  font-size: 0.95rem;
+  color: #e8ecff;
+  letter-spacing: 0.03em;
+}
+
+.chronicle-sub-h {
+  margin-top: 4px;
+}
+
+.chronicle-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(60, 80, 120, 0.35);
+}
+
+.chronicle-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.chronicle-table thead {
+  background: rgba(30, 38, 58, 0.85);
+  color: #b8c4e8;
+}
+
+.chronicle-table th,
+.chronicle-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(50, 60, 90, 0.4);
+}
+
+.chronicle-td-time {
+  white-space: nowrap;
+  color: #9aa8c0;
+  font-size: 0.8rem;
+}
+
+.chronicle-new {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(120, 200, 160, 0.2);
+  color: #b8f0d8;
+}
+
+.chronicle-empty {
+  padding: 12px;
+}
+
+.chronicle-empty-cell {
+  padding: 14px 12px;
+  vertical-align: top;
+}
+
+.chronicle-tr.rarity-UR .chronicle-td-r {
+  color: #ffd88a;
+}
+.chronicle-tr.rarity-SSR .chronicle-td-r {
+  color: #e8b8ff;
+}
+.chronicle-tr.rarity-SR .chronicle-td-r {
+  color: #a8d4ff;
+}
