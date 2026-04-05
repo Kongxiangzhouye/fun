@@ -281,6 +281,10 @@ export interface UiPrefs {
   reduceMotion: boolean;
   /** true：灵石等使用 K/M/B 缩写；false：尽量完整数字 */
   compactNumbers: boolean;
+  /** 全局静音（保留主音量数值，取消静音后恢复） */
+  soundMuted: boolean;
+  /** 主音量 0–1（未静音时对 Web Audio / 后续音效生效） */
+  masterVolume: number;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

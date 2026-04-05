@@ -36,6 +36,11 @@ function normalizeGearInventorySort(raw: unknown): GearInventorySortMode {
   return "rarity";
 }
 
+function normalizeMasterVolume(raw: unknown): number {
+  if (raw == null || !Number.isFinite(Number(raw))) return 0.85;
+  return Math.max(0, Math.min(1, Number(raw)));
+}
+
 export interface SerializedState {
   version: number;
   spiritStones: string | number;
@@ -466,6 +471,8 @@ export function deserialize(json: string): GameState {
   st.uiPrefs = {
     reduceMotion: !!data.uiPrefs?.reduceMotion,
     compactNumbers: data.uiPrefs?.compactNumbers !== false,
+    soundMuted: !!data.uiPrefs?.soundMuted,
+    masterVolume: normalizeMasterVolume(data.uiPrefs?.masterVolume),
   };
 
   if (data.pets && typeof data.pets === "object") {

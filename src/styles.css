@@ -2479,6 +2479,56 @@ h1 {
   margin: 6px 0 0 28px;
 }
 
+.ui-prefs-panel .ui-pref-audio-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ui-prefs-panel .ui-pref-inline-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.ui-prefs-panel .ui-pref-section-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.ui-prefs-panel .ui-pref-volume-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 10px 28px;
+}
+
+.ui-prefs-panel .ui-pref-vol-label {
+  min-width: 3.5em;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.ui-prefs-panel .ui-pref-volume-range {
+  flex: 1;
+  min-width: 120px;
+  accent-color: #6b9cff;
+}
+
+.ui-prefs-panel .ui-pref-vol-readout {
+  min-width: 3.2em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.ui-prefs-panel .ui-pref-audio-actions {
+  margin: 0 0 4px 28px;
+}
+
 html.ui-reduce-motion .app-visual-aurora,
 html.ui-reduce-motion .app-visual-bg {
   animation: none !important;

@@ -47,6 +47,7 @@ import {
 import { CARDS, getCard } from "./data/cards";
 import { tryCompleteAchievements, drainAchievementToastQueue, ACHIEVEMENTS, type AchievementDef } from "./achievements";
 import { countUniqueOwned } from "./state";
+import { playUiBlip, resumeAudioContext } from "./audio";
 import {
   canReincarnate,
   daoEssenceGainOnReincarnate,
@@ -128,6 +129,7 @@ import {
   UI_SAVE_DOWNLOAD_DECO,
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
+  UI_SOUND_PREFS_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -2003,6 +2005,33 @@ function renderUiPrefsPanel(): string {
         </label>
         <p class="hint sm ui-pref-desc">开启：K / M / B 等缩写；关闭：尽量显示完整整数（极大值仍用科学计数）。</p>
       </li>
+      <li class="ui-pref-row ui-pref-audio-block">
+        <div class="ui-pref-audio-head">
+          <img class="ui-pref-inline-ico" src="${UI_SOUND_PREFS_DECO}" alt="" width="22" height="22" loading="lazy" />
+          <span class="ui-pref-section-title">音频</span>
+        </div>
+        <label class="ui-pref-label">
+          <input type="checkbox" class="ui-pref-input" data-ui-pref="soundMuted" ${p.soundMuted ? "checked" : ""} />
+          <span class="ui-pref-title">静音</span>
+        </label>
+        <div class="ui-pref-volume-row">
+          <label class="ui-pref-vol-label" for="ui-master-volume">主音量</label>
+          <input
+            type="range"
+            id="ui-master-volume"
+            class="ui-pref-volume-range"
+            min="0"
+            max="100"
+            step="1"
+            value="${Math.round(p.masterVolume * 100)}"
+          />
+          <span class="ui-pref-vol-readout" id="ui-master-volume-pct">${p.soundMuted ? "静音" : `${Math.round(p.masterVolume * 100)}%`}</span>
+        </div>
+        <div class="ui-pref-audio-actions">
+          <button type="button" class="btn" id="btn-audio-test">试听</button>
+        </div>
+        <p class="hint sm ui-pref-desc">使用 Web Audio 生成短促提示音（无额外资源包）；后续若加入音效将统一走主音量与静音。</p>
+      </li>
     </ul>
   </section>`;
 }
@@ -2893,10 +2922,24 @@ function bindEvents(rb: Decimal, _slots: number): void {
       const checked = (ev.target as HTMLInputElement).checked;
       if (t === "reduceMotion") state.uiPrefs.reduceMotion = checked;
       else if (t === "compactNumbers") state.uiPrefs.compactNumbers = checked;
+      else if (t === "soundMuted") state.uiPrefs.soundMuted = checked;
       else return;
       saveGame(state);
       render();
     });
+  });
+
+  document.getElementById("ui-master-volume")?.addEventListener("input", (ev) => {
+    const pct = Number((ev.target as HTMLInputElement).value);
+    state.uiPrefs.masterVolume = Math.max(0, Math.min(1, pct / 100));
+    const ro = document.getElementById("ui-master-volume-pct");
+    if (ro) ro.textContent = state.uiPrefs.soundMuted ? "静音" : `${Math.round(state.uiPrefs.masterVolume * 100)}%`;
+  });
+  document.getElementById("ui-master-volume")?.addEventListener("change", () => {
+    saveGame(state);
+  });
+  document.getElementById("btn-audio-test")?.addEventListener("click", () => {
+    void resumeAudioContext().then(() => playUiBlip(state));
   });
 
   document.getElementById("btn-tutorial-claim")?.addEventListener("click", () => {
