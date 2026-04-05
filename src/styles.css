@@ -385,19 +385,93 @@ body {
   touch-action: manipulation;
 }
 
-/* 幻域：生命/体力置于地图框右上，避免与底部剑气/凶煞读条重叠 */
-.dungeon-map-hud-tr {
+/* 幻域·阵线对决：左右对阵条（我方 | VS | 敌方），与中央意象、底部读条分层 */
+.dungeon-duel-vs-bar {
   position: absolute;
-  right: 8px;
-  top: 48px;
-  z-index: 11;
-  width: min(48%, 176px);
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 8px 4px max(72px, 8px);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.dungeon-duel-side {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: calc(50% - 28px);
   padding: 6px 8px;
   border-radius: 10px;
   background: rgba(6, 10, 18, 0.78);
-  border: 1px solid rgba(80, 110, 160, 0.45);
-  pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.dungeon-duel-side--player {
+  text-align: left;
+  border: 1px solid rgba(100, 150, 230, 0.42);
+}
+
+.dungeon-duel-side--enemy {
+  text-align: right;
+  border: 1px solid rgba(200, 110, 90, 0.42);
+}
+
+.dungeon-duel-side-tag {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  color: rgba(180, 195, 220, 0.75);
+  margin-bottom: 4px;
+}
+
+.dungeon-duel-side--enemy .dungeon-duel-side-tag {
+  text-align: right;
+}
+
+.dungeon-duel-vs-mid {
+  flex: 0 0 auto;
+  align-self: center;
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-size: clamp(0.85rem, 3.2vw, 1.05rem);
+  letter-spacing: 0.12em;
+  color: rgba(220, 200, 160, 0.45);
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.85);
+}
+
+.dungeon-boss-strip.dungeon-boss-strip--duel {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.dungeon-duel-side--enemy .dungeon-boss-strip-title {
+  text-align: right;
+  letter-spacing: 0.12em;
+}
+
+.dungeon-duel-side--enemy .dungeon-boss-strip-readout {
+  text-align: right;
+}
+
+@media (max-width: 420px) {
+  .dungeon-duel-vs-mid {
+    font-size: 0.72rem;
+    margin-top: 22px;
+  }
+  .dungeon-duel-side-tag {
+    letter-spacing: 0.18em;
+  }
 }
 
 .dungeon-hud-mini-row {
@@ -4391,7 +4465,7 @@ html.ui-reduce-motion *::after {
 .dungeon-duel-center {
   position: absolute;
   left: 50%;
-  top: 40%;
+  top: 46%;
   transform: translate(-50%, -50%);
   z-index: 4;
   display: flex;

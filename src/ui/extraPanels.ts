@@ -126,32 +126,39 @@ function renderDungeonMapHtml(state: GameState): string {
           undefined,
         )
       : "敌阵";
-  const bossHud = `<div class="dungeon-map-hud-overlay" aria-hidden="true">
-      <div class="dungeon-boss-strip" id="dungeon-boss-hud">
-        <div class="dungeon-boss-strip-title" id="dungeon-boss-name">${title}</div>
-        <div class="dungeon-boss-strip-bar-wrap">
-          <div class="dungeon-boss-strip-bar-bg" aria-hidden="true"></div>
-          <div class="dungeon-boss-strip-bar-fill" id="dungeon-boss-bar" style="width:${mobPct}%"></div>
-        </div>
-        <div class="dungeon-boss-strip-readout" id="dungeon-boss-hp-txt">${fmtNum(Math.max(0, d.monsterHp))} / ${fmtNum(d.monsterMax)}</div>
-      </div>
-      <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
-    </div>`;
   const hpPct = d.playerMax > 0 ? Math.min(100, (100 * Math.max(0, d.playerHp)) / d.playerMax) : 0;
   const staPct = DUNGEON_STAMINA_MAX > 0 ? Math.min(100, (100 * Math.max(0, d.stamina)) / DUNGEON_STAMINA_MAX) : 0;
   const hitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / playerDungeonAttackSpeedMult(state));
+  const floatOverlay = `<div class="dungeon-map-hud-overlay" aria-hidden="true">
+      <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
+    </div>`;
   return `
     <div class="dungeon-map-frame">
       <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
-      <div class="dungeon-map-hud-tr" aria-hidden="true">
-        <div class="dungeon-hud-mini-row"><span>生命</span><span id="dungeon-pl-txt">${fmtNum(Math.max(0, d.playerHp))} / ${fmtNum(d.playerMax)}</span></div>
-        <div class="progress-track dungeon slim hud-mini"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
-        <div class="dungeon-hud-mini-row"><span>体力</span><span id="dungeon-stamina-txt">${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}</span></div>
-        <div class="progress-track dungeon slim stamina-track hud-mini"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
-      </div>
       <div class="dungeon-map-wrap">
         <div class="dungeon-map dungeon-duel-stage is-aoe in-combat" id="dungeon-map" aria-label="幻域阵线对决" style="--dungeon-player-hit-interval:${hitIntSec}s">
-          ${bossHud}
+          <div class="dungeon-duel-vs-bar" aria-hidden="true">
+            <div class="dungeon-duel-side dungeon-duel-side--player">
+              <span class="dungeon-duel-side-tag">我方</span>
+              <div class="dungeon-hud-mini-row"><span>生命</span><span id="dungeon-pl-txt">${fmtNum(Math.max(0, d.playerHp))} / ${fmtNum(d.playerMax)}</span></div>
+              <div class="progress-track dungeon slim hud-mini"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
+              <div class="dungeon-hud-mini-row"><span>体力</span><span id="dungeon-stamina-txt">${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}</span></div>
+              <div class="progress-track dungeon slim stamina-track hud-mini"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
+            </div>
+            <div class="dungeon-duel-vs-mid">VS</div>
+            <div class="dungeon-duel-side dungeon-duel-side--enemy">
+              <span class="dungeon-duel-side-tag">敌方</span>
+              <div class="dungeon-boss-strip dungeon-boss-strip--duel" id="dungeon-boss-hud">
+                <div class="dungeon-boss-strip-title" id="dungeon-boss-name">${title}</div>
+                <div class="dungeon-boss-strip-bar-wrap">
+                  <div class="dungeon-boss-strip-bar-bg" aria-hidden="true"></div>
+                  <div class="dungeon-boss-strip-bar-fill" id="dungeon-boss-bar" style="width:${mobPct}%"></div>
+                </div>
+                <div class="dungeon-boss-strip-readout" id="dungeon-boss-hp-txt">${fmtNum(Math.max(0, d.monsterHp))} / ${fmtNum(d.monsterMax)}</div>
+              </div>
+            </div>
+          </div>
+          ${floatOverlay}
           <div class="dungeon-duel-center">
             <img class="dungeon-duel-deco" src="${UI_DUNGEON_DUEL_DECO}" alt="" width="100" height="100" loading="lazy" />
             <p class="hint sm dungeon-duel-tagline">连击叠伤 · 随机破绽 · 战意爆发 · 克制灵脉 — 与剑气/凶煞同帧验证</p>
