@@ -6,6 +6,7 @@ import { addStones } from "./stones";
 import { metalGachaBonusStones } from "./deckSynergy";
 import { generateRandomGear } from "./systems/gearCraft";
 import { noteWeeklyBountyCardPulls } from "./systems/weeklyBounty";
+import { daoMeridianLuckFlat } from "./systems/daoMeridian";
 
 /** 基础概率（单抽），会被 meta.gachaLuck 略微提升高稀有 */
 const BASE_WEIGHT: Record<Rarity, number> = {
@@ -21,7 +22,7 @@ export const UR_PITY_MAX = 90;
 const SSR_SOFT_START = 65;
 
 function luckFactor(state: GameState): number {
-  return 1 + state.meta.gachaLuck * 0.02;
+  return 1 + state.meta.gachaLuck * 0.02 + daoMeridianLuckFlat(state);
 }
 
 function pickRarity(state: GameState): Rarity {

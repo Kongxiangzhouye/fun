@@ -13,6 +13,7 @@ import {
   defenseFlatBonusFromSkills,
 } from "./battleSkills";
 import { petDungeonDefenseFlat, petEssenceFindMult } from "./pets";
+import { daoMeridianHpMult } from "./daoMeridian";
 
 /** 与 deckSynergy.elementCounts 同规则，避免与 deckSynergy ↔ playerCombat 循环依赖 */
 function deckSlotElementCounts(state: GameState): Record<Element, number> {
@@ -78,7 +79,7 @@ export function playerMaxHp(state: GameState): number {
   const g = collectEquippedGear(state);
   const life = sumGearMods(g, "life_flat");
   const base = 100 + state.realmLevel * 12 + combatSkillLevel(state) * 6 + life;
-  return Math.max(10, Math.floor(base));
+  return Math.max(10, Math.floor(base * daoMeridianHpMult(state)));
 }
 
 export function playerCritChance(state: GameState): number {

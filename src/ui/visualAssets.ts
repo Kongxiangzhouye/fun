@@ -61,6 +61,8 @@ export const UI_HEAD_GARDEN = asset("deco-garden-header.svg");
 export const UI_HEAD_BOUNTY = asset("deco-bounty-header.svg");
 /** 幻域周常词缀条左侧装饰 */
 export const UI_DUNGEON_AFFIX_DECO = asset("deco-dungeon-affix.svg");
+/** 道韵灵窍页标题装饰 */
+export const UI_HEAD_DAO_MERIDIAN = asset("deco-dao-meridian.svg");
 export const UI_EMPTY_GEAR = asset("art-empty-gear.svg");
 export const UI_EMPTY_PET = asset("art-empty-pet.svg");
 export const UI_EMPTY_UNLOCK = asset("art-empty-unlock.svg");

@@ -381,6 +381,11 @@ export interface GameState {
 
   /** 周常悬赏进度与领取记录 */
   weeklyBounty: WeeklyBountyState;
+
+  /**
+   * 道韵灵窍：0–5 已解锁层数（消耗道韵；轮回不重置）
+   */
+  daoMeridian: number;
 }
 
 export const DECK_SIZE = 6;

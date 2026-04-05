@@ -106,6 +106,8 @@ import {
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderBountyPanel, updateBountyPanelReadouts } from "./ui/bountyPanel";
+import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
+import { tryBuyDaoMeridian } from "./systems/daoMeridian";
 import { claimWeeklyBountyTask, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
 import {
   plantCrop,
@@ -231,7 +233,7 @@ let veinHelpDocListenerBound = false;
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
 type EstateSub = "idle" | "vein" | "garden";
 type CultivateSub = "deck" | "train" | "pets" | "codex" | "meta" | "ach" | "bounty";
-type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive";
+type CharacterSub = "stats" | "cards" | "gear" | "guides" | "archive" | "meridian";
 
 let activeHub: HubId = "estate";
 let estateSub: EstateSub = "idle";
@@ -1067,6 +1069,9 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   if (!u.tabBounty) {
     unlockLines.push("「<strong>养成→周常悬赏</strong>」解锁条件：境界≥5，或抽卡≥5。");
   }
+  if (!u.tabDaoMeridian) {
+    unlockLines.push("「<strong>角色→道韵·灵窍</strong>」解锁条件：已轮回，或道韵≥15，或曾贯通灵窍。");
+  }
   if (!u.tabMeta && u.tabCodex) {
     unlockLines.push("「<strong>养成→轮回</strong>」解锁条件：境界≥18，或已轮回。");
   }
@@ -1648,6 +1653,7 @@ function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
     }
   };
   if (activeHub === "cultivate" && !subOk(cultivateSub)) cultivateSub = "deck";
+  if (activeHub === "character" && characterSub === "meridian" && !u.tabDaoMeridian) characterSub = "stats";
 }
 
 /** 二级页签：主内容区顶部横排（幻域已独立为底部「幻域」页） */
@@ -1691,10 +1697,15 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
       mkCult("ach", "成就·奖励", u.tabAch, cultivateSub === "ach", false),
     ].join("");
   } else if (activeHub === "character") {
+    const mkCharUnlock = (id: CharacterSub, label: string, unlocked: boolean, active: boolean): string =>
+      unlocked
+        ? mkChar(id, label, active)
+        : `<span class="hub-sub-tab hub-sub-tab-locked" title="未解锁">${label}</span>`;
     left = [
       mkChar("stats", "属性·总览", characterSub === "stats"),
       mkChar("cards", "卡牌·仓库", characterSub === "cards"),
       mkChar("gear", "装备·背包", characterSub === "gear"),
+      mkCharUnlock("meridian", "道韵·灵窍", u.tabDaoMeridian, characterSub === "meridian"),
       mkChar("guides", "功能·指引", characterSub === "guides"),
       mkChar("archive", "存档·管理", characterSub === "archive"),
     ].join("");
@@ -1743,6 +1754,8 @@ function renderDiscoverabilityHint(): string {
       text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在「角色→存档·管理」。";
     } else if (characterSub === "archive") {
       text = "常用入口：这里集中管理保存/导出/导入与重置存档。";
+    } else if (characterSub === "meridian") {
+      text = "常用入口：道韵灵窍消耗道韵获得永久加成；道韵主要来自轮回结算。";
     }
   } else if (activeHub === "gacha") {
     text = "常用入口：灵卡池=卡牌，铸灵池=装备；自动分解开关在本页底部。";
@@ -1770,6 +1783,9 @@ function renderBottomNav(u: ReturnType<typeof getUiUnlocks>): string {
 function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
   if (characterSub === "stats") {
     return `<div class="character-hub-root">${renderPlayerStatsBlock(state)}${renderCombatStatsPanel()}</div>`;
+  }
+  if (characterSub === "meridian" && u.tabDaoMeridian) {
+    return `<div class="character-hub-root">${renderDaoMeridianPanel(state)}</div>`;
   }
   if (characterSub === "cards") {
     return `<div class="character-hub-root">${renderCharacterCardsPanel()}</div>`;
@@ -2427,7 +2443,9 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.querySelectorAll("[data-character-sub]").forEach((el) => {
     el.addEventListener("click", () => {
       const s = (el as HTMLElement).dataset.characterSub as CharacterSub | undefined;
-      if (s !== "stats" && s !== "cards" && s !== "gear" && s !== "guides" && s !== "archive") return;
+      if (s !== "stats" && s !== "cards" && s !== "gear" && s !== "guides" && s !== "archive" && s !== "meridian")
+        return;
+      if (s === "meridian" && !getUiUnlocks(state).tabDaoMeridian) return;
       characterSub = s;
       if (s !== "gear") gearDetailSlot = null;
       render();
@@ -2765,6 +2783,17 @@ function bindEvents(rb: Decimal, _slots: number): void {
     deckModalSlot = null;
     gearDetailSlot = null;
     render();
+  });
+
+  document.getElementById("btn-dao-meridian-buy")?.addEventListener("click", () => {
+    if (tryBuyDaoMeridian(state)) {
+      tryCompleteAchievements(state);
+      saveGame(state);
+      toast("灵窍贯通，道韵已固化为修为。");
+      render();
+    } else {
+      toast("无法贯通：道韵不足或已达上限。");
+    }
   });
 
   document.querySelectorAll("[data-vein]").forEach((el) => {

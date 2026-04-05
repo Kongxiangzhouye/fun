@@ -1,4 +1,5 @@
 import type { GameState } from "../types";
+import { daoMeridianDungeonAtkMult } from "./daoMeridian";
 import { currentWeekKey } from "./weeklyBounty";
 import { playerExpectedDps } from "./playerCombat";
 
@@ -91,5 +92,5 @@ export function dungeonAffixMobDamageMult(now: number): number {
 
 /** 幻域脚标期望秒伤：含本周「锐锋印」等攻击向词缀 */
 export function playerExpectedDpsDungeonAffix(state: GameState, now: number): number {
-  return playerExpectedDps(state) * dungeonAffixPlayerAtkMult(now);
+  return playerExpectedDps(state) * dungeonAffixPlayerAtkMult(now) * daoMeridianDungeonAtkMult(state);
 }

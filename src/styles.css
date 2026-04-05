@@ -5792,3 +5792,63 @@ header h1 {
   opacity: 0.75;
   font-size: 0.76rem;
 }
+
+/* —— 角色 · 道韵灵窍 —— */
+.dao-meridian-panel .dao-meridian-list {
+  margin: 12px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dao-meridian-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 180, 120, 0.28);
+  background: rgba(18, 16, 12, 0.55);
+}
+
+.dao-meridian-row.done {
+  border-color: rgba(100, 180, 130, 0.4);
+  opacity: 0.88;
+}
+
+.dao-meridian-row.current {
+  border-color: rgba(230, 200, 120, 0.55);
+  box-shadow: 0 0 0 1px rgba(230, 200, 120, 0.15);
+}
+
+.dao-meridian-row.locked {
+  opacity: 0.65;
+}
+
+.dao-meridian-badge {
+  flex-shrink: 0;
+  width: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  color: #d4c4a8;
+}
+
+.dao-meridian-row-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dao-meridian-row-body strong {
+  color: #f0e6d4;
+  letter-spacing: 0.04em;
+}
+
+.dao-meridian-cost {
+  margin-top: 4px;
+}
+
+.dao-meridian-actions {
+  margin-top: 4px;
+}

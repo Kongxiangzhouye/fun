@@ -43,6 +43,7 @@ import {
   dungeonAffixMobHpMult,
   dungeonAffixPlayerAtkMult,
 } from "./dungeonAffix";
+import { daoMeridianDungeonAtkMult, daoMeridianDungeonEssenceMult } from "./daoMeridian";
 import {
   DUNGEON_MAP_H,
   DUNGEON_MAP_W,
@@ -1106,7 +1107,7 @@ export function essenceRewardTotalFloat(
   const base = 5 + wave * 2.1;
   let v = Math.max(0.05, base * essenceFindMult(state) * (1 + dungeonEssenceBonusFromSkills(state)));
   if (isBoss) v *= 1.45;
-  v *= dungeonAffixEssenceMult(Date.now());
+  v *= dungeonAffixEssenceMult(Date.now()) * daoMeridianDungeonEssenceMult(state);
   if (repeatMode) {
     v *= DUNGEON_REPEAT_ESSENCE_MULT;
     // 复刷若明显落后前沿波次，则再做温和衰减，避免长期低关稳定刷最优。
@@ -1591,7 +1592,8 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
   const baseAtk =
     playerAttack(state) *
     (1 + skillAtk + petDungeonAtkAdditive(state)) *
-    dungeonAffixPlayerAtkMult(now);
+    dungeonAffixPlayerAtkMult(now) *
+    daoMeridianDungeonAtkMult(state);
   const cc = playerCritChance(state);
   const cm = playerCritMult(state);
   const pDodge = playerDungeonDodgeChance(state);

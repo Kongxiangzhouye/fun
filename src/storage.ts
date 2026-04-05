@@ -19,6 +19,7 @@ import {
   normalizeWeeklyBounty,
   ensureWeeklyBountyWeek,
 } from "./systems/weeklyBounty";
+import { normalizeDaoMeridian } from "./systems/daoMeridian";
 
 const KEY = "idle-gacha-realm-v1";
 
@@ -82,6 +83,7 @@ export interface SerializedState {
   petPullsTotal?: number;
   spiritGarden?: GameState["spiritGarden"];
   weeklyBounty?: GameState["weeklyBounty"];
+  daoMeridian?: number;
   combatHpCurrent?: number;
   dungeonSanctuaryMode?: boolean;
   dungeonPortalTargetWave?: number;
@@ -272,6 +274,7 @@ export function serialize(state: GameState): string {
       breakthroughs: state.weeklyBounty.breakthroughs,
       claimed: [...state.weeklyBounty.claimed],
     },
+    daoMeridian: state.daoMeridian,
     combatHpCurrent: state.combatHpCurrent,
     dungeonSanctuaryMode: state.dungeonSanctuaryMode,
     dungeonPortalTargetWave: state.dungeonPortalTargetWave,
@@ -428,6 +431,10 @@ export function deserialize(json: string): GameState {
   }
   normalizeWeeklyBounty(st);
   ensureWeeklyBountyWeek(st, Date.now());
+  if (data.daoMeridian != null && Number.isFinite(data.daoMeridian)) {
+    st.daoMeridian = Math.floor(data.daoMeridian);
+  }
+  normalizeDaoMeridian(st);
   st.combatHpCurrent =
     data.combatHpCurrent !== undefined && data.combatHpCurrent !== null && Number.isFinite(data.combatHpCurrent)
       ? data.combatHpCurrent
