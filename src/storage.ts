@@ -32,9 +32,13 @@ import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
 /** 旧版单键存档（首次启动时迁移到槽位 0） */
 const LEGACY_KEY = "idle-gacha-realm-v1";
 const ACTIVE_SLOT_KEY = "idle-gacha-realm-active-slot";
+/** 各槽位用户备注（仅存本机，不随导出存档字符串迁移） */
+const SLOT_LABELS_KEY = "idle-gacha-realm-slot-labels";
 
 /** 本地存档位数量（0 起算索引） */
 export const SAVE_SLOT_COUNT = 3;
+/** 存档位备注最大字符数 */
+export const SAVE_SLOT_LABEL_MAX = 20;
 
 function storageKeyForSlot(slot: number): string {
   return `idle-gacha-realm-v1-slot-${slot}`;
@@ -695,6 +699,63 @@ function setActiveSlotIndex(slot: number): void {
   if (slot < 0 || slot >= SAVE_SLOT_COUNT) return;
   try {
     localStorage.setItem(ACTIVE_SLOT_KEY, String(slot));
+  } catch {
+    /* ignore */
+  }
+}
+
+function sanitizeSlotLabel(raw: string): string {
+  return raw
+    .replace(/[\x00-\x1f\x7f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, SAVE_SLOT_LABEL_MAX);
+}
+
+/** 读取某槽用户备注（本机 meta，可为空字符串） */
+export function getSlotLabel(slot: number): string {
+  ensureSaveSlotsMigrated();
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return "";
+  try {
+    const raw = localStorage.getItem(SLOT_LABELS_KEY);
+    if (!raw) return "";
+    const o = JSON.parse(raw) as Record<string, unknown>;
+    if (!o || typeof o !== "object") return "";
+    const v = o[String(slot)];
+    return typeof v === "string" ? sanitizeSlotLabel(v) : "";
+  } catch {
+    return "";
+  }
+}
+
+/** 写入某槽备注；空字符串则清除该槽条目 */
+export function setSlotLabel(slot: number, label: string): void {
+  ensureSaveSlotsMigrated();
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return;
+  try {
+    const cleaned = sanitizeSlotLabel(label);
+    const o: Record<string, string> = {};
+    const prev = localStorage.getItem(SLOT_LABELS_KEY);
+    if (prev) {
+      try {
+        const parsed = JSON.parse(prev) as Record<string, unknown>;
+        if (parsed && typeof parsed === "object") {
+          for (let i = 0; i < SAVE_SLOT_COUNT; i++) {
+            const vv = parsed[String(i)];
+            if (typeof vv === "string") {
+              const s = sanitizeSlotLabel(vv);
+              if (s) o[String(i)] = s;
+            }
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    if (cleaned === "") delete o[String(slot)];
+    else o[String(slot)] = cleaned;
+    if (Object.keys(o).length === 0) localStorage.removeItem(SLOT_LABELS_KEY);
+    else localStorage.setItem(SLOT_LABELS_KEY, JSON.stringify(o));
   } catch {
     /* ignore */
   }

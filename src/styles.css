@@ -2454,6 +2454,12 @@ h1 {
   margin-bottom: 6px;
 }
 
+.save-tools-panel .save-slots-label-head-ico {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.88;
+}
+
 .save-tools-panel .save-slots-head-ico {
   flex-shrink: 0;
   opacity: 0.94;
@@ -2496,9 +2502,17 @@ h1 {
   min-width: min(100%, 200px);
 }
 
+.save-tools-panel .save-slot-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 4px;
+}
+
 .save-tools-panel .save-slot-title {
   font-size: 0.95rem;
-  margin-right: 8px;
+  margin-right: 0;
 }
 
 .save-tools-panel .save-slot-badge {
@@ -2515,10 +2529,38 @@ h1 {
 
 .save-tools-panel .save-slot-meta {
   display: block;
-  margin-top: 4px;
+  margin-top: 0;
+  margin-bottom: 8px;
   font-size: 0.84rem;
   color: var(--muted);
   line-height: 1.35;
+}
+
+.save-tools-panel .save-slot-label-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.save-tools-panel .save-slot-label-field {
+  font-size: 0.82rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.save-tools-panel .save-slot-label-input {
+  flex: 1;
+  min-width: min(100%, 160px);
+  max-width: 100%;
+  padding: 8px 10px;
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg0);
+  color: var(--text);
+  font-size: 0.9rem;
 }
 
 .save-tools-panel .save-slot-actions {

@@ -27,6 +27,9 @@ import {
   peekSlotSummary,
   switchToSaveSlot,
   copyCurrentToSlot,
+  getSlotLabel,
+  setSlotLabel,
+  SAVE_SLOT_LABEL_MAX,
 } from "./storage";
 import {
   incomePerSecond,
@@ -143,6 +146,7 @@ import {
   UI_DATA_OVERVIEW_DECO,
   UI_SOUND_PREFS_DECO,
   UI_SAVE_SLOTS_DECO,
+  UI_SAVE_SLOT_LABEL_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_DATA_EXPORT_DECO,
   UI_DATA_STATS_DOWNLOAD_DECO,
@@ -1918,7 +1922,7 @@ function renderDiscoverabilityHint(): string {
     } else if (characterSub === "data") {
       text = "常用入口：可复制或下载统计摘要（.txt）；详细规则见「养成→图鉴」，奖励见「成就」。";
     } else if (characterSub === "archive") {
-      text = "常用入口：本机多存档位、保存/导出/导入与重置均在此；切换槽位前会自动保存当前槽。";
+      text = "常用入口：多存档位与本机备注、保存/导出/导入与重置均在此；切换槽位前会自动保存当前槽。";
     } else if (characterSub === "meridian") {
       text = "常用入口：道韵灵窍消耗道韵获得永久加成；道韵主要来自轮回结算。";
     }
@@ -2345,16 +2349,36 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-harvests", String(st.spiritGarden.totalHarvests));
 }
 
+function escapeHtmlAttr(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function renderSaveSlotRow(i: number): string {
   const active = getActiveSlotIndex();
   const sum = peekSlotSummary(i);
   const meta = sum.empty ? "空槽" : `境界 ${sum.realmLevel} · ${fmtPlaytimeSec(sum.playtimeSec ?? 0)}`;
   const isActive = i === active;
+  const labelVal = escapeHtmlAttr(getSlotLabel(i));
   return `<li class="save-slot-row">
     <div class="save-slot-main">
-      <strong class="save-slot-title">槽位 ${i + 1}</strong>
-      ${isActive ? `<span class="save-slot-badge">当前</span>` : ""}
+      <div class="save-slot-title-row">
+        <strong class="save-slot-title">槽位 ${i + 1}</strong>
+        ${isActive ? `<span class="save-slot-badge">当前</span>` : ""}
+      </div>
       <span class="save-slot-meta">${meta}</span>
+      <div class="save-slot-label-row">
+        <label class="save-slot-label-field" for="save-slot-label-${i}">备注</label>
+        <input
+          type="text"
+          id="save-slot-label-${i}"
+          class="save-slot-label-input"
+          data-save-slot-label="${i}"
+          maxlength="${SAVE_SLOT_LABEL_MAX}"
+          autocomplete="off"
+          placeholder="本机备注，最多 ${SAVE_SLOT_LABEL_MAX} 字"
+          value="${labelVal}"
+        />
+      </div>
     </div>
     <div class="save-slot-actions">
       ${
@@ -2375,8 +2399,17 @@ function renderSaveToolsPanel(): string {
       <div class="save-slots-head">
         <img class="save-slots-head-ico" src="${UI_SAVE_SLOTS_DECO}" alt="" width="26" height="26" loading="lazy" />
         <h3 class="save-slots-heading">本机存档位</h3>
+        <img
+          class="save-slots-label-head-ico"
+          src="${UI_SAVE_SLOT_LABEL_DECO}"
+          alt=""
+          width="22"
+          height="22"
+          loading="lazy"
+          title="槽位备注仅保存在本机，不随导出存档字符串迁移"
+        />
       </div>
-      <p class="hint sm save-slots-hint">共 ${SAVE_SLOT_COUNT} 个独立槽位。切换前会自动保存当前槽；切换到空槽将开始新开局。</p>
+      <p class="hint sm save-slots-hint">共 ${SAVE_SLOT_COUNT} 个独立槽位；可填备注区分周目。切换前会自动保存当前槽；空槽切换将新开局。备注不写入导出字符串。</p>
       <ul class="save-slots-list">${rows}</ul>
     </div>
     <div class="footer-tools">
@@ -3944,6 +3977,16 @@ function bindEvents(rb: Decimal, _slots: number): void {
       copyCurrentToSlot(slot, state);
       toast(`已复制当前进度到存档位 ${slot + 1}`);
       render();
+    });
+  });
+
+  document.querySelectorAll(".save-slot-label-input").forEach((el) => {
+    el.addEventListener("change", () => {
+      const inp = el as HTMLInputElement;
+      const slot = Number(inp.dataset.saveSlotLabel);
+      if (!Number.isFinite(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) return;
+      setSlotLabel(slot, inp.value);
+      inp.value = getSlotLabel(slot);
     });
   });
 
