@@ -29,7 +29,46 @@ import {
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
 
-const KEY = "idle-gacha-realm-v1";
+/** 旧版单键存档（首次启动时迁移到槽位 0） */
+const LEGACY_KEY = "idle-gacha-realm-v1";
+const ACTIVE_SLOT_KEY = "idle-gacha-realm-active-slot";
+
+/** 本地存档位数量（0 起算索引） */
+export const SAVE_SLOT_COUNT = 3;
+
+function storageKeyForSlot(slot: number): string {
+  return `idle-gacha-realm-v1-slot-${slot}`;
+}
+
+let slotsMigrationChecked = false;
+
+/** 将旧单文件存档迁入槽 0，并保证存在激活槽位索引 */
+function ensureSaveSlotsMigrated(): void {
+  if (slotsMigrationChecked) return;
+  slotsMigrationChecked = true;
+  if (typeof localStorage === "undefined") return;
+  try {
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    const hasSlotData = (): boolean => {
+      for (let i = 0; i < SAVE_SLOT_COUNT; i++) {
+        if (localStorage.getItem(storageKeyForSlot(i))) return true;
+      }
+      return false;
+    };
+    if (legacy && !hasSlotData()) {
+      localStorage.setItem(storageKeyForSlot(0), legacy);
+      localStorage.setItem(ACTIVE_SLOT_KEY, "0");
+      localStorage.removeItem(LEGACY_KEY);
+    } else if (legacy) {
+      localStorage.removeItem(LEGACY_KEY);
+    }
+    if (!localStorage.getItem(ACTIVE_SLOT_KEY)) {
+      localStorage.setItem(ACTIVE_SLOT_KEY, "0");
+    }
+  } catch {
+    /* ignore */
+  }
+}
 
 function normalizeGearInventorySort(raw: unknown): GearInventorySortMode {
   if (raw === "rarity" || raw === "ilvl" || raw === "slot" || raw === "name") return raw;
@@ -640,18 +679,94 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   return st;
 }
 
+export function getActiveSlotIndex(): number {
+  ensureSaveSlotsMigrated();
+  try {
+    const v = localStorage.getItem(ACTIVE_SLOT_KEY);
+    const n = v != null ? parseInt(v, 10) : 0;
+    if (Number.isFinite(n) && n >= 0 && n < SAVE_SLOT_COUNT) return n;
+  } catch {
+    /* ignore */
+  }
+  return 0;
+}
+
+function setActiveSlotIndex(slot: number): void {
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return;
+  try {
+    localStorage.setItem(ACTIVE_SLOT_KEY, String(slot));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 用于存档页展示：不反序列化完整 GameState */
+export function peekSlotSummary(slot: number): { empty: boolean; realmLevel?: number; playtimeSec?: number } {
+  ensureSaveSlotsMigrated();
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return { empty: true };
+  try {
+    const raw = localStorage.getItem(storageKeyForSlot(slot));
+    if (!raw) return { empty: true };
+    const data = JSON.parse(raw) as { realmLevel?: number; playtimeSec?: number };
+    return {
+      empty: false,
+      realmLevel: Math.max(1, Math.floor(data.realmLevel ?? 1)),
+      playtimeSec: Math.max(0, Math.floor(data.playtimeSec ?? 0)),
+    };
+  } catch {
+    return { empty: true };
+  }
+}
+
+/** 将内存中的进度写入指定槽（用于复制；不切换激活槽） */
+export function copyCurrentToSlot(target: number, current: GameState): void {
+  ensureSaveSlotsMigrated();
+  if (target < 0 || target >= SAVE_SLOT_COUNT) return;
+  try {
+    current.version = SAVE_VERSION;
+    localStorage.setItem(storageKeyForSlot(target), serialize(current));
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * 先刷写当前槽，再切换激活槽并载入目标槽（空槽则新开局）。
+ * 返回新的 GameState，调用方应替换全局 `state` 并重绘。
+ */
+export function switchToSaveSlot(slot: number, current: GameState): GameState {
+  ensureSaveSlotsMigrated();
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return current;
+  const from = getActiveSlotIndex();
+  if (slot === from) return current;
+  try {
+    current.version = SAVE_VERSION;
+    localStorage.setItem(storageKeyForSlot(from), serialize(current));
+    setActiveSlotIndex(slot);
+    const raw = localStorage.getItem(storageKeyForSlot(slot));
+    if (raw) return deserialize(raw);
+    return createInitialState();
+  } catch {
+    return current;
+  }
+}
+
 export function saveGame(state: GameState): void {
   try {
     state.version = SAVE_VERSION;
-    localStorage.setItem(KEY, serialize(state));
+    ensureSaveSlotsMigrated();
+    const slot = getActiveSlotIndex();
+    localStorage.setItem(storageKeyForSlot(slot), serialize(state));
   } catch {
     /* ignore */
   }
 }
 
 export function loadGame(): GameState {
+  ensureSaveSlotsMigrated();
   try {
-    const raw = localStorage.getItem(KEY);
+    const slot = getActiveSlotIndex();
+    const raw = localStorage.getItem(storageKeyForSlot(slot));
     if (raw) return deserialize(raw);
   } catch {
     /* ignore */
@@ -678,8 +793,10 @@ export function totalCardsInPool(): number {
 
 /** 删除本地存档并生成全新灵识（立即写回存档位） */
 export function clearSaveAndNewGame(): GameState {
+  ensureSaveSlotsMigrated();
+  const slot = getActiveSlotIndex();
   try {
-    localStorage.removeItem(KEY);
+    localStorage.removeItem(storageKeyForSlot(slot));
   } catch {
     /* ignore */
   }

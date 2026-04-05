@@ -15,7 +15,19 @@ import {
   DUNGEON_STAMINA_MAX,
   DUNGEON_DODGE_STAMINA_COST,
 } from "./types";
-import { loadGame, saveGame, exportSave, importSave, totalCardsInPool, clearSaveAndNewGame } from "./storage";
+import {
+  loadGame,
+  saveGame,
+  exportSave,
+  importSave,
+  totalCardsInPool,
+  clearSaveAndNewGame,
+  SAVE_SLOT_COUNT,
+  getActiveSlotIndex,
+  peekSlotSummary,
+  switchToSaveSlot,
+  copyCurrentToSlot,
+} from "./storage";
 import {
   incomePerSecond,
   incomeBreakdownForDisplay,
@@ -130,6 +142,7 @@ import {
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
   UI_SOUND_PREFS_DECO,
+  UI_SAVE_SLOTS_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -1900,7 +1913,7 @@ function renderDiscoverabilityHint(): string {
     } else if (characterSub === "data") {
       text = "常用入口：汇总历程与唤引等统计；详细规则见「养成→图鉴」，奖励见「成就」。";
     } else if (characterSub === "archive") {
-      text = "常用入口：这里集中管理保存/导出/导入与重置存档。";
+      text = "常用入口：本机多存档位、保存/导出/导入与重置均在此；切换槽位前会自动保存当前槽。";
     } else if (characterSub === "meridian") {
       text = "常用入口：道韵灵窍消耗道韵获得永久加成；道韵主要来自轮回结算。";
     }
@@ -2152,10 +2165,40 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-harvests", String(st.spiritGarden.totalHarvests));
 }
 
+function renderSaveSlotRow(i: number): string {
+  const active = getActiveSlotIndex();
+  const sum = peekSlotSummary(i);
+  const meta = sum.empty ? "空槽" : `境界 ${sum.realmLevel} · ${fmtPlaytimeSec(sum.playtimeSec ?? 0)}`;
+  const isActive = i === active;
+  return `<li class="save-slot-row">
+    <div class="save-slot-main">
+      <strong class="save-slot-title">槽位 ${i + 1}</strong>
+      ${isActive ? `<span class="save-slot-badge">当前</span>` : ""}
+      <span class="save-slot-meta">${meta}</span>
+    </div>
+    <div class="save-slot-actions">
+      ${
+        !isActive
+          ? `<button type="button" class="btn save-slot-btn" data-save-slot-activate="${i}">切换到此槽</button><button type="button" class="btn save-slot-btn" data-save-slot-copy="${i}">将当前复制到此槽</button>`
+          : ""
+      }
+    </div>
+  </li>`;
+}
+
 function renderSaveToolsPanel(): string {
+  const rows = Array.from({ length: SAVE_SLOT_COUNT }, (_, i) => renderSaveSlotRow(i)).join("");
   return `<section class="panel save-tools-panel">
     <h2>存档管理</h2>
     <p class="hint">保存/导出/导入与重置都集中在这里。重置前建议先导出备份。</p>
+    <div class="save-slots-block">
+      <div class="save-slots-head">
+        <img class="save-slots-head-ico" src="${UI_SAVE_SLOTS_DECO}" alt="" width="26" height="26" loading="lazy" />
+        <h3 class="save-slots-heading">本机存档位</h3>
+      </div>
+      <p class="hint sm save-slots-hint">共 ${SAVE_SLOT_COUNT} 个独立槽位。切换前会自动保存当前槽；切换到空槽将开始新开局。</p>
+      <ul class="save-slots-list">${rows}</ul>
+    </div>
     <div class="footer-tools">
       <button class="btn" type="button" id="btn-save">保存到本机</button>
       <button class="btn" type="button" id="btn-export">导出存档字符串</button>
@@ -3654,6 +3697,44 @@ function bindEvents(rb: Decimal, _slots: number): void {
 
   document.getElementById("btn-save-download")?.addEventListener("click", () => {
     triggerDownloadSaveBackup();
+  });
+
+  document.querySelectorAll("[data-save-slot-activate]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const slot = Number((btn as HTMLElement).dataset.saveSlotActivate);
+      if (!Number.isFinite(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) return;
+      if (slot === getActiveSlotIndex()) return;
+      if (peekSlotSummary(slot).empty) {
+        const ok = confirm(
+          `存档位 ${slot + 1} 当前为空。切换后将从此槽开始新开局（当前槽会先保存）。确定吗？`,
+        );
+        if (!ok) return;
+      }
+      state = switchToSaveSlot(slot, state);
+      selectedInvId = null;
+      refineTargetId = null;
+      autoEnterPromptHandled = false;
+      flyCreditsDismissed = false;
+      saveGame(state);
+      toast(`已切换到存档位 ${slot + 1}`);
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-save-slot-copy]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const slot = Number((btn as HTMLElement).dataset.saveSlotCopy);
+      if (!Number.isFinite(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) return;
+      if (slot === getActiveSlotIndex()) return;
+      const sum = peekSlotSummary(slot);
+      if (!sum.empty) {
+        const ok = confirm(`将用当前进度覆盖存档位 ${slot + 1} 的已有存档。确定吗？`);
+        if (!ok) return;
+      }
+      copyCurrentToSlot(slot, state);
+      toast(`已复制当前进度到存档位 ${slot + 1}`);
+      render();
+    });
   });
 
   document.getElementById("btn-import")?.addEventListener("click", () => {

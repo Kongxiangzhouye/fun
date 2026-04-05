@@ -2439,6 +2439,101 @@ h1 {
   opacity: 0.92;
 }
 
+.save-tools-panel .save-slots-block {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.04);
+}
+
+.save-tools-panel .save-slots-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.save-tools-panel .save-slots-head-ico {
+  flex-shrink: 0;
+  opacity: 0.94;
+}
+
+.save-tools-panel .save-slots-heading {
+  margin: 0;
+  font-size: 1rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.save-tools-panel .save-slots-hint {
+  margin: 0 0 10px;
+}
+
+.save-tools-panel .save-slots-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.save-tools-panel .save-slot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.save-tools-panel .save-slot-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.save-tools-panel .save-slot-main {
+  flex: 1;
+  min-width: min(100%, 200px);
+}
+
+.save-tools-panel .save-slot-title {
+  font-size: 0.95rem;
+  margin-right: 8px;
+}
+
+.save-tools-panel .save-slot-badge {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: middle;
+  color: var(--bg0);
+  background: linear-gradient(90deg, #6b9cff, #4a78c8);
+}
+
+.save-tools-panel .save-slot-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.84rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.save-tools-panel .save-slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.save-tools-panel .save-slot-btn {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+}
+
 .ui-prefs-panel .ui-prefs-list {
   list-style: none;
   margin: 0;
