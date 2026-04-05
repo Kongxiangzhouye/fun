@@ -144,6 +144,7 @@ import {
   UI_SOUND_PREFS_DECO,
   UI_SAVE_SLOTS_DECO,
   UI_KEYBOARD_HELP_DECO,
+  UI_DATA_EXPORT_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -1914,7 +1915,7 @@ function renderDiscoverabilityHint(): string {
     } else if (characterSub === "settings") {
       text = "常用入口：动效、数字与音频偏好在此；按 ? 打开快捷键说明；备份与导入在「存档·管理」。";
     } else if (characterSub === "data") {
-      text = "常用入口：汇总历程与唤引等统计；详细规则见「养成→图鉴」，奖励见「成就」。";
+      text = "常用入口：可一键复制统计摘要（纯文本）；详细规则见「养成→图鉴」，奖励见「成就」。";
     } else if (characterSub === "archive") {
       text = "常用入口：本机多存档位、保存/导出/导入与重置均在此；切换槽位前会自动保存当前槽。";
     } else if (characterSub === "meridian") {
@@ -2142,6 +2143,57 @@ function handleGlobalKeyboardShortcuts(e: KeyboardEvent): void {
 
 const GEAR_FORGE_RARITY_RANK_LABELS = ["N", "R", "SR", "SSR", "UR"] as const;
 
+function buildDataOverviewExportText(st: GameState): string {
+  const d = st.dungeon;
+  const lt = st.lifetimeStats;
+  const pool = totalCardsInPool();
+  const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
+  const rarityPeak =
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_FORGE_RARITY_RANK_LABELS.length
+      ? GEAR_FORGE_RARITY_RANK_LABELS[lt.maxGearRarityRankForged]
+      : "—";
+  const slotIdx = getActiveSlotIndex();
+  const lines: string[] = [
+    "万象唤灵 · 数据摘要",
+    `导出时间（本地 ISO）: ${new Date().toISOString()}`,
+    `当前存档位: ${slotIdx + 1} / ${SAVE_SLOT_COUNT}`,
+    `存档数据版本: ${st.version}`,
+    "",
+    "[历程与境界]",
+    `累计入世时长: ${fmtPlaytimeSec(st.playtimeSec)}`,
+    `本轮回第几日: 第 ${lifeDay} 日`,
+    `境界: ${st.realmLevel}`,
+    `轮回次数: ${st.reincarnations}`,
+    `本轮灵石峰值: ${fmtDecimal(new Decimal(st.peakSpiritStonesThisLife || "0"))}`,
+    `灵息连签: ${st.dailyStreak}`,
+    "",
+    "[唤引与图鉴]",
+    `灵卡唤引总次数: ${st.totalPulls}`,
+    `本轮唤引次数: ${st.pullsThisLife ?? 0}`,
+    `灵宠唤引累计: ${st.petPullsTotal}`,
+    `图鉴解锁: ${st.codexUnlocked.size} / ${pool}`,
+    `持有不同灵卡: ${countUniqueOwned(st)}`,
+    `成就: ${st.achievementsDone.size} / ${ACHIEVEMENTS.length}`,
+    "",
+    "[幻域]",
+    `历史最高波次: ${d.maxWaveRecord}`,
+    `累计清波次数: ${d.totalWavesCleared}`,
+    "",
+    "[终身累计]",
+    `幻域累计获得唤灵髓（整数）: ${lt.dungeonEssenceIntGained}`,
+    `天机匣兑换次数: ${lt.celestialStashBuys}`,
+    `蓄灵池收取次数: ${lt.spiritReservoirClaims}`,
+    `心斋卦象刷新次数: ${lt.dailyFortuneRolls}`,
+    `铸灵累计次数: ${lt.gearForgesTotal}`,
+    `历史最高铸灵稀有度: ${rarityPeak}`,
+    "",
+    "[其他]",
+    `行囊装备件数: ${Object.keys(st.gearInventory).length}`,
+    `灵田累计收获: ${st.spiritGarden.totalHarvests}`,
+  ];
+  return lines.join("\n");
+}
+
 function renderDataOverviewPanel(): string {
   const st = state;
   const d = st.dungeon;
@@ -2162,6 +2214,13 @@ function renderDataOverviewPanel(): string {
       <h2>数据总览</h2>
     </div>
     <p class="hint">只读汇总：历程、唤引、幻域与终身统计；在线时长随挂机累计。</p>
+    <div class="data-overview-export-row">
+      <button type="button" class="btn data-overview-copy-btn" id="btn-data-overview-copy">
+        <img class="data-overview-copy-ico" src="${UI_DATA_EXPORT_DECO}" alt="" width="18" height="18" loading="lazy" />
+        复制统计摘要
+      </button>
+      <span class="hint sm data-overview-export-hint">纯文本，含存档位与时间戳，便于反馈与交流。</span>
+    </div>
 
     <div class="data-overview-section">
       <h3>历程与境界</h3>
@@ -3088,6 +3147,19 @@ function bindEvents(rb: Decimal, _slots: number): void {
   };
   document.getElementById("btn-keyboard-help-close")?.addEventListener("click", closeKeyboardHelp);
   document.getElementById("keyboard-help-backdrop")?.addEventListener("click", closeKeyboardHelp);
+
+  document.getElementById("btn-data-overview-copy")?.addEventListener("click", () => {
+    const text = buildDataOverviewExportText(state);
+    void navigator.clipboard.writeText(text).then(
+      () => {
+        void resumeAudioContext().then(() => playUiBlip(state));
+        toast("统计摘要已复制到剪贴板。");
+      },
+      () => {
+        toast("复制失败：请检查剪贴板权限或浏览器设置。");
+      },
+    );
+  });
 
   document.getElementById("btn-tutorial-claim")?.addEventListener("click", () => {
     state.tutorialStep = 2;

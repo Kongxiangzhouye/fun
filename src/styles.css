@@ -2754,6 +2754,35 @@ html.ui-reduce-motion *::after {
   scroll-behavior: auto !important;
 }
 
+.data-overview-panel .data-overview-export-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.05);
+}
+
+.data-overview-panel .data-overview-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.data-overview-panel .data-overview-copy-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.data-overview-panel .data-overview-export-hint {
+  flex: 1;
+  min-width: min(100%, 200px);
+  margin: 0;
+}
+
 .data-overview-panel .data-overview-section {
   margin-bottom: 18px;
 }
