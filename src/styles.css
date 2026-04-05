@@ -2766,13 +2766,21 @@ html.ui-reduce-motion *::after {
   background: rgba(124, 156, 255, 0.05);
 }
 
-.data-overview-panel .data-overview-copy-btn {
+.data-overview-panel .data-overview-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.data-overview-panel .data-overview-copy-btn,
+.data-overview-panel .data-overview-download-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.data-overview-panel .data-overview-copy-ico {
+.data-overview-panel .data-overview-copy-ico,
+.data-overview-panel .data-overview-download-ico {
   flex-shrink: 0;
   opacity: 0.92;
 }

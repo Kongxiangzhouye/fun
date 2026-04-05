@@ -145,6 +145,7 @@ import {
   UI_SAVE_SLOTS_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_DATA_EXPORT_DECO,
+  UI_DATA_STATS_DOWNLOAD_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -1915,7 +1916,7 @@ function renderDiscoverabilityHint(): string {
     } else if (characterSub === "settings") {
       text = "常用入口：动效、数字与音频偏好在此；按 ? 打开快捷键说明；备份与导入在「存档·管理」。";
     } else if (characterSub === "data") {
-      text = "常用入口：可一键复制统计摘要（纯文本）；详细规则见「养成→图鉴」，奖励见「成就」。";
+      text = "常用入口：可复制或下载统计摘要（.txt）；详细规则见「养成→图鉴」，奖励见「成就」。";
     } else if (characterSub === "archive") {
       text = "常用入口：本机多存档位、保存/导出/导入与重置均在此；切换槽位前会自动保存当前槽。";
     } else if (characterSub === "meridian") {
@@ -1993,6 +1994,29 @@ function triggerDownloadSaveBackup(): void {
   a.remove();
   URL.revokeObjectURL(url);
   toast("已下载备份文件（与导出字符串相同格式，可导入还原）。");
+}
+
+function triggerDownloadDataOverviewTxt(): void {
+  const text = buildDataOverviewExportText(state);
+  const ts = new Date();
+  const y = ts.getFullYear();
+  const mo = String(ts.getMonth() + 1).padStart(2, "0");
+  const d = String(ts.getDate()).padStart(2, "0");
+  const h = String(ts.getHours()).padStart(2, "0");
+  const mi = String(ts.getMinutes()).padStart(2, "0");
+  const name = `idle-gacha-realm-stats-${y}${mo}${d}-${h}${mi}.txt`;
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  void resumeAudioContext().then(() => playUiBlip(state));
+  toast("已下载统计摘要文件（与「复制统计摘要」内容相同）。");
 }
 
 function syncComfortDomFromState(): void {
@@ -2215,11 +2239,17 @@ function renderDataOverviewPanel(): string {
     </div>
     <p class="hint">只读汇总：历程、唤引、幻域与终身统计；在线时长随挂机累计。</p>
     <div class="data-overview-export-row">
-      <button type="button" class="btn data-overview-copy-btn" id="btn-data-overview-copy">
-        <img class="data-overview-copy-ico" src="${UI_DATA_EXPORT_DECO}" alt="" width="18" height="18" loading="lazy" />
-        复制统计摘要
-      </button>
-      <span class="hint sm data-overview-export-hint">纯文本，含存档位与时间戳，便于反馈与交流。</span>
+      <div class="data-overview-export-actions">
+        <button type="button" class="btn data-overview-copy-btn" id="btn-data-overview-copy">
+          <img class="data-overview-copy-ico" src="${UI_DATA_EXPORT_DECO}" alt="" width="18" height="18" loading="lazy" />
+          复制统计摘要
+        </button>
+        <button type="button" class="btn data-overview-download-btn" id="btn-data-overview-download">
+          <img class="data-overview-download-ico" src="${UI_DATA_STATS_DOWNLOAD_DECO}" alt="" width="18" height="18" loading="lazy" />
+          下载 .txt
+        </button>
+      </div>
+      <span class="hint sm data-overview-export-hint">纯文本，含存档位与时间戳；下载与复制内容相同。</span>
     </div>
 
     <div class="data-overview-section">
@@ -3159,6 +3189,10 @@ function bindEvents(rb: Decimal, _slots: number): void {
         toast("复制失败：请检查剪贴板权限或浏览器设置。");
       },
     );
+  });
+
+  document.getElementById("btn-data-overview-download")?.addEventListener("click", () => {
+    triggerDownloadDataOverviewTxt();
   });
 
   document.getElementById("btn-tutorial-claim")?.addEventListener("click", () => {
