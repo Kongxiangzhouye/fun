@@ -134,6 +134,7 @@ import {
   UI_PANEL_RUNES,
   UI_HEAD_STATS,
   UI_HEAD_COMBAT,
+  UI_HUB_SECTION_FLAIR,
   UI_HEAD_SPIRIT_RESERVOIR,
   UI_HEAD_DAILY_FORTUNE,
   UI_ACH_FORGE_DECO,
@@ -311,7 +312,7 @@ let gearDetailSlot: "weapon" | "body" | "ring" | null = null;
 let gachaPool: "cards" | "gear" = "cards";
 let autoEnterPromptHandled = false;
 let veinHelpDocListenerBound = false;
-/** 主导航：底部五栏（中间为幻域）+ 部分页内二级子栏 */
+/** 主导航：底部五栏（灵府→养成→幻域→抽卡→角色）+ 部分页内二级子栏 */
 type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
 type EstateSub = "idle" | "vein" | "array" | "garden";
 type CultivateSub =
@@ -1876,7 +1877,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
     }
     left = gTabs.join("");
   } else if (activeHub === "cultivate") {
-    left = [
+    const rowBattle = [
       mkCult(
         "deck",
         "卡组·上阵",
@@ -1888,7 +1889,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
       mkCult("xinfa", "心法·领悟", u.tabBattleSkills, cultivateSub === "xinfa", false),
       mkCult("pets", "灵宠·全局加成", u.tabPets, cultivateSub === "pets", false),
     ].join("");
-    right = [
+    const rowSys = [
       mkCult("codex", "图鉴·规则说明", u.tabCodex, cultivateSub === "codex", false),
       mkCult("chronicle", "唤灵·通鉴", u.tabChronicle, cultivateSub === "chronicle", false),
       mkCult("meta", "轮回·永久强化", u.tabMeta, cultivateSub === "meta", false),
@@ -1897,6 +1898,20 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
       mkCult("daily", "灵息·日历", u.tabDailyLogin, cultivateSub === "daily", false),
       mkCult("ach", "成就·奖励", u.tabAch, cultivateSub === "ach", false),
     ].join("");
+    left = `<div class="hub-subnav-section">
+      <div class="hub-subnav-section-label">
+        <img class="hub-subnav-flair" src="${UI_HUB_SECTION_FLAIR}" alt="" width="12" height="12" loading="lazy" />
+        <span>阵线与成长</span>
+      </div>
+      <div class="hub-inline-subnav-row hub-inline-subnav-row--tight">${rowBattle}</div>
+    </div>
+    <div class="hub-subnav-section">
+      <div class="hub-subnav-section-label">
+        <img class="hub-subnav-flair" src="${UI_HUB_SECTION_FLAIR}" alt="" width="12" height="12" loading="lazy" />
+        <span>图鉴与周常</span>
+      </div>
+      <div class="hub-inline-subnav-row hub-inline-subnav-row--tight">${rowSys}</div>
+    </div>`;
   } else if (activeHub === "character") {
     const mkCharUnlock = (id: CharacterSub, label: string, unlocked: boolean, active: boolean): string =>
       unlocked
@@ -1914,6 +1929,9 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
     ].join("");
   }
   if (!left && !right) return "";
+  if (activeHub === "cultivate") {
+    return `<div class="hub-inline-subnav hub-inline-subnav--cultivate" aria-label="页内导航">${left}</div>`;
+  }
   return `<div class="hub-inline-subnav" aria-label="页内导航">
     <div class="hub-inline-subnav-row">${left}${right}</div>
   </div>`;
@@ -1989,14 +2007,16 @@ function renderDiscoverabilityHint(): string {
 }
 
 function renderBottomNav(u: ReturnType<typeof getUiUnlocks>): string {
-  const item = (hub: HubId, label: string, disabled: boolean, pulse: boolean): string =>
-    `<button type="button" class="app-nav-item ${activeHub === hub ? "active" : ""}${pulse ? " tutorial-pulse" : ""}" data-hub="${hub}"${activeHub === hub && !disabled ? ` aria-current="page"` : ""}${disabled ? " disabled" : ""}>${label}</button>`;
+  const item = (hub: HubId, label: string, disabled: boolean, pulse: boolean): string => {
+    const battleCue = hub === "battle" && !disabled ? " app-nav-item--battle" : "";
+    return `<button type="button" class="app-nav-item${battleCue} ${activeHub === hub ? "active" : ""}${pulse ? " tutorial-pulse" : ""}" data-hub="${hub}"${activeHub === hub && !disabled ? ` aria-current="page"` : ""}${disabled ? " disabled" : ""}>${label}</button>`;
+  };
   return `<nav class="app-bottom-nav" role="navigation" aria-label="主导航">
-    ${item("character", "角色", false, false)}
+    ${item("estate", "灵府·成长", false, state.tutorialStep === 6 || state.tutorialStep === 7)}
     ${item("cultivate", "养成", false, state.tutorialStep >= 4 && state.tutorialStep <= 5)}
     ${item("battle", "幻域·副本", !u.tabDungeon, false)}
     ${item("gacha", "抽卡", false, state.tutorialStep === 2 || state.tutorialStep === 3)}
-    ${item("estate", "灵府·成长", false, state.tutorialStep === 6 || state.tutorialStep === 7)}
+    ${item("character", "角色", false, false)}
   </nav>`;
 }
 
@@ -2150,10 +2170,10 @@ function renderKeyboardHelpModal(): string {
         <button type="button" class="btn keyboard-help-close" id="btn-keyboard-help-close" aria-label="关闭">×</button>
       </div>
       <ul class="keyboard-help-list">
-        <li><span class="kbd-pill">1</span> … <span class="kbd-pill">5</span> 切换底部主栏：<strong>角色</strong> / <strong>养成</strong> / <strong>幻域</strong> / <strong>抽卡</strong> / <strong>灵府</strong>（小键盘 1–5 亦可）</li>
+        <li><span class="kbd-pill">1</span> … <span class="kbd-pill">5</span> 切换底部主栏：<strong>灵府</strong> / <strong>养成</strong> / <strong>幻域</strong> / <strong>抽卡</strong> / <strong>角色</strong>（小键盘 1–5 亦可）</li>
         <li><span class="kbd-pill">?</span> 或 <span class="kbd-pill">Shift</span> + <span class="kbd-pill">/</span> 打开或关闭本说明</li>
         <li><span class="kbd-pill">Esc</span> 关闭最上层浮层（先「关于游戏」，再本说明）</li>
-        <li class="keyboard-help-note">幻域未解锁时按 <span class="kbd-pill">3</span> 会提示不可用。</li>
+        <li class="keyboard-help-note">幻域未解锁时按 <span class="kbd-pill">3</span>（幻域）会提示不可用。</li>
         <li class="keyboard-help-note">在输入框内输入时，数字键不会切换页面。</li>
       </ul>
     </div>
@@ -2193,11 +2213,11 @@ function parseHubDigitKey(e: KeyboardEvent): HubId | null {
   }
   if (!d) return null;
   const map: Record<string, HubId> = {
-    "1": "character",
+    "1": "estate",
     "2": "cultivate",
     "3": "battle",
     "4": "gacha",
-    "5": "estate",
+    "5": "character",
   };
   return map[d] ?? null;
 }
@@ -4768,6 +4788,12 @@ function loop(): void {
     if (footChp) footChp.textContent = fmtNumZh(Math.max(0, chp));
     if (footPmax) footPmax.textContent = fmtNumZh(pmax);
     if (footEdps) footEdps.textContent = fmtNumZh(playerExpectedDpsDungeonAffix(state, now));
+    const idleEdps = document.getElementById("dungeon-idle-readiness-edps");
+    const idleChp = document.getElementById("dungeon-idle-readiness-chp");
+    const idlePmax = document.getElementById("dungeon-idle-readiness-pmax");
+    if (idleEdps && footEdps) idleEdps.textContent = footEdps.textContent;
+    if (idleChp && footChp) idleChp.textContent = footChp.textContent;
+    if (idlePmax && footPmax) idlePmax.textContent = footPmax.textContent;
     const elElapsed = document.getElementById("dungeon-session-elapsed");
     const elEta = document.getElementById("dungeon-eta-remaining");
     if (d.active && d.sessionEnterAtMs > 0) {

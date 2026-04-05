@@ -93,6 +93,10 @@ export const UI_HEAD_BOUNTY = asset("deco-bounty-header.svg");
 export const UI_BOUNTY_FORGE_DECO = asset("bounty-forge-deco.svg");
 /** 周常悬赏 · 一键领取按钮内图标 */
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset("bounty-claim-all-deco.svg");
+/** 养成二级导航 · 分组标题前小徽记 */
+export const UI_HUB_SECTION_FLAIR = asset("hub-section-flair.svg");
+/** 幻域备战条左侧装饰 */
+export const UI_DUNGEON_READINESS_DECO = asset("deco-dungeon-readiness-ribbon.svg");
 /** 幻域周常词缀条左侧装饰 */
 export const UI_DUNGEON_AFFIX_DECO = asset("deco-dungeon-affix.svg");
 /** 幻域·阵线对决舞台中央装饰 */

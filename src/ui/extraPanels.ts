@@ -54,6 +54,7 @@ import {
   UI_DUNGEON_FOOT_TIMER_DECO,
   UI_DUNGEON_PANEL_LIVE_STRIP,
   UI_DUNGEON_ENTER_DECO,
+  UI_DUNGEON_READINESS_DECO,
   UI_DUNGEON_LEAVE_DECO,
   UI_DUEL_BOSS_BADGE,
   UI_DUNGEON_AFFIX_DECO,
@@ -335,9 +336,12 @@ export function renderDungeonPanel(state: GameState): string {
 
   return `
     <section class="panel dungeon-strip-panel${panelRunClass}"${panelRunStyle}>
-      <div class="panel-title-art-row">
+      <div class="panel-title-art-row dungeon-panel-title-cluster">
         <img class="panel-title-art-icon" src="${UI_HEAD_DUNGEON}" alt="" width="28" height="28" loading="lazy" />
-        <h2>幻域</h2>
+        <div class="dungeon-panel-title-text">
+          <h2>幻域</h2>
+          <p class="hint sm dungeon-panel-subtitle">阵线对决 · 增量战斗与词缀周常</p>
+        </div>
       </div>
       <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner">
         <img class="dungeon-affix-icon" src="${UI_DUNGEON_AFFIX_DECO}" alt="" width="40" height="40" loading="lazy" />
@@ -346,6 +350,21 @@ export function renderDungeonPanel(state: GameState): string {
           <p class="hint sm dungeon-affix-desc" id="dungeon-affix-desc">${affix.desc}<span class="dungeon-affix-wk">（周次 ${weekLine}）</span></p>
         </div>
       </div>
+      ${
+        !d.active && !sanctuaryIdle
+          ? `<div class="dungeon-battle-readiness" role="region" aria-label="备战摘要" id="dungeon-battle-readiness-strip">
+        <img class="dungeon-readiness-ico" src="${UI_DUNGEON_READINESS_DECO}" alt="" width="36" height="36" loading="lazy" />
+        <div class="dungeon-readiness-body">
+          <span class="dungeon-readiness-kicker">备战</span>
+          <p class="dungeon-readiness-line hint sm">
+            期望秒伤 <strong id="dungeon-idle-readiness-edps">${fmtNum(edps)}</strong>/s
+            · 幻域生命 <strong id="dungeon-idle-readiness-chp">${fmtNum(Math.max(0, chp))}</strong>/<strong id="dungeon-idle-readiness-pmax">${fmtNum(pmax)}</strong>
+            · 目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波
+          </p>
+        </div>
+      </div>`
+          : ""
+      }
       <div class="dungeon-map-stage">
         <button type="button" class="dungeon-map-help-btn" id="btn-dungeon-help" aria-expanded="false" aria-controls="dungeon-help-popover" aria-label="查看幻域说明" title="幻域说明">?</button>
         ${helpPop}
