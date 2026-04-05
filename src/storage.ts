@@ -5,7 +5,7 @@ type SkillsSave = GameState["skills"];
 type DungeonSave = GameState["dungeon"];
 type GearInvSave = GameState["gearInventory"];
 type EquippedSave = GameState["equippedGear"];
-import { DECK_SIZE, DUNGEON_STAMINA_MAX } from "./types";
+import { DECK_SIZE, DUNGEON_STAMINA_MAX, type GearInventorySortMode } from "./types";
 import { SAVE_VERSION, createInitialState } from "./state";
 import { CARDS } from "./data/cards";
 import { initRng, rollNewRngSeed, syncRngFromState } from "./rng";
@@ -30,6 +30,11 @@ import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celesti
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
 
 const KEY = "idle-gacha-realm-v1";
+
+function normalizeGearInventorySort(raw: unknown): GearInventorySortMode {
+  if (raw === "rarity" || raw === "ilvl" || raw === "slot" || raw === "name") return raw;
+  return "rarity";
+}
 
 export interface SerializedState {
   version: number;
@@ -91,6 +96,7 @@ export interface SerializedState {
   gearInventory?: GearInvSave;
   equippedGear?: EquippedSave;
   nextGearInstanceId?: number;
+  gearInventorySort?: GameState["gearInventorySort"];
   featureGuideDismissed?: string[];
   suppressFeatureGuides?: boolean;
   pets?: GameState["pets"];
@@ -281,6 +287,7 @@ export function serialize(state: GameState): string {
     gearInventory: state.gearInventory,
     equippedGear: state.equippedGear,
     nextGearInstanceId: state.nextGearInstanceId,
+    gearInventorySort: state.gearInventorySort,
     featureGuideDismissed: [...state.featureGuideDismissed],
     suppressFeatureGuides: state.suppressFeatureGuides,
     pets: { ...state.pets },
@@ -448,6 +455,7 @@ export function deserialize(json: string): GameState {
     st.equippedGear = { ...st.equippedGear, ...data.equippedGear };
   }
   st.nextGearInstanceId = Math.max(st.nextGearInstanceId, data.nextGearInstanceId ?? 1);
+  st.gearInventorySort = normalizeGearInventorySort(data.gearInventorySort);
 
   st.featureGuideDismissed = Array.isArray(data.featureGuideDismissed)
     ? [...data.featureGuideDismissed]

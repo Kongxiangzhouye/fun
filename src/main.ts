@@ -73,7 +73,15 @@ import { fmtDecimal, stones, addStones, canAfford, subStones } from "./stones";
 import { fireSynergyActive, deckSynergySummary } from "./deckSynergy";
 import { tryFenTianBurst } from "./fenTian";
 import { buyQoL, bulkUpgradeAllCards, qoLCost } from "./qoL";
-import type { QoLFlags, Rarity, SkillId, GearItem, Element, GardenCropId } from "./types";
+import type {
+  QoLFlags,
+  Rarity,
+  SkillId,
+  GearItem,
+  Element,
+  GardenCropId,
+  GearInventorySortMode,
+} from "./types";
 import Decimal from "decimal.js";
 import { gsap } from "gsap";
 import { Application, Container, Graphics, type Ticker } from "pixi.js";
@@ -86,7 +94,6 @@ import {
   renderTrainPanel,
   renderGearPanel,
   renderPetPanel,
-  type GearInvSortMode,
 } from "./ui/extraPanels";
 import { featureGuidePanelHtml, type FeatureGuideId } from "./ui/featureGuides";
 import { renderGameLoreHtml } from "./ui/gameLore";
@@ -269,8 +276,6 @@ let deckModalSlot: number | null = null;
 let refineTargetId: string | null = null;
 /** 装备页：正在查看哪一栏位的已装备详情（卸下仅在此操作） */
 let gearDetailSlot: "weapon" | "body" | "ring" | null = null;
-/** 行囊背包排序（会话内，不写存档） */
-let gearInvSortMode: GearInvSortMode = "rarity";
 /** 聚灵阵：灵卡池 / 铸灵池 */
 let gachaPool: "cards" | "gear" = "cards";
 /** 本次启动时若有离线灵石结算，展示摘要条直至玩家关闭 */
@@ -1312,7 +1317,7 @@ function refreshGearPanel(): void {
   const cur = document.getElementById("gear-panel-root");
   if (!cur || !getUiUnlocks(state).tabGear) return;
   const w = document.createElement("div");
-  w.innerHTML = renderGearPanel(state, refineTargetId, gearDetailSlot, gearInvSortMode);
+  w.innerHTML = renderGearPanel(state, refineTargetId, gearDetailSlot, state.gearInventorySort);
   const next = w.firstElementChild as HTMLElement | null;
   if (next) cur.replaceWith(next);
   updateTopResourcePillsAndVigor(totalCardsInPool());
@@ -1324,9 +1329,10 @@ function handleGearPanelClick(e: MouseEvent): void {
 
   const sortEl = t.closest("[data-gear-inv-sort]");
   if (sortEl) {
-    const m = (sortEl as HTMLElement).dataset.gearInvSort as GearInvSortMode | undefined;
+    const m = (sortEl as HTMLElement).dataset.gearInvSort as GearInventorySortMode | undefined;
     if (m === "rarity" || m === "ilvl" || m === "slot" || m === "name") {
-      gearInvSortMode = m;
+      state.gearInventorySort = m;
+      saveGame(state);
       refreshGearPanel();
     }
     return;
@@ -1919,7 +1925,7 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
     return `<div class="character-hub-root">${renderSaveToolsPanel()}</div>`;
   }
   const gearBlock = u.tabGear
-    ? renderGearPanel(state, refineTargetId, gearDetailSlot, gearInvSortMode)
+    ? renderGearPanel(state, refineTargetId, gearDetailSlot, state.gearInventorySort)
     : `<section class="panel character-hub-gear-locked"><p class="hint">解锁条件：获得 1 件装备，或累计抽卡≥10。解锁后开放铸灵池和行囊装备管理。</p></section>`;
   return `<div class="character-hub-root">${gearBlock}</div>`;
 }

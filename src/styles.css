@@ -2964,6 +2964,12 @@ h1 {
   opacity: 0.92;
 }
 
+.gear-inv-sort-pinned {
+  flex-shrink: 0;
+  margin-left: 2px;
+  opacity: 0.88;
+}
+
 .gear-inv-sort-btns {
   display: flex;
   flex-wrap: wrap;

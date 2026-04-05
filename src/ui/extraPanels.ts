@@ -1,4 +1,4 @@
-import type { GameState, GearItem, Rarity, SkillId } from "../types";
+import type { GameState, GearInventorySortMode, GearItem, Rarity, SkillId } from "../types";
 import {
   DUNGEON_DEATH_CD_MS,
   DUNGEON_DODGE_IFRAMES_MS,
@@ -47,6 +47,7 @@ import {
   UI_DUNGEON_AFFIX_DECO,
   UI_GEAR_LOCK_DECO,
   UI_GEAR_SORT_DECO,
+  UI_GEAR_SORT_PINNED_DECO,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
   UI_HEAD_TRAIN,
@@ -460,13 +461,10 @@ export function renderTrainPanel(state: GameState): string {
     </section>`;
 }
 
-/** 行囊背包列表排序（仅影响展示，不写存档） */
-export type GearInvSortMode = "rarity" | "ilvl" | "slot" | "name";
-
 const RARITY_ORDER_SORT: Record<string, number> = { UR: 0, SSR: 1, SR: 2, R: 3, N: 4 };
 const SLOT_ORDER_SORT: Record<"weapon" | "body" | "ring", number> = { weapon: 0, body: 1, ring: 2 };
 
-function sortGearInventoryItems(items: GearItem[], mode: GearInvSortMode): GearItem[] {
+function sortGearInventoryItems(items: GearItem[], mode: GearInventorySortMode): GearItem[] {
   const ro = RARITY_ORDER_SORT;
   const so = SLOT_ORDER_SORT;
   return [...items].sort((a, b) => {
@@ -495,7 +493,7 @@ function sortGearInventoryItems(items: GearItem[], mode: GearInvSortMode): GearI
   });
 }
 
-const GEAR_SORT_LABELS: Record<GearInvSortMode, string> = {
+const GEAR_SORT_LABELS: Record<GearInventorySortMode, string> = {
   rarity: "稀有度",
   ilvl: "装等",
   slot: "部位",
@@ -506,7 +504,7 @@ export function renderGearPanel(
   state: GameState,
   refineTargetId: string | null = null,
   gearDetailSlot: "weapon" | "body" | "ring" | null = null,
-  gearInvSort: GearInvSortMode = "rarity",
+  gearInvSort: GearInventorySortMode = "rarity",
 ): string {
   const refineHint = refineTargetId
     ? `<p class="hint refine-hint">精炼：已选主件，再点<strong>另一件</strong>同基底天极作为消耗；再点主件可取消。</p>`
@@ -631,6 +629,7 @@ export function renderGearPanel(
         <span class="gear-inv-sort-label">
           <img src="${UI_GEAR_SORT_DECO}" class="gear-inv-sort-ico" alt="" width="18" height="18" loading="lazy" />
           排序
+          <img src="${UI_GEAR_SORT_PINNED_DECO}" class="gear-inv-sort-pinned" alt="" width="14" height="14" loading="lazy" title="偏好已写入存档" />
         </span>
         <div class="gear-inv-sort-btns">
           ${(["rarity", "ilvl", "slot", "name"] as const)

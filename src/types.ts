@@ -43,6 +43,9 @@ export interface PullChronicleEntry {
   isNew: boolean;
 }
 
+/** 行囊背包列表排序（与 UI 一致，持久化） */
+export type GearInventorySortMode = "rarity" | "ilvl" | "slot" | "name";
+
 /** 铸灵池产出通鉴单条（与灵卡分表） */
 export interface GearPullChronicleEntry {
   atMs: number;
@@ -427,6 +430,8 @@ export interface GameState {
   gearInventory: Record<string, GearItem>;
   equippedGear: { weapon: string | null; body: string | null; ring: string | null };
   nextGearInstanceId: number;
+  /** 行囊背包排序偏好 */
+  gearInventorySort: GearInventorySortMode;
 
   /** 已邂逅的灵宠（仅存在的键）；唤灵池抽到后才可喂养 */
   pets: Partial<Record<PetId, PetProgress>>;
