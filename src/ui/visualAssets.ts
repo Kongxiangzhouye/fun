@@ -164,6 +164,8 @@ export const UI_ACH_TRAIN_DECO = asset("ach-train-deco.svg");
 export const UI_ACH_DUNGEON_DECO = asset("ach-dungeon-deco.svg");
 /** 成就列表 · 幻域累计波次系条目左侧小徽 */
 export const UI_ACH_DUNGEON_WAVES_DECO = asset("ach-dungeon-waves-deco.svg");
+/** 成就列表 · 幻域超高累计波次里程碑（浪涌） */
+export const UI_ACH_DUNGEON_WAVES_SURGE_DECO = asset("ach-dungeon-waves-surge-deco.svg");
 /** 成就列表 · 灵息日历 / 连签系条目左侧小徽 */
 export const UI_ACH_LOGIN_DECO = asset("ach-login-deco.svg");
 /** 成就列表 · 周常悬赏系条目左侧小徽 */

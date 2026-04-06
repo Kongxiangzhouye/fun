@@ -166,7 +166,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>阵线对决</strong>：敌我各按攻击间隔<strong>离散出伤 / 承击</strong>，顶条为敌阵总灵压；剑气 / 凶煞读条对齐期望 DPS 与敌方节奏，便于对照数值。</li>
           <li>五行克制会影响伤害；<strong>化劲</strong>可在无敌帧内化解敌方一击。</li>
           <li>魔物<strong>闪避</strong>以飘字「偏斜」表现；我方闪避以「闪避」表现。</li>
-          <li>累计击溃波次达 <strong>40 / 100 / 500</strong> 等可在<strong>成就</strong>领奖（与「累计清波次数」统计同源）。</li>
+          <li>累计击溃波次达 <strong>40 / 100 / 500 / 2000</strong> 等可在<strong>成就</strong>领奖（与「累计清波次数」统计同源）。</li>
         </ul>
       </details>
 

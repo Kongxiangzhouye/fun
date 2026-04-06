@@ -149,6 +149,7 @@ import {
   UI_ACH_TRAIN_DECO,
   UI_ACH_DUNGEON_DECO,
   UI_ACH_DUNGEON_WAVES_DECO,
+  UI_ACH_DUNGEON_WAVES_SURGE_DECO,
   UI_ACH_LOGIN_DECO,
   UI_ACH_BOUNTY_DECO,
   UI_ACH_MERIDIAN_DECO,
@@ -3206,6 +3207,8 @@ function renderAch(): string {
             ? `<img class="ach-deco-icon" src="${UI_ACH_DUNGEON_DECO}" alt="" width="22" height="22" loading="lazy" />`
             : a.listDeco === "dungeonWaves"
               ? `<img class="ach-deco-icon" src="${UI_ACH_DUNGEON_WAVES_DECO}" alt="" width="22" height="22" loading="lazy" />`
+            : a.listDeco === "dungeonWavesSurge"
+              ? `<img class="ach-deco-icon" src="${UI_ACH_DUNGEON_WAVES_SURGE_DECO}" alt="" width="22" height="22" loading="lazy" />`
             : a.listDeco === "login"
               ? `<img class="ach-deco-icon" src="${UI_ACH_LOGIN_DECO}" alt="" width="22" height="22" loading="lazy" />`
               : a.listDeco === "bounty"

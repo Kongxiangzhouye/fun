@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
+  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -190,6 +190,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 4200,
     rewardEssence: 155,
     listDeco: "dungeonWaves",
+  },
+  {
+    id: "dungeon_waves_2000",
+    title: "万波证道",
+    desc: "在幻域累计击溃 2000 波",
+    rewardStones: 9800,
+    rewardEssence: 265,
+    listDeco: "dungeonWavesSurge",
   },
   {
     id: "pet_first_feed",
@@ -557,6 +565,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dungeon.totalWavesCleared >= 100;
     case "dungeon_waves_500":
       return state.dungeon.totalWavesCleared >= 500;
+    case "dungeon_waves_2000":
+      return state.dungeon.totalWavesCleared >= 2000;
     case "pet_first_feed":
       return anyPetOwned(state);
     case "pet_level_30":
