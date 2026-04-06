@@ -1,4 +1,4 @@
-/** 周常悬赏各功课卡片标题旁小标（`public/assets/ui/`） */
+/** 周常悬赏装饰与反馈徽记（`public/assets/ui/`） */
 export const WEEKLY_BOUNTY_UI_FILES = {
   forge: "bounty-forge-deco.svg",
   waves: "bounty-waves-deco.svg",
@@ -8,4 +8,6 @@ export const WEEKLY_BOUNTY_UI_FILES = {
   realm: "bounty-realm-deco.svg",
   claimAll: "bounty-claim-all-deco.svg",
   claimBurst: "bounty-claim-burst.svg",
+  streakBadge: "bounty-weekly-streak-badge.svg",
+  completeBadge: "bounty-weekly-complete-badge.svg",
 } as const;

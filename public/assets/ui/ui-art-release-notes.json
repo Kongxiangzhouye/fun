@@ -3,6 +3,14 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Weekly bounty feedback loop accents (P1)",
+      "highlights": [
+        "Added weekly streak and completion status badge SVGs for lightweight weekly-bounty feedback closure.",
+        "Synced weekly bounty source mapping, manifest assets, and index wording to keep the UI art pipeline consistent."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Dungeon combat feedback decals (P0)",
       "highlights": [
         "Added hit flash, critical burst, and guard break SVG decals for dungeon combat feedback.",

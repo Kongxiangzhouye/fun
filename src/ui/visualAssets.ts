@@ -147,6 +147,10 @@ export const UI_BOUNTY_REALM_DECO = asset(WEEKLY_BOUNTY_UI_FILES.realm);
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset(WEEKLY_BOUNTY_UI_FILES.claimAll);
 /** 周常悬赏 · 领取反馈爆闪徽记 */
 export const UI_BOUNTY_CLAIM_BURST = asset(WEEKLY_BOUNTY_UI_FILES.claimBurst);
+/** 周常悬赏 · 周进度连胜状态徽记 */
+export const UI_BOUNTY_STREAK_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.streakBadge);
+/** 周常悬赏 · 周目标完成状态徽记 */
+export const UI_BOUNTY_COMPLETE_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.completeBadge);
 /** 养成二级导航 · 分组标题前小徽记；与 `HUB_VEIN_FLAIR_UI_FILES` 同源 */
 export const UI_HUB_SECTION_FLAIR = asset(HUB_VEIN_FLAIR_UI_FILES.hubSectionFlair);
 /** 洞府蕴灵 · 共鸣乘区说明行左侧小标（双环链意象） */
