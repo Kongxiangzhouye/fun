@@ -416,6 +416,217 @@ body {
   max-width: 480px;
 }
 
+/* 历练页：战斗区下方 · 三件筑灵装备条（默认仅一行图标，长按展开） */
+.battle-equipped-strip {
+  margin: 14px auto 0;
+  padding: 12px 12px 14px;
+  max-width: 520px;
+  border-radius: 14px;
+  border: 1px solid rgba(90, 110, 160, 0.45);
+  background: linear-gradient(165deg, rgba(16, 20, 36, 0.96), rgba(10, 12, 22, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.battle-equipped-strip--collapsible {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.battle-equipped-strip--collapsible:not(.battle-equipped-strip--expanded) {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.battle-equipped-touch-target {
+  cursor: pointer;
+  padding: 2px 0 4px;
+}
+
+.battle-equipped-mini-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.battle-gear-ico-mini {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(100, 120, 180, 0.35);
+  background: radial-gradient(circle at 50% 30%, rgba(80, 100, 160, 0.2), rgba(12, 14, 22, 0.92));
+}
+
+.battle-gear-ico-mini img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.battle-gear-ico-mini--empty span {
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: rgba(160, 175, 220, 0.42);
+  line-height: 1;
+}
+
+.battle-equipped-longpress-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: rgba(160, 180, 220, 0.78);
+  letter-spacing: 0.04em;
+}
+
+.battle-equipped-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.battle-gear-modal.panel,
+.battle-gear-modal .panel {
+  margin-top: 28px;
+  margin-bottom: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.battle-equipped-strip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.battle-equipped-strip-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #c8d4f0;
+}
+
+.battle-equipped-strip-hint {
+  margin: 0;
+}
+
+.battle-gear-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.battle-gear-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 6px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 120, 180, 0.35);
+  background: rgba(8, 10, 18, 0.65);
+  min-height: 0;
+}
+
+.battle-gear-cell--empty {
+  opacity: 0.88;
+  border-style: dashed;
+}
+
+.battle-gear-cell-top {
+  min-height: 1.1em;
+  margin-bottom: 4px;
+}
+
+.battle-gear-stars {
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  color: #e8c060;
+  text-shadow: 0 0 8px rgba(232, 192, 96, 0.35);
+}
+
+.battle-gear-stars-dim {
+  opacity: 0.28;
+}
+
+.battle-gear-icon-wrap {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: radial-gradient(circle at 50% 30%, rgba(80, 100, 160, 0.25), rgba(20, 24, 40, 0.9));
+  border: 1px solid rgba(120, 140, 200, 0.25);
+}
+
+.battle-gear-icon-wrap--empty {
+  background: rgba(12, 14, 24, 0.5);
+}
+
+.battle-gear-empty-plus {
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: rgba(160, 175, 220, 0.45);
+  line-height: 1;
+}
+
+.battle-gear-icon {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.battle-gear-lv {
+  font-size: 0.72rem;
+  color: #9aa8c8;
+  margin-bottom: 2px;
+}
+
+.battle-gear-pw {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #d0dce8;
+}
+
+.battle-gear-slot-label {
+  margin-top: 6px;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: rgba(180, 195, 230, 0.65);
+}
+
+.battle-gear-cell.rarity-UR {
+  border-color: rgba(255, 200, 120, 0.45);
+  box-shadow: 0 0 16px rgba(255, 200, 100, 0.08);
+}
+
+.battle-gear-cell.rarity-SSR {
+  border-color: rgba(200, 140, 255, 0.42);
+}
+
+.battle-gear-cell.rarity-SR {
+  border-color: rgba(120, 180, 255, 0.38);
+}
+
 /* 战斗中：底栏不再重复「生命」（对阵条与战报已足够） */
 .dungeon-panel--live-fight .dungeon-foot-chip--hp {
   display: none;
@@ -560,6 +771,109 @@ body {
   min-height: 44px;
   padding: 8px 14px;
   font-size: 0.85rem;
+}
+
+/* 幻域 · 阶段条（清剿 / 首领前哨 / 首领对决） */
+.dungeon-phase-banner {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 130, 200, 0.38);
+  background: linear-gradient(145deg, rgba(14, 18, 32, 0.96), rgba(8, 10, 18, 0.98));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.dungeon-phase-banner--trash {
+  border-color: rgba(110, 150, 220, 0.42);
+}
+
+.dungeon-phase-banner--boss_prep {
+  border-color: rgba(220, 170, 100, 0.5);
+  background: linear-gradient(145deg, rgba(32, 22, 12, 0.96), rgba(12, 10, 8, 0.98));
+}
+
+.dungeon-phase-banner--boss_fight {
+  border-color: rgba(200, 90, 90, 0.45);
+  background: linear-gradient(145deg, rgba(28, 12, 14, 0.96), rgba(10, 8, 10, 0.98));
+}
+
+.dungeon-phase-banner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.dungeon-phase-badge {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #c8d6f8;
+}
+
+.dungeon-phase-banner--boss_prep .dungeon-phase-badge {
+  color: #f0d4a0;
+}
+
+.dungeon-phase-banner--boss_fight .dungeon-phase-badge {
+  color: #ffb0b0;
+}
+
+.dungeon-phase-wave-hint {
+  margin: 0;
+}
+
+.dungeon-phase-banner-guide {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #a8b8d8;
+}
+
+.dungeon-phase-banner--boss_prep .dungeon-phase-banner-guide {
+  color: #d8c8a8;
+}
+
+.dungeon-phase-banner--boss_fight .dungeon-phase-banner-guide {
+  color: #e8b8b8;
+}
+
+.dungeon-phase-banner-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dungeon-phase-cta-note {
+  margin: 0;
+}
+
+.dungeon-idle-guide-steps {
+  margin: 10px 0 0;
+  padding-left: 1.25em;
+  line-height: 1.55;
+  color: #a8b8d8;
+}
+
+.dungeon-idle-guide-steps li {
+  margin-bottom: 4px;
+}
+
+/* 阵线舞台：按阶段微调氛围（与小兵/Boss 拆分一致） */
+.dungeon-duel-stage--phase-boss-fight {
+  box-shadow:
+    0 0 0 1px rgba(200, 80, 80, 0.15) inset,
+    0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.dungeon-duel-stage--phase-boss-prep {
+  box-shadow:
+    0 0 0 1px rgba(220, 170, 90, 0.12) inset,
+    0 8px 28px rgba(0, 0, 0, 0.3);
 }
 
 .dungeon-boss-intent-row {
@@ -6926,6 +7240,67 @@ header h1 {
   background-clip: text;
   color: transparent;
   filter: drop-shadow(0 2px 14px rgba(124, 156, 255, 0.25));
+}
+
+/* 历练页底部：聚灵阵紧凑版（抽卡按钮贴近装备区） */
+.gacha-panel-root--battle-embed {
+  margin-top: 10px;
+  padding-top: 10px;
+  padding-bottom: 12px;
+}
+
+.gacha-panel-root--battle-embed::before {
+  animation-duration: 48s;
+  opacity: 0.65;
+}
+
+.gacha-panel-header--embed {
+  margin-bottom: 6px;
+  padding: 6px 0 10px;
+  border-bottom: 1px solid rgba(124, 156, 255, 0.1);
+}
+
+.gacha-panel-header-inner--embed {
+  padding-right: 0;
+}
+
+.gacha-panel-title--embed {
+  font-size: clamp(1.05rem, 3.4vw, 1.25rem);
+}
+
+.gacha-lead--embed {
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
+  padding: 6px 10px !important;
+  font-size: 0.78rem !important;
+}
+
+.resonance-panel--embed .resonance-head-row .resonance-core-img {
+  width: 36px;
+  height: 36px;
+}
+
+.resonance-panel--embed {
+  padding-bottom: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.resonance-panel--embed .resonance-hint-tight {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pity-info--embed {
+  font-size: 0.78rem !important;
+  line-height: 1.45 !important;
+  margin: 8px 0 !important;
+}
+
+.gacha-hint-embed {
+  font-size: 0.78rem !important;
+  margin: 6px 0 !important;
 }
 
 .gacha-panel-root .gacha-lead {

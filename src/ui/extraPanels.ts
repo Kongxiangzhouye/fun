@@ -53,7 +53,6 @@ import {
   UI_DUNGEON_PANEL_LIVE_STRIP,
   UI_DUNGEON_ENTER_DECO,
   UI_DUNGEON_READINESS_DECO,
-  UI_DUNGEON_LEAVE_DECO,
   UI_DUEL_BOSS_BADGE,
   UI_DUNGEON_AFFIX_DECO,
   ELEMENT_ICON,
@@ -104,6 +103,17 @@ function fmtEta(sec: number | null): string {
   return `约 ${Math.floor(sec / 60)} 分钟`;
 }
 
+/** 战斗中阶段：清剿 / 首领前小怪 / 真正首领（用于界面拆分） */
+export function getDungeonCombatPhase(state: GameState): "trash" | "boss_prep" | "boss_fight" {
+  const d = state.dungeon;
+  if (!d.active) return "trash";
+  const isBossWave = d.wave % 5 === 0;
+  if (isBossWave && state.dungeonDeferBoss) return "boss_prep";
+  const live = d.mobs.find((m) => m.hp > 0);
+  if (isBossWave && live?.isBoss) return "boss_fight";
+  return "trash";
+}
+
 /** 幻域战斗中：波次、锁定、掉落说明等合并为一段文字（由 loop 刷新） */
 export function formatDungeonActiveMeta(state: GameState, now: number): string {
   const d = state.dungeon;
@@ -120,7 +130,7 @@ export function formatDungeonActiveMeta(state: GameState, now: number): string {
     ? `五行 ${EL_ZH[pEl]}→${EL_ZH[tgt.element]} · 绽×${elementDamageMultiplier(pEl, tgt.element).toFixed(2)} · 承×${elementDamageMultiplier(tgt.element, pEl).toFixed(2)}`
     : "五行 —";
   const lines = [
-    `本次击溃 ${d.sessionKills} · 本次髓 +${fmtSessEss(d.sessionEssence)} · 累计通关 ${d.totalWavesCleared} 波`,
+    `本次击溃 ${d.sessionKills} · 本次髓累计 +${fmtSessEss(d.sessionEssence)}（小兵即时入袋，关末记入此累计） · 通关 ${d.totalWavesCleared} 波`,
     elemLine,
     `第 ${d.wave} 波 · ${lockLine} · 本关清完约 ${waveEssF.toFixed(2)} 髓 · 下波灵压档参考 ${nPk}`,
   ];
@@ -154,6 +164,25 @@ export function formatDungeonInterMeta(): string {
 function renderDungeonMapHtml(state: GameState): string {
   const d = state.dungeon;
   if (!d.active) return "";
+  const combatPhase = getDungeonCombatPhase(state);
+  const phaseClass =
+    combatPhase === "boss_fight"
+      ? "dungeon-duel-stage--phase-boss-fight"
+      : combatPhase === "boss_prep"
+        ? "dungeon-duel-stage--phase-boss-prep"
+        : "dungeon-duel-stage--phase-trash";
+  const tagFull =
+    combatPhase === "boss_fight"
+      ? "首领对决 · 可对你造成真实伤害 · 击败后进入下一关"
+      : combatPhase === "boss_prep"
+        ? "首领前哨 · 清完小怪后须点「挑战首领」才会进入首领战"
+        : "阵线清剿 · 自动接战 · 每击杀一只小兵即时结算筑灵髓";
+  const tagCompact =
+    combatPhase === "boss_fight"
+      ? "首领战 · 击败后进下一关"
+      : combatPhase === "boss_prep"
+        ? "清小怪 → 挑战首领"
+        : "清剿 · 击杀即时入髓";
   const bossMob = currentBossMob(d);
   const frontMob = d.mobs.find((m) => m.hp > 0) ?? d.mobs[0];
   const mobPct = d.monsterMax > 0 ? Math.min(100, (100 * Math.max(0, d.monsterHp)) / d.monsterMax) : 0;
@@ -182,7 +211,7 @@ function renderDungeonMapHtml(state: GameState): string {
   return `
     <div class="dungeon-map-frame">
       <div class="dungeon-map-wrap">
-        <div class="dungeon-map dungeon-duel-stage is-aoe in-combat" id="dungeon-map" aria-label="幻域阵线对决" style="--dungeon-player-hit-interval:${hitIntSec}s">
+        <div class="dungeon-map dungeon-duel-stage is-aoe in-combat ${phaseClass}" id="dungeon-map" aria-label="幻域阵线对决" style="--dungeon-player-hit-interval:${hitIntSec}s">
           <div class="dungeon-duel-frame-corners" aria-hidden="true">
             <img class="duel-corner duel-corner--tl" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
             <img class="duel-corner duel-corner--tr" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
@@ -258,14 +287,14 @@ function renderDungeonMapHtml(state: GameState): string {
           </div>
         </div>
         <p class="hint sm dungeon-duel-tagline-outside" role="note">
-          <span class="dungeon-duel-tagline-full">连击叠伤 · 随机破绽 · 战意爆发 · 灵脉共鸣 — 剑气/凶煞与结算同帧</span>
-          <span class="dungeon-duel-tagline-compact">连击 · 破绽 · 战意 · 剑气/凶煞同帧</span>
+          <span class="dungeon-duel-tagline-full">${tagFull}</span>
+          <span class="dungeon-duel-tagline-compact">${tagCompact}</span>
         </p>
       </div>
     </div>`;
 }
 
-const DUNGEON_HELP_BLURB = `历练副本掉落筑灵髓（按关结算），用于本页下方聚灵阵抽卡。幻域生命为全局共享，进关不会回满。每次进关都会重置地图与怪物；阵亡无灵石损失。复刷规则见「养成→图鉴·札记」。`;
+const DUNGEON_HELP_BLURB = `筑灵髓来自战斗：普通波为小怪群，每击杀一只即入袋整数唤灵髓；清完一波进下一波。每逢第 5、10…波为首领关：先清首领前小怪，再手动点「挑战首领」才进入首领；击败首领后进下一关。首领可造成伤害，小怪不会致死（灵护）。唤灵髓用于本页聚灵阵。幻域生命全局共享。阵亡无灵石损失。`;
 
 function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
   const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
@@ -289,7 +318,73 @@ function renderIdlePreviewMap(): string {
   return `<div class="dungeon-idle-preview-map dungeon-idle-preview-map--mist" style="--dungeon-idle-mist:url('${UI_DUNGEON_IDLE_MIST}')" aria-hidden="true"><div class="dungeon-idle-preview-grid"></div></div>`;
 }
 
-export function renderDungeonPanel(state: GameState): string {
+function battleGearStarLine(r: Rarity): string {
+  const n = r === "UR" ? 5 : r === "SSR" ? 4 : r === "SR" ? 3 : r === "R" ? 2 : 1;
+  return `<span class="battle-gear-stars" aria-hidden="true">${"★".repeat(n)}<span class="battle-gear-stars-dim">${"★".repeat(5 - n)}</span></span>`;
+}
+
+/** 历练页中部：三件筑灵装备概览；默认收起，长按展开详情 */
+export function renderBattleEquippedStrip(state: GameState, expanded: boolean): string {
+  const slots = ["weapon", "body", "ring"] as const;
+  const slotLabel: Record<(typeof slots)[number], string> = { weapon: "武器", body: "衣甲", ring: "指环" };
+  let cells = "";
+  let collapsedIcons = "";
+  for (const s of slots) {
+    const id = state.equippedGear[s];
+    const g = id ? state.gearInventory[id] : null;
+    if (g) {
+      const pw = gearItemPower(g);
+      collapsedIcons += `<div class="battle-gear-ico-mini rarity-${g.rarity}" title="${slotLabel[s]}">
+        <img src="${gearPortraitSrc(g.baseId, g.slot)}" alt="" width="36" height="36" loading="lazy" />
+      </div>`;
+      cells += `
+      <div class="battle-gear-cell rarity-${g.rarity}">
+        <div class="battle-gear-cell-top">${battleGearStarLine(g.rarity)}</div>
+        <div class="battle-gear-icon-wrap">
+          <img src="${gearPortraitSrc(g.baseId, g.slot)}" alt="" width="48" height="48" loading="lazy" class="battle-gear-icon" />
+        </div>
+        <div class="battle-gear-lv">Lv.${g.itemLevel}</div>
+        <div class="battle-gear-pw">战力 ${fmtNum(pw)}</div>
+        <span class="battle-gear-slot-label">${slotLabel[s]}</span>
+      </div>`;
+    } else {
+      collapsedIcons += `<div class="battle-gear-ico-mini battle-gear-ico-mini--empty" aria-hidden="true"><span>+</span></div>`;
+      cells += `
+      <div class="battle-gear-cell battle-gear-cell--empty">
+        <div class="battle-gear-cell-top">&nbsp;</div>
+        <div class="battle-gear-icon-wrap battle-gear-icon-wrap--empty" aria-hidden="true">
+          <span class="battle-gear-empty-plus">+</span>
+        </div>
+        <div class="battle-gear-lv">—</div>
+        <div class="battle-gear-pw">未装备</div>
+        <span class="battle-gear-slot-label">${slotLabel[s]}</span>
+      </div>`;
+    }
+  }
+  const stripClass = `battle-equipped-strip battle-equipped-strip--collapsible${expanded ? " battle-equipped-strip--expanded" : ""}`;
+  return `
+      <div class="${stripClass}" id="battle-equipped-strip" role="region" aria-label="筑灵装备" aria-expanded="${expanded ? "true" : "false"}">
+        <div class="battle-equipped-collapsed-only" ${expanded ? "hidden" : ""}>
+          <div class="battle-equipped-touch-target" title="长按展开装备详情">
+            <div class="battle-equipped-mini-icons">${collapsedIcons}</div>
+            <p class="battle-equipped-longpress-hint">筑灵装备 · 长按展开</p>
+          </div>
+        </div>
+        <div class="battle-equipped-expanded-only" ${expanded ? "" : "hidden"}>
+          <div class="battle-equipped-strip-head">
+            <span class="battle-equipped-strip-title">筑灵装备</span>
+            <span class="hint sm battle-equipped-strip-hint">铸灵仅保留战力更高者</span>
+          </div>
+          <div class="battle-gear-grid">${cells}</div>
+          <div class="battle-equipped-actions">
+            <button type="button" class="btn" id="btn-battle-equipped-collapse">收起</button>
+            <button type="button" class="btn btn-primary" id="btn-battle-gear-open-manage">强化 / 锁定 / 分解</button>
+          </div>
+        </div>
+      </div>`;
+}
+
+export function renderDungeonPanel(state: GameState, battleGearStripExpanded = false): string {
   const d = state.dungeon;
   const now = Date.now();
   const cd = Math.max(0, d.deathCooldownUntil - now);
@@ -309,9 +404,13 @@ export function renderDungeonPanel(state: GameState): string {
   const cdPct = cd > 0 ? Math.min(100, 100 - (100 * cd) / DUNGEON_DEATH_CD_MS) : 100;
   const sanctuaryIdle = state.dungeonSanctuaryMode && !d.active;
   const showCombatBossBtn =
-    d.active && state.dungeonDeferBoss && d.wave % 5 === 0 && d.mobs.some((m) => m.hp > 0);
+    d.active &&
+    state.dungeonDeferBoss &&
+    d.wave % 5 === 0 &&
+    (d.mobs.some((m) => m.hp > 0) || d.mobs.length === 0);
   const showIdleBossBtn =
     !d.active && !sanctuaryIdle && state.dungeonDeferBoss && fw % 5 === 0 && canEnter;
+  const combatPhase = d.active ? getDungeonCombatPhase(state) : "trash";
 
   const helpPop = `<div id="dungeon-help-popover" class="dungeon-help-popover" role="region" aria-label="幻域说明" hidden>
     <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
@@ -326,7 +425,7 @@ export function renderDungeonPanel(state: GameState): string {
         <img class="panel-title-art-icon" src="${UI_HEAD_DUNGEON}" alt="" width="28" height="28" loading="lazy" />
         <div class="dungeon-panel-title-text">
           <h2>历练·筑灵</h2>
-          <p class="hint sm dungeon-panel-subtitle">副本掉落筑灵髓 · 下方聚灵阵抽卡 · 阵线对决战斗</p>
+          <p class="hint sm dungeon-panel-subtitle">上为阵线战斗 · 中为筑灵装备（默认收起，长按展开）· 下为聚灵抽卡</p>
         </div>
       </div>
       <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner">
@@ -357,14 +456,26 @@ export function renderDungeonPanel(state: GameState): string {
       ${
         d.active
           ? `<div class="dungeon-active-stack dungeon-active-stack--live">
-          <div class="dungeon-combat-toolbar">
-            <button type="button" class="dungeon-map-leave-btn dungeon-map-leave-btn--outside" id="btn-dungeon-leave">
-              <img class="dungeon-map-leave-ico" src="${UI_DUNGEON_LEAVE_DECO}" alt="" width="16" height="16" loading="lazy" />
-              <span>暂离</span>
-            </button>
+          <div class="dungeon-phase-banner dungeon-phase-banner--${combatPhase}" role="region" aria-label="阶段说明">
+            <div class="dungeon-phase-banner-head">
+              <span class="dungeon-phase-badge">${
+                combatPhase === "boss_fight" ? "首领对决" : combatPhase === "boss_prep" ? "首领前哨" : "阵线清剿"
+              }</span>
+              <span class="dungeon-phase-wave-hint hint sm">第 ${d.wave} 波</span>
+            </div>
+            <p class="dungeon-phase-banner-guide">${
+              combatPhase === "boss_fight"
+                ? "首领可对你造成真实伤害。击败首领后本关胜利，并自动进入下一波。"
+                : combatPhase === "boss_prep"
+                  ? "场上为首领前小怪群：请先全部清完，再点下方「挑战首领」进入真正的首领战（不会自动开）。"
+                  : "普通清剿：敌人自动接战；每击杀一只小兵，唤灵髓整数立即入袋。清完本关后进入下一波。"
+            }</p>
             ${
               showCombatBossBtn
-                ? `<button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss">挑战首领</button>`
+                ? `<div class="dungeon-phase-banner-cta">
+              <button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss">挑战首领</button>
+              <span class="hint sm dungeon-phase-cta-note">清完小怪后可用</span>
+            </div>`
                 : ""
             }
           </div>
@@ -384,7 +495,12 @@ export function renderDungeonPanel(state: GameState): string {
           ${renderIdlePreviewMap()}
           <p class="dungeon-idle-stats">累计通关 <strong>${d.totalWavesCleared}</strong> 波 · 最高第 <strong>${d.maxWaveRecord}</strong> 波</p>
           <p class="hint sm">目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波：${nextWavePreview}</p>
-          <p class="hint sm">下一未通关波为第 <strong>${fw}</strong> 波（前沿）。无入场费；阵亡无灵石损失。首领关可先清小怪再点挑战首领。</p>
+          <p class="hint sm">下一未通关波为第 <strong>${fw}</strong> 波（前沿）。首领关（5 的倍数波）需先清小怪，再点「挑战首领」。</p>
+          <ol class="dungeon-idle-guide-steps hint sm">
+            <li>点「进入副本」开始；普通波自动打小怪，每只掉落即时入袋。</li>
+            <li>首领波先清前哨小怪 → 点「挑战首领」→ 击败首领 → 自动进下一波。</li>
+            <li>下方聚灵阵消耗筑灵髓抽卡；筑灵条长按可展开。</li>
+          </ol>
           ${
             showIdleBossBtn
               ? `<div class="dungeon-boss-intent-row">
@@ -430,6 +546,7 @@ export function renderDungeonPanel(state: GameState): string {
           <span class="dungeon-foot-timer-hint">（估算值）</span>
         </div>
       </div>
+      ${renderBattleEquippedStrip(state, battleGearStripExpanded)}
     </section>`;
 }
 
@@ -682,8 +799,8 @@ export function renderGearPanel(
         <img class="panel-title-art-icon" src="${UI_HEAD_GEAR}" alt="" width="28" height="28" loading="lazy" />
         <h2>装备</h2>
       </div>
-      <p class="hint">装备仅保留<strong>已穿三件</strong>，无背包：新装在「历练·筑灵→境界铸灵」与当前部位比对<strong>战力</strong>决定替换或销毁。强化消耗玄铁。</p>
-      <p class="hint sm">锁定装备不可分解，也不会被自动分解（灵卡自动分解仍可在上方聚灵阵勾选）。</p>
+      <p class="hint">装备仅保留<strong>已穿三件</strong>：新装在境界铸灵与当前部位比对<strong>战力</strong>，更高才替换。强化消耗玄铁。在「历练·筑灵」页长按筑灵条展开，点「管理」在此强化、锁定或分解。</p>
+      <p class="hint sm">锁定装备不可分解，也不会被自动分解（灵卡自动分解仍可在聚灵阵勾选）。</p>
       <h3 class="sub-h">已装备</h3>
       ${slotHtml}
       ${detailBlock}

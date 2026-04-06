@@ -1,11 +1,11 @@
 import type { GameState, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
+import { DECK_SIZE, DUNGEON_STAMINA_MAX, type GearInventorySortMode } from "./types";
 
 type VeinSave = GameState["vein"];
 type SkillsSave = GameState["skills"];
 type DungeonSave = GameState["dungeon"];
 type GearInvSave = GameState["gearInventory"];
 type EquippedSave = GameState["equippedGear"];
-import { DECK_SIZE, DUNGEON_STAMINA_MAX, type GearInventorySortMode } from "./types";
 import { SAVE_VERSION, createInitialState } from "./state";
 import { CARDS } from "./data/cards";
 import { initRng, rollNewRngSeed, syncRngFromState } from "./rng";
@@ -228,6 +228,7 @@ function normalizeDungeonState(st: GameState): void {
   if (d.interWaveCooldownUntil == null || !Number.isFinite(d.interWaveCooldownUntil)) d.interWaveCooldownUntil = 0;
   if (d.essenceThisWave == null || !Number.isFinite(d.essenceThisWave)) d.essenceThisWave = 0;
   if (d.pendingToast === undefined) d.pendingToast = null;
+  if (d.pendingKillToast === undefined) d.pendingKillToast = null;
   if (d.pendingDeathPresentation == null) d.pendingDeathPresentation = false;
   if (d.waveEntrySpawnX == null || !Number.isFinite(d.waveEntrySpawnX)) d.waveEntrySpawnX = 0.5;
   if (d.waveEntrySpawnY == null || !Number.isFinite(d.waveEntrySpawnY)) d.waveEntrySpawnY = 0.5;

@@ -42,8 +42,8 @@ const COPY: Record<
   },
   gear: {
     title: "装备已解锁",
-    body: "装备管理在「<strong>角色 → 行囊·装备</strong>」。装备来源在「<strong>抽卡 → 境界铸灵</strong>」（稀有度与装等随铸灵阶成长）。可强化，天极可精炼。",
-    tabHint: "入口：角色看装备，抽卡拿装备。",
+    body: "在「<strong>历练·筑灵</strong>」长按<strong>筑灵装备条</strong>展开，再点「管理」强化、锁定或分解。装备来自「<strong>境界铸灵</strong>」（稀有度与装等随铸灵阶成长）；天极可精炼。",
+    tabHint: "入口：历练页筑灵条；铸灵在聚灵阵。",
   },
   vein: {
     title: "洞府已解锁",

@@ -121,7 +121,7 @@ export function highestRarityInPulls(results: PullResult[]): Rarity {
 }
 
 /**
- * 境界铸灵：无背包，新装仅能与当前部位比对战力——更强则替换并分解旧装；更弱则销毁新装并返少量玄铁。
+ * 境界铸灵：无背包，新装仅能与当前部位比对战力——战力更高则替换并分解旧装；更低或相等则销毁新装并返少量玄铁。
  */
 function finalizeGearPull(state: GameState, g: GearItem): void {
   const slot = g.slot;
@@ -137,7 +137,7 @@ function finalizeGearPull(state: GameState, g: GearItem): void {
     } else {
       const np = gearItemPower(g);
       const cp = gearItemPower(cur);
-      if (np >= cp) {
+      if (np > cp) {
         state.xuanTie += xuanTieFromGearPiece(cur);
         delete state.gearInventory[curId];
         state.gearInventory[g.instanceId] = g;

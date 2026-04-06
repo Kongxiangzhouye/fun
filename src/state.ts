@@ -14,7 +14,8 @@ const emptySkills = (): GameState["skills"] => ({
   arcana: { level: 1, xp: 0 },
 });
 
-const emptyDungeon = (): GameState["dungeon"] => ({
+/** 新档 / 轮回等场景复用，避免与 `createInitialState` 漂移 */
+export const emptyDungeon = (): GameState["dungeon"] => ({
   active: false,
   wave: 1,
   monsterHp: 0,
@@ -46,6 +47,7 @@ const emptyDungeon = (): GameState["dungeon"] => ({
   interWaveCooldownUntil: 0,
   essenceThisWave: 0,
   pendingToast: null,
+  pendingKillToast: null,
   pendingDeathPresentation: false,
   waveCheckpoint: {},
   waveEntrySpawnX: 0.5,

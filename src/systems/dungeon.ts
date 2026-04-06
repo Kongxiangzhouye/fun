@@ -1286,19 +1286,27 @@ function repeatLingShaBonus(wave: number): number {
   return 2 + Math.floor(wave / 2);
 }
 
-/**
- * 本波清关时统一结算：将本波累计的筑灵髓（含小数进位）写入角色与会话统计。
- * 击杀过程中只累加 essenceThisWave / essenceRemainder，不即时加 zhuLingEssence。
- */
-function grantWaveEssenceToInventory(state: GameState): void {
+/** 将余数中满 1 的部分立即写入唤灵髓；返回本帧入袋整数个数 */
+function flushRemainderToZhuLing(state: GameState): number {
   const d = state.dungeon;
   let intGain = 0;
   while (d.essenceRemainder >= 1) {
     d.essenceRemainder -= 1;
     intGain += 1;
   }
-  state.zhuLingEssence += intGain;
-  noteDungeonEssenceIntGained(state, intGain);
+  if (intGain > 0) {
+    state.zhuLingEssence += intGain;
+    noteDungeonEssenceIntGained(state, intGain);
+  }
+  return intGain;
+}
+
+/**
+ * 本波清关时：余数已在每杀flush；此处将本波髓总量记入会话统计。
+ */
+function grantWaveEssenceToInventory(state: GameState): void {
+  const d = state.dungeon;
+  flushRemainderToZhuLing(state);
   d.sessionEssence += d.essenceThisWave;
 }
 
@@ -1348,8 +1356,22 @@ function registerDungeonKill(state: GameState, d: DungeonState, mob: DungeonMob,
   d.sessionKills += 1;
   const isLastInPack = d.packKilled >= d.packSize;
   mob.hp = 0;
+  const intGain = flushRemainderToZhuLing(state);
+  if (intGain > 0 && !mob.isBoss) {
+    d.pendingKillToast = `拾得 ${intGain} 筑灵髓`;
+  }
   if (isLastInPack) {
     grantWaveEssenceToInventory(state);
+    /** 首领位：先清前哨小怪，清完后不自动进下一波，须手动「挑战首领」 */
+    if (d.wave % 5 === 0 && state.dungeonDeferBoss && !mob.isBoss) {
+      d.pendingToast = "前哨已清 · 请点击「挑战首领」迎战首领";
+      d.mobs = [];
+      d.packSize = 0;
+      d.packKilled = 0;
+      d.monsterHp = 0;
+      d.monsterMax = 0;
+      return true;
+    }
     clearWaveAndAdvance(state, now);
     return true;
   }
@@ -1725,6 +1747,8 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
       }
       if (nextRand01(state) < pDodge) {
         pushDamageFloat(px, py, "闪避", "dmg-miss");
+      } else if (!target.isBoss) {
+        pushDamageFloat(px, py, "灵护", "dmg-miss");
       } else {
         d.playerHp -= md;
         d.playerMoveLockUntil = Math.max(

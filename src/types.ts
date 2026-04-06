@@ -259,6 +259,8 @@ export interface DungeonState {
   essenceThisWave: number;
   /** 待主界面 toast 的关卡结算文案（消费后清空） */
   pendingToast: string | null;
+  /** 单次击杀即时入袋整数筑灵髓的提示（小兵；消费后清空） */
+  pendingKillToast: string | null;
   /** 兼容旧存档；已不再用于 UI，阵亡说明见 `pendingToast` */
   pendingDeathPresentation: boolean;
   /** 各波次未通关时的进度（反复挑战同一关时魔物血量持久化） */

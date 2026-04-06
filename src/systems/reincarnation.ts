@@ -1,7 +1,8 @@
 import Decimal from "decimal.js";
 import type { GameState } from "../types";
-import { REINCARNATION_REALM_REQ, DECK_SIZE, DUNGEON_STAMINA_MAX } from "../types";
+import { REINCARNATION_REALM_REQ, DECK_SIZE } from "../types";
 import { reseedRng } from "../rng";
+import { emptyDungeon } from "../state";
 import { playerMaxHp } from "./playerCombat";
 
 export function canReincarnate(state: GameState): boolean {
@@ -41,58 +42,7 @@ export function performReincarnate(state: GameState): void {
     arcana: { level: 1, xp: 0 },
   };
   state.activeSkillId = "combat";
-  state.dungeon = {
-    active: false,
-    wave: 1,
-    monsterHp: 0,
-    monsterMax: 0,
-    playerHp: 0,
-    playerMax: 0,
-    deathCooldownUntil: 0,
-    totalWavesCleared: 0,
-    monsterAttackAccum: 0,
-    playerAttackAccum: 0,
-    playerAttackTargetMobId: 0,
-    packSize: 1,
-    packKilled: 0,
-    sessionKills: 0,
-    sessionEssence: 0,
-    essenceRemainder: 0,
-    playerX: 0.5,
-    playerY: 0.5,
-    mobs: [],
-    nextMobId: 1,
-    walkable: [],
-    mapW: 0,
-    mapH: 0,
-    maxWaveRecord: 0,
-    entryWave: 1,
-    attackAnimPhase: 0,
-    inMelee: false,
-    attackVisualMode: "none",
-    interWaveCooldownUntil: 0,
-    essenceThisWave: 0,
-    pendingToast: null,
-    pendingDeathPresentation: false,
-    waveCheckpoint: {},
-    waveEntrySpawnX: 0.5,
-    waveEntrySpawnY: 0.5,
-    bossDodgeVisual: false,
-    stamina: DUNGEON_STAMINA_MAX,
-    dodgeIframesUntil: 0,
-    dodgeQueued: false,
-    playerMoveLockUntil: 0,
-    playerLastMoveNx: 0,
-    playerLastMoveNy: 0,
-    rewardModeRepeat: false,
-    autoEnterConsumed: false,
-    sessionEnterAtMs: 0,
-    duelComboStacks: 0,
-    duelWeakUntilMs: 0,
-    duelWeakNextAtMs: 0,
-    duelFervor: 0,
-    duelElemSurgeCounter: 0,
-  };
+  state.dungeon = emptyDungeon();
   state.lingSha = 0;
   state.xuanTie = 0;
   state.battleSkills = {};

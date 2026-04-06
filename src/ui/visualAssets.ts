@@ -42,7 +42,13 @@ export const GEAR_SLOT_ICON: Record<"weapon" | "body" | "ring", string> = {
 };
 
 /** 各装备基底立绘（`public/assets/ui/gear-base-<baseId>.png`）；有映射则用立绘，否则回退槽位图标 */
-export const GEAR_BASE_PORTRAIT: Record<string, string> = {};
+export const GEAR_BASE_PORTRAIT: Record<string, string> = {
+  blade_wrought: asset("gear-base-blade_wrought.png"),
+  robe_scholar: asset("gear-base-robe_scholar.png"),
+  ring_moon: asset("gear-base-ring_moon.png"),
+  spear_cloud: asset("gear-base-spear_cloud.png"),
+  boots_void: asset("gear-base-boots_void.png"),
+};
 
 export function gearPortraitSrc(
   baseId: string,
