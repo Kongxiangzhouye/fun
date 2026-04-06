@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "assetRoot": "public/assets/ui/",
+  "patterns": {
+    "gearBasePortrait": "gear-base-<baseId>.png — <baseId> from src/data/gearBases.ts; URL built in src/ui/visualAssets.ts"
+  },
+  "modules": "Static filenames are listed in src/data/*Ui.ts; aggregate manifest list in ui-art-manifest-index.json"
+}
