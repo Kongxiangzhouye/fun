@@ -418,8 +418,8 @@ let showKeyboardHelpModal = false;
 let showAboutModal = false;
 /** 上一次完整 render 对应的主内容视图（用于同页操作时恢复 .hub-page-scroll 滚动） */
 let lastMainContentViewKey = "";
-/** 主循环间隔：过小会增加 CPU，过大则幻域位移像「瞬移」跨格 */
-const LOOP_INTERVAL_MS = 50;
+/** 主循环基准间隔：实际会按移动端/减动效自适应放大 */
+const LOOP_INTERVAL_BASE_MS = 50;
 
 let toastTimer = 0;
 let flyCreditsDismissed = false;
@@ -455,8 +455,21 @@ let mobileLiteFx = false;
 let pixiFxBooted = false;
 let pixiApp: Application | null = null;
 let pixiLayer: Container | null = null;
+let loopTimer: number | null = null;
 type PixiParticle = { g: Graphics; vx: number; vy: number; ttl: number; life: number };
 const pixiParticles: PixiParticle[] = [];
+
+function motionReduced(): boolean {
+  return prefersReducedMotion || !!state.uiPrefs.reduceMotion;
+}
+
+function loopIntervalMs(): number {
+  // 手机端 + 减动效下主动降频，降低持续 CPU 占用与发热。
+  if (mobileLiteFx && motionReduced()) return 160;
+  if (motionReduced()) return 120;
+  if (mobileLiteFx) return 80;
+  return LOOP_INTERVAL_BASE_MS;
+}
 
 function initPixiFxLayer(): void {
   if (typeof document === "undefined" || pixiFxBooted) return;
@@ -512,7 +525,7 @@ function initPixiFxLayer(): void {
 }
 
 function emitPixiBurst(clientX: number, clientY: number, intensity: "normal" | "high" = "normal"): void {
-  if (!pixiApp || !pixiLayer || prefersReducedMotion) return;
+  if (!pixiApp || !pixiLayer || motionReduced()) return;
   const n = intensity === "high" ? 30 : 14;
   const speed = intensity === "high" ? 7.6 : 5.4;
   const palette = intensity === "high" ? [0xfff2b1, 0xffb6f8, 0x8fe8ff, 0xaac4ff] : [0x9bb8ff, 0x81d8ff, 0x9ff1d4];
@@ -544,7 +557,7 @@ function bindMotionUiFx(): void {
 }
 
 function playRevealOverlayIntro(overlay: HTMLElement, liteFx: boolean): void {
-  if (liteFx || prefersReducedMotion) {
+  if (liteFx || motionReduced()) {
     overlay.classList.add("gacha-reveal-active");
     return;
   }
@@ -565,7 +578,7 @@ function playRevealOverlayIntro(overlay: HTMLElement, liteFx: boolean): void {
 }
 
 function playRevealOverlayExit(overlay: HTMLElement, liteFx: boolean, done: () => void): void {
-  if (liteFx || prefersReducedMotion) {
+  if (liteFx || motionReduced()) {
     window.setTimeout(done, 140);
     return;
   }
@@ -608,6 +621,9 @@ function shouldUseMobileLiteFx(): boolean {
 function updateModernVisualFx(now: number): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
+  const reduced = motionReduced();
+  root.classList.toggle("fx-reduce-motion", reduced);
+  if (reduced) return;
   const cycle = 28000;
   const t = ((now % cycle) + cycle) / cycle;
   const pulse = (Math.sin((now / 1800) * Math.PI * 2) + 1) * 0.5;
@@ -626,7 +642,6 @@ function updateModernVisualFx(now: number): void {
   root.style.setProperty("--modern-fx-t", t.toFixed(4));
   root.style.setProperty("--modern-fx-mx", `${(modernFxPointerX * 100).toFixed(2)}%`);
   root.style.setProperty("--modern-fx-my", `${(modernFxPointerY * 100).toFixed(2)}%`);
-  root.classList.toggle("fx-reduce-motion", prefersReducedMotion);
 }
 
 function tryToast(msg: string): void {
@@ -5043,7 +5058,7 @@ function loop(): void {
         const isCrit = f.cls === "dmg-out-crit" || f.text === "暴击";
         const isHit = f.cls === "dmg-out" || f.cls === "dmg-out-crit";
         const isMiss = f.cls === "dmg-miss";
-        if (state.dungeon.active && !prefersReducedMotion) {
+        if (state.dungeon.active && !motionReduced()) {
           if (special && !isWeak && fxNow - lastDuelSpecialShownAtMs < DUEL_SPECIAL_GAP_MS) continue;
           if (!special && fxNow - lastDuelFloatShownAtMs < DUEL_FLOAT_NOISE_GAP_MS) continue;
           if (isWeak && fxNow - lastDuelWeakShownAtMs < DUEL_WEAK_FLOAT_GAP_MS) continue;
@@ -5115,7 +5130,7 @@ function loop(): void {
   for (const a of drainAchievementToastQueue()) {
     toastAchievement(a);
   }
-  toastTimer += LOOP_INTERVAL_MS;
+  toastTimer += loopIntervalMs();
   if (toastTimer >= 5000) {
     toastTimer = 0;
     saveGame(state);
@@ -5247,23 +5262,23 @@ function loop(): void {
       mapEl.classList.toggle("duel-combo-high", d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.comboHighStacks);
       mapEl.classList.toggle(
         "duel-fx-hit",
-        !prefersReducedMotion && mapNow - duelFloatBurstAtMs < DUNGEON_DUEL_FEEDBACK.duelFxHitMs,
+        !motionReduced() && mapNow - duelFloatBurstAtMs < DUNGEON_DUEL_FEEDBACK.duelFxHitMs,
       );
       mapEl.classList.toggle(
         "duel-fx-hit-deco-on",
-        !prefersReducedMotion && mapNow - duelHitFlashAtMs < DUNGEON_DUEL_FEEDBACK.duelFxHitDecoMs,
+        !motionReduced() && mapNow - duelHitFlashAtMs < DUNGEON_DUEL_FEEDBACK.duelFxHitDecoMs,
       );
       mapEl.classList.toggle(
         "duel-fx-crit-deco-on",
-        !prefersReducedMotion && mapNow - duelCritBurstAtMs < DUNGEON_DUEL_FEEDBACK.duelFxCritDecoMs,
+        !motionReduced() && mapNow - duelCritBurstAtMs < DUNGEON_DUEL_FEEDBACK.duelFxCritDecoMs,
       );
       mapEl.classList.toggle(
         "duel-fx-guard-deco-on",
-        !prefersReducedMotion && mapNow - duelGuardBreakAtMs < DUNGEON_DUEL_FEEDBACK.duelFxGuardDecoMs,
+        !motionReduced() && mapNow - duelGuardBreakAtMs < DUNGEON_DUEL_FEEDBACK.duelFxGuardDecoMs,
       );
       mapEl.classList.toggle(
         "duel-fx-weakness-ping-on",
-        !prefersReducedMotion && mapNow - duelWeaknessPingAtMs < DUNGEON_DUEL_FEEDBACK.duelFxWeaknessPingMs,
+        !motionReduced() && mapNow - duelWeaknessPingAtMs < DUNGEON_DUEL_FEEDBACK.duelFxWeaknessPingMs,
       );
       mapEl.classList.toggle(
         "duel-hp-low",
@@ -5706,7 +5721,12 @@ function init(): void {
     for (const m of deferredDungeonToasts) toast(m);
     deferredDungeonToasts.length = 0;
   });
-  setInterval(loop, LOOP_INTERVAL_MS);
+  const runLoop = (): void => {
+    loop();
+    loopTimer = window.setTimeout(runLoop, loopIntervalMs());
+  };
+  if (loopTimer) window.clearTimeout(loopTimer);
+  runLoop();
 }
 
 init();
