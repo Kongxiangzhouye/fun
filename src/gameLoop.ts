@@ -20,6 +20,7 @@ import {
   recordBiGuanFastForwardLifetime,
   recordOfflineStoneSettlementLifetime,
   recordRealmBreakthroughLifetime,
+  recordSummonEssenceSpentLifetime,
 } from "./systems/pullChronicle";
 import { ensureCelestialStashWeek } from "./systems/celestialStash";
 import { tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
@@ -72,6 +73,7 @@ function tryAutoGacha(state: GameState, now: number): void {
   if (now - state.lastAutoGachaMs < 2800) return;
   state.lastAutoGachaMs = now;
   state.summonEssence -= ESSENCE_COST_SINGLE;
+  recordSummonEssenceSpentLifetime(state, ESSENCE_COST_SINGLE);
   pullOne(state);
   onGachaPulls(state, 1);
   tryCompleteAchievements(state);

@@ -2,7 +2,7 @@ import type { GameState } from "../types";
 import { CELESTIAL_OFFERS } from "../data/celestialStash";
 import { currentWeekKey } from "./weeklyBounty";
 import { addStones, canAfford, stones, subStones } from "../stones";
-import { normalizeLifetimeStats } from "./pullChronicle";
+import { normalizeLifetimeStats, recordSummonEssenceSpentLifetime } from "./pullChronicle";
 
 export function emptyCelestialStash(weekKey: string): GameState["celestialStash"] {
   return { weekKey, purchased: [] };
@@ -47,7 +47,10 @@ export function tryBuyCelestialOffer(state: GameState, offerId: string, now: num
   if (cs > 0 && !subStones(state, cs)) return "灵石不足。";
   if (cl > 0) state.lingSha -= cl;
   if (cx > 0) state.xuanTie -= cx;
-  if (ce > 0) state.summonEssence -= ce;
+  if (ce > 0) {
+    state.summonEssence -= ce;
+    recordSummonEssenceSpentLifetime(state, ce);
+  }
 
   if (def.rewardStones != null && def.rewardStones > 0) addStones(state, def.rewardStones);
   if (def.rewardEssence != null && def.rewardEssence > 0) state.summonEssence += def.rewardEssence;

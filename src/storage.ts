@@ -977,6 +977,7 @@ export function deserialize(json: string): GameState {
       dungeonBossKills: Math.max(0, Math.floor(data.lifetimeStats.dungeonBossKills ?? 0)),
       dungeonRollDodges: Math.max(0, Math.floor(data.lifetimeStats.dungeonRollDodges ?? 0)),
       daoEssenceSpentLifetime: Math.max(0, Math.floor(data.lifetimeStats.daoEssenceSpentLifetime ?? 0)),
+      summonEssenceSpentLifetime: Math.max(0, Math.floor(data.lifetimeStats.summonEssenceSpentLifetime ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

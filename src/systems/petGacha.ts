@@ -3,6 +3,7 @@ import { nextRand01 } from "../rng";
 import { rarityRank } from "../data/rarityRank";
 import { PET_DEFS } from "../data/pets";
 import { PET_PULL_COST, addPetXp, petSystemUnlocked } from "./pets";
+import { recordSummonEssenceSpentLifetime } from "./pullChronicle";
 import { pickRarityByWeights01 } from "./rarityDraw";
 
 const RARITY_WEIGHT: Record<Rarity, number> = {
@@ -61,6 +62,7 @@ export function pullPet(state: GameState): {
     state.petPullsTotal = Math.max(0, state.petPullsTotal - 1);
     return { ok: false, msg: "唤灵失败：灵宠配置异常" };
   }
+  recordSummonEssenceSpentLifetime(state, PET_PULL_COST);
   const had = state.pets[pick.defId] != null;
 
   if (had) {

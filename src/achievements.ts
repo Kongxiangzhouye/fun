@@ -336,6 +336,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "meridian",
   },
   {
+    id: "summon_essence_spent_5000",
+    title: "髓海千浪",
+    desc: "累计消耗唤灵髓 5000（唤引、喂养、心法、天机匣等合计）",
+    rewardStones: 2400,
+    rewardEssence: 120,
+    listDeco: "gacha",
+  },
+  {
+    id: "summon_essence_spent_60000",
+    title: "唤尽灵潮",
+    desc: "累计消耗唤灵髓 60000",
+    rewardStones: 12000,
+    rewardEssence: 480,
+    listDeco: "petPullBloom",
+  },
+  {
     id: "pet_first_feed",
     title: "灵契初结",
     desc: "在唤灵池结缘任意灵宠",
@@ -1193,6 +1209,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.daoEssenceSpentLifetime ?? 0) >= 600;
     case "dao_essence_spent_12000":
       return (state.lifetimeStats?.daoEssenceSpentLifetime ?? 0) >= 12000;
+    case "summon_essence_spent_5000":
+      return (state.lifetimeStats?.summonEssenceSpentLifetime ?? 0) >= 5000;
+    case "summon_essence_spent_60000":
+      return (state.lifetimeStats?.summonEssenceSpentLifetime ?? 0) >= 60000;
     case "pet_first_feed":
       return anyPetOwned(state);
     case "pet_level_30":

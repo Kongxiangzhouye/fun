@@ -146,6 +146,8 @@ export interface LifetimeStatsState {
   dungeonRollDodges: number;
   /** 累计消耗道韵（元强化、固元灵脉、道韵灵窍等所有扣费合计，整数） */
   daoEssenceSpentLifetime: number;
+  /** 累计消耗唤灵髓（灵卡唤引、唤灵池、灵宠喂养、心法领悟、天机匣等合计，整数） */
+  summonEssenceSpentLifetime: number;
 }
 
 /** 灵田作物 id */

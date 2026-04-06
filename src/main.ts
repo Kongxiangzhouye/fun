@@ -362,6 +362,7 @@ import {
   PULL_CHRONICLE_MAX,
   recordCardLevelUpLifetime,
   recordRealmBreakthroughLifetime,
+  recordSummonEssenceSpentLifetime,
 } from "./systems/pullChronicle";
 import { GEAR_BASES } from "./data/gearBases";
 import { isSlotTopPowerGear, salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
@@ -2969,6 +2970,7 @@ function buildDataOverviewExportText(st: GameState): string {
     "",
     "[终身累计]",
     `累计消耗道韵: ${lt.daoEssenceSpentLifetime}`,
+    `累计消耗唤灵髓: ${lt.summonEssenceSpentLifetime}`,
     `历练副本累计获得筑灵髓（整数）: ${lt.dungeonEssenceIntGained}`,
     `天机匣兑换次数: ${lt.celestialStashBuys}`,
     `蓄灵池收取次数: ${lt.spiritReservoirClaims}`,
@@ -3066,6 +3068,7 @@ function renderDataOverviewPanel(): string {
       <h3>终身累计</h3>
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">累计消耗道韵</span><strong class="d-val" id="data-overview-lt-dao-spent">${lt.daoEssenceSpentLifetime}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">累计消耗唤灵髓</span><strong class="d-val" id="data-overview-lt-summon-spent">${lt.summonEssenceSpentLifetime}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历练副本累计获得筑灵髓（整数）</span><strong class="d-val" id="data-overview-lt-dungeon-ess">${lt.dungeonEssenceIntGained}</strong></div>
         <div class="data-overview-cell"><span class="d-label">天机匣兑换次数</span><strong class="d-val" id="data-overview-lt-stash">${lt.celestialStashBuys}</strong></div>
         <div class="data-overview-cell"><span class="d-label">蓄灵池收取次数</span><strong class="d-val" id="data-overview-lt-reservoir">${lt.spiritReservoirClaims}</strong></div>
@@ -3124,6 +3127,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-dungeon-boss", String(lt.dungeonBossKills));
   set("data-overview-lt-dungeon-roll", String(lt.dungeonRollDodges));
   set("data-overview-lt-dao-spent", String(lt.daoEssenceSpentLifetime));
+  set("data-overview-lt-summon-spent", String(lt.summonEssenceSpentLifetime));
   set("data-overview-lt-dungeon-ess", String(lt.dungeonEssenceIntGained));
   set("data-overview-lt-stash", String(lt.celestialStashBuys));
   set("data-overview-lt-reservoir", String(lt.spiritReservoirClaims));
@@ -4601,6 +4605,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     const cost = n === 1 ? ESSENCE_COST_SINGLE : ESSENCE_COST_TEN;
     if (state.summonEssence < cost) return;
     state.summonEssence -= cost;
+    recordSummonEssenceSpentLifetime(state, cost);
     let pullHtml = "";
     let toastMsg = "";
     let resultsForFx: PullResult[] = [];

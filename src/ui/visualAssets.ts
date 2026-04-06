@@ -109,6 +109,8 @@ export const UI_CHRONICLE_OFFLINE_STONE_SETTLEMENT_STAT = asset("chronicle-offli
 export const UI_CHRONICLE_META_UPGRADE_STAT = asset("chronicle-meta-upgrade-stat.svg");
 /** 唤灵通鉴 · 累计消耗道韵小标 */
 export const UI_CHRONICLE_DAO_ESSENCE_SPENT_STAT = asset("chronicle-dao-essence-spent-stat.svg");
+/** 唤灵通鉴 · 累计消耗唤灵髓小标 */
+export const UI_CHRONICLE_SUMMON_ESSENCE_SPENT_STAT = asset("chronicle-summon-essence-spent-stat.svg");
 /** 唤灵通鉴 · 灵宠喂养累计小标 */
 export const UI_CHRONICLE_PET_FEED_STAT = asset("chronicle-pet-feed-stat.svg");
 /** 唤灵通鉴 · 灵田种植累计小标 */

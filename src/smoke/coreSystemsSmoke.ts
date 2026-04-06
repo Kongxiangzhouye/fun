@@ -725,6 +725,17 @@ function runDaoEssenceSpentAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "dao_essence_spent_12000"));
 }
 
+function runSummonEssenceSpentAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("summon_essence_spent_5000"));
+  st.lifetimeStats.summonEssenceSpentLifetime = 5000;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "summon_essence_spent_5000"));
+  st.lifetimeStats.summonEssenceSpentLifetime = 60000;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "summon_essence_spent_60000"));
+}
+
 function runCardTenPullSessionAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("card_ten_sessions_5"));
@@ -1112,6 +1123,7 @@ function main(): void {
   runDungeonBossKillAchievementsSmoke();
   runDungeonRollDodgeAchievementsSmoke();
   runDaoEssenceSpentAchievementsSmoke();
+  runSummonEssenceSpentAchievementsSmoke();
   runCardTenPullSessionAchievementsSmoke();
   runPullTenLifetimeStatSmoke();
   runCardSinglePullLifetimeSmoke();

@@ -1,7 +1,7 @@
 import type { GameState } from "../types";
 import { BATTLE_SKILLS, getBattleSkill } from "../data/battleSkills";
 import { nextRand01 } from "../rng";
-import { normalizeLifetimeStats } from "./pullChronicle";
+import { normalizeLifetimeStats, recordSummonEssenceSpentLifetime } from "./pullChronicle";
 
 const PULL_COST_ESSENCE = 28;
 
@@ -19,6 +19,7 @@ export function pullBattleSkill(state: GameState): { ok: boolean; msg: string; i
     return { ok: false, msg: "唤灵髓不足" };
   }
   state.summonEssence -= PULL_COST_ESSENCE;
+  recordSummonEssenceSpentLifetime(state, PULL_COST_ESSENCE);
   const roll = nextRand01(state);
   const pick = pool[Math.floor(roll * pool.length)]!;
   const cur = state.battleSkills[pick.id] ?? 0;
