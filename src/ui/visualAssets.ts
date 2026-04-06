@@ -3,6 +3,8 @@
  * 图标来源：Twemoji（CC-BY 4.0）https://github.com/twitter/twemoji
  */
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
+import { EMPTY_STATE_UI_FILES } from "../data/emptyStateUi";
+import { HUD_BAR_UI_FILES } from "../data/hudBarUi";
 import { ELEMENT_UI_FILES } from "../data/elementUi";
 import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
 import { GEAR_SLOT_UI_FILES } from "../data/gearSlotUi";
@@ -16,17 +18,17 @@ function asset(name: string): string {
   return `${BASE}assets/ui/${name}`;
 }
 
-/** 顶栏资源小图标 */
-export const UI_STONE = asset("ui-stone.png");
-export const UI_ESSENCE = asset("ui-essence.png");
+/** 顶栏资源小图标；与 `HUD_BAR_UI_FILES` 同源 */
+export const UI_STONE = asset(HUD_BAR_UI_FILES.stone);
+export const UI_ESSENCE = asset(HUD_BAR_UI_FILES.essence);
 /** 筑灵髓（历练副本掉落货币） */
-export const UI_ZHULING = asset("ui-zhuling.svg");
-export const UI_REALM = asset("ui-realm.png");
-export const UI_DAO = asset("ui-dao.svg");
-export const UI_ZAO = asset("ui-zao.svg");
-export const UI_POWER = asset("ui-power.svg");
-export const UI_LING_SHA = asset("ui-ling-sha.svg");
-export const UI_XUAN_TIE = asset("ui-xuan-tie.svg");
+export const UI_ZHULING = asset(HUD_BAR_UI_FILES.zhuling);
+export const UI_REALM = asset(HUD_BAR_UI_FILES.realm);
+export const UI_DAO = asset(HUD_BAR_UI_FILES.dao);
+export const UI_ZAO = asset(HUD_BAR_UI_FILES.zao);
+export const UI_POWER = asset(HUD_BAR_UI_FILES.power);
+export const UI_LING_SHA = asset(HUD_BAR_UI_FILES.lingSha);
+export const UI_XUAN_TIE = asset(HUD_BAR_UI_FILES.xuanTie);
 
 /** SSR / UR 灵卡角标（与五行底图分离）；与 `RARITY_BADGE_UI_FILES` 同源 */
 export const RARITY_BADGE_SSR = asset(RARITY_BADGE_UI_FILES.SSR);
@@ -268,9 +270,10 @@ export const UI_HEAD_SPIRIT_RESERVOIR = asset("deco-spirit-reservoir.svg");
 export const UI_HEAD_DAILY_FORTUNE = asset("deco-daily-fortune.svg");
 /** 纳灵阵图（灵府）标题装饰 */
 export const UI_HEAD_SPIRIT_ARRAY = asset("deco-spirit-array.svg");
-export const UI_EMPTY_GEAR = asset("art-empty-gear.svg");
-export const UI_EMPTY_PET = asset("art-empty-pet.svg");
-export const UI_EMPTY_UNLOCK = asset("art-empty-unlock.svg");
+/** 与 `EMPTY_STATE_UI_FILES` 同源 */
+export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
+export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);
+export const UI_EMPTY_UNLOCK = asset(EMPTY_STATE_UI_FILES.unlock);
 
 /** 灵田作物图标（自绘 SVG）；与 `GARDEN_CROPS[].artFile` 同源 */
 export const GARDEN_CROP_IMG: Record<GardenCropId, string> = Object.fromEntries(
