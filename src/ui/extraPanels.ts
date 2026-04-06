@@ -31,7 +31,7 @@ import {
   xpToNextLevel,
 } from "../systems/skillTraining";
 import { getGearBase } from "../data/gearBases";
-import { xuanTieEnhanceCost } from "../systems/gearCraft";
+import { gearItemPower, xuanTieEnhanceCost } from "../systems/gearCraft";
 import { BATTLE_SKILLS } from "../data/battleSkills";
 import { battleSkillPullCost, describeBattleSkillLevels } from "../systems/battleSkills";
 import { rarityZh } from "./rarityZh";
@@ -58,8 +58,6 @@ import {
   UI_DUNGEON_AFFIX_DECO,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
-  UI_GEAR_SORT_DECO,
-  UI_GEAR_SORT_PINNED_DECO,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
   UI_HEAD_TRAIN,
@@ -267,7 +265,7 @@ function renderDungeonMapHtml(state: GameState): string {
     </div>`;
 }
 
-const DUNGEON_HELP_BLURB = `幻域只掉唤灵髓，按关结算。幻域生命为全局共享，进关不会回满。每次进关都会重置地图和怪物；无入场费，阵亡无灵石损失。复刷规则见「养成→图鉴·札记」。`;
+const DUNGEON_HELP_BLURB = `历练副本掉落筑灵髓（按关结算），用于本页下方聚灵阵抽卡。幻域生命为全局共享，进关不会回满。每次进关都会重置地图与怪物；阵亡无灵石损失。复刷规则见「养成→图鉴·札记」。`;
 
 function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
   const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
@@ -327,8 +325,8 @@ export function renderDungeonPanel(state: GameState): string {
       <div class="panel-title-art-row dungeon-panel-title-cluster">
         <img class="panel-title-art-icon" src="${UI_HEAD_DUNGEON}" alt="" width="28" height="28" loading="lazy" />
         <div class="dungeon-panel-title-text">
-          <h2>幻域</h2>
-          <p class="hint sm dungeon-panel-subtitle">阵线对决 · 增量战斗与词缀周常</p>
+          <h2>历练·筑灵</h2>
+          <p class="hint sm dungeon-panel-subtitle">副本掉落筑灵髓 · 下方聚灵阵抽卡 · 阵线对决战斗</p>
         </div>
       </div>
       <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner">
@@ -587,45 +585,39 @@ export function renderGearPanel(
   gearDetailSlot: "weapon" | "body" | "ring" | null = null,
   gearInvSort: GearInventorySortMode = "rarity",
 ): string {
-  const refineHint = refineTargetId
-    ? `<p class="hint refine-hint">精炼：已选主件，再点<strong>另一件</strong>同基底天极作为消耗；再点主件可取消。</p>`
-    : "";
-  const items = sortGearInventoryItems(Object.values(state.gearInventory), gearInvSort);
+  void refineTargetId;
+  void gearInvSort;
+  const items = sortGearInventoryItems(Object.values(state.gearInventory), "slot");
   let inv = "";
   for (const g of items) {
     const eq =
       state.equippedGear.weapon === g.instanceId ||
       state.equippedGear.body === g.instanceId ||
       state.equippedGear.ring === g.instanceId;
+    if (!eq) continue;
     const pre = g.prefixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
     const suf = g.suffixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
-    const picked = refineTargetId === g.instanceId;
-    const refineBtn =
-      g.rarity === "UR"
-        ? `<button class="btn ${picked ? "btn-primary" : ""}" type="button" data-gear-refine="${g.instanceId}">${picked ? "取消精炼" : "精炼"}</button>`
-        : "";
     const xt = xuanTieEnhanceCost(g.enhanceLevel);
     const locked = !!g.locked;
+    const pw = gearItemPower(g);
     inv += `
-      <div class="gear-row ${eq ? "equipped" : ""} ${picked ? "refine-picked" : ""} ${locked ? "is-locked" : ""}">
+      <div class="gear-row equipped ${locked ? "is-locked" : ""}">
         <div class="gear-row-visual">
           <div class="gear-icon-wrap rarity-${g.rarity}">
             <img src="${GEAR_SLOT_ICON[g.slot]}" alt="" width="32" height="32" loading="lazy" class="gear-slot-icon" />
           </div>
           <div>
-          <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · ilvl ${g.itemLevel}
-          <p class="inv-meta">强化 ${g.enhanceLevel}${g.rarity === "UR" ? ` · 精炼 ${g.refineLevel}` : ""}${locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
+          <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade} · ilvl ${g.itemLevel}
+          <p class="inv-meta">战力 ${pw} · 强化 ${g.enhanceLevel}${locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
           <div class="affix-block">${pre}${suf}</div>
           </div>
         </div>
         <div class="gear-actions">
-          <button class="btn btn-primary" type="button" data-gear-equip="${g.instanceId}" ${eq ? "disabled" : ""}>装备</button>
           <button class="btn" type="button" data-gear-enhance="${g.instanceId}">强化（${xt} 玄铁）</button>
           <button class="btn gear-lock-toggle-btn ${locked ? "is-locked" : ""}" type="button" data-gear-toggle-lock="${g.instanceId}">
             <img src="${UI_GEAR_LOCK_DECO}" alt="" width="16" height="16" class="gear-lock-ico" loading="lazy" />${locked ? "解锁" : "锁定"}
           </button>
-          <button class="btn" type="button" data-gear-salvage="${g.instanceId}" ${eq || locked ? "disabled" : ""}>分解</button>
-          ${refineBtn}
+          <button class="btn" type="button" data-gear-salvage="${g.instanceId}" ${locked ? "disabled" : ""}>分解</button>
         </div>
       </div>`;
   }
@@ -643,7 +635,7 @@ export function renderGearPanel(
     slotHtml += `<div class="gear-slot-line">
       <button type="button" class="gear-slot-summary ${open ? "is-open" : ""}" data-gear-open-slot="${s}">
         <span class="gear-slot-summary-label">${slotLabel[s]}</span>
-        <span class="gear-slot-summary-name">${g ? g.displayName : "（空）"}</span>
+        <span class="gear-slot-summary-name">${g ? `${g.displayName} · 战力 ${gearItemPower(g)}` : "（空）"}</span>
         <span class="inv-meta gear-slot-summary-hint">${open ? "收起" : "详情 · 卸下 / 强化"}</span>
       </button>
     </div>`;
@@ -655,36 +647,30 @@ export function renderGearPanel(
     const g = id ? state.gearInventory[id] : null;
     if (!g) {
       detailBlock = `<div class="gear-equipped-detail" id="gear-equipped-detail">
-        <p class="hint">${slotLabel[s]}栏位为空。可在下方背包点击「装备」上阵。</p>
+        <p class="hint">${slotLabel[s]}栏位为空。请去「历练·筑灵→境界铸灵」获取装备。</p>
         <button type="button" class="btn" id="btn-gear-detail-close">关闭</button>
       </div>`;
     } else {
       const pre = g.prefixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
       const suf = g.suffixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
       const xt = xuanTieEnhanceCost(g.enhanceLevel);
-      const picked = refineTargetId === g.instanceId;
-      const refineBtn =
-        g.rarity === "UR"
-          ? `<button class="btn ${picked ? "btn-primary" : ""}" type="button" data-gear-refine="${g.instanceId}">${picked ? "取消精炼" : "精炼"}</button>`
-          : "";
       detailBlock = `<div class="gear-equipped-detail" id="gear-equipped-detail">
         <div class="gear-equipped-detail-head">
           <div class="gear-icon-wrap rarity-${g.rarity}">
             <img src="${GEAR_SLOT_ICON[g.slot]}" alt="" width="40" height="40" loading="lazy" class="gear-slot-icon" />
           </div>
           <div>
-            <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · ilvl ${g.itemLevel}
-            <p class="inv-meta">已装备于 ${slotLabel[s]} · 强化 ${g.enhanceLevel}${g.rarity === "UR" ? ` · 精炼 ${g.refineLevel}` : ""}${g.locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
+            <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade} · ilvl ${g.itemLevel}
+            <p class="inv-meta">已装备于 ${slotLabel[s]} · 战力 ${gearItemPower(g)} · 强化 ${g.enhanceLevel}${g.locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
           </div>
         </div>
         <div class="affix-block">${pre}${suf}</div>
         <div class="gear-equipped-detail-actions">
-          <button class="btn btn-danger" type="button" data-gear-unequip-detail="${s}">卸下</button>
+          <button class="btn btn-danger" type="button" data-gear-unequip-detail="${s}" ${g.locked ? "disabled" : ""}>卸下并拆解</button>
           <button class="btn btn-primary" type="button" data-gear-enhance="${g.instanceId}">强化（${xt} 玄铁）</button>
           <button class="btn gear-lock-toggle-btn ${g.locked ? "is-locked" : ""}" type="button" data-gear-toggle-lock="${g.instanceId}">
             <img src="${UI_GEAR_LOCK_DECO}" alt="" width="16" height="16" class="gear-lock-ico" loading="lazy" />${g.locked ? "解锁" : "锁定"}
           </button>
-          ${refineBtn}
           <button type="button" class="btn" id="btn-gear-detail-close">关闭</button>
         </div>
       </div>`;
@@ -696,33 +682,12 @@ export function renderGearPanel(
         <img class="panel-title-art-icon" src="${UI_HEAD_GEAR}" alt="" width="28" height="28" loading="lazy" />
         <h2>装备</h2>
       </div>
-      <p class="hint">装备来自抽卡的境界铸灵（随进度升阶）。强化消耗玄铁（分解装备获得）；天极可精炼。</p>
-      <p class="hint">点武器/衣甲/指环查看详情，可卸下或强化。背包中的未装备件也能强化。</p>
-      <p class="hint sm">锁定装备不可分解，也不会被自动分解；精炼时不可锁定消耗件。</p>
-      ${refineHint}
+      <p class="hint">装备仅保留<strong>已穿三件</strong>，无背包：新装在「历练·筑灵→境界铸灵」与当前部位比对<strong>战力</strong>决定替换或销毁。强化消耗玄铁。</p>
+      <p class="hint sm">锁定装备不可分解，也不会被自动分解（灵卡自动分解仍可在上方聚灵阵勾选）。</p>
       <h3 class="sub-h">已装备</h3>
       ${slotHtml}
       ${detailBlock}
-      <h3 class="sub-h">背包</h3>
-      ${
-        items.length > 0
-          ? `<div class="gear-inv-sort-bar" role="toolbar" aria-label="背包排序">
-        <span class="gear-inv-sort-label">
-          <img src="${UI_GEAR_SORT_DECO}" class="gear-inv-sort-ico" alt="" width="18" height="18" loading="lazy" />
-          排序
-          <img src="${UI_GEAR_SORT_PINNED_DECO}" class="gear-inv-sort-pinned" alt="" width="14" height="14" loading="lazy" title="偏好已写入存档" />
-        </span>
-        <div class="gear-inv-sort-btns">
-          ${(["rarity", "ilvl", "slot", "name"] as const)
-            .map(
-              (m) =>
-                `<button type="button" class="btn gear-inv-sort-btn ${gearInvSort === m ? "is-active" : ""}" data-gear-inv-sort="${m}">${GEAR_SORT_LABELS[m]}</button>`,
-            )
-            .join("")}
-        </div>
-      </div>`
-          : ""
-      }
+      <h3 class="sub-h">部位详情</h3>
       <div class="gear-inv">${inv || `<div class="empty-art-wrap"><img src="${UI_EMPTY_GEAR}" alt="暂无装备" class="empty-art-img" width="320" height="160" loading="lazy" /></div>`}</div>
     </section>`;
 }

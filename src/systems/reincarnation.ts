@@ -29,6 +29,7 @@ export function performReincarnate(state: GameState): void {
   state.peakSpiritStonesThisLife = "0";
   state.realmLevel = 1;
   state.summonEssence = 80 + state.meta.ticketRegen * 24;
+  state.zhuLingEssence = 28 + state.meta.ticketRegen * 10;
   state.owned = {};
   state.deck = Array.from({ length: DECK_SIZE }, () => null);
   state.gearInventory = {};

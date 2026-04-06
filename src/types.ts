@@ -57,7 +57,7 @@ export interface GearPullChronicleEntry {
 
 /** 终身统计（部分由事件累加） */
 export interface LifetimeStatsState {
-  /** 自幻域入包累计的整数唤灵髓（与背包总髓不同，不含抽卡/成就等来源） */
+  /** 历练副本入包累计的整数筑灵髓（不含唤灵髓、抽卡/成就等来源） */
   dungeonEssenceIntGained: number;
   /** 天机匣累计成功兑换次数 */
   celestialStashBuys: number;
@@ -139,6 +139,8 @@ export interface GearItem {
   displayName: string;
   slot: "weapon" | "body" | "ring";
   rarity: Rarity;
+  /** 筑灵阶 1–48：越高词条池越强（与稀有度、装等协同） */
+  gearGrade: number;
   itemLevel: number;
   /** SSR 及以下：与灵卡同级强化感；UR 可继续精炼 */
   enhanceLevel: number;
@@ -327,8 +329,10 @@ export interface GameState {
   spiritStones: string;
   /** 本轮轮回内峰值灵石（道韵对数结算） */
   peakSpiritStonesThisLife: string;
-  /** 唤灵髓：抽卡唯一货币，仅副本掉落 */
+  /** 唤灵髓：共鸣、心法、灵宠等（非副本抽卡） */
   summonEssence: number;
+  /** 筑灵髓：历练副本掉落；灵卡池与境界铸灵消耗 */
+  zhuLingEssence: number;
   /** 道韵：轮回货币 */
   daoEssence: number;
   /** 造化玉：QoL 解锁 */
@@ -516,6 +520,8 @@ export interface GameState {
 export const DECK_SIZE = 6;
 export const MAX_CARD_LEVEL = 100;
 export const MAX_STARS = 5;
+/** 装备筑灵阶上限（与稀有度并行，用于词条池分层） */
+export const GEAR_GRADE_MAX = 48;
 
 /** 升级消耗：灵石 = base * level^gamma */
 export const LEVEL_COST_BASE = 12;

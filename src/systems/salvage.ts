@@ -6,9 +6,14 @@ function lingShaFromRarity(r: Rarity, stars: number): number {
   return base + Math.floor(stars * 2);
 }
 
-function xuanTieFromRarity(r: Rarity, enhance: number): number {
+export function xuanTieFromRarity(r: Rarity, enhance: number): number {
   const base = { N: 3, R: 8, SR: 20, SSR: 45, UR: 120 }[r] ?? 3;
   return base + enhance * 2;
+}
+
+/** 分解/被替换销毁时的玄铁折算（与 `salvageGear` 一致） */
+export function xuanTieFromGearPiece(g: { rarity: Rarity; enhanceLevel: number }): number {
+  return xuanTieFromRarity(g.rarity, g.enhanceLevel);
 }
 
 /** 分解灵卡：移除持有，获得灵砂 */

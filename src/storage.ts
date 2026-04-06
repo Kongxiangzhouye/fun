@@ -28,6 +28,7 @@ import {
 } from "./systems/pullChronicle";
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
+import { normalizeGearGrade } from "./systems/gearCraft";
 
 /** 旧版单键存档（首次启动时迁移到槽位 0） */
 const LEGACY_KEY = "idle-gacha-realm-v1";
@@ -91,6 +92,7 @@ export interface SerializedState {
   /** 仅兼容旧存档读取，不再写入 */
   tickets?: number;
   summonEssence?: number;
+  zhuLingEssence?: number;
   daoEssence: number;
   zaoHuaYu?: number;
   realmLevel: number;
@@ -296,6 +298,7 @@ export function serialize(state: GameState): string {
     spiritStones: state.spiritStones,
     peakSpiritStonesThisLife: state.peakSpiritStonesThisLife,
     summonEssence: state.summonEssence,
+    zhuLingEssence: state.zhuLingEssence,
     daoEssence: state.daoEssence,
     zaoHuaYu: state.zaoHuaYu,
     realmLevel: state.realmLevel,
@@ -420,6 +423,10 @@ export function deserialize(json: string): GameState {
     data.summonEssence !== undefined && data.summonEssence !== null
       ? data.summonEssence
       : Math.floor((data.tickets ?? 0) * 14) + 48;
+  st.zhuLingEssence =
+    data.zhuLingEssence !== undefined && data.zhuLingEssence !== null && Number.isFinite(data.zhuLingEssence)
+      ? Math.max(0, Math.floor(data.zhuLingEssence))
+      : 0;
   st.daoEssence = data.daoEssence ?? 0;
   st.zaoHuaYu = data.zaoHuaYu ?? 0;
   st.realmLevel = Math.max(1, data.realmLevel ?? 1);
@@ -511,6 +518,9 @@ export function deserialize(json: string): GameState {
     st.dungeon = { ...st.dungeon, ...data.dungeon };
   }
   st.gearInventory = data.gearInventory && typeof data.gearInventory === "object" ? data.gearInventory : st.gearInventory;
+  for (const g of Object.values(st.gearInventory)) {
+    if (g) normalizeGearGrade(g);
+  }
   if (data.equippedGear) {
     st.equippedGear = { ...st.equippedGear, ...data.equippedGear };
   }

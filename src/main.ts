@@ -99,6 +99,7 @@ import type {
 import Decimal from "decimal.js";
 import { gsap } from "gsap";
 import { Application, Container, Graphics, type Ticker } from "pixi.js";
+import { gearItemPower } from "./systems/gearCraft";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
 import { sessionFunFlavorLine, onTitleSpiritPet, bindKonamiEasterEgg } from "./funBits";
@@ -117,6 +118,7 @@ import {
   ELEMENT_ICON,
   UI_STONE,
   UI_ESSENCE,
+  UI_ZHULING,
   UI_REALM,
   UI_DAO,
   UI_ZAO,
@@ -344,8 +346,8 @@ let gearDetailSlot: "weapon" | "body" | "ring" | null = null;
 let gachaPool: "cards" | "gear" = "cards";
 let autoEnterPromptHandled = false;
 let veinHelpDocListenerBound = false;
-/** 主导航：底部五栏（灵府→养成→幻域→抽卡→角色）+ 部分页内二级子栏 */
-type HubId = "character" | "cultivate" | "battle" | "gacha" | "estate";
+/** 主导航：底部四栏（灵府→养成→历练·筑灵→角色）+ 部分页内二级子栏 */
+type HubId = "character" | "cultivate" | "battle" | "estate";
 type EstateSub = "idle" | "vein" | "array" | "garden";
 type CultivateSub =
   | "deck"
@@ -559,8 +561,7 @@ function updateModernVisualFx(now: number): void {
   const hubHue: Record<HubId, number> = {
     estate: 0,
     cultivate: -20,
-    battle: 22,
-    gacha: 34,
+    battle: 30,
     character: -10,
   };
   const pullDensity = Math.min(1, Math.log10(Math.max(10, state.totalPulls + 10)) / 4);
@@ -642,7 +643,9 @@ const CURRENCY_HINTS: Record<string, string> = {
   stone:
     "灵石\n\n基础货币。用于破境、灵卡升阶、洞府升级等。主要来自每秒产出，也可由玩法和成就获得。",
   essence:
-    "唤灵髓\n\n用于抽卡、进入幻域、抽取心法。主要由共鸣进度生成，也可由玩法和成就获得。不能用灵石直接购买。",
+    "唤灵髓\n\n用于心法领悟、灵宠唤灵、天机匣等。主要由聚灵共鸣随时间生成，也可由玩法和成就获得。不能用灵石直接购买。",
+  zhuling:
+    "筑灵髓\n\n历练副本掉落；用于底部「历练·筑灵」中的灵卡池与境界铸灵。不随共鸣自动增长。",
   realm: "境界\n\n当前境界等级。影响属性和功能解锁。可在「灵府→灵脉」消耗灵石提升。",
   dao: "道韵\n\n轮回结算获得。用于「养成→轮回」中的元强化。轮回后保留。",
   zao: "造化玉\n\n用于解锁便利功能。可通过成就等方式获得。",
@@ -970,8 +973,8 @@ function showGearRevealOverlay(gears: GearItem[], toastMsg: string, onDone: () =
       return `<div class="gacha-reveal-card ${liteFx ? "card-fx-lite" : `card-fx-${cardFx}`} gear-reveal rarity-${g.rarity} tier-${g.rarity}" style="--stagger:${liteFx ? 0 : i}">
         ${gearRarityCorner(g.rarity)}
         <span class="gacha-reveal-card-name">${g.displayName}</span>
-        <span class="gacha-reveal-card-r">${rarityZh(g.rarity)} · ilvl ${g.itemLevel}</span>
-        <span class="gacha-reveal-card-tag">${pre} 条词缀 · 强化 ${g.enhanceLevel}</span>
+        <span class="gacha-reveal-card-r">${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade ?? "?"} · ilvl ${g.itemLevel}</span>
+        <span class="gacha-reveal-card-tag">战力 ${fmtNumZh(gearItemPower(g))} · ${pre} 条词缀 · 强化 ${g.enhanceLevel}</span>
       </div>`;
     })
     .join("");
@@ -1466,10 +1469,10 @@ function handleGearPanelClick(e: MouseEvent): void {
   if (unequipD) {
     const s = (unequipD as HTMLElement).dataset.gearUnequipDetail as "weapon" | "body" | "ring" | undefined;
     if (!s) return;
-    unequipGear(state, s);
+    const ok = unequipGear(state, s);
     gearDetailSlot = null;
     saveGame(state);
-    toast("已卸下");
+    toast(ok ? "已卸下并拆解为玄铁（无背包）" : "已锁定，无法卸下");
     refreshGearPanel();
     return;
   }
@@ -1724,17 +1727,17 @@ function renderTutorialBlock(): string {
       <div class="tutorial-backdrop" role="dialog">
         <div class="tutorial-modal">
           <h3>新手引导</h3>
-          <p class="hint">先领新手礼包，再去「<strong>抽卡</strong>」抽一次，然后到「<strong>养成→卡组</strong>」上阵灵卡开始产出。</p>
+          <p class="hint">先领新手礼包，再去「<strong>历练·筑灵</strong>」用<strong>筑灵髓</strong>抽一次灵卡，然后到「<strong>养成→卡组</strong>」上阵灵卡开始产出。</p>
           <div class="btn-row">
-            <button class="btn btn-primary" type="button" id="btn-tutorial-claim">领取新手礼包（唤灵髓×50 · 灵石×600）</button>
+            <button class="btn btn-primary" type="button" id="btn-tutorial-claim">领取新手礼包（筑灵髓×50 · 灵石×600）</button>
             <button class="btn" type="button" id="btn-tutorial-skip">跳过引导</button>
           </div>
         </div>
       </div>`;
   }
   const hints: Record<number, string> = {
-    2: "引导：点底部「抽卡」。",
-    3: "引导：在抽卡页完成 1 次抽卡。完成后开放「幻域」。",
+    2: "引导：点底部「历练·筑灵」。",
+    3: "引导：在本页下方完成 1 次灵卡单抽（消耗筑灵髓）。",
     4: "引导：点「养成→卡组」，再点任意阵位。",
     5: "引导：在弹层里选择 1 张灵卡上阵。",
     6: "引导：点「灵府→洞府」，任意强化 1 次。",
@@ -1806,9 +1809,17 @@ function renderTopBar(
     <span class="res-chip res-chip-key res-chip-essence" data-currency-hint-id="essence">
       <img class="res-ico" src="${UI_ESSENCE}" alt="" width="20" height="20" />
       <span class="res-chip-stack">
-        <span class="res-lbl">灵髓</span>
+        <span class="res-lbl">唤灵髓</span>
         <strong id="pill-essence">${state.summonEssence}</strong>
         <span class="res-delta res-delta-ess" id="pill-essence-delta">+${essenceIncomePerSecondFromResonance(state).toFixed(3)}/秒</span>
+      </span>
+    </span>
+    <span class="res-chip res-chip-key res-chip-zhuling" data-currency-hint-id="zhuling">
+      <img class="res-ico" src="${UI_ZHULING}" alt="" width="20" height="20" />
+      <span class="res-chip-stack">
+        <span class="res-lbl">筑灵髓</span>
+        <strong id="pill-zhuling">${Math.floor(state.zhuLingEssence)}</strong>
+        <span class="res-delta res-delta-zhuling" id="pill-zhuling-delta">历练</span>
       </span>
     </span>
     <span class="res-chip res-chip-key" data-currency-hint-id="realm">
@@ -2003,7 +2014,7 @@ function renderDiscoverabilityHint(): string {
     if (characterSub === "cards") {
       text = "常用入口：这里只做灵卡升阶/分解；上阵请去「养成→卡组」点阵位。";
     } else if (characterSub === "gear") {
-      text = "常用入口：装备产出在底部「抽卡→境界铸灵」；强化/精炼/卸下在本页行囊。";
+      text = "常用入口：装备来自「历练·筑灵→境界铸灵」；仅保留已装备三件，无背包。强化在本页。";
     } else if (characterSub === "guides") {
       text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在「角色→存档·管理」。";
     } else if (characterSub === "settings") {
@@ -2015,13 +2026,11 @@ function renderDiscoverabilityHint(): string {
     } else if (characterSub === "meridian") {
       text = "常用入口：道韵灵窍消耗道韵获得永久加成；道韵主要来自轮回结算。";
     }
-  } else if (activeHub === "gacha") {
-    text = "常用入口：灵卡池=卡牌，境界铸灵=装备；自动分解开关在本页底部。";
   } else if (activeHub === "estate") {
     text =
       "常用入口：灵脉=升级境界，洞府=长期加成，阵图=灵石全局乘区（轮回不重置），灵田=种植收获灵砂；可并行推进。";
   } else if (activeHub === "battle") {
-    text = "常用入口：这里就是副本（幻域）；进本与复刷都在此页。";
+    text = "常用入口：历练副本、筑灵髓抽卡与共鸣进度均在此页（仿寻道式主循环）。";
   }
   if (!text) return "";
   return `<p class="hint sm discoverability-hint">${text}</p>`;
@@ -2035,8 +2044,7 @@ function renderBottomNav(u: ReturnType<typeof getUiUnlocks>): string {
   return `<nav class="app-bottom-nav" role="navigation" aria-label="主导航">
     ${item("estate", "灵府·成长", false, state.tutorialStep === 6 || state.tutorialStep === 7)}
     ${item("cultivate", "养成", false, state.tutorialStep >= 4 && state.tutorialStep <= 5)}
-    ${item("battle", "幻域·副本", !u.tabDungeon, false)}
-    ${item("gacha", "抽卡", false, state.tutorialStep === 2 || state.tutorialStep === 3)}
+    ${item("battle", "历练·筑灵", !u.tabDungeon, state.tutorialStep === 2 || state.tutorialStep === 3)}
     ${item("character", "角色", false, false)}
   </nav>`;
 }
@@ -2191,10 +2199,10 @@ function renderKeyboardHelpModal(): string {
         <button type="button" class="btn keyboard-help-close" id="btn-keyboard-help-close" aria-label="关闭">×</button>
       </div>
       <ul class="keyboard-help-list">
-        <li><span class="kbd-pill">1</span> … <span class="kbd-pill">5</span> 切换底部主栏：<strong>灵府</strong> / <strong>养成</strong> / <strong>幻域</strong> / <strong>抽卡</strong> / <strong>角色</strong>（小键盘 1–5 亦可）</li>
+        <li><span class="kbd-pill">1</span> … <span class="kbd-pill">5</span> 切换底部主栏：<strong>灵府</strong> / <strong>养成</strong> / <strong>历练·筑灵</strong> / <strong>角色</strong>（<span class="kbd-pill">5</span> 同角色；小键盘 1–5 亦可）</li>
         <li><span class="kbd-pill">?</span> 或 <span class="kbd-pill">Shift</span> + <span class="kbd-pill">/</span> 打开或关闭本说明</li>
         <li><span class="kbd-pill">Esc</span> 关闭最上层浮层（先「关于游戏」，再本说明）</li>
-        <li class="keyboard-help-note">幻域未解锁时按 <span class="kbd-pill">3</span>（幻域）会提示不可用。</li>
+        <li class="keyboard-help-note">历练未解锁时按 <span class="kbd-pill">3</span> 会提示不可用。</li>
         <li class="keyboard-help-note">在输入框内输入时，数字键不会切换页面。</li>
       </ul>
     </div>
@@ -2237,7 +2245,7 @@ function parseHubDigitKey(e: KeyboardEvent): HubId | null {
     "1": "estate",
     "2": "cultivate",
     "3": "battle",
-    "4": "gacha",
+    "4": "character",
     "5": "character",
   };
   return map[d] ?? null;
@@ -2291,7 +2299,7 @@ function handleGlobalKeyboardShortcuts(e: KeyboardEvent): void {
   const u = getUiUnlocks(state);
   if (hub === "battle" && !u.tabDungeon) {
     e.preventDefault();
-    toast("幻域尚未解锁。");
+    toast("历练·筑灵尚未解锁。");
     return;
   }
   e.preventDefault();
@@ -2339,7 +2347,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `累计清波次数: ${d.totalWavesCleared}`,
     "",
     "[终身累计]",
-    `幻域累计获得唤灵髓（整数）: ${lt.dungeonEssenceIntGained}`,
+    `历练副本累计获得筑灵髓（整数）: ${lt.dungeonEssenceIntGained}`,
     `天机匣兑换次数: ${lt.celestialStashBuys}`,
     `蓄灵池收取次数: ${lt.spiritReservoirClaims}`,
     `心斋卦象刷新次数: ${lt.dailyFortuneRolls}`,
@@ -2423,7 +2431,7 @@ function renderDataOverviewPanel(): string {
     <div class="data-overview-section">
       <h3>终身累计</h3>
       <div class="data-overview-grid">
-        <div class="data-overview-cell"><span class="d-label">幻域累计获得唤灵髓（整数）</span><strong class="d-val" id="data-overview-lt-dungeon-ess">${lt.dungeonEssenceIntGained}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">历练副本累计获得筑灵髓（整数）</span><strong class="d-val" id="data-overview-lt-dungeon-ess">${lt.dungeonEssenceIntGained}</strong></div>
         <div class="data-overview-cell"><span class="d-label">天机匣兑换次数</span><strong class="d-val" id="data-overview-lt-stash">${lt.celestialStashBuys}</strong></div>
         <div class="data-overview-cell"><span class="d-label">蓄灵池收取次数</span><strong class="d-val" id="data-overview-lt-reservoir">${lt.spiritReservoirClaims}</strong></div>
         <div class="data-overview-cell"><span class="d-label">心斋卦象刷新次数</span><strong class="d-val" id="data-overview-lt-fortune">${lt.dailyFortuneRolls}</strong></div>
@@ -2574,15 +2582,13 @@ function renderHubContent(
   switch (activeHub) {
     case "battle":
       return u.tabDungeon
-        ? renderDungeonPanel(state)
-        : `<section class="panel"><p class="hint">完成 1 次抽卡后开放底部「<strong>幻域</strong>」。</p></section>`;
+        ? `${renderDungeonPanel(state)}${renderGacha(pityUr, u)}`
+        : `<section class="panel"><p class="hint">完成 1 次灵卡单抽后开放「<strong>历练·筑灵</strong>」。</p></section>`;
     case "estate":
       if (estateSub === "idle") return renderIdle(ips, rb, canBreak, u);
       if (estateSub === "vein") return renderVeinPage();
       if (estateSub === "array") return renderSpiritArrayPanel(state);
       return renderSpiritGardenPage(state, nowMs());
-    case "gacha":
-      return renderGacha(pityUr, u);
     case "cultivate":
       switch (cultivateSub) {
         case "deck":
@@ -2778,7 +2784,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       </div>
       ${petIncomeHint !== "" ? `<p class="hint sm income-pet-line" id="income-pet-line">${petIncomeHint}</p>` : ""}
       </div>
-      <p class="hint stone-uses">灵石用于破境、洞府升级和升阶；唤灵髓用于抽卡和幻域。详细规则见「养成→图鉴·札记」。</p>
+      <p class="hint stone-uses">灵石用于破境、洞府升级和升阶；唤灵髓用于心法与灵宠等；筑灵髓用于历练页抽卡，仅副本掉落。详细规则见「养成→图鉴·札记」。</p>
       ${exploreBlock}
       <p class="hint vein-hint-row">洞府乘区（已计入上方每秒灵石）：<strong>汇灵</strong> ×<span id="idle-vein-hui">${huiLingM}</span> · <strong>灵息</strong> ×<span id="idle-vein-ling">${lingXiM}</span>
         <button type="button" class="btn-help-icon" id="btn-vein-synergy-help" aria-expanded="false" aria-controls="vein-synergy-popover" aria-label="查看卡组灵脉说明" title="卡组灵脉说明">?</button>
@@ -2841,7 +2847,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         ${qoLRow("十连加成", "tenPull", "十连结束后额外获得 1 层奖励加成")}
         ${qoLRow("一键尽升", "bulkLevel", "一键将已拥有灵卡升到当前上限")}
         ${qoLRow("自动破境", "autoRealm", "灵石足够时自动破境")}
-        ${qoLRow("自动抽卡", "autoGacha", "唤灵髓足够时自动抽卡")}
+        ${qoLRow("自动抽卡", "autoGacha", "筑灵髓足够时自动单抽灵卡")}
         ${qoLRow("自动吐纳", "autoTuna", "吐纳冷却结束后自动执行")}
       </div>
       <div class="btn-row" style="margin-top:10px">
@@ -2865,15 +2871,15 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
   );
   const gearForgeTierHint = describeGearForgeTierLine(state);
   const tenUnlocked = u.gachaTenUnlocked;
-  const tenDisabled = !tenUnlocked || state.summonEssence < ESSENCE_COST_TEN;
-  const gearTenDisabled = !tenUnlocked || state.summonEssence < ESSENCE_COST_GEAR_TEN;
+  const tenDisabled = !tenUnlocked || state.zhuLingEssence < ESSENCE_COST_TEN;
+  const gearTenDisabled = !tenUnlocked || state.zhuLingEssence < ESSENCE_COST_GEAR_TEN;
   const resonanceBlock = u.gachaResonance
     ? `<div class="resonance-panel resonance-panel-visual">
         <div class="resonance-head-row">
           <img class="resonance-core-img" src="${UI_RESONANCE_CORE}" alt="" width="44" height="44" loading="lazy" />
           <div class="resonance-head-text">
             <h3 class="resonance-title">聚灵共鸣</h3>
-            <p class="hint resonance-hint-tight">随游戏时间累积共鸣，满百得唤灵髓+1（在线、离线追赶、闭关预演均计入）。</p>
+            <p class="hint resonance-hint-tight">随游戏时间累积共鸣，满百得唤灵髓+1（在线、离线追赶、闭关预演均计入）。抽卡消耗筑灵髓，筑灵髓来自历练副本掉落。</p>
           </div>
         </div>
         <div class="resonance-meter-row">
@@ -2931,10 +2937,10 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
       </div>
       <p class="hint">金系卡牌≥3 时，抽卡可获得额外灵石；解锁十连加成功能后收益更高。</p>
       <div class="gacha-actions">
-        <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-1" ${state.summonEssence >= ESSENCE_COST_SINGLE ? "" : "disabled"}>单抽（${ESSENCE_COST_SINGLE} 唤灵髓）</button>
+        <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-1" ${state.zhuLingEssence >= ESSENCE_COST_SINGLE ? "" : "disabled"}>单抽（${ESSENCE_COST_SINGLE} 筑灵髓）</button>
         ${
           tenUnlocked
-            ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-10" ${tenDisabled ? "disabled" : ""}>十连（${ESSENCE_COST_TEN} 唤灵髓）</button>`
+            ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-10" ${tenDisabled ? "disabled" : ""}>十连（${ESSENCE_COST_TEN} 筑灵髓）</button>`
             : `<button class="btn gacha-ten-locked" type="button" disabled title="完成一次单抽或境界≥三重后开放">十连（未解锁）</button>`
         }
       </div>
@@ -2966,35 +2972,30 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
           <div class="pity-meter-fill pity-meter-fill--gear" id="pity-fill-gear" style="width:${gearPityProgressPct}%"></div>
         </div>
       </div>
-      <p class="pity-info">境界铸灵 · 仅产<strong>装备</strong>，<strong>不占灵卡天极保底</strong>；当前阶下<strong>最长 ${gearPityCap} 唤</strong>内至少一件珍品+（基准 ${GEAR_SR_PITY_MAX} 唤，随铸灵阶缩短）；背包上限 80 件。十铸若前 9 次无珍品+，第 10 次必为珍品+。</p>
-      <p class="hint">词条与强化规则在底部「<strong>角色 → 行囊</strong>」查看；天极可精炼。</p>
+      <p class="pity-info">境界铸灵 · 仅产<strong>装备</strong>，<strong>不占灵卡天极保底</strong>；当前阶下<strong>最长 ${gearPityCap} 唤</strong>内至少一件珍品+（基准 ${GEAR_SR_PITY_MAX} 唤，随铸灵阶缩短）。<strong>无背包装备</strong>：新装与当前部位比对<strong>战力</strong>，强者留下，弱者销毁并返少量玄铁。十铸若前 9 次无珍品+，第 10 次必为珍品+。</p>
+      <p class="hint">词条与强化请在「<strong>角色 → 行囊</strong>」查看已装备三件；筑灵阶 1–48 与稀有度共同决定词条池。</p>
       <div class="gacha-actions">
-        <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.summonEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 唤灵髓）</button>
+        <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 筑灵髓）</button>
         ${
           tenUnlocked
-            ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-10" ${gearTenDisabled ? "disabled" : ""}>十铸（${ESSENCE_COST_GEAR_TEN} 唤灵髓）</button>`
+            ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-10" ${gearTenDisabled ? "disabled" : ""}>十铸（${ESSENCE_COST_GEAR_TEN} 筑灵髓）</button>`
             : `<button class="btn gacha-ten-locked" type="button" disabled>十铸（未解锁）</button>`
         }
-      </div>
-      <div class="salvage-auto-row salvage-auto-row--gacha">
-        <span class="salvage-auto-row-title">自动分解（背包未装备）</span>
-        <label class="chk-inline"><input type="checkbox" id="chk-salvage-gear-n" ${state.salvageAuto.gearN ? "checked" : ""} /> 装备·凡品</label>
-        <label class="chk-inline"><input type="checkbox" id="chk-salvage-gear-r" ${state.salvageAuto.gearR ? "checked" : ""} /> 装备·灵品</label>
       </div>
       <div id="pull-output-gear" class="pull-result pull-result-gear"></div>
     </div>`;
 
   const gachaLead = u.tabGear
-    ? `<p class="hint gacha-lead"><strong>灵卡池</strong>产出灵卡；<strong>境界铸灵</strong>按进度产出更强倾向的装备（稀有度、装等随阶提升）。</p>`
-    : `<p class="hint gacha-lead">抽卡入口。境界铸灵会在获得首件装备或累计抽卡 10 次后开放。</p>`;
+    ? `<p class="hint gacha-lead"><strong>灵卡池</strong>产出灵卡；<strong>境界铸灵</strong>产出装备（<strong>筑灵髓</strong>仅副本掉落）。</p>`
+    : `<p class="hint gacha-lead">聚灵阵与铸灵已并入历练页。境界铸灵会在获得首件装备或累计抽卡 10 次后开放。</p>`;
 
   return `
     <section class="panel gacha-panel-root">
       <header class="gacha-panel-header">
         <img class="gacha-panel-decor-img" src="${UI_GACHA_DECOR}" alt="" width="180" height="108" loading="lazy" />
         <div class="gacha-panel-header-inner">
-        <p class="gacha-panel-kicker">抽卡与装备获取</p>
-        <h2 class="gacha-panel-title">抽卡 · 聚灵阵</h2>
+        <p class="gacha-panel-kicker">聚灵阵 · 筑灵抽卡</p>
+        <h2 class="gacha-panel-title">唤灵与铸灵</h2>
         ${gachaLead}
         </div>
       </header>
@@ -3285,7 +3286,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     activeHub = hub;
     if (hub !== "cultivate") deckModalSlot = null;
     if (hub !== "character") gearDetailSlot = null;
-    if (hub === "gacha" && state.tutorialStep === 2) {
+    if (hub === "battle" && state.tutorialStep === 2) {
       state.tutorialStep = 3;
       saveGame(state);
     }
@@ -3449,10 +3450,10 @@ function bindEvents(rb: Decimal, _slots: number): void {
 
   document.getElementById("btn-tutorial-claim")?.addEventListener("click", () => {
     state.tutorialStep = 2;
-    state.summonEssence += 50;
+    state.zhuLingEssence += 50;
     addStones(state, 600);
     saveGame(state);
-    toast("新手礼包已领取。请先去「抽卡」完成 1 次抽卡。");
+    toast("新手礼包已领取。请打开「历练·筑灵」在下方完成 1 次灵卡单抽。");
     render();
   });
 
@@ -3584,8 +3585,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
       return;
     }
     const cost = n === 1 ? ESSENCE_COST_SINGLE : ESSENCE_COST_TEN;
-    if (state.summonEssence < cost) return;
-    state.summonEssence -= cost;
+    if (state.zhuLingEssence < cost) return;
+    state.zhuLingEssence -= cost;
     let pullHtml = "";
     let toastMsg = "";
     let resultsForFx: PullResult[] = [];
@@ -3643,21 +3644,12 @@ function bindEvents(rb: Decimal, _slots: number): void {
       return;
     }
     const cost = n === 1 ? ESSENCE_COST_GEAR_SINGLE : ESSENCE_COST_GEAR_TEN;
-    if (state.summonEssence < cost) return;
-    const inv = Object.keys(state.gearInventory).length;
-    if (inv >= 80) {
-      toast("背包装备已满");
-      return;
-    }
-    if (n === 10 && inv > 70) {
-      toast("背包空间不足，无法十铸");
-      return;
-    }
-    state.summonEssence -= cost;
+    if (state.zhuLingEssence < cost) return;
+    state.zhuLingEssence -= cost;
     if (n === 1) {
       const r = pullGearOne(state);
       if (!r.ok || !r.gear) {
-        state.summonEssence += cost;
+        state.zhuLingEssence += cost;
         toast(!r.ok && "msg" in r ? r.msg : "铸灵失败");
         return;
       }
@@ -4368,6 +4360,7 @@ function updateTopResourcePillsAndVigor(pool: number): void {
   const psd = document.getElementById("pill-stones-delta");
   if (psd) psd.textContent = `+${fmtDecimal(ipsLoop)}/秒`;
   setPillStrong("pill-essence", String(state.summonEssence));
+  setPillStrong("pill-zhuling", String(Math.floor(state.zhuLingEssence)));
   const eps = essenceIncomePerSecondFromResonance(state);
   const ped = document.getElementById("pill-essence-delta");
   if (ped) ped.textContent = `+${eps >= 0.1 ? eps.toFixed(2) : eps.toFixed(3)}/秒`;
@@ -4841,7 +4834,7 @@ function loop(): void {
     if (t) t.textContent = `${fmtNumZh(Math.max(0, chp))} / ${fmtNumZh(pmax)}`;
     if (b) (b as HTMLElement).style.width = `${pct}%`;
   }
-  if (activeHub === "gacha") {
+  if (activeHub === "battle" && getUiUnlocks(state).tabDungeon) {
     const bar = document.getElementById("resonance-bar-fill");
     const ring = document.getElementById("resonance-ring");
     const ringVal = document.getElementById("resonance-ring-val");

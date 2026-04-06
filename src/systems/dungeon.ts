@@ -1260,7 +1260,7 @@ function syncDungeonHpToState(state: GameState): void {
   clampCombatHpToMax(state);
 }
 
-/** 进入第 w 波所需唤灵髓（约本波首通预期收益的 5%；复刷再乘 `DUNGEON_REPEAT_ENTRY_FEE_MULT`） */
+/** 进入第 w 波所需筑灵髓（约本波首通预期收益的 5%；复刷再乘 `DUNGEON_REPEAT_ENTRY_FEE_MULT`） */
 export function dungeonEntryFeeEssence(state: GameState, wave: number, repeatMode = false): number {
   const w = Math.max(1, Math.floor(wave));
   const isBoss = w % 5 === 0;
@@ -1287,8 +1287,8 @@ function repeatLingShaBonus(wave: number): number {
 }
 
 /**
- * 本波清关时统一结算：将本波累计的唤灵髓（含小数进位）写入背包与会话统计。
- * 击杀过程中只累加 essenceThisWave / essenceRemainder，不即时加 summonEssence。
+ * 本波清关时统一结算：将本波累计的筑灵髓（含小数进位）写入角色与会话统计。
+ * 击杀过程中只累加 essenceThisWave / essenceRemainder，不即时加 zhuLingEssence。
  */
 function grantWaveEssenceToInventory(state: GameState): void {
   const d = state.dungeon;
@@ -1297,7 +1297,7 @@ function grantWaveEssenceToInventory(state: GameState): void {
     d.essenceRemainder -= 1;
     intGain += 1;
   }
-  state.summonEssence += intGain;
+  state.zhuLingEssence += intGain;
   noteDungeonEssenceIntGained(state, intGain);
   d.sessionEssence += d.essenceThisWave;
 }
@@ -1328,7 +1328,7 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
     state.lingSha += ls;
     extra = ` · 灵砂 +${ls}（复刷助养成）`;
   }
-  d.pendingToast = `破阵胜利 · 第 ${clearedWave} 关\n本关唤灵髓 +${waveEss.toFixed(2)} 已入背包${extra ? `\n${extra.replace(/^ · /, "")}` : ""}`;
+  d.pendingToast = `破阵胜利 · 第 ${clearedWave} 关\n本关筑灵髓 +${waveEss.toFixed(2)} 已结算${extra ? `\n${extra.replace(/^ · /, "")}` : ""}`;
   refreshRewardModeRepeat(state);
   if (clearedWave % 5 === 0) {
     state.dungeonDeferBoss = true;
@@ -1498,8 +1498,8 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   if (!canEnterAtWave(state, w)) return false;
   d.rewardModeRepeat = computeDungeonRepeatMode(state, w);
   const fee = dungeonEntryFeeEssence(state, w, d.rewardModeRepeat);
-  if (state.summonEssence < fee) return false;
-  state.summonEssence -= fee;
+  if (state.zhuLingEssence < fee) return false;
+  state.zhuLingEssence -= fee;
   d.autoEnterConsumed = true;
   state.dungeonSanctuaryMode = false;
   state.dungeonPortalTargetWave = 0;
@@ -1549,7 +1549,7 @@ export function tryAutoEnterFromSanctuaryPortal(state: GameState, now: number): 
   if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) return false;
   const rm = computeDungeonRepeatMode(state, w);
   const fee = dungeonEntryFeeEssence(state, w, rm);
-  if (state.summonEssence < fee) return false;
+  if (state.zhuLingEssence < fee) return false;
   return enterDungeon(state, w);
 }
 

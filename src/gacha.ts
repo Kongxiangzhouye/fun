@@ -4,7 +4,8 @@ import { ensureOwned } from "./state";
 import { nextRand01 } from "./rng";
 import { addStones } from "./stones";
 import { metalGachaBonusStones } from "./deckSynergy";
-import { generateRandomGear } from "./systems/gearCraft";
+import { generateRandomGear, gearItemPower } from "./systems/gearCraft";
+import { xuanTieFromGearPiece } from "./systems/salvage";
 import { noteWeeklyBountyCardPulls, noteWeeklyBountyGearForges } from "./systems/weeklyBounty";
 import {
   pushGearPullChronicle,
@@ -119,8 +120,33 @@ export function highestRarityInPulls(results: PullResult[]): Rarity {
   return best;
 }
 
+/**
+ * 境界铸灵：无背包，新装仅能与当前部位比对战力——更强则替换并分解旧装；更弱则销毁新装并返少量玄铁。
+ */
 function finalizeGearPull(state: GameState, g: GearItem): void {
-  state.gearInventory[g.instanceId] = g;
+  const slot = g.slot;
+  const curId = state.equippedGear[slot];
+  if (!curId) {
+    state.gearInventory[g.instanceId] = g;
+    state.equippedGear[slot] = g.instanceId;
+  } else {
+    const cur = state.gearInventory[curId];
+    if (!cur) {
+      state.gearInventory[g.instanceId] = g;
+      state.equippedGear[slot] = g.instanceId;
+    } else {
+      const np = gearItemPower(g);
+      const cp = gearItemPower(cur);
+      if (np >= cp) {
+        state.xuanTie += xuanTieFromGearPiece(cur);
+        delete state.gearInventory[curId];
+        state.gearInventory[g.instanceId] = g;
+        state.equippedGear[slot] = g.instanceId;
+      } else {
+        state.xuanTie += Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
+      }
+    }
+  }
   state.gearPityPulls += 1;
   if (rarityRank(g.rarity) >= rarityRank("SR")) {
     state.gearPityPulls = 0;
@@ -174,9 +200,6 @@ export function pullOne(state: GameState): PullResult {
 
 /** 境界铸灵单抽：仅装备，不占灵卡 UR/SSR 保底计数；另有珍品+独立保底（随铸灵阶缩短） */
 export function pullGearOne(state: GameState): { ok: true; gear: GearItem } | { ok: false; msg: string } {
-  if (Object.keys(state.gearInventory).length >= 80) {
-    return { ok: false, msg: "背包装备已满" };
-  }
   const maxP = effectiveGearSrPityMax(state);
   const forceSrPlus = state.gearPityPulls >= maxP - 1;
   const g = forceSrPlus ? generateRandomGear(state, pickPityGearRarity(state)) : generateRandomGear(state);
@@ -188,7 +211,6 @@ export function pullGearOne(state: GameState): { ok: true; gear: GearItem } | { 
 export function pullGearTen(state: GameState): GearItem[] {
   const out: GearItem[] = [];
   for (let i = 0; i < 9; i++) {
-    if (Object.keys(state.gearInventory).length >= 80) break;
     const r = pullGearOne(state);
     if (!r.ok || !r.gear) break;
     out.push(r.gear);
@@ -196,13 +218,10 @@ export function pullGearTen(state: GameState): GearItem[] {
   if (out.length < 9) return out;
   const hasSrPlus = out.some((g) => rarityRank(g.rarity) >= rarityRank("SR"));
   if (hasSrPlus) {
-    if (Object.keys(state.gearInventory).length < 80) {
-      const r = pullGearOne(state);
-      if (r.ok && r.gear) out.push(r.gear);
-    }
+    const r = pullGearOne(state);
+    if (r.ok && r.gear) out.push(r.gear);
     return out;
   }
-  if (Object.keys(state.gearInventory).length >= 80) return out;
   const g = generateRandomGear(state, pickPityGearRarity(state));
   finalizeGearPull(state, g);
   out.push(g);

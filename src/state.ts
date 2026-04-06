@@ -6,7 +6,7 @@ import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 
-export const SAVE_VERSION = 42;
+export const SAVE_VERSION = 43;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -76,6 +76,7 @@ export function createInitialState(): GameState {
     spiritStones: "0",
     peakSpiritStonesThisLife: "0",
     summonEssence: 72,
+    zhuLingEssence: 36,
     daoEssence: 0,
     zaoHuaYu: 0,
     realmLevel: 1,

@@ -13,6 +13,8 @@ function asset(name: string): string {
 /** 顶栏资源小图标 */
 export const UI_STONE = asset("ui-stone.png");
 export const UI_ESSENCE = asset("ui-essence.png");
+/** 筑灵髓（历练副本掉落货币） */
+export const UI_ZHULING = asset("ui-zhuling.svg");
 export const UI_REALM = asset("ui-realm.png");
 export const UI_DAO = asset("ui-dao.svg");
 export const UI_ZAO = asset("ui-zao.svg");
