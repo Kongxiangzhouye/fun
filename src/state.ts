@@ -203,7 +203,7 @@ export function createInitialState(): GameState {
     combatHpCurrent: 100,
     dungeonSanctuaryMode: false,
     dungeonPortalTargetWave: 0,
-    dungeonSanctuaryAutoEnter: false,
+    dungeonSanctuaryAutoEnter: true,
     dungeonDeferBoss: true,
   };
   initRng(st, seed);

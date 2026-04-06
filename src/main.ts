@@ -90,8 +90,7 @@ import type {
   GearInventorySortMode,
 } from "./types";
 import Decimal from "decimal.js";
-import { gsap } from "gsap";
-import { Application, Container, Graphics, type Ticker } from "pixi.js";
+import type { Application, Container, Graphics, Ticker } from "pixi.js";
 import { gearItemPower } from "./systems/gearCraft";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
@@ -190,6 +189,7 @@ import {
   UI_DUNGEON_PARRY_SPARK_DECO,
   UI_DUNGEON_WEAKNESS_PING_DECO,
   UI_DUNGEON_STAGGER_PULSE_DECO,
+  UI_FEEDBACK_TOAST_ICON,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -211,6 +211,8 @@ import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
 import { renderSaveToolsPanel } from "./ui/saveToolsView";
 import { bindSaveToolsEvents } from "./ui/saveToolsEvents";
+import { bindDungeonInteractions } from "./ui/dungeonInteractions";
+import { showHtmlFeedbackToast, showPlainFeedbackToast } from "./ui/feedbackToasts";
 import { tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
 import {
   claimAllCompletableWeeklyBounties,
@@ -458,11 +460,51 @@ let modernFxPointerY = 0.2;
 let motionUiFxBound = false;
 let mobileLiteFx = false;
 let pixiFxBooted = false;
+type GsapRuntime = typeof import("gsap")["gsap"];
+type PixiRuntime = {
+  ApplicationCtor: typeof import("pixi.js").Application;
+  ContainerCtor: typeof import("pixi.js").Container;
+  GraphicsCtor: typeof import("pixi.js").Graphics;
+};
+let gsapRuntime: GsapRuntime | null = null;
+let gsapLoading: Promise<GsapRuntime | null> | null = null;
+let pixiRuntime: PixiRuntime | null = null;
+let pixiLoading: Promise<PixiRuntime | null> | null = null;
 let pixiApp: Application | null = null;
 let pixiLayer: Container | null = null;
 let loopTimer: number | null = null;
 type PixiParticle = { g: Graphics; vx: number; vy: number; ttl: number; life: number };
 const pixiParticles: PixiParticle[] = [];
+
+async function getGsapRuntime(): Promise<GsapRuntime | null> {
+  if (gsapRuntime) return gsapRuntime;
+  if (!gsapLoading) {
+    gsapLoading = import("gsap")
+      .then((mod) => {
+        gsapRuntime = mod.gsap;
+        return gsapRuntime;
+      })
+      .catch(() => null);
+  }
+  return gsapLoading;
+}
+
+async function getPixiRuntime(): Promise<PixiRuntime | null> {
+  if (pixiRuntime) return pixiRuntime;
+  if (!pixiLoading) {
+    pixiLoading = import("pixi.js")
+      .then((mod) => {
+        pixiRuntime = {
+          ApplicationCtor: mod.Application,
+          ContainerCtor: mod.Container,
+          GraphicsCtor: mod.Graphics,
+        };
+        return pixiRuntime;
+      })
+      .catch(() => null);
+  }
+  return pixiLoading;
+}
 
 function motionReduced(): boolean {
   return prefersReducedMotion || !!state.uiPrefs.reduceMotion;
@@ -481,7 +523,9 @@ function initPixiFxLayer(): void {
   pixiFxBooted = true;
   void (async () => {
     try {
-      const app = new Application();
+      const runtime = await getPixiRuntime();
+      if (!runtime) return;
+      const app = new runtime.ApplicationCtor();
       await app.init({
         width: Math.max(1, window.innerWidth),
         height: Math.max(1, window.innerHeight),
@@ -493,7 +537,7 @@ function initPixiFxLayer(): void {
       const canvas = app.canvas as HTMLCanvasElement;
       canvas.className = "modern-pixi-layer";
       document.body.appendChild(canvas);
-      const layer = new Container();
+      const layer = new runtime.ContainerCtor();
       app.stage.addChild(layer);
       app.ticker.add((ticker: Ticker) => {
         const deltaMs = ticker.deltaMS;
@@ -530,12 +574,12 @@ function initPixiFxLayer(): void {
 }
 
 function emitPixiBurst(clientX: number, clientY: number, intensity: "normal" | "high" = "normal"): void {
-  if (!pixiApp || !pixiLayer || motionReduced()) return;
+  if (!pixiApp || !pixiLayer || motionReduced() || !pixiRuntime) return;
   const n = intensity === "high" ? 30 : 14;
   const speed = intensity === "high" ? 7.6 : 5.4;
   const palette = intensity === "high" ? [0xfff2b1, 0xffb6f8, 0x8fe8ff, 0xaac4ff] : [0x9bb8ff, 0x81d8ff, 0x9ff1d4];
   for (let i = 0; i < n; i += 1) {
-    const g = new Graphics();
+    const g = new pixiRuntime.GraphicsCtor();
     const r = intensity === "high" ? 1.8 + Math.random() * 3.6 : 1.3 + Math.random() * 2.2;
     const c = palette[(Math.random() * palette.length) | 0]!;
     g.circle(0, 0, r);
@@ -566,6 +610,12 @@ function playRevealOverlayIntro(overlay: HTMLElement, liteFx: boolean): void {
     overlay.classList.add("gacha-reveal-active");
     return;
   }
+  if (!gsapRuntime) {
+    void getGsapRuntime();
+    overlay.classList.add("gacha-reveal-active");
+    return;
+  }
+  const gsap = gsapRuntime;
   const content = overlay.querySelector(".gacha-reveal-content") as HTMLElement | null;
   const cards = [...overlay.querySelectorAll(".gacha-reveal-card")] as HTMLElement[];
   gsap.set(overlay, { opacity: 0 });
@@ -587,6 +637,12 @@ function playRevealOverlayExit(overlay: HTMLElement, liteFx: boolean, done: () =
     window.setTimeout(done, 140);
     return;
   }
+  if (!gsapRuntime) {
+    void getGsapRuntime();
+    window.setTimeout(done, 140);
+    return;
+  }
+  const gsap = gsapRuntime;
   const content = overlay.querySelector(".gacha-reveal-content") as HTMLElement | null;
   gsap.to(content, {
     opacity: 0,
@@ -660,17 +716,11 @@ function tryToast(msg: string): void {
 const TOAST_DUNGEON_VICTORY_MS = 6000;
 
 function toastDungeonVictory(msg: string): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
-  const el = document.createElement("div");
-  el.className = "toast toast-dungeon-victory";
-  const body = document.createElement("div");
-  body.className = "toast-msg";
-  body.textContent = msg;
-  el.appendChild(body);
-  appendToastProgress(el, TOAST_DUNGEON_VICTORY_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), TOAST_DUNGEON_VICTORY_MS);
+  showPlainFeedbackToast(msg, {
+    iconSrc: UI_FEEDBACK_TOAST_ICON,
+    durationMs: TOAST_DUNGEON_VICTORY_MS,
+    className: "toast toast-dungeon-victory feedback-toast",
+  });
   void resumeAudioContext().then(() => playUiBlip(state));
 }
 
@@ -730,44 +780,16 @@ const CURRENCY_HINTS: Record<string, string> = {
     "战力\n\n综合攻、防、生命、暴击、闪避等战斗属性的总分。会随装备、境界、技能、轮回、灵宠等实时变化。",
 };
 
-function appendToastProgress(el: HTMLElement, durationMs: number): void {
-  const track = document.createElement("div");
-  track.className = "toast-progress";
-  track.setAttribute("aria-hidden", "true");
-  const bar = document.createElement("span");
-  bar.className = "toast-progress-bar";
-  bar.style.animationDuration = `${durationMs}ms`;
-  track.appendChild(bar);
-  el.appendChild(track);
-}
-
 function toast(msg: string): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
-  const el = document.createElement("div");
-  el.className = "toast";
-  const body = document.createElement("div");
-  body.className = "toast-msg";
-  body.textContent = msg;
-  if (msg.includes("\n")) body.style.whiteSpace = "pre-line";
-  el.appendChild(body);
-  appendToastProgress(el, TOAST_DURATION_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), TOAST_DURATION_MS);
+  showPlainFeedbackToast(msg, { iconSrc: UI_FEEDBACK_TOAST_ICON, durationMs: TOAST_DURATION_MS });
 }
 
 function toastCurrencyHint(text: string): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
-  const el = document.createElement("div");
-  el.className = "toast toast-currency-hint";
-  const body = document.createElement("div");
-  body.className = "toast-msg";
-  body.textContent = text;
-  el.appendChild(body);
-  appendToastProgress(el, CURRENCY_HINT_TOAST_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), CURRENCY_HINT_TOAST_MS);
+  showPlainFeedbackToast(text, {
+    iconSrc: UI_FEEDBACK_TOAST_ICON,
+    durationMs: CURRENCY_HINT_TOAST_MS,
+    className: "toast toast-currency-hint feedback-toast",
+  });
 }
 
 function playBountyClaimBurstFx(anchor: HTMLElement | null): void {
@@ -800,8 +822,6 @@ function playBountyClaimBurstFx(anchor: HTMLElement | null): void {
 }
 
 function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
   const capSec = summary.capSec;
   const away = fmtOfflineDurationSec(summary.rawAwaySec);
   const settled = fmtOfflineDurationSec(summary.settledSec);
@@ -809,11 +829,7 @@ function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
   const isIdleSettlement = summary.stoneGain.lte(0.5);
   const offlineBadgeSrc = isIdleSettlement ? UI_OFFLINE_IDLE_BADGE : UI_OFFLINE_SUMMARY_BADGE;
   const offlineTitle = isIdleSettlement ? "离线空转结算" : "离线收益结算";
-  const el = document.createElement("div");
-  el.className = "toast toast-offline";
-  const body = document.createElement("div");
-  body.className = "toast-msg toast-msg-offline";
-  body.innerHTML =
+  const html =
     `<div class="toast-offline-head">` +
     `<img class="toast-offline-badge" src="${offlineBadgeSrc}" alt="" width="18" height="18" loading="lazy" />` +
     `<strong>${offlineTitle}</strong>` +
@@ -822,10 +838,11 @@ function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
     `<div class="toast-offline-line">结算时长：${settled} / 上限：${cap}${summary.wasCapped ? "（已触顶）" : ""}</div>` +
     `<img class="toast-offline-shine" src="${UI_OFFLINE_TRANSITION_SHINE}" alt="" width="180" height="8" loading="lazy" />` +
     `<div class="toast-offline-gain">灵石 +${fmtDecimal(summary.stoneGain)}</div>`;
-  el.appendChild(body);
-  appendToastProgress(el, TOAST_DURATION_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), TOAST_DURATION_MS);
+  showHtmlFeedbackToast(html, {
+    iconSrc: UI_FEEDBACK_TOAST_ICON,
+    durationMs: TOAST_DURATION_MS,
+    className: "toast toast-offline feedback-toast",
+  });
 }
 
 function showCurrencyHintById(id: string): void {
@@ -926,22 +943,17 @@ function setupCurrencyHintInteractions(): void {
 }
 
 function toastAchievement(a: AchievementDef): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
-  const el = document.createElement("div");
-  el.className = "toast toast-achievement";
   const reward =
     (a.rewardStones > 0 ? `灵石 +${fmtNumZh(a.rewardStones)} ` : "") +
     (a.rewardEssence > 0 ? `唤灵髓 +${a.rewardEssence}` : "");
-  const body = document.createElement("div");
-  body.className = "toast-msg toast-msg-achievement";
-  body.innerHTML = `<div class="toast-ach-title">功业达成</div><div class="toast-ach-name">${a.title}</div><div class="toast-ach-desc">${a.desc}</div>${
+  const html = `<div class="toast-ach-title">功业达成</div><div class="toast-ach-name">${a.title}</div><div class="toast-ach-desc">${a.desc}</div>${
     reward ? `<div class="toast-ach-reward">${reward}</div>` : ""
   }`;
-  el.appendChild(body);
-  appendToastProgress(el, TOAST_ACHIEVEMENT_DURATION_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), TOAST_ACHIEVEMENT_DURATION_MS);
+  showHtmlFeedbackToast(html, {
+    iconSrc: UI_FEEDBACK_TOAST_ICON,
+    durationMs: TOAST_ACHIEVEMENT_DURATION_MS,
+    className: "toast toast-achievement feedback-toast",
+  });
 }
 
 function formatPullResults(results: PullResult[]): string {
@@ -4543,114 +4555,24 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   }
 
-  const readEntryWave = (): number => {
-    const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
-    const raw = inp?.valueAsNumber;
-    const d = state.dungeon;
-    const cap = dungeonFrontierWave(state);
-    if (raw == null || !Number.isFinite(raw)) return Math.max(1, Math.min(cap, d.entryWave));
-    return Math.max(1, Math.min(cap, Math.floor(raw)));
-  };
-
-  document.getElementById("btn-dungeon-entry-frontier")?.addEventListener("click", () => {
-    const n = dungeonFrontierWave(state);
-    const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
-    if (inp) inp.value = String(n);
-    state.dungeon.entryWave = n;
-    saveGame(state);
-    render();
-  });
-
-  document.getElementById("btn-dungeon-enter")?.addEventListener("click", () => {
-    const w = readEntryWave();
-    state.dungeon.entryWave = w;
-    const now = nowMs();
-    if (!canEnterDungeon(state, now)) {
-      toast("当前无法进入：冷却中或仍在副本内。");
-      return;
-    }
-    if (!canEnterAtWave(state, w)) {
-      toast("无法从该波进入：已超过当前可推进范围，或该波不可选。");
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？`)) return;
-    if (enterDungeon(state, w)) {
-      saveGame(state);
-      toast(`已进入幻域（自第 ${w} 波）`);
-      render();
-    } else {
-      toast("无法进入副本（冷却或其它限制）");
-    }
-  });
-
-  document.getElementById("sanctuary-auto-enter")?.addEventListener("change", (e) => {
-    const el = e.target as HTMLInputElement;
-    state.dungeonSanctuaryAutoEnter = el.checked;
-    saveGame(state);
-    render();
-  });
-  document.getElementById("btn-sanctuary-portal")?.addEventListener("click", () => {
-    const now = nowMs();
-    const w = state.dungeonPortalTargetWave;
-    if (!state.dungeonSanctuaryMode || state.dungeon.active || w < 1) return;
-    const pmax = playerMaxHp(state);
-    if (state.combatHpCurrent < pmax - 0.25) {
-      toast("灵息未满");
-      return;
-    }
-    if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
-      toast("当前无法进入该关卡。");
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？`)) return;
-    if (enterDungeon(state, w)) {
+  bindDungeonInteractions({
+    state,
+    nowMs,
+    save: () => saveGame(state),
+    render,
+    toast,
+    tryToastDungeonVictory,
+    setActiveHubBattle: () => {
       activeHub = "battle";
-      saveGame(state);
-      toast(`已进入第 ${w} 关`);
-      render();
-    } else {
-      toast("无法进入副本");
-    }
-  });
-  document.getElementById("btn-dungeon-help")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const p = document.getElementById("dungeon-help-popover");
-    const b = document.getElementById("btn-dungeon-help");
-    if (!p || !b) return;
-    p.hidden = !p.hidden;
-    b.setAttribute("aria-expanded", p.hidden ? "false" : "true");
-  });
-  const onDungeonLivePointerUp = (e: PointerEvent): void => {
-    if (!state.dungeon.active) return;
-    const d = state.dungeon;
-    const interWaveWait = d.mobs.length === 0 && d.interWaveCooldownUntil > nowMs();
-    if (interWaveWait) return;
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    const el = e.target as HTMLElement | null;
-    if (el?.closest("button, a, input, textarea, select, label, [role='button']")) return;
-    tryQueueDungeonDodgeWithFeedback();
-  };
-  document.getElementById("dungeon-live-root")?.addEventListener("pointerup", onDungeonLivePointerUp);
-  document.getElementById("btn-dungeon-challenge-boss")?.addEventListener("click", () => {
-    const snap = dungeonBossPrepSnapshot(state);
-    if (!snap.canChallenge) {
-      tryToastDungeonVictory(snap.challengeHint);
-      return;
-    }
-    const r = requestBossChallenge(state);
-    if (!r.ok) {
-      tryToastDungeonVictory(r.msg);
-      return;
-    }
-    saveGame(state);
-    tryToastDungeonVictory(r.msg);
-    render();
-  });
-  document.getElementById("btn-dungeon-boss-next-entry")?.addEventListener("click", () => {
-    state.dungeonDeferBoss = false;
-    saveGame(state);
-    toast("已切换为首领战：下次进入该波将面对首领。");
-    render();
+    },
+    canEnterDungeon,
+    canEnterAtWave,
+    dungeonFrontierWave,
+    enterDungeon,
+    playerMaxHp,
+    tryQueueDungeonDodgeWithFeedback,
+    dungeonBossPrepSnapshot,
+    requestBossChallenge,
   });
 
   document.querySelectorAll("[data-skill-train]").forEach((el) => {

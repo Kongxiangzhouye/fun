@@ -128,6 +128,30 @@ export const UI_FLOW_SECTION_TAG_DECO = inlineSvg(
 export const UI_FLOW_ACTION_ROW_DECO = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.1" y="4.5" width="13.8" height="3" rx="1.5" stroke="#9ec7a0" stroke-width="1.2"/><rect x="3.1" y="8.7" width="9.8" height="3" rx="1.5" stroke="#9ec7a0" stroke-width="1.2"/><rect x="3.1" y="12.9" width="12.1" height="3" rx="1.5" stroke="#9ec7a0" stroke-width="1.2"/></svg>`,
 );
+/** 幻域自动进本开关 · 开启状态徽章 */
+export const UI_DUNGEON_AUTO_BADGE_ON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.6" y="4.2" width="14.8" height="11.6" rx="5.8" stroke="#74d8b2" stroke-width="1.4"/><circle cx="12.9" cy="10" r="3.1" fill="#c9ffe8"/><path d="M6 10h2.5" stroke="#74d8b2" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+);
+/** 幻域自动进本开关 · 关闭状态徽章 */
+export const UI_DUNGEON_AUTO_BADGE_OFF = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.6" y="4.2" width="14.8" height="11.6" rx="5.8" stroke="#9aa7c7" stroke-width="1.4"/><circle cx="7.1" cy="10" r="3.1" fill="#d8dfef"/><path d="M11.6 10H14" stroke="#9aa7c7" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+);
+/** 按需加载流程 · loading chip 图标 */
+export const UI_ASYNC_LOADING_CHIP_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="6.8" stroke="#8db8ff" stroke-width="1.5"/><path d="M10 5.7v4.2l2.8 1.7" stroke="#d8e6ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+);
+/** 按需加载流程 · async hint 图标 */
+export const UI_ASYNC_HINT_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.1" y="3.3" width="13.8" height="13.4" rx="3.1" stroke="#8bb6ff" stroke-width="1.3"/><path d="M7.1 10h5.8M7.8 6.9h4.4M8.4 13.1h3.2" stroke="#dce8ff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+);
+/** 拆分反馈模块统一外观 · toast 图标 */
+export const UI_FEEDBACK_TOAST_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.8" y="4.1" width="14.4" height="11.8" rx="2.8" stroke="#9ab9ff" stroke-width="1.3"/><path d="M6.2 8.1h7.6M6.2 11h5.1" stroke="#e4ecff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+);
+/** 拆分反馈模块统一外观 · panel 图标 */
+export const UI_FEEDBACK_PANEL_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M3.2 5.1A2.1 2.1 0 0 1 5.3 3h9.4a2.1 2.1 0 0 1 2.1 2.1v9.8a2.1 2.1 0 0 1-2.1 2.1H5.3a2.1 2.1 0 0 1-2.1-2.1V5.1z" stroke="#8dc2ff" stroke-width="1.3"/><path d="M6.3 7.1h7.4M6.3 10h7.4M6.3 12.9h4.6" stroke="#d8ebff" stroke-width="1.35" stroke-linecap="round"/></svg>`,
+);
 /** 快捷键说明浮层标题图标 */
 export const UI_KEYBOARD_HELP_DECO = asset(PLAYER_PROFILE_UI_FILES.keyboardHelpDeco);
 /** 关于游戏浮层标题图标 */

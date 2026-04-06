@@ -73,6 +73,11 @@ import {
   UI_DUNGEON_BOSS_PROGRESS_RING,
   UI_DUNGEON_REALM_CLASSIC_FRAME_DECO,
   UI_DUNGEON_REALM_VORTEX_FRAME_DECO,
+  UI_DUNGEON_AUTO_BADGE_ON,
+  UI_DUNGEON_AUTO_BADGE_OFF,
+  UI_ASYNC_LOADING_CHIP_ICON,
+  UI_ASYNC_HINT_DECO,
+  UI_FEEDBACK_PANEL_ICON,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
   UI_GEAR_UPGRADE_UP,
@@ -320,6 +325,8 @@ const DUNGEON_HELP_BLURB = `筑灵髓来自战斗：普通波为小怪群，每�
 function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
   const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
   const w = state.dungeonPortalTargetWave;
+  const autoOn = !!state.dungeonSanctuaryAutoEnter;
+  const autoBadge = autoOn ? UI_DUNGEON_AUTO_BADGE_ON : UI_DUNGEON_AUTO_BADGE_OFF;
   const portalSection = portalReady
     ? `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
       <div class="sanctuary-portal-ring" aria-hidden="true"></div>
@@ -330,7 +337,18 @@ function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): stri
     <div class="sanctuary-visual-bg" aria-hidden="true"></div>
     <div class="sanctuary-heal-particles" aria-hidden="true"></div>
     <div class="sanctuary-player-dot" aria-hidden="true"></div>
-    <p class="hint sm sanctuary-auto-hint">阵亡后从本段起始波继续；首领需点「挑战首领」再进关。</p>
+    <div class="sanctuary-auto-row">
+      <label class="sanctuary-auto-label" for="sanctuary-auto-enter">
+        <input type="checkbox" id="sanctuary-auto-enter" ${autoOn ? "checked" : ""} />
+        <img class="sanctuary-auto-badge-icon" src="${autoBadge}" alt="" width="14" height="14" loading="lazy" />
+        <span>自动进本</span>
+      </label>
+      <span class="status-badge ${autoOn ? "status-badge--ready" : "status-badge--pending"}">${autoOn ? "已开启" : "已关闭"}</span>
+      <p class="hint sm sanctuary-auto-hint">
+        <img class="sanctuary-auto-hint-ico" src="${UI_ASYNC_HINT_DECO}" alt="" width="13" height="13" loading="lazy" />
+        阵亡后从本段起始波继续；首领需点「挑战首领」再进关。
+      </p>
+    </div>
     ${portalSection}
   </div>`;
 }
@@ -449,6 +467,9 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
 
   const panelRunClass = d.active ? " dungeon-panel--run dungeon-panel--live-fight" : "";
   const panelRunStyle = d.active ? ` style="--dungeon-live-strip:url('${UI_DUNGEON_PANEL_LIVE_STRIP}')"` : "";
+  const asyncHintText = d.active
+    ? "战场反馈按需刷新中（优先战斗数值与交互）"
+    : "入口与预览按需加载，先渲染核心操作";
 
   return `
     <section class="panel dungeon-strip-panel${panelRunClass}"${panelRunStyle}>
@@ -458,6 +479,20 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
           <h2>历练·筑灵</h2>
           <p class="hint sm dungeon-panel-subtitle">上为阵线战斗 · 中为筑灵装备（默认收起，长按展开）· 下为聚灵抽卡</p>
         </div>
+      </div>
+      <div class="feedback-panel-head">
+        <img class="feedback-panel-head-ico" src="${UI_FEEDBACK_PANEL_ICON}" alt="" width="14" height="14" loading="lazy" />
+        <span>统一反馈样式</span>
+      </div>
+      <div class="dungeon-async-feedback" role="status" aria-live="polite">
+        <span class="loading-chip ${d.active ? "is-active" : ""}">
+          <img src="${UI_ASYNC_LOADING_CHIP_ICON}" alt="" width="14" height="14" loading="lazy" />
+          ${d.active ? "战斗流已加载" : "轻量预加载中"}
+        </span>
+        <span class="async-hint">
+          <img src="${UI_ASYNC_HINT_DECO}" alt="" width="14" height="14" loading="lazy" />
+          ${asyncHintText}
+        </span>
       </div>
       <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner">
         <img class="dungeon-affix-icon" src="${UI_DUNGEON_AFFIX_DECO}" alt="" width="40" height="40" loading="lazy" />
