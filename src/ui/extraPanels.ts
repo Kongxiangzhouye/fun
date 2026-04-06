@@ -47,6 +47,7 @@ import {
   UI_DUNGEON_DUEL_DECO,
   UI_DUNGEON_HIT_CONFIRM_RING_DECO,
   UI_DUNGEON_CRIT_ECHO_DECO,
+  UI_DUNGEON_COMBO_CHAIN_DECO,
   UI_DUNGEON_GUARD_BREAK_DECO,
   UI_DUEL_GAUGE_SWORD,
   UI_DUEL_GAUGE_THREAT,
@@ -277,6 +278,7 @@ function renderDungeonMapHtml(state: GameState): string {
             <img class="dungeon-duel-deco" src="${UI_DUNGEON_DUEL_DECO}" alt="" width="100" height="100" loading="lazy" />
           </div>
           <div class="dungeon-duel-momentum" id="dungeon-duel-momentum" aria-live="polite">
+            <img class="dungeon-duel-combo-chain-deco" id="dungeon-duel-combo-chain-deco" src="${UI_DUNGEON_COMBO_CHAIN_DECO}" alt="" width="120" height="24" loading="lazy" />
             <span class="duel-mom-pill duel-mom-pill--tier" id="duel-combo-tier">蓄势</span>
             <span class="duel-mom-pill" id="duel-combo-pill">连击 0</span>
             <span class="duel-mom-pill duel-weak-pill" id="duel-weak-pill" hidden>破绽</span>

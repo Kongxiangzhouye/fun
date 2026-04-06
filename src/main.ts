@@ -252,6 +252,7 @@ import {
   drainDungeonDamageFloats,
   bossDisplayTitle,
   currentBossMob,
+  DUNGEON_DUEL_FEEDBACK,
   playerEngageRadiusNorm,
   queueDungeonDodge,
   totalAliveMobHpSum,
@@ -4867,7 +4868,7 @@ function loop(): void {
       mapEl.classList.toggle("duel-mood-windup", duelMood === "windup");
       mapEl.classList.toggle("duel-mood-fervor", duelMood === "fervor");
       mapEl.classList.toggle("duel-boss-telegraph", d.bossDodgeVisual);
-      mapEl.classList.toggle("duel-combo-high", d.duelComboStacks >= 7);
+      mapEl.classList.toggle("duel-combo-high", d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.comboHighStacks);
       mapEl.classList.toggle(
         "duel-fx-hit",
         !prefersReducedMotion && mapNow - duelFloatBurstAtMs < 140,
@@ -4889,8 +4890,14 @@ function loop(): void {
         d.playerMax > 0 && d.playerHp / d.playerMax < 0.28,
       );
       mapEl.classList.toggle("duel-is-boss", !!(tgt?.isBoss));
-      const hitDecoSrc = d.duelComboStacks >= 3 ? UI_DUNGEON_HIT_CONFIRM_RING_DECO : UI_DUNGEON_HIT_FLASH_DECO;
-      const critDecoSrc = d.duelComboStacks >= 7 ? UI_DUNGEON_CRIT_ECHO_DECO : UI_DUNGEON_CRIT_BURST_DECO;
+      const hitDecoSrc =
+        d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.hitDecoComboThreshold
+          ? UI_DUNGEON_HIT_CONFIRM_RING_DECO
+          : UI_DUNGEON_HIT_FLASH_DECO;
+      const critDecoSrc =
+        d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.critDecoComboThreshold
+          ? UI_DUNGEON_CRIT_ECHO_DECO
+          : UI_DUNGEON_CRIT_BURST_DECO;
       mapEl.style.setProperty("--duel-hit-flash-deco", `url("${hitDecoSrc}")`);
       mapEl.style.setProperty("--duel-crit-burst-deco", `url("${critDecoSrc}")`);
       mapEl.style.setProperty("--duel-guard-break-deco", `url("${UI_DUNGEON_STAGGER_PULSE_DECO}")`);
@@ -4919,7 +4926,14 @@ function loop(): void {
       if (comboPill) comboPill.textContent = `连击 ${d.duelComboStacks}`;
       if (tierEl) {
         tierEl.textContent = duelComboTierLabel(d.duelComboStacks);
-        tierEl.classList.toggle("is-hot", d.duelComboStacks >= 7);
+        tierEl.classList.toggle("is-hot", d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.comboHighStacks);
+      }
+      const comboChainDeco = document.getElementById("dungeon-duel-combo-chain-deco");
+      if (comboChainDeco) {
+        comboChainDeco.classList.toggle(
+          "is-active",
+          d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.comboChainDecoThreshold,
+        );
       }
       if (weakPill) weakPill.hidden = now >= d.duelWeakUntilMs;
       if (fervPct) fervPct.textContent = String(Math.min(100, Math.floor(d.duelFervor)));

@@ -302,6 +302,14 @@ const DUEL_ELEM_ADV = 1.27;
 const DUEL_SURGE_EVERY = 4;
 const DUEL_SURGE_RATIO = 0.11;
 
+/** 幻域反馈阈值集中在此，供战斗与 UI 同口径读取 */
+export const DUNGEON_DUEL_FEEDBACK = {
+  comboHighStacks: 7,
+  hitDecoComboThreshold: 3,
+  critDecoComboThreshold: 7,
+  comboChainDecoThreshold: 5,
+} as const;
+
 function initDuelBattleState(state: GameState, now: number): void {
   const d = state.dungeon;
   d.duelComboStacks = 0;

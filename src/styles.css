@@ -5675,6 +5675,22 @@ html.ui-reduce-motion *::after {
   pointer-events: none;
 }
 
+.dungeon-duel-combo-chain-deco {
+  display: block;
+  width: 120px;
+  max-width: 80%;
+  height: auto;
+  opacity: 0;
+  transform: translateY(2px) scale(0.96);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  filter: drop-shadow(0 0 8px rgba(255, 170, 108, 0.35));
+}
+
+.dungeon-duel-combo-chain-deco.is-active {
+  opacity: 0.95;
+  transform: translateY(0) scale(1);
+}
+
 .duel-mom-pill {
   font-size: 0.72rem;
   letter-spacing: 0.06em;
@@ -8004,6 +8020,14 @@ p.gear-forge-tier-hint {
 /* —— 养成 · 周常悬赏 —— */
 .bounty-panel .bounty-week-line {
   margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bounty-week-focus-ico {
+  flex-shrink: 0;
+  opacity: 0.94;
 }
 
 .bounty-feedback-row {

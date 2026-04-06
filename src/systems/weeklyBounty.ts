@@ -115,8 +115,7 @@ export function emptyWeeklyBounty(weekKey: string): GameState["weeklyBounty"] {
   };
 }
 
-export function normalizeWeeklyBounty(st: GameState): void {
-  const now = Date.now();
+export function normalizeWeeklyBounty(st: GameState, now = Date.now()): void {
   const wk = currentWeekKey(now);
   if (!st.weeklyBounty || typeof st.weeklyBounty.weekKey !== "string") {
     st.weeklyBounty = emptyWeeklyBounty(wk);
@@ -145,7 +144,7 @@ export function normalizeWeeklyBounty(st: GameState): void {
 
 /** 在周切换时重置进度（在 tick 与关键操作前调用） */
 export function ensureWeeklyBountyWeek(state: GameState, now: number): void {
-  normalizeWeeklyBounty(state);
+  normalizeWeeklyBounty(state, now);
   const wk = currentWeekKey(now);
   if (state.weeklyBounty.weekKey !== wk) {
     state.weeklyBounty = emptyWeeklyBounty(wk);
@@ -183,6 +182,13 @@ export function isWeeklyBountyClaimed(state: GameState, taskId: string): boolean
   return state.weeklyBounty.claimed.includes(taskId);
 }
 
+export type WeeklyBountyTaskState = "pending" | "claimable" | "claimed";
+
+export function weeklyBountyTaskState(state: GameState, def: WeeklyBountyTaskDef): WeeklyBountyTaskState {
+  if (isWeeklyBountyClaimed(state, def.id)) return "claimed";
+  return isWeeklyBountyComplete(state, def) ? "claimable" : "pending";
+}
+
 export function noteWeeklyBountyWave(state: GameState): void {
   ensureWeeklyBountyWeek(state, Date.now());
   state.weeklyBounty.waves += 1;
@@ -218,8 +224,7 @@ export function claimWeeklyBountyTask(state: GameState, taskId: string, now: num
   ensureWeeklyBountyWeek(state, now);
   const def = WEEKLY_BOUNTY_TASKS.find((t) => t.id === taskId);
   if (!def) return false;
-  if (state.weeklyBounty.claimed.includes(taskId)) return false;
-  if (!isWeeklyBountyComplete(state, def)) return false;
+  if (weeklyBountyTaskState(state, def) !== "claimable") return false;
   state.weeklyBounty.claimed.push(taskId);
   state.weeklyBounty.claimed.sort();
   if (def.rewardStones > 0) addStones(state, def.rewardStones);
@@ -266,14 +271,11 @@ export function weeklyBountyFeedbackState(state: GameState, now: number): Weekly
   let claimed = 0;
   let claimable = 0;
   for (const def of WEEKLY_BOUNTY_TASKS) {
-    const done = isWeeklyBountyComplete(state, def);
-    const got = isWeeklyBountyClaimed(state, def.id);
-    if (got) {
+    const taskState = weeklyBountyTaskState(state, def);
+    if (taskState === "claimed") {
       claimed += 1;
       completed += 1;
-      continue;
-    }
-    if (done) {
+    } else if (taskState === "claimable") {
       completed += 1;
       claimable += 1;
     }

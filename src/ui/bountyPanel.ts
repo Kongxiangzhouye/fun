@@ -2,11 +2,10 @@ import type { GameState } from "../types";
 import {
   WEEKLY_BOUNTY_TASKS,
   weeklyBountyProgress,
-  isWeeklyBountyComplete,
-  isWeeklyBountyClaimed,
   currentWeekKey,
   ensureWeeklyBountyWeek,
   weeklyBountyFeedbackState,
+  weeklyBountyTaskState,
   type WeeklyBountyCardDeco,
 } from "../systems/weeklyBounty";
 import {
@@ -20,6 +19,7 @@ import {
   UI_BOUNTY_STREAK_BADGE,
   UI_BOUNTY_COMPLETE_BADGE,
   UI_BOUNTY_PENDING_BADGE,
+  UI_BOUNTY_WAVES_FOCUS_BADGE,
   UI_HEAD_BOUNTY,
 } from "./visualAssets";
 
@@ -39,10 +39,11 @@ export function renderBountyPanel(state: GameState, now: number): string {
   const claimableN = fb.claimable;
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
     const prog = weeklyBountyProgress(state, t);
-    const done = isWeeklyBountyComplete(state, t);
-    const claimed = isWeeklyBountyClaimed(state, t.id);
+    const taskState = weeklyBountyTaskState(state, t);
+    const done = taskState !== "pending";
+    const claimed = taskState === "claimed";
     const pct = Math.min(100, (100 * prog) / t.target);
-    const canClaim = done && !claimed;
+    const canClaim = taskState === "claimable";
     const deco = `<img class="bounty-task-deco" src="${BOUNTY_CARD_DECO_SRC[t.cardDeco]}" alt="" width="22" height="22" loading="lazy" />`;
     return `
       <div class="bounty-card" data-bounty-task="${t.id}">
@@ -70,7 +71,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
         <h2>周常悬赏</h2>
       </div>
       <p class="hint">每周一（本地时间）刷新进度与领取状态。完成条目可领取灵石与唤灵髓。</p>
-      <p class="hint sm bounty-week-line">当前周次：<strong>${wk}</strong></p>
+      <p class="hint sm bounty-week-line"><img class="bounty-week-focus-ico" src="${UI_BOUNTY_WAVES_FOCUS_BADGE}" alt="" width="16" height="16" loading="lazy" />当前周次：<strong>${wk}</strong></p>
       <div class="bounty-feedback-row">
         <span class="bounty-feedback-pill">
           <img class="bounty-feedback-ico" src="${UI_BOUNTY_PENDING_BADGE}" alt="" width="18" height="18" loading="lazy" />
@@ -116,10 +117,11 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   if (claimPill) claimPill.classList.toggle("is-ready", fb.claimed >= fb.total);
   for (const t of WEEKLY_BOUNTY_TASKS) {
     const prog = weeklyBountyProgress(state, t);
-    const done = isWeeklyBountyComplete(state, t);
-    const claimed = isWeeklyBountyClaimed(state, t.id);
+    const taskState = weeklyBountyTaskState(state, t);
+    const done = taskState !== "pending";
+    const claimed = taskState === "claimed";
     const pct = Math.min(100, (100 * prog) / t.target);
-    const canClaim = done && !claimed;
+    const canClaim = taskState === "claimable";
     const card = document.querySelector(`[data-bounty-task="${t.id}"]`);
     if (!card) continue;
     const fill = card.querySelector(".bounty-bar-fill") as HTMLElement | null;
