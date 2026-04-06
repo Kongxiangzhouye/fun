@@ -8,6 +8,8 @@
     { "id": "hitFlashDeco", "file": "deco-dungeon-hit-flash.svg" },
     { "id": "critBurstDeco", "file": "deco-dungeon-crit-burst.svg" },
     { "id": "guardBreakDeco", "file": "deco-dungeon-guard-break.svg" },
+    { "id": "staggerPulseDeco", "file": "deco-dungeon-stagger-pulse.svg" },
+    { "id": "finisherSealDeco", "file": "deco-dungeon-finisher-seal.svg" },
     { "id": "gaugeSword", "file": "deco-duel-gauge-sword.svg" },
     { "id": "gaugeThreat", "file": "deco-duel-gauge-threat.svg" },
     { "id": "idleMist", "file": "deco-dungeon-idle-mist.svg" },

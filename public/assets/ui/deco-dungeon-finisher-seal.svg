@@ -1,0 +1,19 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="finA" x1="18" y1="12" x2="78" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE5A5"/>
+      <stop offset="0.48" stop-color="#FFB66E"/>
+      <stop offset="1" stop-color="#FF7A9E"/>
+    </linearGradient>
+    <filter id="finGlow" x="7" y="7" width="82" height="82" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="48" cy="48" r="38" fill="#1F1020" stroke="url(#finA)" stroke-width="2.4" opacity="0.96"/>
+  <circle cx="48" cy="48" r="30.5" fill="none" stroke="url(#finA)" stroke-width="1.2" opacity="0.3" stroke-dasharray="3 5"/>
+  <path d="M48 19 L56 36 L75 39 L61 52 L64 72 L48 62 L32 72 L35 52 L21 39 L40 36 Z" fill="url(#finA)" opacity="0.24" filter="url(#finGlow)"/>
+  <path d="M48 28 L54 42 L69 44 L57 54 L60 68 L48 60 L36 68 L39 54 L27 44 L42 42 Z" fill="url(#finA)" opacity="0.84"/>
+  <path d="M40 54 L48 36 L56 54" stroke="#FFF2D9" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+  <path d="M43 60 H53" stroke="#FFD9AF" stroke-width="2.2" stroke-linecap="round" opacity="0.9"/>
+</svg>

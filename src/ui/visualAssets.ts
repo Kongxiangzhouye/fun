@@ -167,6 +167,10 @@ export const UI_DUNGEON_HIT_FLASH_DECO = asset(DUNGEON_DUEL_UI_FILES.hitFlashDec
 export const UI_DUNGEON_CRIT_BURST_DECO = asset(DUNGEON_DUEL_UI_FILES.critBurstDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 破防/破绽反馈 */
 export const UI_DUNGEON_GUARD_BREAK_DECO = asset(DUNGEON_DUEL_UI_FILES.guardBreakDeco, UI_DUNGEON_DUEL_DECO);
+/** 阵线对决 · 失衡震荡反馈 */
+export const UI_DUNGEON_STAGGER_PULSE_DECO = asset(DUNGEON_DUEL_UI_FILES.staggerPulseDeco, UI_DUNGEON_DUEL_DECO);
+/** 阵线对决 · 斩杀收束印记反馈 */
+export const UI_DUNGEON_FINISHER_SEAL_DECO = asset(DUNGEON_DUEL_UI_FILES.finisherSealDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 剑气读条旁小标 */
 export const UI_DUEL_GAUGE_SWORD = asset(DUNGEON_DUEL_UI_FILES.gaugeSword);
 /** 阵线对决 · 凶煞读条旁小标 */
