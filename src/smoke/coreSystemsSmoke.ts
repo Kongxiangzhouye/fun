@@ -919,6 +919,9 @@ function runCardLevelAndStarAchievementsSmoke(): void {
   st.lifetimeStats.cardStarUps = 180;
   const d = tryCompleteAchievements(st);
   assert.ok(d.some((x) => x.id === "card_star_ups_180"), "180 card star ups should unlock");
+  st.lifetimeStats.cardStarUps = 400;
+  const e = tryCompleteAchievements(st);
+  assert.ok(e.some((x) => x.id === "card_star_ups_400"), "400 card star ups should unlock");
 }
 
 function runSpiritTideSmoke(): void {
@@ -973,6 +976,9 @@ function runGearEnhanceAndUrRefineAchievementsSmoke(): void {
   st.lifetimeStats.gearEnhances = 160;
   const b = tryCompleteAchievements(st);
   assert.ok(b.some((x) => x.id === "gear_enhances_160"), "160 gear enhances should unlock");
+  st.lifetimeStats.gearEnhances = 400;
+  const b2 = tryCompleteAchievements(st);
+  assert.ok(b2.some((x) => x.id === "gear_enhances_400"), "400 gear enhances should unlock");
   st.lifetimeStats.urGearRefines = 3;
   const c = tryCompleteAchievements(st);
   assert.ok(c.some((x) => x.id === "ur_refines_3"), "3 ur refines should unlock");
@@ -1074,6 +1080,9 @@ function runCardSalvageAndVeinAchievementsSmoke(): void {
   st.lifetimeStats.veinUpgrades = 320;
   const d = tryCompleteAchievements(st);
   assert.ok(d.some((x) => x.id === "vein_upgrades_320"), "320 vein upgrades should unlock");
+  st.lifetimeStats.veinUpgrades = 600;
+  const e = tryCompleteAchievements(st);
+  assert.ok(e.some((x) => x.id === "vein_upgrades_600"), "600 vein upgrades should unlock");
 }
 
 function runBattleSkillAndGearSalvageAchievementsSmoke(): void {

@@ -179,6 +179,7 @@ import {
   UI_DATA_OVERVIEW_DECO,
   UI_DATA_OVERVIEW_ACH_RIBBON,
   UI_DATA_OVERVIEW_TRAINING_FLAIR,
+  UI_DATA_OVERVIEW_CULTIVATION_FLAIR,
   UI_SOUND_PREFS_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
@@ -2978,6 +2979,11 @@ function buildDataOverviewExportText(st: GameState): string {
     `焚天成功累计: ${lt.fenTianBursts}`,
     `闭关时间推进累计: ${lt.biGuanCompletions}`,
     "",
+    "[养成淬炼]",
+    `洞府灵脉升级累计: ${lt.veinUpgrades}`,
+    `行囊槽位强化累计: ${lt.gearEnhances}`,
+    `灵卡叠星累计: ${lt.cardStarUps}`,
+    "",
     "[终身累计]",
     `累计消耗道韵: ${lt.daoEssenceSpentLifetime}`,
     `累计消耗唤灵髓: ${lt.summonEssenceSpentLifetime}`,
@@ -3096,6 +3102,18 @@ function renderDataOverviewPanel(): string {
     </div>
 
     <div class="data-overview-section">
+      <h3 class="data-overview-h3--cultivation">
+        <img class="data-overview-cultivation-flair" src="${UI_DATA_OVERVIEW_CULTIVATION_FLAIR}" alt="" width="22" height="22" loading="lazy" />
+        养成淬炼
+      </h3>
+      <div class="data-overview-grid">
+        <div class="data-overview-cell"><span class="d-label">洞府灵脉升级累计</span><strong class="d-val" id="data-overview-lt-vein-upgrades">${lt.veinUpgrades}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">行囊槽位强化累计</span><strong class="d-val" id="data-overview-lt-gear-enhances">${lt.gearEnhances}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵卡叠星累计</span><strong class="d-val" id="data-overview-lt-card-star-ups">${lt.cardStarUps}</strong></div>
+      </div>
+    </div>
+
+    <div class="data-overview-section">
       <h3>终身累计</h3>
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">累计消耗道韵</span><strong class="d-val" id="data-overview-lt-dao-spent">${lt.daoEssenceSpentLifetime}</strong></div>
@@ -3163,6 +3181,9 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-tuna", String(lt.tunaCompletions));
   set("data-overview-lt-fentian", String(lt.fenTianBursts));
   set("data-overview-lt-bi-guan", String(lt.biGuanCompletions));
+  set("data-overview-lt-vein-upgrades", String(lt.veinUpgrades));
+  set("data-overview-lt-gear-enhances", String(lt.gearEnhances));
+  set("data-overview-lt-card-star-ups", String(lt.cardStarUps));
   set("data-overview-lt-dao-spent", String(lt.daoEssenceSpentLifetime));
   set("data-overview-lt-summon-spent", String(lt.summonEssenceSpentLifetime));
   set("data-overview-lt-zhuling-spent", String(lt.zhuLingEssenceSpentLifetime));

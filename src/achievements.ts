@@ -704,6 +704,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "vein",
   },
   {
+    id: "vein_upgrades_600",
+    title: "灵络千循",
+    desc: "洞府灵脉累计升级 600 次",
+    rewardStones: 10500,
+    rewardEssence: 185,
+    listDeco: "vein",
+  },
+  {
     id: "offline_adventure_35",
     title: "离尘归鞘",
     desc: "离线奇遇成功结算累计 35 次",
@@ -848,6 +856,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "forgeEmber",
   },
   {
+    id: "gear_enhances_400",
+    title: "万锻玄罡",
+    desc: "行囊槽位强化成功累计 400 次",
+    rewardStones: 9500,
+    rewardEssence: 148,
+    listDeco: "forgeNova",
+  },
+  {
     id: "ur_refines_3",
     title: "天工三炼",
     desc: "天极装备精炼成功累计 3 次",
@@ -893,6 +909,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "灵卡叠星成功累计 180 次",
     rewardStones: 8800,
     rewardEssence: 128,
+    listDeco: "rarity",
+  },
+  {
+    id: "card_star_ups_400",
+    title: "星垣无极",
+    desc: "灵卡叠星成功累计 400 次",
+    rewardStones: 13500,
+    rewardEssence: 168,
     listDeco: "rarity",
   },
   {
@@ -1579,6 +1603,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.veinUpgrades ?? 0) >= 80;
     case "vein_upgrades_320":
       return (state.lifetimeStats?.veinUpgrades ?? 0) >= 320;
+    case "vein_upgrades_600":
+      return (state.lifetimeStats?.veinUpgrades ?? 0) >= 600;
     case "offline_adventure_35":
       return (state.lifetimeStats?.offlineAdventureCompletions ?? 0) >= 35;
     case "offline_adventure_140":
@@ -1615,6 +1641,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.gearEnhances ?? 0) >= 40;
     case "gear_enhances_160":
       return (state.lifetimeStats?.gearEnhances ?? 0) >= 160;
+    case "gear_enhances_400":
+      return (state.lifetimeStats?.gearEnhances ?? 0) >= 400;
     case "ur_refines_3":
       return (state.lifetimeStats?.urGearRefines ?? 0) >= 3;
     case "ur_refines_12":
@@ -1627,6 +1655,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.cardStarUps ?? 0) >= 40;
     case "card_star_ups_180":
       return (state.lifetimeStats?.cardStarUps ?? 0) >= 180;
+    case "card_star_ups_400":
+      return (state.lifetimeStats?.cardStarUps ?? 0) >= 400;
     case "spirit_tide_hours_24":
       return (state.lifetimeStats?.spiritTideHours ?? 0) >= 24;
     case "spirit_tide_hours_120":
