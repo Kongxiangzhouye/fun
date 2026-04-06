@@ -340,7 +340,7 @@ export interface GameState {
   dungeonSanctuaryMode: boolean;
   /** 自动传送目标波次（阵亡时记录，0 表示无） */
   dungeonPortalTargetWave: number;
-  /** 圣所回满后是否自动进本（付入场髓）；未勾选则需手动点击 */
+  /** 圣所回满后是否自动进本；未勾选则需手动点击 */
   dungeonSanctuaryAutoEnter: boolean;
   /**
    * 首领关（每 5 波）是否先刷小怪群；为 false 时该波为真正首领。
@@ -555,7 +555,7 @@ export const DUNGEON_INTER_WAVE_CD_MS = 4_000;
 
 /** 复刷已通关波次：唤灵髓相对首通的比例 */
 export const DUNGEON_REPEAT_ESSENCE_MULT = 0.2;
-/** 复刷关入场费相对首通的比例 */
+/** 历史：复刷关入场费相对首通的比例；当前无入场费，保留常量以免改存档键 */
 export const DUNGEON_REPEAT_ENTRY_FEE_MULT = 0.45;
 
 /** 怪物攻击间隔（秒） */

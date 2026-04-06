@@ -44,6 +44,7 @@ import {
   dungeonAffixPlayerAtkMult,
 } from "./dungeonAffix";
 import { daoMeridianDungeonAtkMult, daoMeridianDungeonEssenceMult } from "./daoMeridian";
+import { veinGongMingResonanceMult } from "./veinCultivation";
 import { noteDungeonEssenceIntGained } from "./pullChronicle";
 import {
   DUNGEON_MAP_H,
@@ -1139,7 +1140,13 @@ export function essenceRewardTotalFloat(
   repeatMode = false,
 ): number {
   const base = 5 + wave * 2.1;
-  let v = Math.max(0.05, base * essenceFindMult(state) * (1 + dungeonEssenceBonusFromSkills(state)));
+  let v = Math.max(
+    0.05,
+    base *
+      essenceFindMult(state) *
+      (1 + dungeonEssenceBonusFromSkills(state)) *
+      veinGongMingResonanceMult(state.vein.gongMing),
+  );
   if (isBoss) v *= 1.45;
   v *= dungeonAffixEssenceMult(Date.now()) * daoMeridianDungeonEssenceMult(state);
   if (repeatMode) {

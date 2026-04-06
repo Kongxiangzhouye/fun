@@ -97,6 +97,8 @@ export const UI_BOUNTY_FORGE_DECO = asset("bounty-forge-deco.svg");
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset("bounty-claim-all-deco.svg");
 /** 养成二级导航 · 分组标题前小徽记 */
 export const UI_HUB_SECTION_FLAIR = asset("hub-section-flair.svg");
+/** 洞府蕴灵 · 共鸣乘区说明行左侧小标（双环链意象） */
+export const UI_VEIN_GONGMING_LINK = asset("deco-vein-gongming-link.svg");
 /** 幻域备战条左侧装饰 */
 export const UI_DUNGEON_READINESS_DECO = asset("deco-dungeon-readiness-ribbon.svg");
 /** 幻域周常词缀条左侧装饰 */

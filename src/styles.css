@@ -2972,6 +2972,12 @@ h1 {
   margin-top: 8px;
 }
 
+.vein-gm-deco {
+  vertical-align: -0.15em;
+  margin-right: 6px;
+  opacity: 0.92;
+}
+
 .vein-card {
   border: 1px solid var(--border);
   border-radius: 10px;

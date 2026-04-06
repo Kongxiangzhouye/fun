@@ -191,6 +191,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardEssence: 15,
   },
   {
+    id: "vein_gongming_40",
+    title: "声应气求",
+    desc: "洞府「共鸣」达到 40 级",
+    rewardStones: 520,
+    rewardEssence: 35,
+  },
+  {
     id: "forge_1",
     title: "铸灵初鸣",
     desc: "完成第 1 次铸灵",
@@ -309,6 +316,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
+    case "vein_gongming_40":
+      return state.vein.gongMing >= 40;
     case "forge_1":
       return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 1;
     case "forge_50":

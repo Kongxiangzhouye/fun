@@ -36,7 +36,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>汇灵</strong>：全局灵石效率乘区。</li>
           <li><strong>灵息</strong>：在汇灵等乘区之后，再叠一层灵石效率（约每级 +2.2%，与汇灵叠乘）。</li>
           <li><strong>固元</strong>：以道韵淬炼道基，降低破境灵石消耗。</li>
-          <li><strong>共鸣</strong>：加快「聚灵共鸣」累积速度（与法篆叠乘，满级约 +32%）。</li>
+          <li><strong>共鸣</strong>：与「聚灵共鸣」进度、幻域唤灵髓结算共用同一乘区（与法篆、词条等叠乘，满级约 +32%）。</li>
           <li>洞府等级<strong>轮回不重置</strong>，可长期投入。</li>
         </ul>
       </details>

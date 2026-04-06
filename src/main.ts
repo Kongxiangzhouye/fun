@@ -151,6 +151,7 @@ import {
   UI_ABOUT_GAME_DECO,
   UI_DATA_EXPORT_DECO,
   UI_DATA_STATS_DOWNLOAD_DECO,
+  UI_VEIN_GONGMING_LINK,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -3021,14 +3022,14 @@ function renderVeinPage(): string {
   return `
     <section class="panel">
       <h2>洞府蕴灵</h2>
-      <p class="hint">汇灵/灵息叠乘全局灵石；固元减破境消耗；共鸣加快聚灵共鸣。洞府<strong>轮回不重置</strong>。细则见图鉴·札记。</p>
+      <p class="hint">汇灵/灵息叠乘全局灵石；固元减破境消耗；共鸣同时加快聚灵共鸣与幻域唤灵髓。洞府<strong>轮回不重置</strong>。细则见图鉴·札记。</p>
       <p class="stat-inline vein-dungeon-readout" id="vein-dungeon-readout">
         当前乘区：<strong>汇灵</strong> ×<span id="vein-live-hui">${huiMult.toFixed(3)}</span>
         · <strong>灵息</strong> ×<span id="vein-live-ling">${lingMult.toFixed(3)}</span>
         · 洞府双线合并 ×<span id="vein-live-hui-ling">${(huiMult * lingMult).toFixed(3)}</span>
         · 每秒灵石 <strong id="vein-preview-ips">${fmtDecimal(ipsNow)}</strong>
       </p>
-      <p class="hint sm vein-res-readout">聚灵共鸣速度 ×<span id="vein-live-gongming">${gmMult.toFixed(3)}</span>（与法篆叠乘）</p>
+      <p class="hint sm vein-res-readout"><img src="${UI_VEIN_GONGMING_LINK}" alt="" width="14" height="14" class="vein-gm-deco" /> 共鸣乘区 ×<span id="vein-live-gongming">${gmMult.toFixed(3)}</span> · 聚灵共鸣 / 幻域唤灵髓（与法篆、词条等叠乘）</p>
       <div class="vein-grid">${grid}</div>
     </section>
   `;
