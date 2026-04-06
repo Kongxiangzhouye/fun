@@ -228,7 +228,8 @@ import { renderEstateCommissionPanel, updateEstateCommissionPanelReadouts } from
 import { claimDailyLoginReward, tickDailyLoginCalendar, toLocalYMD } from "./systems/dailyLoginCalendar";
 import { getActiveFortuneDef, tickDailyFortune } from "./systems/dailyFortune";
 import { renderCelestialStashPanel, updateCelestialStashPanelReadouts } from "./ui/celestialStashPanel";
-import { ensureCelestialStashWeek, tryBuyCelestialOffer } from "./systems/celestialStash";
+import { CELESTIAL_OFFERS } from "./data/celestialStash";
+import { ensureCelestialStashWeek, tryAutoRedeemCelestialStashOffers, tryBuyCelestialOffer } from "./systems/celestialStash";
 import { tryUpgradeSpiritArray } from "./systems/spiritArray";
 import {
   reservoirCap,
@@ -4213,6 +4214,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoClaimDailyLogin") state.uiPrefs.autoClaimDailyLogin = checked;
       else if (t === "autoClaimWeeklyBounty") state.uiPrefs.autoClaimWeeklyBounty = checked;
       else if (t === "autoSettleEstateCommission") state.uiPrefs.autoSettleEstateCommission = checked;
+      else if (t === "autoRedeemCelestialStash") state.uiPrefs.autoRedeemCelestialStash = checked;
       else return;
       saveGame(state);
       render();
@@ -5486,6 +5488,27 @@ function loop(): void {
       if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
       if (!refreshBountyPanelLiveIfVisible(state, now, activeHub === "cultivate" && cultivateSub === "bounty")) {
         render();
+      }
+    }
+  }
+  if (
+    typeof document !== "undefined" &&
+    state.uiPrefs.autoRedeemCelestialStash &&
+    uLoop.tabCelestialStash
+  ) {
+    const redeemedIds = tryAutoRedeemCelestialStashOffers(state, now);
+    if (redeemedIds && redeemedIds.length > 0) {
+      tryCompleteAchievements(state);
+      requestSave("天机匣自动兑换", true);
+      const titles = redeemedIds
+        .map((id) => CELESTIAL_OFFERS.find((o) => o.id === id)?.title ?? id)
+        .join("、");
+      toast(`天机匣已自动兑换：${titles}`);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      if (activeHub === "cultivate" && cultivateSub === "stash") {
+        updateCelestialStashPanelReadouts(state, now);
       }
     }
   }

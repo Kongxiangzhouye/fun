@@ -85,3 +85,21 @@ export function celestialStashWeeklyProgress(state: GameState, now: number): { p
   }
   return { purchased, total: CELESTIAL_OFFERS.length };
 }
+
+/**
+ * 主循环用：偏好开启时，按 `CELESTIAL_OFFERS` 顺序尝试兑换所有当前可负担且未限购的条目。
+ * 返回本次成功兑换的 offer id 列表；无操作或关闭偏好时返回 null。
+ */
+export function tryAutoRedeemCelestialStashOffers(state: GameState, now: number): string[] | null {
+  if (!state.uiPrefs.autoRedeemCelestialStash) return null;
+  ensureCelestialStashWeek(state, now);
+  const redeemed: string[] = [];
+  for (const def of CELESTIAL_OFFERS) {
+    if (isCelestialOfferPurchasedThisWeek(state, def.id)) continue;
+    if (def.minRealm != null && state.realmLevel < def.minRealm) continue;
+    if (!canAffordCelestialOffer(state, def.id)) continue;
+    const err = tryBuyCelestialOffer(state, def.id, now);
+    if (err == null) redeemed.push(def.id);
+  }
+  return redeemed.length ? redeemed : null;
+}

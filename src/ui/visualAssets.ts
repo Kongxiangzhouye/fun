@@ -546,6 +546,8 @@ export const UI_DAILY_LOGIN_AUTO = asset("daily-login-auto-claim.svg");
 export const UI_HEAD_CELESTIAL_STASH = asset(FEATURE_PAGE_HEADS_UI_FILES.celestialStash);
 /** 天机匣 · 本周兑换进度行 */
 export const UI_CELESTIAL_STASH_PROGRESS = asset("celestial-stash-week-progress.svg");
+/** 天机匣 · 自动兑换偏好开关旁 */
+export const UI_CELESTIAL_STASH_AUTO_REDEEM = asset("celestial-auto-redeem.svg");
 /** 蓄灵池（灵府灵脉）标题装饰 */
 export const UI_HEAD_SPIRIT_RESERVOIR = asset(FEATURE_PAGE_HEADS_UI_FILES.spiritReservoir);
 /** 蓄灵池「满溢自动收取」开关旁小标 */

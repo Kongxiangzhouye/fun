@@ -463,6 +463,8 @@ export interface UiPrefs {
   autoClaimWeeklyBounty: boolean;
   /** 洞府委托：活动委托到期可结算时自动领奖（不要求开启托管连签） */
   autoSettleEstateCommission: boolean;
+  /** 天机匣：本周尚有可换条目且资源与境界满足时，按列表顺序自动兑换（需已解锁天机匣页） */
+  autoRedeemCelestialStash: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

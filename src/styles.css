@@ -10325,6 +10325,36 @@ p.gear-forge-tier-hint {
   color: #b0c4e8;
 }
 
+.celestial-auto-redeem-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(140, 110, 200, 0.38);
+  background: rgba(18, 12, 36, 0.5);
+  cursor: pointer;
+  user-select: none;
+}
+
+.celestial-auto-redeem-row input {
+  margin-top: 3px;
+  accent-color: #a080d8;
+}
+
+.celestial-auto-redeem-ico {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.9;
+}
+
+.celestial-auto-redeem-text {
+  font-size: 0.82rem;
+  color: #c8b8e8;
+  line-height: 1.45;
+}
+
 .celestial-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

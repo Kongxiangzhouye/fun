@@ -7,7 +7,12 @@ import {
   noteWeeklyBountyEstateCompletion,
   tryAutoClaimWeeklyBountyIfAny,
 } from "../systems/weeklyBounty";
-import { celestialStashWeeklyProgress, ensureCelestialStashWeek } from "../systems/celestialStash";
+import {
+  celestialStashWeeklyProgress,
+  ensureCelestialStashWeek,
+  tryAutoRedeemCelestialStashOffers,
+} from "../systems/celestialStash";
+import { addStones } from "../stones";
 import {
   chooseOfflineAdventureOption,
   commitOfflineAdventureAutoReceipt,
@@ -488,6 +493,20 @@ function runCelestialStashProgressSmoke(): void {
   assert.equal(p1.purchased, 1);
 }
 
+function runCelestialStashAutoRedeemSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  addStones(st, 5000);
+  st.lingSha = 100;
+  st.xuanTie = 100;
+  st.uiPrefs.autoRedeemCelestialStash = false;
+  assert.equal(tryAutoRedeemCelestialStashOffers(st, now), null);
+  st.uiPrefs.autoRedeemCelestialStash = true;
+  const r = tryAutoRedeemCelestialStashOffers(st, now);
+  assert.ok(r && r.length >= 1, "auto redeem should purchase affordable offers when pref on");
+  assert.ok(r!.includes("cs_stone_ess"), "stone→essence offer should auto-redeem when affordable");
+}
+
 function runDailyLoginAutoClaimPrefsSmoke(): void {
   const st = createInitialState();
   st.totalPulls = 1;
@@ -570,6 +589,7 @@ function main(): void {
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();
   runCelestialStashProgressSmoke();
+  runCelestialStashAutoRedeemSmoke();
   runWeeklyBountyAutoClaimSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
