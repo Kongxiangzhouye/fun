@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet";
+  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet" | "array";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -248,6 +248,23 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "纳灵阵图达到 10 重",
     rewardStones: 600,
     rewardEssence: 15,
+    listDeco: "array",
+  },
+  {
+    id: "spirit_array_25",
+    title: "阵图大成",
+    desc: "纳灵阵图达到 25 重",
+    rewardStones: 1400,
+    rewardEssence: 38,
+    listDeco: "array",
+  },
+  {
+    id: "spirit_array_30",
+    title: "阵图圆满",
+    desc: "纳灵阵图达到 30 重",
+    rewardStones: 2600,
+    rewardEssence: 72,
+    listDeco: "array",
   },
   {
     id: "vein_gongming_40",
@@ -434,6 +451,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
+    case "spirit_array_25":
+      return state.spiritArrayLevel >= 25;
+    case "spirit_array_30":
+      return state.spiritArrayLevel >= 30;
     case "vein_gongming_40":
       return state.vein.gongMing >= 40;
     case "skills_triple_25":
