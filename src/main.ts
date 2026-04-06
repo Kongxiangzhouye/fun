@@ -88,6 +88,7 @@ import type {
   Element,
   GardenCropId,
   GearInventorySortMode,
+  PetId,
 } from "./types";
 import Decimal from "decimal.js";
 import type { Application, Container, Graphics, Ticker } from "pixi.js";
@@ -301,6 +302,8 @@ import {
   petDungeonAtkAdditive,
   petDungeonDefenseFlat,
   petEssenceFindMult,
+  feedPet,
+  feedPetUntilBroke,
 } from "./systems/pets";
 import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
 import {
@@ -4933,6 +4936,41 @@ function bindEvents(rb: Decimal, _slots: number): void {
     } else {
       render();
     }
+    });
+
+    document.body.addEventListener("click", (ev) => {
+      const t = ev.target as HTMLElement | null;
+      const one = t?.closest?.("[data-pet-feed]") as HTMLElement | null;
+      const bulk = t?.closest?.("[data-pet-feed-bulk]") as HTMLElement | null;
+      if (!one && !bulk) return;
+      const id = (one?.dataset.petFeed ?? bulk?.dataset.petFeedBulk) as PetId | undefined;
+      if (!id) return;
+      if (!petSystemUnlocked(state) || !state.pets[id]) {
+        toast("灵宠未结缘。");
+        return;
+      }
+      if (bulk) {
+        const n = feedPetUntilBroke(state, id);
+        if (n <= 0) {
+          toast("唤灵髓不足或灵宠已满级。");
+          return;
+        }
+        tryCompleteAchievements(state);
+        saveGame(state);
+        toast(`已尽髓连喂 ${n} 次`);
+      } else {
+        if (!feedPet(state, id)) {
+          toast("唤灵髓不足或灵宠已满级。");
+          return;
+        }
+        tryCompleteAchievements(state);
+        saveGame(state);
+        toast("灵契喂养成功");
+      }
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      render();
     });
   }
 

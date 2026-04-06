@@ -89,6 +89,7 @@ import {
   gearTierBadgeSrc,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
+  UI_PET_FEED_ACTION,
   UI_HEAD_TRAIN,
   UI_HEAD_COMBAT,
 } from "./visualAssets";
@@ -98,6 +99,7 @@ import {
   describePetBonusesSummary,
   MAX_PET_LEVEL,
   petBonusPreviewLine,
+  petFeedCost,
   petSystemUnlocked,
   PET_SYSTEM_UNLOCK_WAVES,
   PET_PULL_COST,
@@ -1012,6 +1014,8 @@ export function renderPetPanel(state: GameState): string {
       const maxed = p.level >= MAX_PET_LEVEL;
       const need = maxed ? 0 : xpToNextPetLevel(p.level);
       const pct = maxed || need <= 0 ? 100 : Math.min(100, (100 * p.xp) / need);
+      const feedCost = petFeedCost(p.level);
+      const canFeedOnce = !maxed && state.summonEssence >= feedCost;
       cards += `<div class="pet-card pet-card-owned">
       <div class="pet-card-portrait"><img src="${PET_PORTRAIT[def.id]}" alt="" width="72" height="72" loading="lazy" /></div>
       <div class="pet-card-body">
@@ -1032,7 +1036,16 @@ export function renderPetPanel(state: GameState): string {
           maxed
             ? `<div class="pet-xp-bar pet-xp-bar-maxed" aria-hidden="true"><span class="pet-xp-fill" style="width:100%"></span></div>`
             : `<div class="pet-xp-bar" title="灵契经验（重复邂逅增加）"><span class="pet-xp-fill" style="width:${pct}%"></span></div>
-               <p class="inv-meta pet-xp-label">${p.xp} / ${need} 灵契</p>`
+               <p class="inv-meta pet-xp-label">${p.xp} / ${need} 灵契</p>
+               <div class="pet-card-actions pet-feed-row">
+                 <button type="button" class="btn btn-primary pet-feed-btn" data-pet-feed="${def.id}" ${canFeedOnce ? "" : "disabled"} title="消耗唤灵髓提升灵契">
+                   <img class="pet-feed-ico" src="${UI_PET_FEED_ACTION}" alt="" width="14" height="14" loading="lazy" />
+                   喂养一次（${feedCost}<img class="btn-inline-ico" src="${UI_ESSENCE}" alt="" width="14" height="14" />）
+                 </button>
+                 <button type="button" class="btn pet-feed-btn" data-pet-feed-bulk="${def.id}" ${canFeedOnce ? "" : "disabled"} title="连续喂养直至唤灵髓不足或满级">
+                   尽髓连喂
+                 </button>
+               </div>`
         }
       </div>
     </div>`;

@@ -202,6 +202,13 @@ export function feedPet(state: GameState, id: PetId): boolean {
   return true;
 }
 
+/** 连续喂养直至唤灵髓不足或已满级；返回成功次数 */
+export function feedPetUntilBroke(state: GameState, id: PetId): number {
+  let n = 0;
+  while (feedPet(state, id)) n += 1;
+  return n;
+}
+
 /** 重复邂逅或系统奖励：直接加灵契经验并可能升级 */
 export function addPetXp(state: GameState, id: PetId, addXp: number): void {
   const p = state.pets[id];

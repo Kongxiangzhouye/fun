@@ -8360,6 +8360,20 @@ header h1 {
   margin-top: 10px;
 }
 
+.pet-feed-row .pet-feed-btn {
+  font-size: 0.88rem;
+  padding: 0.35rem 0.65rem;
+  gap: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pet-feed-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+  vertical-align: middle;
+}
+
 .btn-inline-ico {
   vertical-align: -2px;
   margin: 0 1px;
