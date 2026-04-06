@@ -128,6 +128,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "gacha",
   },
   {
+    id: "gear_ten_sessions_3",
+    title: "十铸初形",
+    desc: "境界铸灵十铸完成累计 3 次",
+    rewardStones: 520,
+    rewardEssence: 0,
+    listDeco: "forge",
+  },
+  {
+    id: "gear_ten_sessions_15",
+    title: "铸潮叠浪",
+    desc: "境界铸灵十铸完成累计 15 次",
+    rewardStones: 2800,
+    rewardEssence: 0,
+    listDeco: "forgeEmber",
+  },
+  {
     id: "realm_20",
     title: "道台初筑",
     desc: "境界达到 20",
@@ -997,6 +1013,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.cardTenPullSessions ?? 0) >= 5;
     case "card_ten_sessions_30":
       return (state.lifetimeStats?.cardTenPullSessions ?? 0) >= 30;
+    case "gear_ten_sessions_3":
+      return (state.lifetimeStats?.gearTenPullSessions ?? 0) >= 3;
+    case "gear_ten_sessions_15":
+      return (state.lifetimeStats?.gearTenPullSessions ?? 0) >= 15;
     case "realm_20":
       return state.realmLevel >= 20;
     case "realm_50":

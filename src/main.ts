@@ -4,6 +4,7 @@ import {
   ESSENCE_COST_SINGLE,
   ESSENCE_COST_TEN,
   ESSENCE_COST_GEAR_SINGLE,
+  ESSENCE_COST_GEAR_TEN,
   MAX_CARD_LEVEL,
   REINCARNATION_REALM_REQ,
   BI_GUAN_COOLDOWN_MS,
@@ -39,6 +40,7 @@ import {
   pullOne,
   pullTen,
   pullGearOne,
+  pullGearTen,
   urPityRemaining,
   UR_PITY_MAX,
   gearSrPityRemaining,
@@ -2949,6 +2951,7 @@ function buildDataOverviewExportText(st: GameState): string {
     "[唤引与图鉴]",
     `灵卡唤引总次数: ${st.totalPulls}`,
     `灵卡十连完成次数: ${lt.cardTenPullSessions}`,
+    `境界铸灵十铸完成次数: ${lt.gearTenPullSessions}`,
     `本轮唤引次数: ${st.pullsThisLife ?? 0}`,
     `灵宠唤引累计: ${st.petPullsTotal}`,
     `图鉴解锁: ${st.codexUnlocked.size} / ${pool}`,
@@ -3029,6 +3032,7 @@ function renderDataOverviewPanel(): string {
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">灵卡唤引总次数</span><strong class="d-val" id="data-overview-total-pulls">${st.totalPulls}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵卡十连完成次数</span><strong class="d-val" id="data-overview-lt-card-ten">${lt.cardTenPullSessions}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">境界十铸完成次数</span><strong class="d-val" id="data-overview-lt-gear-ten">${lt.gearTenPullSessions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">本轮唤引次数</span><strong class="d-val" id="data-overview-pulls-life">${st.pullsThisLife ?? 0}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵宠唤引累计</span><strong class="d-val" id="data-overview-pet-pulls">${st.petPullsTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">图鉴解锁</span><strong class="d-val" id="data-overview-codex">${codex} / ${pool}</strong></div>
@@ -3090,6 +3094,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-streak", String(st.dailyStreak));
   set("data-overview-total-pulls", String(st.totalPulls));
   set("data-overview-lt-card-ten", String(lt.cardTenPullSessions));
+  set("data-overview-lt-gear-ten", String(lt.gearTenPullSessions));
   set("data-overview-pulls-life", String(st.pullsThisLife ?? 0));
   set("data-overview-pet-pulls", String(st.petPullsTotal));
   set("data-overview-codex", `${st.codexUnlocked.size} / ${pool}`);
@@ -3703,6 +3708,7 @@ function renderGacha(
   const showCards = poolMode !== "gearOnly";
   const showGear = poolMode !== "cardsOnly";
   const tenDisabled = !tenUnlocked || state.summonEssence < ESSENCE_COST_TEN;
+  const gearTenDisabled = !tenUnlocked || state.zhuLingEssence < ESSENCE_COST_GEAR_TEN;
   const resonanceBlock = embedBattle
     ? ""
     : (u.gachaResonance || showCards)
@@ -3821,8 +3827,14 @@ function renderGacha(
       ${gearDetailBlock}
       <div class="gacha-actions">
         <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 筑灵髓）</button>
+        ${
+          tenUnlocked
+            ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-10" ${gearTenDisabled ? "disabled" : ""}>十铸（${ESSENCE_COST_GEAR_TEN} 筑灵髓）</button>`
+            : `<button class="btn gacha-ten-locked" type="button" disabled title="完成一次单抽或境界≥三重后开放">十铸（未解锁）</button>`
+        }
         <button class="btn" type="button" id="btn-toggle-auto-gear-forge">${state.autoGearForge ? "自动单铸：开" : "自动单铸：关"}</button>
       </div>
+      ${!tenUnlocked ? `<p class="hint gacha-ten-hint">与灵卡十连相同条件解锁<strong>十铸</strong>。</p>` : ""}
       <div id="pull-output-gear" class="pull-result pull-result-gear"></div>
       <h3 class="sub-h chronicle-sub-h chronicle-sub-h--gear">最近境界铸灵</h3>
       ${gearChronicleBlock}
@@ -4622,6 +4634,9 @@ function bindEvents(rb: Decimal, _slots: number): void {
       updateTopResourcePillsAndVigor(totalCardsInPool());
       const btnPullGear = document.getElementById("btn-pull-gear-1") as HTMLButtonElement | null;
       if (btnPullGear) btnPullGear.disabled = state.zhuLingEssence < ESSENCE_COST_GEAR_SINGLE;
+      const btnPullGear10 = document.getElementById("btn-pull-gear-10") as HTMLButtonElement | null;
+      if (btnPullGear10)
+        btnPullGear10.disabled = !getUiUnlocks(state).gachaTenUnlocked || state.zhuLingEssence < ESSENCE_COST_GEAR_TEN;
       const out = document.getElementById("pull-output-gear");
       if (out) {
         out.innerHTML = pullHtml;
@@ -4662,9 +4677,36 @@ function bindEvents(rb: Decimal, _slots: number): void {
     }, r.replaceExpectation, r.powerDelta);
   };
 
+  const runGearPullTen = (): void => {
+    if (!getUiUnlocks(state).tabGear) {
+      toast("境界铸灵未解锁：获得 1 件装备，或累计抽卡达到 10 次后开放。");
+      return;
+    }
+    if (!getUiUnlocks(state).gachaTenUnlocked) {
+      toast("十连未解锁：先完成 1 次单抽，或境界达到 3。");
+      return;
+    }
+    const cost = ESSENCE_COST_GEAR_TEN;
+    if (state.zhuLingEssence < cost) return;
+    state.zhuLingEssence -= cost;
+    const gears = pullGearTen(state);
+    if (gears.length < 10) {
+      state.zhuLingEssence += cost;
+      toast("十铸未完成，已退还筑灵髓。");
+      return;
+    }
+    tryCompleteAchievements(state);
+    saveGame(state);
+    const toastMsg = `十铸完成：共 ${gears.length} 件`;
+    showGearRevealOverlay(gears, toastMsg, () => {
+      render();
+    });
+  };
+
   document.getElementById("btn-pull-1")?.addEventListener("click", () => runCardPull(1));
   document.getElementById("btn-pull-10")?.addEventListener("click", () => runCardPull(10));
   document.getElementById("btn-pull-gear-1")?.addEventListener("click", () => runGearPull(1));
+  document.getElementById("btn-pull-gear-10")?.addEventListener("click", () => runGearPullTen());
   document.getElementById("btn-toggle-auto-gear-forge")?.addEventListener("click", () => {
     state.autoGearForge = !state.autoGearForge;
     saveGame(state);

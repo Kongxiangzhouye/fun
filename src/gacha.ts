@@ -14,6 +14,7 @@ import {
   noteGearForgePull,
   recordCardStarUpLifetime,
   recordCardTenPullSessionLifetime,
+  recordGearTenPullSessionLifetime,
   recordMaxGearForgedRarity,
 } from "./systems/pullChronicle";
 import { daoMeridianLuckFlat } from "./systems/daoMeridian";
@@ -288,11 +289,13 @@ export function pullGearTen(state: GameState): GearItem[] {
   if (hasSrPlus) {
     const r = pullGearOne(state);
     if (r.ok && r.gear) out.push(r.gear);
+    if (out.length === 10) recordGearTenPullSessionLifetime(state);
     return out;
   }
   const g = generateRandomGear(state, pickPityGearRarity(state));
   finalizeGearPull(state, g);
   out.push(g);
+  if (out.length === 10) recordGearTenPullSessionLifetime(state);
   return out;
 }
 

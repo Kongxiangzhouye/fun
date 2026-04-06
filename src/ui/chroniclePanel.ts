@@ -10,6 +10,7 @@ import {
   UI_CHRONICLE_CARD_SALVAGE_STAT,
   UI_CHRONICLE_CARD_STAR_STAT,
   UI_CHRONICLE_CARD_TEN_PULL_STAT,
+  UI_CHRONICLE_GEAR_TEN_PULL_STAT,
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
   UI_CHRONICLE_BI_GUAN_STAT,
@@ -137,6 +138,13 @@ export function renderChroniclePanel(state: GameState): string {
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">累计铸灵</span>
           <strong class="chronicle-stat-val">${ls.gearForgesTotal} 次</strong>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--gear-ten-pull">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_GEAR_TEN_PULL_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">境界十铸</span>
+            <strong class="chronicle-stat-val">${ls.gearTenPullSessions} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--gear-enhance">
           <img class="chronicle-stat-ico" src="${UI_CHRONICLE_GEAR_ENHANCE_STAT}" alt="" width="32" height="32" loading="lazy" />

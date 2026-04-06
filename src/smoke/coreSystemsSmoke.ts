@@ -48,7 +48,7 @@ import {
 import { canClaimDailyLoginReward, claimDailyLoginReward } from "../systems/dailyLoginCalendar";
 import { getUiUnlocks } from "../uiUnlocks";
 import { tryCompleteAchievements } from "../achievements";
-import { pullTen } from "../gacha";
+import { pullTen, pullGearTen } from "../gacha";
 import { incomePerSecondAt } from "../economy";
 import { advanceInGameHour } from "../inGameClock";
 import { spiritTideActive, spiritTideStoneMult } from "../systems/spiritTide";
@@ -691,6 +691,26 @@ function runPullTenLifetimeStatSmoke(): void {
   assert.equal(st.lifetimeStats.cardTenPullSessions, 1);
 }
 
+function runGearTenPullSessionAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("gear_ten_sessions_3"));
+  st.lifetimeStats.gearTenPullSessions = 3;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "gear_ten_sessions_3"));
+  st.lifetimeStats.gearTenPullSessions = 15;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "gear_ten_sessions_15"));
+}
+
+function runPullGearTenLifetimeStatSmoke(): void {
+  const st = createInitialState();
+  st.totalPulls = 20;
+  st.zhuLingEssence = 999999;
+  assert.equal(st.lifetimeStats.gearTenPullSessions, 0);
+  pullGearTen(st);
+  assert.equal(st.lifetimeStats.gearTenPullSessions, 1);
+}
+
 function runCardLevelAndStarAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("card_level_ups_60"), "card level 60 should start locked");
@@ -962,6 +982,8 @@ function main(): void {
   runBiGuanAchievementsSmoke();
   runCardTenPullSessionAchievementsSmoke();
   runPullTenLifetimeStatSmoke();
+  runGearTenPullSessionAchievementsSmoke();
+  runPullGearTenLifetimeStatSmoke();
   runEstateCommissionAchievementsSmoke();
   runReincarnationTierAchievementsSmoke();
   runBattleSkillAndGearSalvageAchievementsSmoke();

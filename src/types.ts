@@ -128,6 +128,8 @@ export interface LifetimeStatsState {
   biGuanCompletions: number;
   /** 灵卡池十连唤引完成次数（每次完整十连计 1） */
   cardTenPullSessions: number;
+  /** 境界铸灵十铸完成次数（每次完整十铸计 1） */
+  gearTenPullSessions: number;
 }
 
 /** 灵田作物 id */
