@@ -2,7 +2,7 @@
  * 面向玩家的说明文：收纳于「万象图鉴 → 修行札记」，避免主界面堆砌。
  */
 import { REINCARNATION_REALM_REQ } from "../types";
-import { UI_LORE_THREE_ARTS } from "./visualAssets";
+import { UI_LORE_THREE_ARTS, UI_LORE_BOUNTY } from "./visualAssets";
 
 export function renderGameLoreHtml(): string {
   return `
@@ -67,6 +67,16 @@ export function renderGameLoreHtml(): string {
           <li><strong>采灵</strong>：略增灵石向收益。</li>
           <li><strong>法篆</strong>：略加快聚灵共鸣累积（与洞府「共鸣」叠乘）。</li>
           <li>三线等级均达到较高阶段时，功业录中另有对应嘉奖。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_BOUNTY}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 周常悬赏</summary>
+        <ul class="game-lore-list">
+          <li>按<strong>本地时区</strong>：每周一 <strong>0:00</strong> 刷新各条目进度与「已领」状态；与真实日历周对齐。</li>
+          <li>条目覆盖幻域、唤引、铸灵、灵田、吐纳、破境等；达成后即可领<strong>灵石</strong>与<strong>唤灵髓</strong>。</li>
+          <li>底部可<strong>一键领取</strong>所有已达成的条目。</li>
+          <li>与「功业录」<strong>不同</strong>：功业录多为一次性或累计终身目标；周常按<strong>自然周</strong>循环。</li>
         </ul>
       </details>
 
