@@ -128,7 +128,15 @@ export function normalizeWeeklyBounty(st: GameState): void {
     else st.weeklyBounty[k] = Math.floor(v);
   }
   if (!Array.isArray(st.weeklyBounty.claimed)) st.weeklyBounty.claimed = [];
-  st.weeklyBounty.claimed = st.weeklyBounty.claimed.filter((x) => typeof x === "string");
+  const seen = new Set<string>();
+  st.weeklyBounty.claimed = st.weeklyBounty.claimed
+    .filter((x) => typeof x === "string")
+    .filter((id) => {
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .sort();
 }
 
 /** 在周切换时重置进度（在 tick 与关键操作前调用） */
