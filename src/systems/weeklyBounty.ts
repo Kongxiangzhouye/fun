@@ -128,15 +128,19 @@ export function normalizeWeeklyBounty(st: GameState): void {
     else st.weeklyBounty[k] = Math.floor(v);
   }
   if (!Array.isArray(st.weeklyBounty.claimed)) st.weeklyBounty.claimed = [];
+  const taskIds = new Set(WEEKLY_BOUNTY_TASKS.map((t) => t.id));
   const seen = new Set<string>();
   st.weeklyBounty.claimed = st.weeklyBounty.claimed
-    .filter((x) => typeof x === "string")
+    .filter((x) => typeof x === "string" && taskIds.has(x))
     .filter((id) => {
       if (seen.has(id)) return false;
       seen.add(id);
       return true;
     })
     .sort();
+  if (st.weeklyBounty.weekKey !== wk) {
+    st.weeklyBounty = emptyWeeklyBounty(wk);
+  }
 }
 
 /** 在周切换时重置进度（在 tick 与关键操作前调用） */
@@ -259,13 +263,20 @@ export function weeklyBountyFeedbackState(state: GameState, now: number): Weekly
   ensureWeeklyBountyWeek(state, now);
   let completed = 0;
   let claimed = 0;
+  let claimable = 0;
   for (const def of WEEKLY_BOUNTY_TASKS) {
     const done = isWeeklyBountyComplete(state, def);
     const got = isWeeklyBountyClaimed(state, def.id);
-    if (done) completed += 1;
-    if (got) claimed += 1;
+    if (got) {
+      claimed += 1;
+      completed += 1;
+      continue;
+    }
+    if (done) {
+      completed += 1;
+      claimable += 1;
+    }
   }
   const total = WEEKLY_BOUNTY_TASKS.length;
-  const claimable = Math.max(0, completed - claimed);
   return { total, completed, claimed, claimable };
 }

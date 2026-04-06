@@ -15,7 +15,10 @@ function readJson(p) {
 
 /** @param {string[]} errs */
 function fail(errs) {
-  for (const e of errs) console.error(`❌ ${e}`);
+  console.error(`❌ UI art validation failed with ${errs.length} issue(s):`);
+  errs.forEach((e, idx) => {
+    console.error(`  ${idx + 1}. ${e}`);
+  });
   process.exit(1);
 }
 

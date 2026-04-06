@@ -4007,7 +4007,11 @@ function bindEvents(rb: Decimal, _slots: number): void {
         const fb = weeklyBountyFeedbackState(state, t);
         toast(`悬赏奖励已领取（已领 ${fb.claimed}/${fb.total}，可领 ${fb.claimable}）`);
         updateTopResourcePillsAndVigor(totalCardsInPool());
-        render();
+        if (activeHub === "cultivate" && cultivateSub === "bounty") {
+          updateBountyPanelReadouts(state, t);
+        } else {
+          render();
+        }
       } else {
         toast("无法领取：未达成或本周已领过。");
       }
@@ -4030,7 +4034,11 @@ function bindEvents(rb: Decimal, _slots: number): void {
       `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（已领 ${fb.claimed}/${fb.total}）`,
     );
     updateTopResourcePillsAndVigor(totalCardsInPool());
-    render();
+    if (activeHub === "cultivate" && cultivateSub === "bounty") {
+      updateBountyPanelReadouts(state, t);
+    } else {
+      render();
+    }
   });
 
   document.body.addEventListener("click", (ev) => {
