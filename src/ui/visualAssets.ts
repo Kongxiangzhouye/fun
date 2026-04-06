@@ -167,6 +167,8 @@ export const UI_ACH_SPIRIT_ARRAY_DECO = asset("ach-spirit-array-deco.svg");
 export const UI_ACH_PET_PULL_DECO = asset("ach-pet-pull-deco.svg");
 /** 成就列表 · 轮回次数系条目左侧小徽 */
 export const UI_ACH_REINCARNATION_DECO = asset("ach-reincarnation-deco.svg");
+/** 成就列表 · 灵田系条目左侧小徽 */
+export const UI_ACH_GARDEN_DECO = asset("ach-garden-deco.svg");
 /** 修行札记 · 「挂机三艺」折叠标题旁 */
 export const UI_LORE_THREE_ARTS = asset("deco-lore-three-arts.svg");
 /** 修行札记 · 「周常悬赏」折叠标题旁 */
