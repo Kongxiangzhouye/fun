@@ -21,7 +21,7 @@ import { LORE_JOURNAL_UI_FILES } from "../data/loreJournalUi";
 import { OFFLINE_SETTLEMENT_UI_FILES } from "../data/offlineSettlementUi";
 import { PANEL_CHROME_UI_FILES } from "../data/panelChromeUi";
 import { PLAYER_PROFILE_UI_FILES } from "../data/playerProfileUi";
-import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
+import { GEAR_TIER_BADGE_UI_FILES, RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
 import { WEEKLY_BOUNTY_UI_FILES } from "../data/weeklyBountyUi";
 import { PET_DEFS } from "../data/pets";
 import { GARDEN_CROPS } from "../systems/spiritGarden";
@@ -54,6 +54,17 @@ export const UI_XUAN_TIE = asset(HUD_BAR_UI_FILES.xuanTie);
 /** SSR / UR 灵卡角标（与五行底图分离）；与 `RARITY_BADGE_UI_FILES` 同源 */
 export const RARITY_BADGE_SSR = asset(RARITY_BADGE_UI_FILES.SSR);
 export const RARITY_BADGE_UR = asset(RARITY_BADGE_UI_FILES.UR);
+export const GEAR_TIER_BADGE: Record<number, string> = {
+  1: asset(GEAR_TIER_BADGE_UI_FILES.T1),
+  2: asset(GEAR_TIER_BADGE_UI_FILES.T2),
+  3: asset(GEAR_TIER_BADGE_UI_FILES.T3),
+  4: asset(GEAR_TIER_BADGE_UI_FILES.T4),
+  5: asset(GEAR_TIER_BADGE_UI_FILES.T5),
+  6: asset(GEAR_TIER_BADGE_UI_FILES.T6),
+  7: asset(GEAR_TIER_BADGE_UI_FILES.T7),
+  8: asset(GEAR_TIER_BADGE_UI_FILES.T8),
+  9: asset(GEAR_TIER_BADGE_UI_FILES.T9),
+};
 
 /** 五行灵卡小图标；与 `ELEMENT_UI_FILES` 同源 */
 export const ELEMENT_ICON: Record<Element, string> = Object.fromEntries(
@@ -509,4 +520,9 @@ export function rarityBadgeSrc(rarity: Rarity): string | null {
   if (rarity === "SSR") return RARITY_BADGE_SSR;
   if (rarity === "UR") return RARITY_BADGE_UR;
   return null;
+}
+
+export function gearTierBadgeSrc(tier: number): string {
+  const normalized = Math.max(1, Math.min(9, Math.floor(tier)));
+  return GEAR_TIER_BADGE[normalized] ?? GEAR_TIER_BADGE[1] ?? UI_INLINE_FALLBACK;
 }

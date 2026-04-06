@@ -48,7 +48,7 @@ import {
   type PullResult,
 } from "./gacha";
 import { CARDS, getCard } from "./data/cards";
-import { RARITY_ORDER_ASC, rarityRank } from "./data/rarityRank";
+import { rarityRank } from "./data/rarityRank";
 import { tryCompleteAchievements, drainAchievementToastQueue, ACHIEVEMENTS, type AchievementDef } from "./achievements";
 import { countUniqueOwned, SAVE_VERSION } from "./state";
 import pkg from "../package.json";
@@ -96,8 +96,10 @@ import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
 import { sessionFunFlavorLine, onTitleSpiritPet, bindKonamiEasterEgg } from "./funBits";
 import {
-  formatDungeonActiveMeta,
+  DUNGEON_HELP_BLURB,
+  formatDungeonActiveHelpMeta,
   formatDungeonActiveMetaBrief,
+  renderBattleEquippedStrip,
   renderDungeonPanel,
   renderTrainPanel,
   renderBattleSkillPanel,
@@ -119,6 +121,7 @@ import {
   UI_XUAN_TIE,
   RARITY_BADGE_SSR,
   RARITY_BADGE_UR,
+  gearTierBadgeSrc,
   cardPortraitClass,
   rarityBadgeSrc,
   UI_GACHA_DECOR,
@@ -194,6 +197,7 @@ import {
   UI_SMOKE_DEV_METRIC_ICON,
   UI_SMOKE_DEV_REGRESSION_ICON,
 } from "./ui/visualAssets";
+import { GEAR_TIER_LABELS, gearTierClass, gearTierLabel, gearVisualTier } from "./ui/gearVisualTier";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
 import { renderBountyPanel, refreshBountyPanelLiveIfVisible } from "./ui/bountyPanel";
@@ -454,6 +458,45 @@ const DUEL_HIT_FLOAT_GAP_MS = 120;
 const DUEL_CRIT_FLOAT_GAP_MS = 200;
 const DUEL_WEAK_FLOAT_GAP_MS = 300;
 const DUEL_MISS_FLOAT_GAP_MS = 150;
+const ZHULING_RATE_SAMPLE_INTERVAL_MS = 2500;
+const ZHULING_RATE_WINDOW_MS = 30000;
+type ZhuLingRateSample = { at: number; total: number };
+let zhuLingRateSamples: ZhuLingRateSample[] = [];
+let lastZhuLingRateSampleAt = 0;
+let zhuLingRateEstimatePerSec = 0;
+
+function formatZhuLingRateLabel(ratePerSec: number): string {
+  if (!(ratePerSec > 0.004)) return "历练";
+  return `≈+${ratePerSec >= 10 ? ratePerSec.toFixed(1) : ratePerSec.toFixed(2)}/秒`;
+}
+
+/** 基于近期副本整数掉落估算筑灵髓每秒效率（不受消费影响） */
+function updateZhuLingRateEstimate(now: number): void {
+  const total = Math.max(0, Math.floor(state.lifetimeStats?.dungeonEssenceIntGained ?? 0));
+  if (lastZhuLingRateSampleAt <= 0) {
+    lastZhuLingRateSampleAt = now;
+    zhuLingRateSamples = [{ at: now, total }];
+    zhuLingRateEstimatePerSec = 0;
+    return;
+  }
+  const latest = zhuLingRateSamples[zhuLingRateSamples.length - 1];
+  const shouldSample = now - lastZhuLingRateSampleAt >= ZHULING_RATE_SAMPLE_INTERVAL_MS || total !== latest?.total;
+  if (!shouldSample) return;
+  lastZhuLingRateSampleAt = now;
+  zhuLingRateSamples.push({ at: now, total });
+  const minAt = now - ZHULING_RATE_WINDOW_MS;
+  while (zhuLingRateSamples.length > 2 && zhuLingRateSamples[0]!.at < minAt) zhuLingRateSamples.shift();
+  const first = zhuLingRateSamples[0];
+  const last = zhuLingRateSamples[zhuLingRateSamples.length - 1];
+  if (!first || !last || last.at <= first.at) return;
+  const dtSec = (last.at - first.at) / 1000;
+  const gain = Math.max(0, last.total - first.total);
+  const raw = dtSec > 0 ? gain / dtSec : 0;
+  const target = state.dungeon.active ? raw : 0;
+  const alpha = state.dungeon.active ? 0.45 : 0.3;
+  zhuLingRateEstimatePerSec += (target - zhuLingRateEstimatePerSec) * alpha;
+  if (zhuLingRateEstimatePerSec < 0.001) zhuLingRateEstimatePerSec = 0;
+}
 const reducedMotionQuery =
   typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 let prefersReducedMotion = reducedMotionQuery?.matches ?? false;
@@ -1128,15 +1171,10 @@ function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toas
   window.setTimeout(() => finish(), autoMs);
 }
 
-function highestGearRarityInList(gears: GearItem[]): Rarity {
-  let best: Rarity = "N";
-  let bestRank = rarityRank(best);
+function highestGearTierInList(gears: GearItem[]): number {
+  let best = 1;
   for (const g of gears) {
-    const rr = rarityRank(g.rarity);
-    if (rr > bestRank) {
-      best = g.rarity;
-      bestRank = rr;
-    }
+    best = Math.max(best, gearVisualTier(g));
   }
   return best;
 }
@@ -1150,19 +1188,19 @@ function showGearRevealOverlay(
 ): void {
   const overlay = document.createElement("div");
   const liteFx = shouldUseLiteRevealFx();
-  const hi = highestGearRarityInList(gears);
+  const hi = highestGearTierInList(gears);
   const single = gears.length === 1;
   const r0 = gears[0]!.rarity;
-  const orbTier = single ? r0 : hi;
+  const orbTier = single ? gearVisualTier(gears[0]!) : hi;
   const fx = liteFx ? "rift" : pickRevealFxVariant();
   const cardSalt = Math.floor(Math.random() * 9);
-  overlay.className = `gacha-reveal-overlay gacha-gear ${liteFx ? "gacha-reveal-lite" : ""} ${single ? `gacha-single reveal-${r0}` : `gacha-ten reveal-hi-${hi}`}`;
+  overlay.className = `gacha-reveal-overlay gacha-gear ${liteFx ? "gacha-reveal-lite" : ""} ${single ? `gacha-single reveal-${r0}` : `gacha-ten reveal-hi-${Math.min(9, hi)}`}`;
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
-  const hasHigh = hi === "UR" || hi === "SSR";
+  const hasHigh = hi >= 6;
   if (!liteFx && hasHigh && typeof navigator !== "undefined" && navigator.vibrate) {
     try {
-      navigator.vibrate(hi === "UR" ? [18, 45, 25] : [15, 30, 15]);
+      navigator.vibrate(hi >= 8 ? [18, 45, 25] : [15, 30, 15]);
     } catch {
       /* ignore */
     }
@@ -1170,17 +1208,18 @@ function showGearRevealOverlay(
   if (hasHigh) {
     emitPixiBurst(window.innerWidth * 0.5, window.innerHeight * 0.34, "high");
   }
-  const gearRarityCorner = (r: Rarity): string =>
-    r === "SSR"
-      ? `<img class="gacha-reveal-rarity-badge" src="${RARITY_BADGE_SSR}" alt="" width="36" height="36" />`
-      : r === "UR"
-        ? `<img class="gacha-reveal-rarity-badge" src="${RARITY_BADGE_UR}" alt="" width="40" height="40" />`
-        : "";
+  const gearRarityCorner = (tier: number): string => {
+    const label = gearTierLabel(tier);
+    return `<img class="gacha-reveal-rarity-badge gacha-reveal-rarity-badge--gear" src="${gearTierBadgeSrc(tier)}" alt="${label}" width="42" height="42" />`;
+  };
   const cardsHtml = gears
     .map((g, i) => {
       const pre = g.prefixes.length + g.suffixes.length;
       const cardFx = pickCardFxVariant(i, cardSalt);
       const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0));
+      const visualTier = gearVisualTier(g);
+      const visualTierCls = gearTierClass(visualTier);
+      const visualTierLabel = gearTierLabel(visualTier);
       const replaceTag =
         i === 0 && replaceExpectation
           ? `<span class="gacha-reveal-card-replace-tag ${
@@ -1193,10 +1232,10 @@ function showGearRevealOverlay(
               replaceExpectation === "upgrade" ? "提升" : replaceExpectation === "downgrade" ? "降级" : "持平"
             }（${fmtSignedPowerDelta(powerDelta)}）</span>`
           : "";
-      return `<div class="gacha-reveal-card ${liteFx ? "card-fx-lite" : `card-fx-${cardFx}`} gear-reveal rarity-${g.rarity} tier-${g.rarity}" style="--stagger:${liteFx ? 0 : i}">
-        ${gearRarityCorner(g.rarity)}
+      return `<div class="gacha-reveal-card ${liteFx ? "card-fx-lite" : `card-fx-${cardFx}`} gear-reveal rarity-${g.rarity} ${visualTierCls}" style="--stagger:${liteFx ? 0 : i}">
+        ${gearRarityCorner(visualTier)}
         <span class="gacha-reveal-card-name">${g.displayName}</span>
-        <span class="gacha-reveal-card-r">${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade ?? "?"} · ilvl ${g.itemLevel}</span>
+        <span class="gacha-reveal-card-r ${visualTierCls} gear-tier-text">${visualTierLabel} · 筑灵阶 ${g.gearGrade ?? "?"} · ilvl ${g.itemLevel}</span>
         <span class="gacha-reveal-card-tag">战力 ${fmtNumZh(gearItemPower(g, slotLv))} · ${pre} 条词缀 · 槽位强化 ${slotLv}</span>
         ${replaceTag}
       </div>`;
@@ -2074,7 +2113,7 @@ function renderTopBar(
       <span class="res-chip-stack">
         <span class="res-lbl">筑灵髓</span>
         <strong id="pill-zhuling">${Math.floor(state.zhuLingEssence)}</strong>
-        <span class="res-delta res-delta-zhuling" id="pill-zhuling-delta">历练</span>
+        <span class="res-delta res-delta-zhuling" id="pill-zhuling-delta">${formatZhuLingRateLabel(zhuLingRateEstimatePerSec)}</span>
       </span>
     </span>
     <span class="res-chip res-chip-key" data-currency-hint-id="realm">
@@ -2331,6 +2370,19 @@ function renderDiscoverabilityHint(): string {
     text = "常用入口：历练已拆为二级模块——「幻域·战斗」与「境界·铸灵」，可在页内上方切换。";
   }
   if (!text) return "";
+  if (activeHub === "battle" && battleSub === "dungeon") {
+    const live = state.dungeon.active
+      ? `<p class="hint sm discoverability-help-live" id="discoverability-help-live-meta">${formatDungeonActiveHelpMeta(state, nowMs())}</p>`
+      : "";
+    return `<div class="hint sm discoverability-hint">
+      <p class="discoverability-hint-main">${text}</p>
+      <details class="discoverability-help-details">
+        <summary>战斗说明（原 ? 面板）</summary>
+        <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
+        ${live}
+      </details>
+    </div>`;
+  }
   return `<p class="hint sm discoverability-hint">${text}</p>`;
 }
 
@@ -2615,8 +2667,8 @@ function buildDataOverviewExportText(st: GameState): string {
   const pool = totalCardsInPool();
   const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
   const rarityPeak =
-    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < RARITY_ORDER_ASC.length
-      ? RARITY_ORDER_ASC[lt.maxGearRarityRankForged]
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length
+      ? GEAR_TIER_LABELS[lt.maxGearRarityRankForged]
       : "—";
   const slotIdx = getActiveSlotIndex();
   const lines: string[] = [
@@ -2670,8 +2722,8 @@ function renderDataOverviewPanel(): string {
   const owned = countUniqueOwned(st);
   const gearN = Object.keys(st.gearInventory).length;
   const rarityPeak =
-    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < RARITY_ORDER_ASC.length
-      ? RARITY_ORDER_ASC[lt.maxGearRarityRankForged]
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length
+      ? GEAR_TIER_LABELS[lt.maxGearRarityRankForged]
       : "—";
   const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
 
@@ -2781,8 +2833,8 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
   set("data-overview-lt-forge", String(lt.gearForgesTotal));
   const rarityPeak =
-    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < RARITY_ORDER_ASC.length
-      ? RARITY_ORDER_ASC[lt.maxGearRarityRankForged]
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length
+      ? GEAR_TIER_LABELS[lt.maxGearRarityRankForged]
       : "—";
   set("data-overview-lt-rarity", rarityPeak);
   set("data-overview-lt-bounty-weeks", String(lt.weeklyBountyFullWeeks));
@@ -3098,7 +3150,8 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
     </section>`
       : "";
 
-  const offlineChoicePanel = `<section class="panel offline-event-panel">
+  const offlineChoicePanel = oaPending
+    ? `<section class="panel offline-event-panel">
       <div class="panel-title-art-row panel-title-art-row--sub">
         <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_BADGE}" alt="" width="24" height="24" loading="lazy" />
         <h2>离线奇遇二选一</h2>
@@ -3142,7 +3195,8 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
           <button class="btn" type="button" data-offline-choice="boost" ${oaPending ? "" : "disabled"}>选择本项</button>
         </article>
       </div>
-    </section>`;
+    </section>`
+    : "";
 
   const incomeGuidePanel = `<section class="panel income-visual-panel">
       <div class="panel-title-art-row panel-title-art-row--sub">
@@ -3271,10 +3325,10 @@ function renderGacha(
             <thead><tr><th>时间</th><th>装备</th><th>稀有度</th></tr></thead>
             <tbody>${state.gearPullChronicle
               .map(
-                (e) => `<tr class="chronicle-tr rarity-${e.rarity}">
+                (e) => `<tr class="chronicle-tr ${gearTierClass(e.gearTier)}">
                   <td class="chronicle-td-time">${fmtChronicleTime(e.atMs)}</td>
                   <td class="chronicle-td-name">${e.displayName}</td>
-                  <td class="chronicle-td-r">${rarityZh(e.rarity)}</td>
+                  <td class="chronicle-td-r ${gearTierClass(e.gearTier)} gear-tier-text">${gearTierLabel(e.gearTier)}</td>
                 </tr>`,
               )
               .join("")}</tbody>
@@ -3384,10 +3438,10 @@ function renderGacha(
   const gearDetailBlock = `<details class="gacha-detail-block">
       <summary class="gacha-detail-summary">查看详情：铸灵池当前概率、综合期望与下一阶预告</summary>
       <div class="gacha-detail-content">
-        <p class="hint sm">当前：铸灵阶 ${currentForgeTier}/${GEAR_FORGE_TIER_MAX} · 珍品+保底上限 ${gearNow.pityCap} 唤 · 保底计数 ${state.gearPityPulls}/${gearNow.pityCap} · 运势系数 ×${gearLuck.toFixed(3)}。</p>
-        <p class="hint sm">当前单铸概率：凡品 ${pct(gearNow.probs.N)} · 灵品 ${pct(gearNow.probs.R)} · 珍品 ${pct(gearNow.probs.SR)} · 绝品 ${pct(gearNow.probs.SSR)} · 天极 ${pct(gearNow.probs.UR)} · 珍品+ 合计 ${pct(gearSrPlusNow)}。</p>
+        <p class="hint sm">当前：铸灵阶 ${currentForgeTier}/${GEAR_FORGE_TIER_MAX} · 高胚保底上限 ${gearNow.pityCap} 唤 · 保底计数 ${state.gearPityPulls}/${gearNow.pityCap} · 运势系数 ×${gearLuck.toFixed(3)}。</p>
+        <p class="hint sm">当前单铸底胚概率：N ${pct(gearNow.probs.N)} · R ${pct(gearNow.probs.R)} · SR ${pct(gearNow.probs.SR)} · SSR ${pct(gearNow.probs.SSR)} · UR ${pct(gearNow.probs.UR)}。最终显示按 9 品阶（凡品→至宝）结合筑灵阶换算。</p>
         <p class="hint sm">当前综合期望：平均 ilvl 约 ${gearNow.ilvlAvg} · 平均筑灵阶约 ${gearNow.gradeExpected.toFixed(2)} / 48。</p>
-        <p class="hint sm">下一阶（${nextForgeTier}）预估：珍品+ ${pct(gearSrPlusNext)}（当前 ${pct(gearSrPlusNow)}）· 天极 ${pct(gearNext.probs.UR)}（当前 ${pct(gearNow.probs.UR)}）· 平均 ilvl 约 ${gearNext.ilvlAvg} · 平均筑灵阶约 ${gearNext.gradeExpected.toFixed(2)} / 48 · 保底上限 ${gearNext.pityCap} 唤。</p>
+        <p class="hint sm">下一阶（${nextForgeTier}）预估：高胚+ ${pct(gearSrPlusNext)}（当前 ${pct(gearSrPlusNow)}）· UR 底胚 ${pct(gearNext.probs.UR)}（当前 ${pct(gearNow.probs.UR)}）· 平均 ilvl 约 ${gearNext.ilvlAvg} · 平均筑灵阶约 ${gearNext.gradeExpected.toFixed(2)} / 48 · 保底上限 ${gearNext.pityCap} 唤。</p>
       </div>
     </details>`;
   const resFrac = ((state.wishResonance % 100) + 100) % 100;
@@ -3521,6 +3575,7 @@ function renderGacha(
       ${gearDetailBlock}
       <div class="gacha-actions">
         <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 筑灵髓）</button>
+        <button class="btn" type="button" id="btn-toggle-auto-gear-forge">${state.autoGearForge ? "自动单铸：开" : "自动单铸：关"}</button>
       </div>
       <div id="pull-output-gear" class="pull-result pull-result-gear"></div>
       <h3 class="sub-h chronicle-sub-h chronicle-sub-h--gear">最近境界铸灵</h3>
@@ -4229,10 +4284,28 @@ function bindEvents(rb: Decimal, _slots: number): void {
   };
 
   const runGearPull = (n: 1) => {
+    void n;
     if (!getUiUnlocks(state).tabGear) {
       toast("境界铸灵未解锁：获得 1 件装备，或累计抽卡达到 10 次后开放。");
       return;
     }
+    const applyGearPullUiPatch = (pullHtml: string, equipped: boolean): void => {
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const btnPullGear = document.getElementById("btn-pull-gear-1") as HTMLButtonElement | null;
+      if (btnPullGear) btnPullGear.disabled = state.zhuLingEssence < ESSENCE_COST_GEAR_SINGLE;
+      const out = document.getElementById("pull-output-gear");
+      if (out) {
+        out.innerHTML = pullHtml;
+        out.classList.add("pull-burst");
+        setTimeout(() => out.classList.remove("pull-burst"), 450);
+      }
+      if (equipped) {
+        const strip = document.getElementById("battle-equipped-strip");
+        if (strip) {
+          strip.outerHTML = renderBattleEquippedStrip(state, battleEquippedStripExpanded);
+        }
+      }
+    };
     const cost = ESSENCE_COST_GEAR_SINGLE;
     if (state.zhuLingEssence < cost) return;
     state.zhuLingEssence -= cost;
@@ -4245,36 +4318,42 @@ function bindEvents(rb: Decimal, _slots: number): void {
     const g = r.gear;
     tryCompleteAchievements(state);
     saveGame(state);
+    const visualTier = gearVisualTier(g);
+    const visualTierLabel = gearTierLabel(visualTier);
     const pullHtml = r.equipped
-      ? `<span class="pull-tag">${g.displayName} · ${rarityZh(g.rarity)}</span>`
-      : `<span class="pull-tag">${g.displayName} · ${rarityZh(g.rarity)}</span><p class="hint sm">未超过当前部位战力，已分解为玄铁 +${r.salvagedXuanTie}</p>`;
+      ? `<span class="pull-tag">${g.displayName} · ${visualTierLabel}</span>`
+      : `<span class="pull-tag">${g.displayName} · ${visualTierLabel}</span><p class="hint sm">未超过当前部位战力，已分解为玄铁 +${r.salvagedXuanTie}</p>`;
     if (!r.equipped) {
-      render();
-      queueMicrotask(() => {
-        const out = document.getElementById("pull-output-gear");
-        if (!out) return;
-        out.innerHTML = pullHtml;
-        out.classList.add("pull-burst");
-        setTimeout(() => out.classList.remove("pull-burst"), 450);
-      });
+      applyGearPullUiPatch(pullHtml, false);
       return;
     }
-    const toastMsg = `铸灵：${g.displayName}「${rarityZh(g.rarity)}」`;
+    const toastMsg = `铸灵：${g.displayName}「${visualTierLabel}」`;
     showGearRevealOverlay([g], toastMsg, () => {
-      render();
-      queueMicrotask(() => {
-        const out = document.getElementById("pull-output-gear");
-        if (!out) return;
-        out.innerHTML = pullHtml;
-        out.classList.add("pull-burst");
-        setTimeout(() => out.classList.remove("pull-burst"), 450);
-      });
+      applyGearPullUiPatch(pullHtml, true);
     }, r.replaceExpectation, r.powerDelta);
   };
 
   document.getElementById("btn-pull-1")?.addEventListener("click", () => runCardPull(1));
   document.getElementById("btn-pull-10")?.addEventListener("click", () => runCardPull(10));
   document.getElementById("btn-pull-gear-1")?.addEventListener("click", () => runGearPull(1));
+  document.getElementById("btn-toggle-auto-gear-forge")?.addEventListener("click", () => {
+    state.autoGearForge = !state.autoGearForge;
+    saveGame(state);
+    const btn = document.getElementById("btn-toggle-auto-gear-forge") as HTMLButtonElement | null;
+    if (btn) btn.textContent = state.autoGearForge ? "自动单铸：开" : "自动单铸：关";
+    toast(state.autoGearForge ? "已开启自动单铸" : "已关闭自动单铸");
+  });
+  document.querySelectorAll<HTMLElement>('[data-toggle-auto-boss-challenge="1"]').forEach((el) => {
+    el.addEventListener("click", () => {
+      state.autoBossChallenge = !state.autoBossChallenge;
+      saveGame(state);
+      const txt = state.autoBossChallenge ? "自动挑战首领：开" : "自动挑战首领：关";
+      document.querySelectorAll<HTMLElement>('[data-toggle-auto-boss-challenge="1"]').forEach((node) => {
+        node.textContent = txt;
+      });
+      toast(state.autoBossChallenge ? "已开启自动挑战首领" : "已关闭自动挑战首领");
+    });
+  });
 
   document.getElementById("main-content")?.addEventListener("click", handleDeckPanelClick);
   document.getElementById("main-content")?.addEventListener("keydown", (e) => {
@@ -4876,6 +4955,8 @@ function updateTopResourcePillsAndVigor(pool: number): void {
   const eps = essenceIncomePerSecondFromResonance(state);
   const ped = document.getElementById("pill-essence-delta");
   if (ped) ped.textContent = `+${eps >= 0.1 ? eps.toFixed(2) : eps.toFixed(3)}/秒`;
+  const pzd = document.getElementById("pill-zhuling-delta");
+  if (pzd) pzd.textContent = formatZhuLingRateLabel(zhuLingRateEstimatePerSec);
   if (u.tabGear) {
     setPillStrong("pill-ling-sha", String(state.lingSha));
     setPillStrong("pill-xuan-tie", String(state.xuanTie));
@@ -5044,6 +5125,7 @@ function updateEstateGardenLiveReadouts(now: number): void {
 function loop(): void {
   syncDecimalFormatFromState(state);
   const now = nowMs();
+  updateZhuLingRateEstimate(now);
   ensureWeeklyBountyWeek(state, now);
   if (lastUiWeekKey !== state.weeklyBounty.weekKey) {
     const prevWeekKey = lastUiWeekKey;
@@ -5144,7 +5226,9 @@ function loop(): void {
   if (state.dungeon.pendingKillToast) {
     const k = state.dungeon.pendingKillToast;
     state.dungeon.pendingKillToast = null;
-    toast(k);
+    if (activeHub === "battle" && battleSub === "dungeon") {
+      toast(k);
+    }
   }
   if (state.dungeon.pendingToast) {
     const m = state.dungeon.pendingToast;
@@ -5437,10 +5521,10 @@ function loop(): void {
     const hpPct = d.playerMax > 0 ? Math.min(100, (100 * Math.max(0, d.playerHp)) / d.playerMax) : 0;
     const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
     const interWaveWait = d.mobs.length === 0 && d.interWaveCooldownUntil > now;
-    const metaEl = document.getElementById("dungeon-active-meta");
+    const helpMetaEl = document.getElementById("discoverability-help-live-meta");
     const metaBriefEl = document.getElementById("dungeon-active-meta-brief");
-    if (metaEl && !interWaveWait) {
-      metaEl.textContent = formatDungeonActiveMeta(state, now);
+    if (helpMetaEl && !interWaveWait) {
+      helpMetaEl.textContent = formatDungeonActiveHelpMeta(state, now);
     }
     if (metaBriefEl && !interWaveWait) {
       metaBriefEl.textContent = formatDungeonActiveMetaBrief(state, now);
@@ -5601,11 +5685,8 @@ function loop(): void {
     if (idleEdps && footEdps) idleEdps.textContent = footEdps.textContent;
     if (idleChp && footChp) idleChp.textContent = footChp.textContent;
     if (idlePmax && footPmax) idlePmax.textContent = footPmax.textContent;
-    const elElapsed = document.getElementById("dungeon-session-elapsed");
     const elEta = document.getElementById("dungeon-eta-remaining");
     if (d.active && d.sessionEnterAtMs > 0) {
-      const elapsedSec = (now - d.sessionEnterAtMs) / 1000;
-      if (elElapsed) elElapsed.textContent = fmtDungeonDur(elapsedSec);
       const poolHp = totalAliveMobHpSum(d);
       const edps = playerExpectedDpsDungeonAffix(state, now);
       if (elEta) {
@@ -5614,7 +5695,6 @@ function loop(): void {
         else elEta.textContent = fmtDungeonDur(poolHp / edps);
       }
     } else {
-      if (elElapsed) elElapsed.textContent = "—";
       if (elEta) elEta.textContent = "—";
     }
   }

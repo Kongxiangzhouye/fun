@@ -6,7 +6,7 @@ import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 
-export const SAVE_VERSION = 43;
+export const SAVE_VERSION = 44;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -117,6 +117,8 @@ export function createInitialState(): GameState {
       autoTuna: false,
     },
     lastAutoGachaMs: 0,
+    lastAutoGearForgeMs: 0,
+    lastAutoBossChallengeMs: 0,
     trueEndingSeen: false,
     tutorialStep: 1,
     featureGuideDismissed: [],
@@ -205,6 +207,8 @@ export function createInitialState(): GameState {
     dungeonPortalTargetWave: 0,
     dungeonSanctuaryAutoEnter: true,
     dungeonDeferBoss: true,
+    autoGearForge: false,
+    autoBossChallenge: false,
   };
   initRng(st, seed);
   st.combatHpCurrent = playerMaxHp(st);

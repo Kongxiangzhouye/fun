@@ -3,6 +3,8 @@ export type Element = "metal" | "wood" | "water" | "fire" | "earth";
 
 /** 稀有度：影响基础产出与抽卡权重 */
 export type Rarity = "N" | "R" | "SR" | "SSR" | "UR";
+/** 装备专用视觉品阶（与灵卡/灵宠稀有度分离） */
+export type GearRarityTier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export interface CardDef {
   id: string;
@@ -50,7 +52,10 @@ export type GearInventorySortMode = "rarity" | "ilvl" | "slot" | "name";
 export interface GearPullChronicleEntry {
   atMs: number;
   baseId: string;
-  rarity: Rarity;
+  /** 装备专用品阶 1–9（凡品…至宝） */
+  gearTier: GearRarityTier;
+  /** 旧存档兼容：历史上曾以灵卡稀有度写入 */
+  rarity?: Rarity;
   /** 产出时的展示名快照 */
   displayName: string;
 }
@@ -67,7 +72,7 @@ export interface LifetimeStatsState {
   dailyFortuneRolls: number;
   /** 累计铸灵次数（铸灵池成功产出装备） */
   gearForgesTotal: number;
-  /** 历史铸灵达到过的最高稀有度阶位 0–4（N…UR），用于成就，不因分解降低） */
+  /** 历史铸灵达到过的最高装备品阶 0–8（凡品…至宝），用于成就，不因分解降低） */
   maxGearRarityRankForged: number;
   /** 累计有多少个自然周曾完成并领取全部周常悬赏条目（每周最多计 1 次） */
   weeklyBountyFullWeeks: number;
@@ -178,6 +183,8 @@ export interface GearItem {
   displayName: string;
   slot: GearSlot;
   rarity: Rarity;
+  /** 装备专用品阶（1–9，凡品…至宝） */
+  gearTier: GearRarityTier;
   /** 筑灵阶 1–48：越高词条池越强（与稀有度、装等协同） */
   gearGrade: number;
   itemLevel: number;
@@ -405,6 +412,10 @@ export interface GameState {
    * 击败首领后会自动设回 true，进入「先清小怪再点挑战首领」节奏。
    */
   dungeonDeferBoss: boolean;
+  /** 自动单铸开关（仅境界铸灵，消耗筑灵髓） */
+  autoGearForge: boolean;
+  /** 自动挑战首领开关（首领前哨达门槛后自动切入首领战） */
+  autoBossChallenge: boolean;
   /** 已抽总次数（用于统计与成就） */
   totalPulls: number;
   /** 距离 UR 保底的计数（大保底） */
@@ -462,6 +473,10 @@ export interface GameState {
 
   /** 自动抽卡节流（上次触发 ms） */
   lastAutoGachaMs: number;
+  /** 自动单铸节流（上次触发 ms） */
+  lastAutoGearForgeMs: number;
+  /** 自动挑战首领节流（上次触发 ms） */
+  lastAutoBossChallengeMs: number;
 
   /** 飞升已触发（金色 UI + 沙盒） */
   trueEndingSeen: boolean;

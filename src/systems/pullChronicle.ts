@@ -1,14 +1,7 @@
 import type { GameState, GearPullChronicleEntry, PullChronicleEntry, Rarity } from "../types";
+import { gearTierRank, gearVisualTierFor, legacyGearRank5ToRank9 } from "../ui/gearVisualTier";
 
 export const PULL_CHRONICLE_MAX = 48;
-
-const RARITY_RANK: Record<Rarity, number> = {
-  N: 0,
-  R: 1,
-  SR: 2,
-  SSR: 3,
-  UR: 4,
-};
 
 export function normalizePullChronicle(st: GameState): void {
   if (!Array.isArray(st.pullChronicle)) st.pullChronicle = [];
@@ -20,9 +13,17 @@ export function normalizePullChronicle(st: GameState): void {
 
 export function normalizeGearPullChronicle(st: GameState): void {
   if (!Array.isArray(st.gearPullChronicle)) st.gearPullChronicle = [];
-  st.gearPullChronicle = st.gearPullChronicle.filter(
-    (e) => e && typeof e.baseId === "string" && typeof e.displayName === "string" && e.atMs,
-  );
+  st.gearPullChronicle = st.gearPullChronicle
+    .filter((e) => e && typeof e.baseId === "string" && typeof e.displayName === "string" && e.atMs)
+    .map((e) => {
+      const tier =
+        Number.isFinite(e.gearTier) && (e.gearTier as number) >= 1
+          ? Math.max(1, Math.min(9, Math.floor(e.gearTier as number)))
+          : e.rarity
+            ? gearVisualTierFor(e.rarity, 1)
+            : 1;
+      return { ...e, gearTier: tier as GearPullChronicleEntry["gearTier"] };
+    });
   if (st.gearPullChronicle.length > PULL_CHRONICLE_MAX) {
     st.gearPullChronicle.length = PULL_CHRONICLE_MAX;
   }
@@ -59,7 +60,11 @@ export function normalizeLifetimeStats(st: GameState): void {
   else st.lifetimeStats.gearForgesTotal = Math.max(0, Math.floor(gf));
   const mx = st.lifetimeStats.maxGearRarityRankForged;
   if (mx == null || !Number.isFinite(mx)) st.lifetimeStats.maxGearRarityRankForged = 0;
-  else st.lifetimeStats.maxGearRarityRankForged = Math.max(0, Math.min(4, Math.floor(mx)));
+  else {
+    const raw = Math.floor(mx);
+    st.lifetimeStats.maxGearRarityRankForged =
+      raw <= 4 ? legacyGearRank5ToRank9(raw) : Math.max(0, Math.min(8, raw));
+  }
   const wb = st.lifetimeStats.weeklyBountyFullWeeks;
   if (wb == null || !Number.isFinite(wb)) st.lifetimeStats.weeklyBountyFullWeeks = 0;
   else st.lifetimeStats.weeklyBountyFullWeeks = Math.max(0, Math.floor(wb));
@@ -68,9 +73,9 @@ export function normalizeLifetimeStats(st: GameState): void {
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */
-export function recordMaxGearForgedRarity(state: GameState, rarity: Rarity): void {
+export function recordMaxGearForgedRarity(state: GameState, rarity: Rarity, gearGrade: number): void {
   normalizeLifetimeStats(state);
-  const r = RARITY_RANK[rarity] ?? 0;
+  const r = gearTierRank(gearVisualTierFor(rarity, gearGrade));
   if (r > state.lifetimeStats.maxGearRarityRankForged) {
     state.lifetimeStats.maxGearRarityRankForged = r;
   }
@@ -81,12 +86,13 @@ export function syncMaxGearRarityFromInventoryAndChronicle(state: GameState): vo
   normalizeLifetimeStats(state);
   let m = state.lifetimeStats.maxGearRarityRankForged;
   for (const g of Object.values(state.gearInventory)) {
-    m = Math.max(m, RARITY_RANK[g.rarity] ?? 0);
+    m = Math.max(m, gearTierRank(g.gearTier ?? gearVisualTierFor(g.rarity, g.gearGrade ?? 1)));
   }
   for (const e of state.gearPullChronicle) {
-    m = Math.max(m, RARITY_RANK[e.rarity] ?? 0);
+    const t = Number.isFinite(e.gearTier) ? e.gearTier : e.rarity ? gearVisualTierFor(e.rarity, 1) : 1;
+    m = Math.max(m, gearTierRank(t));
   }
-  state.lifetimeStats.maxGearRarityRankForged = Math.max(0, Math.min(4, m));
+  state.lifetimeStats.maxGearRarityRankForged = Math.max(0, Math.min(8, m));
 }
 
 export function noteGearForgePull(state: GameState, n: number = 1): void {
@@ -96,13 +102,14 @@ export function noteGearForgePull(state: GameState, n: number = 1): void {
 
 export function pushGearPullChronicle(
   state: GameState,
-  entry: { baseId: string; rarity: Rarity; displayName: string; atMs?: number },
+  entry: { baseId: string; rarity: Rarity; gearTier: number; displayName: string; atMs?: number },
 ): void {
   normalizeGearPullChronicle(state);
   const atMs = entry.atMs ?? Date.now();
   const row: GearPullChronicleEntry = {
     atMs,
     baseId: entry.baseId,
+    gearTier: Math.max(1, Math.min(9, Math.floor(entry.gearTier))) as GearPullChronicleEntry["gearTier"],
     rarity: entry.rarity,
     displayName: entry.displayName,
   };

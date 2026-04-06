@@ -23,6 +23,7 @@ import {
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
 import { normalizeGearGrade } from "./systems/gearCraft";
+import { legacyGearRank5ToRank9 } from "./ui/gearVisualTier";
 
 type VeinSave = GameState["vein"];
 type SkillsSave = GameState["skills"];
@@ -128,6 +129,8 @@ export interface SerializedState {
   biGuanCooldownUntil?: number;
   qoL?: Partial<QoLFlags>;
   lastAutoGachaMs?: number;
+  lastAutoGearForgeMs?: number;
+  lastAutoBossChallengeMs?: number;
   trueEndingSeen?: boolean;
   tutorialStep?: number;
   firstOpenTodayMs?: number;
@@ -173,6 +176,8 @@ export interface SerializedState {
   dungeonPortalTargetWave?: number;
   dungeonSanctuaryAutoEnter?: boolean;
   dungeonDeferBoss?: boolean;
+  autoGearForge?: boolean;
+  autoBossChallenge?: boolean;
 }
 
 function normalizeDungeonState(st: GameState): void {
@@ -315,6 +320,8 @@ export function serialize(state: GameState): string {
     biGuanCooldownUntil: state.biGuanCooldownUntil,
     qoL: { ...state.qoL },
     lastAutoGachaMs: state.lastAutoGachaMs,
+    lastAutoGearForgeMs: state.lastAutoGearForgeMs,
+    lastAutoBossChallengeMs: state.lastAutoBossChallengeMs,
     trueEndingSeen: state.trueEndingSeen,
     tutorialStep: state.tutorialStep,
     firstOpenTodayMs: state.firstOpenTodayMs,
@@ -389,6 +396,8 @@ export function serialize(state: GameState): string {
     dungeonPortalTargetWave: state.dungeonPortalTargetWave,
     dungeonSanctuaryAutoEnter: state.dungeonSanctuaryAutoEnter,
     dungeonDeferBoss: state.dungeonDeferBoss,
+    autoGearForge: state.autoGearForge,
+    autoBossChallenge: state.autoBossChallenge,
   };
   return JSON.stringify(s);
 }
@@ -539,6 +548,8 @@ export function deserialize(json: string): GameState {
     autoTuna: data.qoL?.autoTuna ?? false,
   };
   st.lastAutoGachaMs = data.lastAutoGachaMs ?? 0;
+  st.lastAutoGearForgeMs = data.lastAutoGearForgeMs ?? 0;
+  st.lastAutoBossChallengeMs = data.lastAutoBossChallengeMs ?? 0;
   st.trueEndingSeen = data.trueEndingSeen ?? false;
 
   if (data.skills) {
@@ -657,9 +668,21 @@ export function deserialize(json: string): GameState {
     st.gearPullChronicle = data.gearPullChronicle.map((e) => ({
       atMs: e.atMs ?? 0,
       baseId: e.baseId ?? "",
+      gearTier:
+        Number.isFinite((e as { gearTier?: unknown }).gearTier) && Number((e as { gearTier?: unknown }).gearTier) >= 1
+          ? Math.max(1, Math.min(9, Math.floor(Number((e as { gearTier?: unknown }).gearTier))))
+          : e.rarity === "UR"
+            ? 7
+            : e.rarity === "SSR"
+              ? 6
+              : e.rarity === "SR"
+                ? 4
+                : e.rarity === "R"
+                  ? 2
+                  : 1,
       rarity: e.rarity ?? "N",
       displayName: e.displayName ?? "",
-    }));
+    })) as GameState["gearPullChronicle"];
   }
   normalizeGearPullChronicle(st);
   if (data.lifetimeStats && typeof data.lifetimeStats === "object") {
@@ -671,7 +694,10 @@ export function deserialize(json: string): GameState {
       gearForgesTotal: Math.max(0, Math.floor(data.lifetimeStats.gearForgesTotal ?? 0)),
       maxGearRarityRankForged: Math.max(
         0,
-        Math.min(4, Math.floor(data.lifetimeStats.maxGearRarityRankForged ?? 0)),
+        (() => {
+          const raw = Math.floor(data.lifetimeStats.maxGearRarityRankForged ?? 0);
+          return raw <= 4 ? legacyGearRank5ToRank9(raw) : Math.min(8, raw);
+        })(),
       ),
       weeklyBountyFullWeeks: Math.max(0, Math.floor(data.lifetimeStats.weeklyBountyFullWeeks ?? 0)),
       lastWeeklyBountyFullWeekKey:
@@ -697,6 +723,9 @@ export function deserialize(json: string): GameState {
       ? !!data.dungeonSanctuaryAutoEnter
       : true;
   st.dungeonDeferBoss = data.dungeonDeferBoss !== undefined && data.dungeonDeferBoss !== null ? !!data.dungeonDeferBoss : true;
+  st.autoGearForge = data.autoGearForge !== undefined && data.autoGearForge !== null ? !!data.autoGearForge : false;
+  st.autoBossChallenge =
+    data.autoBossChallenge !== undefined && data.autoBossChallenge !== null ? !!data.autoBossChallenge : false;
   clampCombatHpToMax(st);
 
   normalizePetsState(st);
@@ -771,6 +800,10 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.biGuanCooldownUntil = 0;
   st.qoL = { tenPull: false, bulkLevel: false, autoRealm: false, autoGacha: false, autoTuna: false };
   st.lastAutoGachaMs = 0;
+  st.lastAutoGearForgeMs = 0;
+  st.lastAutoBossChallengeMs = 0;
+  st.autoGearForge = false;
+  st.autoBossChallenge = false;
   st.trueEndingSeen = false;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 };
   st.pullsThisLife = 0;

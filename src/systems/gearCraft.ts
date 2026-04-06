@@ -5,6 +5,7 @@ import { nextRand01 } from "../rng";
 import { rarityRank } from "../data/rarityRank";
 import { ALL_GEAR_SLOTS, GEAR_BASES, getGearBase, maxAffixCount, maxEnhanceLevel } from "../data/gearBases";
 import { gearForgeAscensionLevel, gearForgeIlvlBonus, rollGearRarityForForge } from "./gearGachaTier";
+import { gearVisualTierFor } from "../ui/gearVisualTier";
 
 /** 单件装备战力（与顶栏综合战力不同：仅用于同部位替换比对） */
 export function gearItemPower(g: GearItem, slotEnhanceLevel = 0): number {
@@ -31,10 +32,12 @@ export function slotEnhanceLevel(state: GameState, slot: GearSlot): number {
 export function normalizeGearGrade(g: GearItem): void {
   if (g.gearGrade != null && Number.isFinite(g.gearGrade) && g.gearGrade >= 1) {
     g.gearGrade = Math.min(GEAR_GRADE_MAX, Math.max(1, Math.floor(g.gearGrade)));
+    g.gearTier = gearVisualTierFor(g.rarity, g.gearGrade);
     return;
   }
   const rr = rarityRank(g.rarity);
   g.gearGrade = Math.min(GEAR_GRADE_MAX, Math.max(1, rr * 9 + 4));
+  g.gearTier = gearVisualTierFor(g.rarity, g.gearGrade);
 }
 
 interface AffixTemplate {
@@ -178,12 +181,14 @@ export function generateRandomGear(state: GameState, forceRarity?: Rarity): Gear
   const prefixes = fillMods(state, PREFIXES, counts.p, ilvl, rarity, gearGrade, usedP);
   const suffixes = fillMods(state, SUFFIXES, counts.s, ilvl, rarity, gearGrade, usedS);
   const id = `gear_${state.nextGearInstanceId++}`;
+  const gearTier = gearVisualTierFor(rarity, gearGrade);
   return {
     instanceId: id,
     baseId: base.id,
     displayName: `${b.name}`,
     slot: b.slot,
     rarity,
+    gearTier,
     gearGrade,
     itemLevel: ilvl,
     enhanceLevel: 0,

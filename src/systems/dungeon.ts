@@ -1473,11 +1473,6 @@ function registerDungeonKill(state: GameState, d: DungeonState, mob: DungeonMob,
     grantWaveEssenceToInventory(state);
     /** 首领前哨：无限刷小兵；达到门槛后可随时挑战首领。 */
     if (inBossPrep) {
-      d.pendingToast =
-        d.pendingToast ??
-        (d.bossPrepChallengeReady
-          ? "前哨已清 · 可继续清剿，或随时点击「挑战首领」。"
-          : `前哨已清 · 挑战首领进度 ${d.bossPrepKills}/${bossPrepKillRequirement(d.wave)}。`);
       d.packKilled = 0;
       spawnMobsForWave(state, now);
       d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);

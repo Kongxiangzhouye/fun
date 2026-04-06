@@ -110,15 +110,6 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
     }
   });
 
-  document.getElementById("btn-dungeon-help")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const p = document.getElementById("dungeon-help-popover");
-    const b = document.getElementById("btn-dungeon-help");
-    if (!p || !b) return;
-    p.hidden = !p.hidden;
-    b.setAttribute("aria-expanded", p.hidden ? "false" : "true");
-  });
-
   const onDungeonLivePointerUp = (e: PointerEvent): void => {
     if (!state.dungeon.active) return;
     const d = state.dungeon;

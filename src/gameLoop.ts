@@ -1,15 +1,15 @@
 import Decimal from "decimal.js";
 import type { GameState } from "./types";
-import { ESSENCE_COST_SINGLE, MAX_OFFLINE_SEC_BASE, TUNA_COOLDOWN_MS } from "./types";
+import { ESSENCE_COST_SINGLE, ESSENCE_COST_GEAR_SINGLE, MAX_OFFLINE_SEC_BASE, TUNA_COOLDOWN_MS } from "./types";
 import { incomePerSecond, realmBreakthroughCostForState } from "./economy";
 import { totalCardsInPool } from "./storage";
 import { tryCompleteAchievements } from "./achievements";
 import { addStones, stones, subStones, canAfford } from "./stones";
 import { tickInGameClock } from "./inGameClock";
 import { earthOfflineCapMult, earthOfflineIncomeMult } from "./deckSynergy";
-import { pullOne } from "./gacha";
+import { pullGearOne, pullOne } from "./gacha";
 import { onGachaPulls, tickWishResonancePassive } from "./dailyRewards";
-import { tickDungeon } from "./systems/dungeon";
+import { dungeonBossPrepSnapshot, requestBossChallenge, tickDungeon } from "./systems/dungeon";
 import { tickCombatHpRegen } from "./systems/combatHp";
 import { tickSkillTraining } from "./systems/skillTraining";
 import { tryTuna, tunaCooldownLeftMs } from "./systems/tuna";
@@ -68,6 +68,32 @@ function tryAutoGacha(state: GameState, now: number): void {
   tryCompleteAchievements(state);
 }
 
+function tryAutoGearForge(state: GameState, now: number): void {
+  if (!state.autoGearForge) return;
+  if (state.zhuLingEssence < ESSENCE_COST_GEAR_SINGLE) return;
+  if (now - state.lastAutoGearForgeMs < 1200) return;
+  state.lastAutoGearForgeMs = now;
+  state.zhuLingEssence -= ESSENCE_COST_GEAR_SINGLE;
+  const r = pullGearOne(state);
+  if (!r.ok || !r.gear) {
+    state.zhuLingEssence += ESSENCE_COST_GEAR_SINGLE;
+    return;
+  }
+  tryCompleteAchievements(state);
+}
+
+function tryAutoBossChallenge(state: GameState, now: number): void {
+  if (!state.autoBossChallenge) return;
+  if (!state.dungeon.active) return;
+  if (!state.dungeonDeferBoss) return;
+  if (state.dungeon.wave % 5 !== 0) return;
+  if (now - state.lastAutoBossChallengeMs < 500) return;
+  const snap = dungeonBossPrepSnapshot(state);
+  if (!snap.canChallenge) return;
+  state.lastAutoBossChallengeMs = now;
+  requestBossChallenge(state);
+}
+
 /** 系统时间回调：时间倒流不扣资源（见设计案 §B） */
 export function applyTick(state: GameState, now: number): void {
   if (now < state.lastTick) {
@@ -96,6 +122,8 @@ export function applyTick(state: GameState, now: number): void {
   tryAutoRealm(state, tickNow);
   tryAutoTuna(state, tickNow);
   tryAutoGacha(state, tickNow);
+  tryAutoGearForge(state, tickNow);
+  tryAutoBossChallenge(state, tickNow);
   autoSalvageAccumSec += dt;
   if (autoSalvageAccumSec >= 2.5) {
     autoSalvageAccumSec = 0;

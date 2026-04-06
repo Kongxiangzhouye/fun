@@ -3,6 +3,15 @@
   "naming": "Filenames from RARITY_BADGE_UI_FILES in src/data/rarityBadgeUi.ts; served as public/assets/ui/<file>.",
   "badges": [
     { "rarity": "SSR", "file": "rarity-ssr.png" },
-    { "rarity": "UR", "file": "rarity-ur.png" }
+    { "rarity": "UR", "file": "rarity-ur.png" },
+    { "rarity": "GEAR_T1", "file": "gear-tier-1-badge.svg" },
+    { "rarity": "GEAR_T2", "file": "gear-tier-2-badge.svg" },
+    { "rarity": "GEAR_T3", "file": "gear-tier-3-badge.svg" },
+    { "rarity": "GEAR_T4", "file": "gear-tier-4-badge.svg" },
+    { "rarity": "GEAR_T5", "file": "gear-tier-5-badge.svg" },
+    { "rarity": "GEAR_T6", "file": "gear-tier-6-badge.svg" },
+    { "rarity": "GEAR_T7", "file": "gear-tier-7-badge.svg" },
+    { "rarity": "GEAR_T8", "file": "gear-tier-8-badge.svg" },
+    { "rarity": "GEAR_T9", "file": "gear-tier-9-badge.svg" }
   ]
 }

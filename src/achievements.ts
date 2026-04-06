@@ -498,7 +498,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "forge_treasure",
     title: "珍品显形",
-    desc: "铸灵曾达到珍品及以上稀有度",
+    desc: "铸灵曾达到极品及以上品阶",
     rewardStones: 350,
     rewardEssence: 18,
     listDeco: "forge",
@@ -506,7 +506,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   {
     id: "forge_celestial",
     title: "天工开物",
-    desc: "铸灵曾达到天极稀有度",
+    desc: "铸灵曾达到至宝品阶",
     rewardStones: 2200,
     rewardEssence: 55,
     listDeco: "forge",
@@ -698,9 +698,9 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
     case "forge_1000":
       return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 1000;
     case "forge_treasure":
-      return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 2;
-    case "forge_celestial":
       return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 4;
+    case "forge_celestial":
+      return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 8;
     case "dao_meridian_3":
       return state.daoMeridian >= 3;
     case "dao_meridian_5":
