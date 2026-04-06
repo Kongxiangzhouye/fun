@@ -223,6 +223,7 @@ export function renderGameLoreHtml(): string {
         <ul class="game-lore-list">
           <li><strong>上阵</strong>：点空阵位再点仓库，或先点仓库再点阵位；点已有卡的阵位可选中该卡。升阶需灵砂。</li>
           <li>境界达到 <strong>${REINCARNATION_REALM_REQ}</strong> 后可轮回：清空境界、灵石、卡组与持有卡牌；保留图鉴邂逅、成就与元强化。道韵按本轮灵石巅峰等规则结算。</li>
+          <li>累计轮回 <strong>1 / 3 / 5 / 10</strong> 次可在<strong>成就</strong>领取阶段性奖励（灵石与唤灵髓等）。</li>
         </ul>
       </details>
 

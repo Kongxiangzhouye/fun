@@ -149,6 +149,7 @@ import {
   UI_ACH_PET_DECO,
   UI_ACH_SPIRIT_ARRAY_DECO,
   UI_ACH_PET_PULL_DECO,
+  UI_ACH_REINCARNATION_DECO,
   UI_SAVE_DOWNLOAD_DECO,
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
@@ -3193,7 +3194,9 @@ function renderAch(): string {
                       ? `<img class="ach-deco-icon" src="${UI_ACH_SPIRIT_ARRAY_DECO}" alt="" width="22" height="22" loading="lazy" />`
                       : a.listDeco === "petPull"
                         ? `<img class="ach-deco-icon" src="${UI_ACH_PET_PULL_DECO}" alt="" width="22" height="22" loading="lazy" />`
-                        : "";
+                        : a.listDeco === "reincarnation"
+                          ? `<img class="ach-deco-icon" src="${UI_ACH_REINCARNATION_DECO}" alt="" width="22" height="22" loading="lazy" />`
+                          : "";
     html += `
       <div class="ach-item ${done ? "done" : ""} ${a.listDeco ? `ach-item--${a.listDeco}` : ""}">
         <div class="ach-item-main">

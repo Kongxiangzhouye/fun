@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull";
+  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -70,6 +70,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "完成 1 次轮回",
     rewardStones: 0,
     rewardEssence: 80,
+    listDeco: "reincarnation",
   },
   {
     id: "pulls_100",
@@ -119,6 +120,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "累计完成 3 次轮回",
     rewardStones: 1500,
     rewardEssence: 90,
+    listDeco: "reincarnation",
   },
   {
     id: "rein_5",
@@ -126,6 +128,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "累计完成 5 次轮回",
     rewardStones: 4000,
     rewardEssence: 150,
+    listDeco: "reincarnation",
+  },
+  {
+    id: "rein_10",
+    title: "十世浮灯",
+    desc: "累计完成 10 次轮回",
+    rewardStones: 9500,
+    rewardEssence: 220,
+    listDeco: "reincarnation",
   },
   {
     id: "streak_7",
@@ -435,6 +446,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.reincarnations >= 3;
     case "rein_5":
       return state.reincarnations >= 5;
+    case "rein_10":
+      return state.reincarnations >= 10;
     case "streak_7":
       return state.dungeon.totalWavesCleared >= 40;
     case "dungeon_waves_100":
