@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import type { GameState } from "../types";
 import { canAfford, subStones } from "../stones";
-import { normalizeLifetimeStats } from "./pullChronicle";
+import { normalizeLifetimeStats, recordDaoEssenceSpentLifetime } from "./pullChronicle";
 
 export type VeinKind = "huiLing" | "guYuan" | "lingXi" | "gongMing";
 
@@ -70,6 +70,7 @@ export function buyVeinUpgrade(state: GameState, kind: VeinKind): boolean {
     const c = guYuanUpgradeCost(cur);
     if (state.daoEssence < c) return false;
     state.daoEssence -= c;
+    recordDaoEssenceSpentLifetime(state, c);
   } else if (kind === "lingXi") {
     const c = lingXiUpgradeCost(cur);
     if (!canAfford(state, c)) return false;

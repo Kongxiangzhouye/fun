@@ -73,6 +73,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       gearSinglePullActions: 0,
       dungeonBossKills: 0,
       dungeonRollDodges: 0,
+      daoEssenceSpentLifetime: 0,
     };
     return;
   }
@@ -205,6 +206,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   const drd = st.lifetimeStats.dungeonRollDodges;
   if (drd == null || !Number.isFinite(drd)) st.lifetimeStats.dungeonRollDodges = 0;
   else st.lifetimeStats.dungeonRollDodges = Math.max(0, Math.floor(drd));
+  const des = st.lifetimeStats.daoEssenceSpentLifetime;
+  if (des == null || !Number.isFinite(des)) st.lifetimeStats.daoEssenceSpentLifetime = 0;
+  else st.lifetimeStats.daoEssenceSpentLifetime = Math.max(0, Math.floor(des));
 }
 
 /** 幻域击败真首领时累加 */
@@ -217,6 +221,17 @@ export function recordDungeonBossKillLifetime(state: GameState): void {
 export function recordDungeonRollDodgeLifetime(state: GameState): void {
   normalizeLifetimeStats(state);
   state.lifetimeStats.dungeonRollDodges += 1;
+}
+
+/** 任意途径消耗道韵时累加（整数，防溢出截断至安全整数上限） */
+export function recordDaoEssenceSpentLifetime(state: GameState, amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  normalizeLifetimeStats(state);
+  const a = Math.floor(amount);
+  const cur = state.lifetimeStats.daoEssenceSpentLifetime;
+  const next = cur + a;
+  state.lifetimeStats.daoEssenceSpentLifetime =
+    next > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : next;
 }
 
 /** 灵卡池单抽（非十连内部逐抽）成功结算一次后累加 */

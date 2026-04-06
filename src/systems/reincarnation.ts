@@ -5,7 +5,7 @@ import { reseedRng } from "../rng";
 import { emptyDungeon } from "../state";
 import { playerMaxHp } from "./playerCombat";
 import { createEmptyEstateCommissionState } from "./estateCommission";
-import { normalizeLifetimeStats } from "./pullChronicle";
+import { normalizeLifetimeStats, recordDaoEssenceSpentLifetime } from "./pullChronicle";
 
 export function canReincarnate(state: GameState): boolean {
   return state.realmLevel >= REINCARNATION_REALM_REQ;
@@ -137,6 +137,7 @@ export function buyMeta(state: GameState, kind: keyof GameState["meta"]): boolea
   const cost = metaUpgradeCost(kind, cur);
   if (state.daoEssence < cost) return false;
   state.daoEssence -= cost;
+  recordDaoEssenceSpentLifetime(state, cost);
   state.meta[kind] = cur + 1;
   normalizeLifetimeStats(state);
   state.lifetimeStats.metaUpgrades += 1;

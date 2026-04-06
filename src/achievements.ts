@@ -320,6 +320,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "dungeonWavesSurge",
   },
   {
+    id: "dao_essence_spent_600",
+    title: "道韵散千金",
+    desc: "累计消耗道韵 600（元强化、固元、灵窍等合计）",
+    rewardStones: 1200,
+    rewardEssence: 55,
+    listDeco: "reincarnation",
+  },
+  {
+    id: "dao_essence_spent_12000",
+    title: "万法归尘",
+    desc: "累计消耗道韵 12000",
+    rewardStones: 8800,
+    rewardEssence: 220,
+    listDeco: "meridian",
+  },
+  {
     id: "pet_first_feed",
     title: "灵契初结",
     desc: "在唤灵池结缘任意灵宠",
@@ -1173,6 +1189,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dungeonRollDodges ?? 0) >= 80;
     case "dungeon_roll_dodges_400":
       return (state.lifetimeStats?.dungeonRollDodges ?? 0) >= 400;
+    case "dao_essence_spent_600":
+      return (state.lifetimeStats?.daoEssenceSpentLifetime ?? 0) >= 600;
+    case "dao_essence_spent_12000":
+      return (state.lifetimeStats?.daoEssenceSpentLifetime ?? 0) >= 12000;
     case "pet_first_feed":
       return anyPetOwned(state);
     case "pet_level_30":

@@ -144,6 +144,8 @@ export interface LifetimeStatsState {
   dungeonBossKills: number;
   /** 幻域内成功触发翻滚闪避次数（消耗体力并进入无敌帧计 1） */
   dungeonRollDodges: number;
+  /** 累计消耗道韵（元强化、固元灵脉、道韵灵窍等所有扣费合计，整数） */
+  daoEssenceSpentLifetime: number;
 }
 
 /** 灵田作物 id */

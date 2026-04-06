@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import type { GameState } from "../types";
+import { recordDaoEssenceSpentLifetime } from "./pullChronicle";
 
 export const DAO_MERIDIAN_MAX = 5;
 
@@ -123,6 +124,7 @@ export function tryBuyDaoMeridian(state: GameState): boolean {
   const cost = DAO_MERIDIAN_TIERS[state.daoMeridian]!.cost;
   if (state.daoEssence < cost) return false;
   state.daoEssence -= cost;
+  recordDaoEssenceSpentLifetime(state, cost);
   state.daoMeridian += 1;
   return true;
 }
