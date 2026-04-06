@@ -200,6 +200,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "realm",
   },
   {
+    id: "realm_100",
+    title: "劫海行舟",
+    desc: "境界达到 100",
+    rewardStones: 28000,
+    rewardEssence: 140,
+    listDeco: "realm",
+  },
+  {
+    id: "realm_120",
+    title: "太虚问顶",
+    desc: "境界达到 120",
+    rewardStones: 42000,
+    rewardEssence: 180,
+    listDeco: "realm",
+  },
+  {
     id: "first_ssr",
     title: "霞光初遇",
     desc: "获得任意 SSR 灵卡",
@@ -1255,6 +1271,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.realmLevel >= 50;
     case "realm_75":
       return state.realmLevel >= 75;
+    case "realm_100":
+      return state.realmLevel >= 100;
+    case "realm_120":
+      return state.realmLevel >= 120;
     case "first_ssr":
       return hasSsr(state);
     case "codex_full":

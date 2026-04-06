@@ -109,6 +109,8 @@ export const UI_CHRONICLE_OFFLINE_STONE_SETTLEMENT_STAT = asset("chronicle-offli
 export const UI_CHRONICLE_META_UPGRADE_STAT = asset("chronicle-meta-upgrade-stat.svg");
 /** 唤灵通鉴 · 累计完成轮回次数小标 */
 export const UI_CHRONICLE_REINCARNATION_TOTAL_STAT = asset("chronicle-reincarnation-total-stat.svg");
+/** 唤灵通鉴 · 当前境界小标 */
+export const UI_CHRONICLE_REALM_LEVEL_STAT = asset("chronicle-realm-level-stat.svg");
 /** 唤灵通鉴 · 累计消耗道韵小标 */
 export const UI_CHRONICLE_DAO_ESSENCE_SPENT_STAT = asset("chronicle-dao-essence-spent-stat.svg");
 /** 唤灵通鉴 · 累计消耗唤灵髓小标 */

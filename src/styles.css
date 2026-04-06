@@ -10814,6 +10814,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--realm-now {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(120, 160, 220, 0.42);
+  background: linear-gradient(145deg, rgba(18, 26, 42, 0.6), rgba(8, 12, 22, 0.72));
+}
+
+.chronicle-stat-card--realm-now .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--realm-now .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--dao-spend {
   display: flex;
   align-items: center;

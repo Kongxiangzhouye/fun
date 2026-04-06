@@ -1047,6 +1047,17 @@ function runReincarnationTierAchievementsSmoke(): void {
   assert.ok(d.some((x) => x.id === "rein_100"), "100 reincarnations should unlock");
 }
 
+function runRealmLevelTierAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("realm_100"));
+  st.realmLevel = 100;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "realm_100"));
+  st.realmLevel = 120;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "realm_120"));
+}
+
 function runEstateCommissionAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("estate_commissions_20"), "estate 20 should start locked");
@@ -1184,6 +1195,7 @@ function main(): void {
   runGearSinglePullAchievementsSmoke();
   runEstateCommissionAchievementsSmoke();
   runReincarnationTierAchievementsSmoke();
+  runRealmLevelTierAchievementsSmoke();
   runBattleSkillAndGearSalvageAchievementsSmoke();
   runCardSalvageAndVeinAchievementsSmoke();
   runOfflineAdventureAndMetaAchievementsSmoke();
