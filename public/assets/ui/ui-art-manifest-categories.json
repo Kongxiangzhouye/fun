@@ -35,6 +35,10 @@
     {
       "id": "element_and_rarity_markers",
       "manifests": ["element_icons", "rarity_badges"]
+    },
+    {
+      "id": "pipeline_reference",
+      "manifests": ["ui_art_style_reference"]
     }
   ]
 }

@@ -17,6 +17,14 @@
         "Added task-level handoff manifest with programHook keys.",
         "Added import profiles for PNG icon and SVG panel assets."
       ]
+    },
+    {
+      "date": "2026-04-06",
+      "title": "Localization and palette reference",
+      "highlights": [
+        "Added zh/en UI glossary with manifest cross-references.",
+        "Added non-runtime palette swatch SVG aligned with gacha decor accents."
+      ]
     }
   ]
 }

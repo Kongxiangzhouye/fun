@@ -10,6 +10,11 @@
       "date": "2026-04-06",
       "change": "Added handoff manifest, import profiles, quality checklist, and category index.",
       "impact": ["outsourcing", "engine-import", "qa"]
+    },
+    {
+      "date": "2026-04-06",
+      "change": "Added UI terminology glossary, palette swatch SVG, and style-reference manifest.",
+      "impact": ["documentation", "outsourcing", "visual-consistency"]
     }
   ]
 }

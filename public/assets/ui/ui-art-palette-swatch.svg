@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" fill="none" aria-hidden="true">
+  <title>UI palette reference (non-runtime)</title>
+  <defs>
+    <linearGradient id="bar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7c9cff"/>
+      <stop offset="50%" stop-color="#b388ff"/>
+      <stop offset="100%" stop-color="#e8c547"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="72" rx="8" fill="#141824"/>
+  <rect x="12" y="12" width="296" height="20" rx="4" fill="url(#bar)" opacity="0.9"/>
+  <g font-family="system-ui,Segoe UI,sans-serif" font-size="10" fill="#c8d0e8">
+    <text x="12" y="52">accent</text>
+    <text x="12" y="64" fill="#7c9cff">#7c9cff</text>
+    <text x="92" y="64" fill="#b388ff">#b388ff</text>
+    <text x="172" y="64" fill="#e8c547">#e8c547</text>
+    <text x="252" y="64" fill="#5a6278">panel #141824</text>
+  </g>
+</svg>
