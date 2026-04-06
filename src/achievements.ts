@@ -112,6 +112,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "gacha",
   },
   {
+    id: "card_ten_sessions_5",
+    title: "十连初愿",
+    desc: "灵卡十连唤引完成累计 5 次",
+    rewardStones: 400,
+    rewardEssence: 28,
+    listDeco: "gacha",
+  },
+  {
+    id: "card_ten_sessions_30",
+    title: "连潮成愿",
+    desc: "灵卡十连唤引完成累计 30 次",
+    rewardStones: 2200,
+    rewardEssence: 72,
+    listDeco: "gacha",
+  },
+  {
     id: "realm_20",
     title: "道台初筑",
     desc: "境界达到 20",
@@ -977,6 +993,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.totalPulls >= 500;
     case "pulls_1000":
       return state.totalPulls >= 1000;
+    case "card_ten_sessions_5":
+      return (state.lifetimeStats?.cardTenPullSessions ?? 0) >= 5;
+    case "card_ten_sessions_30":
+      return (state.lifetimeStats?.cardTenPullSessions ?? 0) >= 30;
     case "realm_20":
       return state.realmLevel >= 20;
     case "realm_50":

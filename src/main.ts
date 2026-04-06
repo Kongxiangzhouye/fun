@@ -2948,6 +2948,7 @@ function buildDataOverviewExportText(st: GameState): string {
     "",
     "[唤引与图鉴]",
     `灵卡唤引总次数: ${st.totalPulls}`,
+    `灵卡十连完成次数: ${lt.cardTenPullSessions}`,
     `本轮唤引次数: ${st.pullsThisLife ?? 0}`,
     `灵宠唤引累计: ${st.petPullsTotal}`,
     `图鉴解锁: ${st.codexUnlocked.size} / ${pool}`,
@@ -3027,6 +3028,7 @@ function renderDataOverviewPanel(): string {
       <h3>唤引与图鉴</h3>
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">灵卡唤引总次数</span><strong class="d-val" id="data-overview-total-pulls">${st.totalPulls}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵卡十连完成次数</span><strong class="d-val" id="data-overview-lt-card-ten">${lt.cardTenPullSessions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">本轮唤引次数</span><strong class="d-val" id="data-overview-pulls-life">${st.pullsThisLife ?? 0}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵宠唤引累计</span><strong class="d-val" id="data-overview-pet-pulls">${st.petPullsTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">图鉴解锁</span><strong class="d-val" id="data-overview-codex">${codex} / ${pool}</strong></div>
@@ -3087,6 +3089,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-peak-stone", fmtDecimal(new Decimal(st.peakSpiritStonesThisLife || "0")));
   set("data-overview-streak", String(st.dailyStreak));
   set("data-overview-total-pulls", String(st.totalPulls));
+  set("data-overview-lt-card-ten", String(lt.cardTenPullSessions));
   set("data-overview-pulls-life", String(st.pullsThisLife ?? 0));
   set("data-overview-pet-pulls", String(st.petPullsTotal));
   set("data-overview-codex", `${st.codexUnlocked.size} / ${pool}`);

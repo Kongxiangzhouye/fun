@@ -13,6 +13,7 @@ import {
   pushPullChronicle,
   noteGearForgePull,
   recordCardStarUpLifetime,
+  recordCardTenPullSessionLifetime,
   recordMaxGearForgedRarity,
 } from "./systems/pullChronicle";
 import { daoMeridianLuckFlat } from "./systems/daoMeridian";
@@ -308,6 +309,7 @@ export function pullTen(state: GameState): PullResult[] {
     const finalRarity: Rarity = rarityRank(rarity) >= rarityRank("SR") ? rarity : "SR";
     out.push(applyPullToState(state, randomCardOfRarity(state, finalRarity)));
   }
+  recordCardTenPullSessionLifetime(state);
   return out;
 }
 

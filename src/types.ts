@@ -126,6 +126,8 @@ export interface LifetimeStatsState {
   spiritArrayUpgrades: number;
   /** 闭关「时间推进」成功结算次数（每次闭关一纪计 1） */
   biGuanCompletions: number;
+  /** 灵卡池十连唤引完成次数（每次完整十连计 1） */
+  cardTenPullSessions: number;
 }
 
 /** 灵田作物 id */

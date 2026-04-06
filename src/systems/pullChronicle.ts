@@ -64,6 +64,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       spiritTideHours: 0,
       spiritArrayUpgrades: 0,
       biGuanCompletions: 0,
+      cardTenPullSessions: 0,
     };
     return;
   }
@@ -165,6 +166,15 @@ export function normalizeLifetimeStats(st: GameState): void {
   const bg = st.lifetimeStats.biGuanCompletions;
   if (bg == null || !Number.isFinite(bg)) st.lifetimeStats.biGuanCompletions = 0;
   else st.lifetimeStats.biGuanCompletions = Math.max(0, Math.floor(bg));
+  const c10 = st.lifetimeStats.cardTenPullSessions;
+  if (c10 == null || !Number.isFinite(c10)) st.lifetimeStats.cardTenPullSessions = 0;
+  else st.lifetimeStats.cardTenPullSessions = Math.max(0, Math.floor(c10));
+}
+
+/** 灵卡池十连唤引完整结算一次后累加 */
+export function recordCardTenPullSessionLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.cardTenPullSessions += 1;
 }
 
 /** 闭关时间推进（fastForward）成功结算后累加 */
