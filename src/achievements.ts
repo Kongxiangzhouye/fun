@@ -1152,6 +1152,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "forgeNova",
   },
   {
+    id: "forge_2500",
+    title: "锻魄三千",
+    desc: "累计铸灵 2500 次",
+    rewardStones: 26000,
+    rewardEssence: 380,
+    listDeco: "forgeNova",
+  },
+  {
+    id: "forge_6000",
+    title: "铸界无垠",
+    desc: "累计铸灵 6000 次",
+    rewardStones: 48000,
+    rewardEssence: 520,
+    listDeco: "forgeEmber",
+  },
+  {
     id: "forge_treasure",
     title: "珍品显形",
     desc: "铸灵曾达到极品及以上品阶",
@@ -1533,6 +1549,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 500;
     case "forge_1000":
       return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 1000;
+    case "forge_2500":
+      return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 2500;
+    case "forge_6000":
+      return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 6000;
     case "forge_treasure":
       return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 4;
     case "forge_celestial":

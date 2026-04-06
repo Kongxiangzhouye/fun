@@ -787,6 +787,17 @@ function runTotalPullsMilestoneAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "pulls_8000"));
 }
 
+function runGearForgeMilestoneAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("forge_2500"));
+  st.lifetimeStats.gearForgesTotal = 2500;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "forge_2500"));
+  st.lifetimeStats.gearForgesTotal = 6000;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "forge_6000"));
+}
+
 function runCardTenPullSessionAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("card_ten_sessions_5"));
@@ -1208,6 +1219,7 @@ function main(): void {
   runReincarnationTierAchievementsSmoke();
   runRealmLevelTierAchievementsSmoke();
   runTotalPullsMilestoneAchievementsSmoke();
+  runGearForgeMilestoneAchievementsSmoke();
   runBattleSkillAndGearSalvageAchievementsSmoke();
   runCardSalvageAndVeinAchievementsSmoke();
   runOfflineAdventureAndMetaAchievementsSmoke();

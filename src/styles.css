@@ -10498,6 +10498,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--total-gear-forges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(200, 120, 70, 0.42);
+  background: linear-gradient(145deg, rgba(44, 28, 16, 0.62), rgba(14, 10, 8, 0.74));
+}
+
+.chronicle-stat-card--total-gear-forges .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--total-gear-forges .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .spirit-tide-row {
   display: flex;
   align-items: center;
