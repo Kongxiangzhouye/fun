@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "checks": [
+    "All files referenced in ui-art-manifest-index.json exist under public/assets/ui/",
+    "All filenames in src/data/*Ui.ts use lowercase kebab-case and approved extensions (.svg/.png).",
+    "No direct asset(\"...\") string literals remain in src/ui/visualAssets.ts except approved dynamic pattern paths.",
+    "Dynamic patterns (gear-base-<baseId>.png, PET_DEFS[].artFile, GARDEN_CROPS[].artFile) are documented in ui-art-conventions.json.",
+    "New manifest entries are added to both ui-art-manifest-index.json and ui-art-manifest-categories.json."
+  ]
+}
