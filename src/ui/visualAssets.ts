@@ -4,6 +4,7 @@
  */
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
 import { EMPTY_STATE_UI_FILES } from "../data/emptyStateUi";
+import { FEATURE_PAGE_HEADS_UI_FILES } from "../data/featurePageHeadsUi";
 import { GACHA_POOL_UI_FILES } from "../data/gachaPoolUi";
 import { HUB_SECTION_HEADER_UI_FILES } from "../data/hubSectionHeadersUi";
 import { HUD_BAR_UI_FILES } from "../data/hudBarUi";
@@ -17,6 +18,7 @@ import { GEAR_BASES } from "../data/gearBases";
 import { ACHIEVEMENTS_LIST_UI_FILES } from "../data/achievementsListUi";
 import { CHRONICLE_HEADERS_UI_FILES } from "../data/chronicleHeadersUi";
 import { DUNGEON_DUEL_UI_FILES } from "../data/dungeonDuelUi";
+import { LORE_JOURNAL_UI_FILES } from "../data/loreJournalUi";
 import { GEAR_INVENTORY_UI_FILES } from "../data/gearInventoryUi";
 import { HUB_VEIN_FLAIR_UI_FILES } from "../data/hubVeinFlairUi";
 import { PET_DEFS } from "../data/pets";
@@ -234,52 +236,52 @@ export const UI_ACH_FORTUNE_BLOOM_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.fortun
 export const UI_ACH_VEIN_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.vein);
 /** 成就列表 · 境界里程碑条目左侧小徽 */
 export const UI_ACH_REALM_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.realm);
-/** 修行札记 · 「挂机三艺」折叠标题旁 */
-export const UI_LORE_THREE_ARTS = asset("deco-lore-three-arts.svg");
+/** 修行札记 · 「挂机三艺」折叠标题旁；与 `LORE_JOURNAL_UI_FILES` 同源 */
+export const UI_LORE_THREE_ARTS = asset(LORE_JOURNAL_UI_FILES.threeArts);
 /** 修行札记 · 「周常悬赏」折叠标题旁 */
-export const UI_LORE_BOUNTY = asset("deco-lore-bounty.svg");
+export const UI_LORE_BOUNTY = asset(LORE_JOURNAL_UI_FILES.bounty);
 /** 修行札记 · 「灵府与灵脉」折叠标题旁 */
-export const UI_LORE_ESTATE = asset("deco-lore-estate.svg");
+export const UI_LORE_ESTATE = asset(LORE_JOURNAL_UI_FILES.estate);
 /** 修行札记 · 「功能解锁一览」折叠标题旁 */
-export const UI_LORE_UNLOCKS = asset("deco-lore-unlocks.svg");
+export const UI_LORE_UNLOCKS = asset(LORE_JOURNAL_UI_FILES.unlocks);
 /** 修行札记 · 「幻域副本」折叠标题旁 */
-export const UI_LORE_DUNGEON = asset("deco-lore-dungeon.svg");
+export const UI_LORE_DUNGEON = asset(LORE_JOURNAL_UI_FILES.dungeon);
 /** 修行札记 · 「行囊与铸灵」折叠标题旁 */
-export const UI_LORE_GEAR = asset("deco-lore-gear.svg");
+export const UI_LORE_GEAR = asset(LORE_JOURNAL_UI_FILES.gear);
 /** 修行札记 · 「卡组与轮回」折叠标题旁 */
-export const UI_LORE_REINCARNATION = asset("deco-lore-reincarnation.svg");
+export const UI_LORE_REINCARNATION = asset(LORE_JOURNAL_UI_FILES.reincarnation);
 /** 修行札记 · 「术语速查」折叠标题旁 */
-export const UI_LORE_GLOSSARY = asset("deco-lore-glossary.svg");
+export const UI_LORE_GLOSSARY = asset(LORE_JOURNAL_UI_FILES.glossary);
 /** 修行札记 · 「资源与灵石分流」折叠标题旁 */
-export const UI_LORE_RESOURCES = asset("deco-lore-resources.svg");
+export const UI_LORE_RESOURCES = asset(LORE_JOURNAL_UI_FILES.resources);
 /** 修行札记 · 「洞府蕴灵四线」折叠标题旁 */
-export const UI_LORE_VEIN = asset("deco-lore-vein.svg");
+export const UI_LORE_VEIN = asset(LORE_JOURNAL_UI_FILES.vein);
 /** 修行札记 · 「五行灵脉」折叠标题旁 */
-export const UI_LORE_ELEMENTS = asset("deco-lore-elements.svg");
+export const UI_LORE_ELEMENTS = asset(LORE_JOURNAL_UI_FILES.elements);
 /** 修行札记 · 「唤灵池与灵宠」折叠标题旁 */
-export const UI_LORE_PET = asset("deco-lore-pet.svg");
+export const UI_LORE_PET = asset(LORE_JOURNAL_UI_FILES.pet);
 /** 修行札记 · 「元强化与道韵」折叠标题旁 */
-export const UI_LORE_META = asset("deco-lore-meta.svg");
+export const UI_LORE_META = asset(LORE_JOURNAL_UI_FILES.meta);
 /** 修行札记 · 「道韵灵窍」折叠标题旁 */
-export const UI_LORE_DAO_MERIDIAN = asset("deco-lore-dao-meridian.svg");
+export const UI_LORE_DAO_MERIDIAN = asset(LORE_JOURNAL_UI_FILES.daoMeridian);
 /** 修行札记 · 「心法（修炼）」折叠标题旁 */
-export const UI_LORE_BATTLE_SKILL = asset("deco-lore-battle-skill.svg");
+export const UI_LORE_BATTLE_SKILL = asset(LORE_JOURNAL_UI_FILES.battleSkill);
 /** 修行札记 · 「灵息日历」折叠标题旁 */
-export const UI_LORE_LOGIN_CALENDAR = asset("deco-lore-login-calendar.svg");
+export const UI_LORE_LOGIN_CALENDAR = asset(LORE_JOURNAL_UI_FILES.loginCalendar);
 /** 修行札记 · 「唤灵通鉴」折叠标题旁 */
-export const UI_LORE_CHRONICLE = asset("deco-lore-chronicle.svg");
+export const UI_LORE_CHRONICLE = asset(LORE_JOURNAL_UI_FILES.chronicle);
 /** 修行札记 · 「吐纳与闭关」折叠标题旁 */
-export const UI_LORE_TUNA_MEDITATION = asset("deco-lore-tuna-meditation.svg");
-/** 灵息日历（每日签到）页标题 */
-export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
+export const UI_LORE_TUNA_MEDITATION = asset(LORE_JOURNAL_UI_FILES.tunaMeditation);
+/** 灵息日历（每日签到）页标题；与 `FEATURE_PAGE_HEADS_UI_FILES` 同源 */
+export const UI_HEAD_DAILY_LOGIN = asset(FEATURE_PAGE_HEADS_UI_FILES.dailyLogin);
 /** 天机匣（周轮换商店）页标题 */
-export const UI_HEAD_CELESTIAL_STASH = asset("deco-celestial-stash.svg");
+export const UI_HEAD_CELESTIAL_STASH = asset(FEATURE_PAGE_HEADS_UI_FILES.celestialStash);
 /** 蓄灵池（灵府灵脉）标题装饰 */
-export const UI_HEAD_SPIRIT_RESERVOIR = asset("deco-spirit-reservoir.svg");
+export const UI_HEAD_SPIRIT_RESERVOIR = asset(FEATURE_PAGE_HEADS_UI_FILES.spiritReservoir);
 /** 心斋卦象（每日运势）标题装饰 */
-export const UI_HEAD_DAILY_FORTUNE = asset("deco-daily-fortune.svg");
+export const UI_HEAD_DAILY_FORTUNE = asset(FEATURE_PAGE_HEADS_UI_FILES.dailyFortune);
 /** 纳灵阵图（灵府）标题装饰 */
-export const UI_HEAD_SPIRIT_ARRAY = asset("deco-spirit-array.svg");
+export const UI_HEAD_SPIRIT_ARRAY = asset(FEATURE_PAGE_HEADS_UI_FILES.spiritArray);
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);

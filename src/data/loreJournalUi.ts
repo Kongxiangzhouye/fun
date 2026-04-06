@@ -1,0 +1,21 @@
+/** 图鉴·札记（修行札记）各折叠节标题旁装饰（`public/assets/ui/deco-lore-*.svg`） */
+export const LORE_JOURNAL_UI_FILES = {
+  threeArts: "deco-lore-three-arts.svg",
+  bounty: "deco-lore-bounty.svg",
+  estate: "deco-lore-estate.svg",
+  unlocks: "deco-lore-unlocks.svg",
+  dungeon: "deco-lore-dungeon.svg",
+  gear: "deco-lore-gear.svg",
+  reincarnation: "deco-lore-reincarnation.svg",
+  glossary: "deco-lore-glossary.svg",
+  resources: "deco-lore-resources.svg",
+  vein: "deco-lore-vein.svg",
+  elements: "deco-lore-elements.svg",
+  pet: "deco-lore-pet.svg",
+  meta: "deco-lore-meta.svg",
+  daoMeridian: "deco-lore-dao-meridian.svg",
+  battleSkill: "deco-lore-battle-skill.svg",
+  loginCalendar: "deco-lore-login-calendar.svg",
+  chronicle: "deco-lore-chronicle.svg",
+  tunaMeditation: "deco-lore-tuna-meditation.svg",
+} as const;
