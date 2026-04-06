@@ -186,6 +186,9 @@ import {
   UI_INCOME_SOURCE_ICON_REALM,
   UI_INCOME_SOURCE_ICON_DECK,
   UI_INCOME_SOURCE_ICON_UPGRADE,
+  UI_ESTATE_COMMISSION_RESOURCE,
+  UI_ESTATE_COMMISSION_COMBAT,
+  UI_ESTATE_COMMISSION_CULTIVATION,
   UI_DUNGEON_HIT_FLASH_DECO,
   UI_DUNGEON_HIT_TRACE_RING_DECO,
   UI_DUNGEON_CRIT_BURST_DECO,
@@ -287,9 +290,19 @@ import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "./syst
 import {
   chooseOfflineAdventureOption,
   maybeQueueOfflineAdventure,
+  normalizeOfflineAdventureState,
   offlineAdventureBoostLeftMs,
   offlineAdventureBoostMult,
 } from "./systems/offlineAdventure";
+import {
+  abandonEstateCommission,
+  acceptEstateCommission,
+  ensureEstateCommissionOffer,
+  estateCommissionTimeLeftMs,
+  refreshEstateCommissionOffer,
+  settleEstateCommission,
+  tickEstateCommission,
+} from "./systems/estateCommission";
 import { elementDamageMultiplier } from "./systems/elementCombat";
 import { playerBattleElement } from "./systems/playerElement";
 import { pullPet } from "./systems/petGacha";
@@ -3216,6 +3229,60 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       </div>
     </section>`
     : "";
+  const ec = state.estateCommission;
+  const ecActive = ec.active;
+  const ecOffer = ec.offer;
+  const ecReady = !!(ecActive && ecActive.completedAtMs != null);
+  const ecRemainSec = Math.ceil(estateCommissionTimeLeftMs(state, now) / 1000);
+  const commissionIconByType: Record<string, string> = {
+    resource: UI_ESTATE_COMMISSION_RESOURCE,
+    combat: UI_ESTATE_COMMISSION_COMBAT,
+    cultivation: UI_ESTATE_COMMISSION_CULTIVATION,
+  };
+  const ecFocusType = ecActive?.offer.type ?? ecOffer?.type ?? "resource";
+  const ecFocusIcon = commissionIconByType[ecFocusType] ?? UI_ESTATE_COMMISSION_RESOURCE;
+  const estateCommissionPanel = `<section class="panel estate-commission-panel">
+      <div class="panel-title-art-row panel-title-art-row--sub">
+        <img class="panel-title-art-icon" src="${ecFocusIcon}" alt="" width="24" height="24" loading="lazy" />
+        <h2>洞府委托</h2>
+      </div>
+      <p class="hint sm">当前仅可同时进行 1 个委托。离线归来会按时长自动判定完成，可直接结算。</p>
+      ${
+        ecActive
+          ? `<div class="estate-commission-card ${ecReady ? "is-ready" : ""}">
+              <div class="estate-commission-card-head">
+                <strong>${ecActive.offer.title}</strong>
+                <span id="estate-commission-status" class="status-badge ${ecReady ? "status-badge--ready" : "status-badge--pending"}">${
+                  ecReady ? "已完成" : "进行中"
+                }</span>
+              </div>
+              <p class="hint sm">${ecActive.offer.desc}</p>
+              <p class="hint sm" id="estate-commission-timer">类型：${ecActive.offer.type === "resource" ? "资源" : ecActive.offer.type === "combat" ? "战斗" : "养成"} · ${
+                ecReady ? "可立即结算" : `剩余约 ${fmtOfflineDurationSec(ecRemainSec)}`
+              }</p>
+              <p class="hint sm">奖励：灵石 ${fmtDecimal(new Decimal(ecActive.offer.reward.spiritStones))} · 唤灵髓 +${ecActive.offer.reward.summonEssence} · 筑灵髓 +${ecActive.offer.reward.zhuLingEssence}</p>
+              <div class="btn-row">
+                <button id="btn-estate-commission-settle" class="btn btn-primary" type="button" data-estate-commission-settle="1" ${ecReady ? "" : "disabled"}>完成结算</button>
+                <button class="btn" type="button" data-estate-commission-abandon="1">放弃委托</button>
+              </div>
+            </div>`
+          : ecOffer
+            ? `<div class="estate-commission-card">
+                <div class="estate-commission-card-head">
+                  <strong>${ecOffer.title}</strong>
+                  <span class="status-badge status-badge--info">待接取</span>
+                </div>
+                <p class="hint sm">${ecOffer.desc}</p>
+                <p class="hint sm">类型：${ecOffer.type === "resource" ? "资源" : ecOffer.type === "combat" ? "战斗" : "养成"} · 时长 ${fmtOfflineDurationSec(ecOffer.durationSec)}</p>
+                <p class="hint sm">奖励：灵石 ${fmtDecimal(new Decimal(ecOffer.reward.spiritStones))} · 唤灵髓 +${ecOffer.reward.summonEssence} · 筑灵髓 +${ecOffer.reward.zhuLingEssence}</p>
+                <div class="btn-row">
+                  <button class="btn btn-primary" type="button" data-estate-commission-accept="1">接取委托</button>
+                  <button class="btn" type="button" data-estate-commission-refresh="1">刷新委托</button>
+                </div>
+              </div>`
+            : `<p class="hint sm">暂无可接委托，稍后可刷新。</p>`
+      }
+    </section>`;
 
   const incomeGuidePanel = `<section class="panel income-visual-panel">
       <div class="panel-title-art-row panel-title-art-row--sub">
@@ -3303,7 +3370,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       <p class="hint">图鉴收集 ${unique} / ${codex}${deckRealmPct > 0.001 ? ` · 卡组境界加成 ${deckRealmPct.toFixed(2)}%` : ""}</p>
     </section>`;
 
-  return reservoirBlock + fortuneBlock + offlineChoicePanel + incomeGuidePanel + core;
+  return reservoirBlock + fortuneBlock + offlineChoicePanel + estateCommissionPanel + incomeGuidePanel + core;
 }
 
 function renderGacha(
@@ -4553,6 +4620,56 @@ function bindEvents(rb: Decimal, _slots: number): void {
       render();
     });
   });
+  document.querySelectorAll("[data-estate-commission-accept]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const t = nowMs();
+      if (!acceptEstateCommission(state, t)) {
+        toast("当前无法接取委托。");
+        return;
+      }
+      saveGame(state);
+      toast("已接取洞府委托。");
+      render();
+    });
+  });
+  document.querySelectorAll("[data-estate-commission-refresh]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const t = nowMs();
+      if (!refreshEstateCommissionOffer(state, t)) {
+        toast("已有活动委托，无法刷新。");
+        return;
+      }
+      saveGame(state);
+      toast("委托已刷新。");
+      render();
+    });
+  });
+  document.querySelectorAll("[data-estate-commission-settle]").forEach((el) => {
+    el.addEventListener("click", () => {
+      if (!settleEstateCommission(state)) {
+        toast("委托尚未完成。");
+        return;
+      }
+      ensureEstateCommissionOffer(state, nowMs());
+      tryCompleteAchievements(state);
+      saveGame(state);
+      toast("委托结算完成，奖励已到账。");
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      render();
+    });
+  });
+  document.querySelectorAll("[data-estate-commission-abandon]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const t = nowMs();
+      if (!abandonEstateCommission(state, t)) {
+        toast("当前没有可放弃的委托。");
+        return;
+      }
+      saveGame(state);
+      toast("已放弃当前委托。");
+      render();
+    });
+  });
 
   document.querySelectorAll("[data-garden-plant]").forEach((el) => {
     el.addEventListener("click", () => {
@@ -5183,6 +5300,20 @@ function updateEstateIdleLiveReadouts(now: number): void {
         ? `当前增益 ×${oaBoostMul.toFixed(2)}（剩余约 ${Math.ceil(oaBoostLeftMs / 60000)} 分）`
         : "当前无挂机增益");
   }
+  const ecActive = state.estateCommission.active;
+  const statusEl = document.getElementById("estate-commission-status");
+  const timerEl = document.getElementById("estate-commission-timer");
+  const settleBtn = document.getElementById("btn-estate-commission-settle") as HTMLButtonElement | null;
+  if (ecActive && statusEl && timerEl) {
+    const ready = ecActive.completedAtMs != null;
+    statusEl.textContent = ready ? "已完成" : "进行中";
+    statusEl.classList.toggle("status-badge--ready", ready);
+    statusEl.classList.toggle("status-badge--pending", !ready);
+    const typeZh = ecActive.offer.type === "resource" ? "资源" : ecActive.offer.type === "combat" ? "战斗" : "养成";
+    const leftSec = Math.ceil(estateCommissionTimeLeftMs(state, now) / 1000);
+    timerEl.textContent = `类型：${typeZh} · ${ready ? "可立即结算" : `剩余约 ${fmtOfflineDurationSec(leftSec)}`}`;
+    if (settleBtn) settleBtn.disabled = !ready;
+  }
 }
 
 /** 灵府·灵田：生长条与收获按钮（仅在该子页时 DOM 存在） */
@@ -5214,6 +5345,8 @@ function updateEstateGardenLiveReadouts(now: number): void {
 function loop(): void {
   syncDecimalFormatFromState(state);
   const now = nowMs();
+  normalizeOfflineAdventureState(state, now);
+  tickEstateCommission(state, now);
   updateZhuLingRateEstimate(now);
   ensureWeeklyBountyWeek(state, now);
   if (lastUiWeekKey !== state.weeklyBounty.weekKey) {
@@ -5886,6 +6019,9 @@ function loop(): void {
 
 function init(): void {
   const t = nowMs();
+  normalizeOfflineAdventureState(state, t);
+  tickEstateCommission(state, t);
+  ensureEstateCommissionOffer(state, t);
   ensureWeeklyBountyWeek(state, t);
   ensureCelestialStashWeek(state, t);
   mobileLiteFx = shouldUseMobileLiteFx();

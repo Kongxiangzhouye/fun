@@ -22,9 +22,10 @@ import {
 } from "./systems/pullChronicle";
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
-import { buildEssenceOptionForSettledSec } from "./systems/offlineAdventure";
+import { buildEssenceOptionForSettledSec, normalizeOfflineAdventureState } from "./systems/offlineAdventure";
 import { normalizeGearGrade } from "./systems/gearCraft";
 import { legacyGearRank5ToRank9 } from "./ui/gearVisualTier";
+import { normalizeEstateCommissionState } from "./systems/estateCommission";
 
 type VeinSave = GameState["vein"];
 type SkillsSave = GameState["skills"];
@@ -143,6 +144,7 @@ export interface SerializedState {
   spiritReservoirStored?: string;
   dailyFortune?: GameState["dailyFortune"];
   offlineAdventure?: GameState["offlineAdventure"];
+  estateCommission?: GameState["estateCommission"];
   spiritArrayLevel?: number;
   lastTunaMs?: number;
   vein?: VeinSave;
@@ -351,6 +353,19 @@ export function serialize(state: GameState): string {
           activeBoostMult: state.offlineAdventure.activeBoostMult,
         }
       : { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1 },
+    estateCommission: {
+      offer: state.estateCommission.offer ? { ...state.estateCommission.offer, reward: { ...state.estateCommission.offer.reward } } : null,
+      active: state.estateCommission.active
+        ? {
+            ...state.estateCommission.active,
+            offer: {
+              ...state.estateCommission.active.offer,
+              reward: { ...state.estateCommission.active.offer.reward },
+            },
+          }
+        : null,
+      refreshCount: state.estateCommission.refreshCount,
+    },
     spiritArrayLevel: state.spiritArrayLevel,
     lastTunaMs: state.lastTunaMs,
     vein: { ...state.vein },
@@ -529,6 +544,18 @@ export function deserialize(json: string): GameState {
   } else {
     st.offlineAdventure = { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1 };
   }
+  normalizeOfflineAdventureState(st, Date.now());
+  if (data.estateCommission && typeof data.estateCommission === "object") {
+    st.estateCommission = {
+      offer: data.estateCommission.offer ?? null,
+      active: data.estateCommission.active ?? null,
+      refreshCount:
+        data.estateCommission.refreshCount != null && Number.isFinite(data.estateCommission.refreshCount)
+          ? Math.max(0, Math.floor(data.estateCommission.refreshCount))
+          : 0,
+    };
+  }
+  normalizeEstateCommissionState(st, Date.now());
   if (data.spiritArrayLevel != null && Number.isFinite(data.spiritArrayLevel)) {
     st.spiritArrayLevel = Math.floor(data.spiritArrayLevel);
   }
@@ -829,6 +856,7 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.autoSalvageAccumSec = 0;
   st.autoGearForge = false;
   st.autoBossChallenge = false;
+  st.estateCommission = { offer: null, active: null, refreshCount: 0 };
   st.trueEndingSeen = false;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 };
   st.pullsThisLife = 0;

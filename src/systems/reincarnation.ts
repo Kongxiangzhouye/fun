@@ -4,6 +4,7 @@ import { REINCARNATION_REALM_REQ, DECK_SIZE } from "../types";
 import { reseedRng } from "../rng";
 import { emptyDungeon } from "../state";
 import { playerMaxHp } from "./playerCombat";
+import { createEmptyEstateCommissionState } from "./estateCommission";
 
 export function canReincarnate(state: GameState): boolean {
   return state.realmLevel >= REINCARNATION_REALM_REQ;
@@ -83,6 +84,11 @@ export function performReincarnate(state: GameState): void {
   state.dungeonSanctuaryMode = false;
   state.dungeonPortalTargetWave = 0;
   state.dungeonDeferBoss = true;
+  // 轮回净化：离线奇遇与委托状态必须回到初始，避免旧档残留影响新周目。
+  state.offlineAdventure.pending = null;
+  state.offlineAdventure.activeBoostUntilMs = 0;
+  state.offlineAdventure.activeBoostMult = 1;
+  state.estateCommission = createEmptyEstateCommissionState();
   reseedRng(state);
 }
 

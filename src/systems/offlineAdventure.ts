@@ -106,3 +106,23 @@ export function offlineAdventureBoostLeftMs(state: GameState, now: number): numb
   if (!oa) return 0;
   return Math.max(0, oa.activeBoostUntilMs - now);
 }
+
+export function normalizeOfflineAdventureState(state: GameState, now: number): void {
+  const oa = state.offlineAdventure;
+  if (!oa) {
+    state.offlineAdventure = { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1 };
+    return;
+  }
+  if (!Number.isFinite(oa.activeBoostUntilMs)) oa.activeBoostUntilMs = 0;
+  if (!Number.isFinite(oa.activeBoostMult) || oa.activeBoostMult < 1) oa.activeBoostMult = 1;
+  if (oa.activeBoostUntilMs <= now) {
+    oa.activeBoostUntilMs = 0;
+    oa.activeBoostMult = 1;
+  }
+  if (!oa.pending) return;
+  const p = oa.pending;
+  if (!Number.isFinite(p.triggeredAtMs) || !Number.isFinite(p.settledSec) || !Array.isArray(p.options) || p.options.length !== 3) {
+    oa.pending = null;
+    return;
+  }
+}

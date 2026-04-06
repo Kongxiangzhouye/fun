@@ -5,8 +5,9 @@ import { playerMaxHp } from "./systems/playerCombat";
 import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
+import { createEmptyEstateCommissionState } from "./systems/estateCommission";
 
-export const SAVE_VERSION = 46;
+export const SAVE_VERSION = 47;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -189,6 +190,7 @@ export function createInitialState(): GameState {
       activeBoostUntilMs: 0,
       activeBoostMult: 1,
     },
+    estateCommission: createEmptyEstateCommissionState(),
     spiritArrayLevel: 0,
     daoMeridian: 0,
     pullChronicle: [],

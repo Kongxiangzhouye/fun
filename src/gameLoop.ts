@@ -20,6 +20,7 @@ import { ensureCelestialStashWeek } from "./systems/celestialStash";
 import { tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
 import { tickDailyFortune } from "./systems/dailyFortune";
 import { spiritReservoirUnlocked, tickSpiritReservoir } from "./systems/spiritReservoir";
+import { tickEstateCommission } from "./systems/estateCommission";
 
 const TICK_MAX_DT = 120;
 const OFFLINE_RESONANCE_GAIN_MULT = 0.28;
@@ -93,6 +94,22 @@ function tryAutoBossChallenge(state: GameState, now: number): void {
   requestBossChallenge(state);
 }
 
+type AutoSchedulerKey = "realm" | "tuna" | "gacha" | "forge" | "boss";
+
+const AUTO_SCHEDULERS: Record<AutoSchedulerKey, (state: GameState, now: number) => void> = {
+  realm: tryAutoRealm,
+  tuna: tryAutoTuna,
+  gacha: tryAutoGacha,
+  forge: tryAutoGearForge,
+  boss: tryAutoBossChallenge,
+};
+
+function runAutoSchedulers(state: GameState, now: number): void {
+  for (const key of ["realm", "tuna", "gacha", "forge", "boss"] as const) {
+    AUTO_SCHEDULERS[key](state, now);
+  }
+}
+
 /** 系统时间回调：时间倒流不扣资源（见设计案 §B） */
 export function applyTick(state: GameState, now: number): void {
   if (now < state.lastTick) {
@@ -115,14 +132,11 @@ export function applyTick(state: GameState, now: number): void {
   tickSkillTraining(state, dt);
   tickCombatHpRegen(state, dt);
   tickDungeon(state, dt, tickNow);
+  tickEstateCommission(state, tickNow);
   const ips = incomePerSecond(state, totalCardsInPool());
   if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips);
   addStones(state, ips.mul(dt));
-  tryAutoRealm(state, tickNow);
-  tryAutoTuna(state, tickNow);
-  tryAutoGacha(state, tickNow);
-  tryAutoGearForge(state, tickNow);
-  tryAutoBossChallenge(state, tickNow);
+  runAutoSchedulers(state, tickNow);
   if (state.autoSalvageAccumSec == null || !Number.isFinite(state.autoSalvageAccumSec)) state.autoSalvageAccumSec = 0;
   state.autoSalvageAccumSec += dt;
   if (state.autoSalvageAccumSec >= 2.5) {

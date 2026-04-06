@@ -148,6 +148,37 @@ export interface OfflineAdventureState {
   activeBoostMult: number;
 }
 
+export type EstateCommissionType = "resource" | "combat" | "cultivation";
+
+export interface EstateCommissionReward {
+  spiritStones: string;
+  summonEssence: number;
+  zhuLingEssence: number;
+}
+
+export interface EstateCommissionOffer {
+  id: string;
+  type: EstateCommissionType;
+  title: string;
+  desc: string;
+  durationSec: number;
+  reward: EstateCommissionReward;
+}
+
+export interface EstateCommissionActive {
+  offer: EstateCommissionOffer;
+  acceptedAtMs: number;
+  dueAtMs: number;
+  completedAtMs: number | null;
+}
+
+/** 洞府委托：单次仅允许 1 个活动委托 */
+export interface EstateCommissionState {
+  offer: EstateCommissionOffer | null;
+  active: EstateCommissionActive | null;
+  refreshCount: number;
+}
+
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */
 export type GearStatKey =
   | "life_flat"
@@ -579,6 +610,9 @@ export interface GameState {
 
   /** 离线奇遇（二选一 + 限时挂机增益） */
   offlineAdventure: OfflineAdventureState;
+
+  /** 洞府委托（离线可结算） */
+  estateCommission: EstateCommissionState;
 
   /**
    * 纳灵阵图等级（灵府；轮回不重置）：提升全局灵石收益乘区

@@ -3908,6 +3908,26 @@ h1 {
   margin-bottom: 5px;
 }
 
+.estate-commission-panel .estate-commission-card {
+  border: 1px solid color-mix(in srgb, var(--line) 75%, #7bd0ff 25%);
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 86%, #203341 14%), var(--panel));
+}
+
+.estate-commission-panel .estate-commission-card.is-ready {
+  border-color: color-mix(in srgb, var(--line) 45%, #9be7bf 55%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, #9be7bf 28%, transparent);
+}
+
+.estate-commission-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
 @media (max-width: 768px) {
   .offline-choice-grid,
   .income-guide-cards,

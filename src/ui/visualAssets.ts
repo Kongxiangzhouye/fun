@@ -508,6 +508,12 @@ export const UI_HEAD_SPIRIT_RESERVOIR = asset(FEATURE_PAGE_HEADS_UI_FILES.spirit
 export const UI_HEAD_DAILY_FORTUNE = asset(FEATURE_PAGE_HEADS_UI_FILES.dailyFortune);
 /** 纳灵阵图（灵府）标题装饰 */
 export const UI_HEAD_SPIRIT_ARRAY = asset(FEATURE_PAGE_HEADS_UI_FILES.spiritArray);
+/** 洞府委托 · 资源类图标 */
+export const UI_ESTATE_COMMISSION_RESOURCE = asset("icon-estate-commission-resource.svg");
+/** 洞府委托 · 战斗类图标 */
+export const UI_ESTATE_COMMISSION_COMBAT = asset("icon-estate-commission-combat.svg");
+/** 洞府委托 · 养成类图标 */
+export const UI_ESTATE_COMMISSION_CULTIVATION = asset("icon-estate-commission-cultivation.svg");
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);
