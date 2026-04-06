@@ -2,7 +2,6 @@ import type { GameState } from "../types";
 import {
   WEEKLY_BOUNTY_TASKS,
   weeklyBountyProgress,
-  currentWeekKey,
   ensureWeeklyBountyWeek,
   weeklyBountyFeedbackState,
   weeklyBountyTaskState,
@@ -23,6 +22,7 @@ import {
   UI_BOUNTY_WAVES_FOCUS_BADGE,
   UI_BOUNTY_SURGE_BADGE,
   UI_BOUNTY_CLAIM_ECHO_BADGE,
+  UI_BOUNTY_LAST_DAY_ALERT_BADGE,
   UI_HEAD_BOUNTY,
 } from "./visualAssets";
 
@@ -52,7 +52,8 @@ function bountyTaskView(taskState: ReturnType<typeof weeklyBountyTaskState>): {
 
 export function renderBountyPanel(state: GameState, now: number): string {
   ensureWeeklyBountyWeek(state, now);
-  const wk = currentWeekKey(now);
+  const wk = state.weeklyBounty.weekKey;
+  const isLastDayOfWeek = new Date(now).getDay() === 0;
   const fb = weeklyBountyFeedbackState(state, now);
   const claimableN = fb.claimable;
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
@@ -87,7 +88,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
         <h2>周常悬赏</h2>
       </div>
       <p class="hint">每周一（本地时间）刷新进度与领取状态。完成条目可领取灵石与唤灵髓。</p>
-      <p class="hint sm bounty-week-line"><img class="bounty-week-focus-ico" src="${UI_BOUNTY_WAVES_FOCUS_BADGE}" alt="" width="16" height="16" loading="lazy" />当前周次：<strong>${wk}</strong></p>
+      <p class="hint sm bounty-week-line"><img class="bounty-week-focus-ico" src="${UI_BOUNTY_WAVES_FOCUS_BADGE}" alt="" width="16" height="16" loading="lazy" />当前周次：<strong>${wk}</strong>${isLastDayOfWeek ? `<img class="bounty-last-day-alert-badge" src="${UI_BOUNTY_LAST_DAY_ALERT_BADGE}" alt="本周最后一天提示" width="18" height="18" loading="lazy" />` : ""}</p>
       <div class="bounty-feedback-row">
         <span class="bounty-feedback-pill">
           <img class="bounty-feedback-ico" src="${UI_BOUNTY_PENDING_BADGE}" alt="" width="18" height="18" loading="lazy" />
@@ -123,7 +124,22 @@ export function renderBountyPanel(state: GameState, now: number): string {
 export function updateBountyPanelReadouts(state: GameState, now: number): void {
   ensureWeeklyBountyWeek(state, now);
   const wkEl = document.querySelector(".bounty-week-line strong");
-  if (wkEl) wkEl.textContent = currentWeekKey(now);
+  if (wkEl) wkEl.textContent = state.weeklyBounty.weekKey;
+  const weekLineEl = document.querySelector(".bounty-week-line");
+  const shouldShowLastDayBadge = new Date(now).getDay() === 0;
+  const existingLastDayBadge = weekLineEl?.querySelector(".bounty-last-day-alert-badge") as HTMLImageElement | null;
+  if (weekLineEl && shouldShowLastDayBadge && !existingLastDayBadge) {
+    const badge = document.createElement("img");
+    badge.className = "bounty-last-day-alert-badge";
+    badge.src = UI_BOUNTY_LAST_DAY_ALERT_BADGE;
+    badge.alt = "本周最后一天提示";
+    badge.width = 18;
+    badge.height = 18;
+    badge.loading = "lazy";
+    weekLineEl.appendChild(badge);
+  } else if (!shouldShowLastDayBadge && existingLastDayBadge) {
+    existingLastDayBadge.remove();
+  }
   const claimAllBtn = document.getElementById("btn-bounty-claim-all") as HTMLButtonElement | null;
   const claimAllLbl = document.getElementById("bounty-claim-all-lbl");
   const fb = weeklyBountyFeedbackState(state, now);

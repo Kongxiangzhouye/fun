@@ -1378,7 +1378,7 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
   if (clearedWave % 5 === 0) {
     state.dungeonDeferBoss = true;
   }
-  spawnMobsForWave(state);
+  spawnMobsForWave(state, now);
   d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
 }
 
@@ -1428,9 +1428,8 @@ function randomEl(state: GameState): Element {
   return EL_LIST[Math.floor(nextRand01(state) * EL_LIST.length)]!;
 }
 
-function spawnMobsForWave(state: GameState): void {
+function spawnMobsForWave(state: GameState, now: number = Date.now()): void {
   const d = state.dungeon;
-  const now = Date.now();
   const ck = d.waveCheckpoint[d.wave];
   if (ck && ck.mobs.some((m) => m.hp > 0) && ck.mapW === 0) {
     restoreWaveFromCheckpoint(state, ck);
@@ -1517,7 +1516,7 @@ export function requestBossChallenge(state: GameState): void {
   d.packKilled = 0;
   d.essenceThisWave = 0;
   d.essenceRemainder = 0;
-  spawnMobsForWave(state);
+  spawnMobsForWave(state, Date.now());
 }
 
 /** 幻域阶段统一口径：普通清剿 / 首领前哨 / 首领战 */
@@ -1607,7 +1606,7 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   d.playerLastMoveNy = 0;
   damageFloatQueue.length = 0;
   resetDamageFloatAccum();
-  spawnMobsForWave(state);
+  spawnMobsForWave(state, now);
   d.dodgeIframesUntil = now + WAVE_START_GRACE_MS;
   return true;
 }
@@ -1666,7 +1665,7 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
 
   if (d.interWaveCooldownUntil > 0 && now >= d.interWaveCooldownUntil && d.mobs.length === 0) {
     d.interWaveCooldownUntil = 0;
-    spawnMobsForWave(state);
+    spawnMobsForWave(state, now);
     d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
   }
 

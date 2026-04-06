@@ -271,7 +271,7 @@ import {
   petDungeonDefenseFlat,
   petEssenceFindMult,
 } from "./systems/pets";
-import { getDungeonAffixForNow, playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
+import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
 import { elementDamageMultiplier } from "./systems/elementCombat";
 import { playerBattleElement } from "./systems/playerElement";
 import { pullPet } from "./systems/petGacha";
@@ -416,8 +416,16 @@ let duelWeaknessPingAtMs = 0;
 let duelHitFlashAtMs = 0;
 let lastDuelFloatShownAtMs = 0;
 let lastDuelSpecialShownAtMs = 0;
-const DUEL_FLOAT_NOISE_GAP_MS = 58;
-const DUEL_SPECIAL_GAP_MS = 210;
+let lastDuelHitShownAtMs = 0;
+let lastDuelCritShownAtMs = 0;
+let lastDuelWeakShownAtMs = 0;
+let lastDuelMissShownAtMs = 0;
+const DUEL_FLOAT_NOISE_GAP_MS = 92;
+const DUEL_SPECIAL_GAP_MS = 260;
+const DUEL_HIT_FLOAT_GAP_MS = 120;
+const DUEL_CRIT_FLOAT_GAP_MS = 200;
+const DUEL_WEAK_FLOAT_GAP_MS = 300;
+const DUEL_MISS_FLOAT_GAP_MS = 150;
 const reducedMotionQuery =
   typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 let prefersReducedMotion = reducedMotionQuery?.matches ?? false;
@@ -2742,6 +2750,7 @@ function renderHubContent(
 function render(): void {
   const app = document.getElementById("app");
   if (!app) return;
+  ensureWeeklyBountyWeek(state, nowMs());
 
   if (activeHub !== "battle") {
     document.getElementById("battle-gear-overlay")?.remove();
@@ -4744,18 +4753,28 @@ function loop(): void {
         const special = f.cls === "dmg-special";
         const isWeak = f.text === "破绽" || f.text === "弱点";
         const isCrit = f.cls === "dmg-out-crit" || f.text === "暴击";
+        const isHit = f.cls === "dmg-out" || f.cls === "dmg-out-crit";
+        const isMiss = f.cls === "dmg-miss";
         if (state.dungeon.active && !prefersReducedMotion) {
           if (special && !isWeak && fxNow - lastDuelSpecialShownAtMs < DUEL_SPECIAL_GAP_MS) continue;
           if (!special && fxNow - lastDuelFloatShownAtMs < DUEL_FLOAT_NOISE_GAP_MS) continue;
+          if (isWeak && fxNow - lastDuelWeakShownAtMs < DUEL_WEAK_FLOAT_GAP_MS) continue;
+          if (isCrit && fxNow - lastDuelCritShownAtMs < DUEL_CRIT_FLOAT_GAP_MS) continue;
+          if (isHit && fxNow - lastDuelHitShownAtMs < DUEL_HIT_FLOAT_GAP_MS) continue;
+          if (isMiss && fxNow - lastDuelMissShownAtMs < DUEL_MISS_FLOAT_GAP_MS) continue;
         }
         if (state.dungeon.active) {
-          if (f.cls === "dmg-out" || f.cls === "dmg-out-crit") duelHitFlashAtMs = fxNow;
+          if (isHit) duelHitFlashAtMs = fxNow;
           if (isCrit) duelCritBurstAtMs = fxNow;
           if (isWeak) {
             duelGuardBreakAtMs = fxNow;
             duelWeaknessPingAtMs = fxNow;
           }
         }
+        if (isWeak) lastDuelWeakShownAtMs = fxNow;
+        if (isCrit) lastDuelCritShownAtMs = fxNow;
+        if (isHit) lastDuelHitShownAtMs = fxNow;
+        if (isMiss) lastDuelMissShownAtMs = fxNow;
         if (special) lastDuelSpecialShownAtMs = fxNow;
         else lastDuelFloatShownAtMs = fxNow;
         const el = document.createElement("span");
@@ -4995,6 +5014,7 @@ function loop(): void {
       const comboPill = document.getElementById("duel-combo-pill");
       const tierEl = document.getElementById("duel-combo-tier");
       const weakPill = document.getElementById("duel-weak-pill");
+      const weakWindowBadge = document.getElementById("dungeon-duel-counter-window-badge");
       const fervPct = document.getElementById("duel-fervor-pct");
       if (comboPill) comboPill.textContent = `连击 ${d.duelComboStacks}`;
       if (tierEl) {
@@ -5009,6 +5029,7 @@ function loop(): void {
         );
       }
       if (weakPill) weakPill.hidden = now >= d.duelWeakUntilMs;
+      if (weakWindowBadge) weakWindowBadge.classList.toggle("is-on", now < d.duelWeakUntilMs);
       if (fervPct) fervPct.textContent = String(Math.min(100, Math.floor(d.duelFervor)));
       const atkSpd = playerDungeonAttackSpeedMult(state);
       const playerHitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
@@ -5116,7 +5137,7 @@ function loop(): void {
         (d.mobs.some((m) => m.hp > 0) || d.mobs.length === 0);
       phaseCta.hidden = !showPhaseCta;
     }
-    const affix = getDungeonAffixForNow(now);
+    const affix = getDungeonAffixForWeekKey(state.weeklyBounty.weekKey);
     const affixTitle = document.getElementById("dungeon-affix-title");
     const affixDesc = document.getElementById("dungeon-affix-desc");
     const affixWeek = document.getElementById("dungeon-affix-week");
@@ -5147,7 +5168,7 @@ function loop(): void {
     }
     const idleWave = document.getElementById("dungeon-idle-readiness-wave");
     if (idleWave) idleWave.textContent = String(Math.max(1, d.entryWave));
-    const affix = getDungeonAffixForNow(now);
+    const affix = getDungeonAffixForWeekKey(state.weeklyBounty.weekKey);
     const affixTitle = document.getElementById("dungeon-affix-title");
     const affixDesc = document.getElementById("dungeon-affix-desc");
     const affixWeek = document.getElementById("dungeon-affix-week");

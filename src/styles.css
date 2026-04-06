@@ -5675,6 +5675,20 @@ html.ui-reduce-motion *::after {
   pointer-events: none;
 }
 
+.dungeon-duel-counter-window-badge {
+  display: block;
+  height: auto;
+  opacity: 0.46;
+  transform: translateY(1px) scale(0.96);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  filter: drop-shadow(0 0 8px rgba(133, 206, 255, 0.24));
+}
+
+.dungeon-duel-counter-window-badge.is-on {
+  opacity: 0.98;
+  transform: translateY(0) scale(1);
+}
+
 .dungeon-duel-combo-chain-deco {
   display: block;
   width: 120px;
@@ -8058,6 +8072,12 @@ p.gear-forge-tier-hint {
 .bounty-week-focus-ico {
   flex-shrink: 0;
   opacity: 0.94;
+}
+
+.bounty-last-day-alert-badge {
+  flex-shrink: 0;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 6px rgba(255, 165, 110, 0.36));
 }
 
 .bounty-feedback-row {

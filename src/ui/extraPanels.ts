@@ -20,7 +20,7 @@ import {
   playerDungeonAttackSpeedMult,
   playerMaxHp,
 } from "../systems/playerCombat";
-import { getDungeonAffixForNow, playerExpectedDpsDungeonAffix } from "../systems/dungeonAffix";
+import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "../systems/dungeonAffix";
 import { elementDamageMultiplier } from "../systems/elementCombat";
 import { playerBattleElement } from "../systems/playerElement";
 import { currentWeekKey } from "../systems/weeklyBounty";
@@ -65,6 +65,7 @@ import {
   UI_DUNGEON_AFFIX_DECO,
   UI_DUNGEON_AFFIX_CLASSIC_DECO,
   UI_DUNGEON_AFFIX_VORTEX_DECO,
+  UI_DUNGEON_COUNTER_WINDOW_BADGE_DECO,
   UI_DUNGEON_REALM_CLASSIC_FRAME_DECO,
   UI_DUNGEON_REALM_VORTEX_FRAME_DECO,
   ELEMENT_ICON,
@@ -280,6 +281,7 @@ function renderDungeonMapHtml(state: GameState): string {
             <img class="dungeon-duel-deco" src="${UI_DUNGEON_DUEL_DECO}" alt="" width="100" height="100" loading="lazy" />
           </div>
           <div class="dungeon-duel-momentum" id="dungeon-duel-momentum" aria-live="polite">
+            <img class="dungeon-duel-counter-window-badge" id="dungeon-duel-counter-window-badge" src="${UI_DUNGEON_COUNTER_WINDOW_BADGE_DECO}" alt="" width="96" height="22" loading="lazy" />
             <img class="dungeon-duel-combo-chain-deco" id="dungeon-duel-combo-chain-deco" src="${UI_DUNGEON_COMBO_CHAIN_DECO}" alt="" width="120" height="24" loading="lazy" />
             <span class="duel-mom-pill duel-mom-pill--tier" id="duel-combo-tier">蓄势</span>
             <span class="duel-mom-pill" id="duel-combo-pill">连击 0</span>
@@ -401,7 +403,8 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
   const cd = Math.max(0, d.deathCooldownUntil - now);
   const canEnter = canEnterDungeon(state, now);
   const edps = playerExpectedDpsDungeonAffix(state, now);
-  const affix = getDungeonAffixForNow(now);
+  const weekLine = state.weeklyBounty?.weekKey || currentWeekKey(now);
+  const affix = getDungeonAffixForWeekKey(weekLine);
   const isVortexAffix = affix.id === "storm_sigil" || affix.id === "iron_march";
   const affixFrameSrc = isVortexAffix
     ? UI_DUNGEON_REALM_VORTEX_FRAME_DECO
@@ -409,7 +412,6 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
   const affixModeDecoSrc = isVortexAffix
     ? UI_DUNGEON_AFFIX_VORTEX_DECO
     : UI_DUNGEON_AFFIX_CLASSIC_DECO;
-  const weekLine = currentWeekKey(now);
   const pmax = playerMaxHp(state);
   const chp = state.combatHpCurrent;
   const chpPctGlobal = pmax > 0 ? Math.min(100, (100 * Math.max(0, chp)) / pmax) : 0;
