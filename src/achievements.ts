@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系等） */
-  listDeco?: "forge" | "train";
+  listDeco?: "forge" | "train" | "dungeon";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -133,6 +133,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "在幻域副本中累计击溃 40 波",
     rewardStones: 350,
     rewardEssence: 50,
+    listDeco: "dungeon",
+  },
+  {
+    id: "dungeon_waves_100",
+    title: "百波斩魔",
+    desc: "在幻域累计击溃 100 波",
+    rewardStones: 1200,
+    rewardEssence: 95,
+    listDeco: "dungeon",
   },
   {
     id: "pet_first_feed",
@@ -316,6 +325,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.reincarnations >= 5;
     case "streak_7":
       return state.dungeon.totalWavesCleared >= 40;
+    case "dungeon_waves_100":
+      return state.dungeon.totalWavesCleared >= 100;
     case "pet_first_feed":
       return anyPetOwned(state);
     case "garden_first_harvest":

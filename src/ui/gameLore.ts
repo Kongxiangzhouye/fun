@@ -2,6 +2,7 @@
  * 面向玩家的说明文：收纳于「万象图鉴 → 修行札记」，避免主界面堆砌。
  */
 import { REINCARNATION_REALM_REQ } from "../types";
+import { UI_LORE_THREE_ARTS } from "./visualAssets";
 
 export function renderGameLoreHtml(): string {
   return `
@@ -56,6 +57,17 @@ export function renderGameLoreHtml(): string {
       <details class="game-lore-block">
         <summary>聚灵共鸣</summary>
         <p class="hint sm">共鸣度随<strong>游戏时间</strong>自动涨（与当前页签无关），<strong>不可点击</strong>；满百得 <strong>唤灵髓 +1</strong>，无次数上限。<strong>在线、离线追赶、闭关预演</strong>均按同公式累积。法篆与洞府「共鸣」可略加快涨速（叠乘）。</p>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_THREE_ARTS}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 挂机修炼（三艺）</summary>
+        <ul class="game-lore-list">
+          <li>同一时间仅<strong>一条</strong>技能获得经验；在修炼页切换<strong>战艺 / 采灵 / 法篆</strong>。</li>
+          <li><strong>战艺</strong>：影响幻域攻防、生命与相关节奏（详见「角色」心法与属性）。</li>
+          <li><strong>采灵</strong>：略增灵石向收益。</li>
+          <li><strong>法篆</strong>：略加快聚灵共鸣累积（与洞府「共鸣」叠乘）。</li>
+          <li>三线等级均达到较高阶段时，功业录中另有对应嘉奖。</li>
+        </ul>
       </details>
 
       <details class="game-lore-block">
