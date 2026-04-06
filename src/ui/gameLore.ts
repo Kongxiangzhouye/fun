@@ -16,6 +16,7 @@ import {
   UI_LORE_ELEMENTS,
   UI_LORE_PET,
   UI_LORE_META,
+  UI_LORE_DAO_MERIDIAN,
   UI_RESONANCE_CORE,
 } from "./visualAssets";
 
@@ -189,6 +190,20 @@ export function renderGameLoreHtml(): string {
           <li><strong>灵石心印</strong>：每级灵石获取 +6%。</li>
           <li>除「额外槽位」外，各条目最高可升至 <strong>20</strong> 级；花费道韵随等级递增。</li>
           <li><strong>造化玉</strong>：与道韵不同，用于「角色」等处解锁便利功能（如十连、自动抽卡等），多来自成就等。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_DAO_MERIDIAN}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 道韵灵窍</summary>
+        <ul class="game-lore-list">
+          <li><strong>入口</strong>：「角色」→ 道韵灵窍（解锁后可见）。解锁条件与「功能解锁一览」中<strong>道韵灵窍</strong>条目一致。</li>
+          <li>共 <strong>5</strong> 重，依次消耗道韵点亮；下一重花费为 <strong>18 / 36 / 54 / 72 / 96</strong>（已满则不再显示）。</li>
+          <li><strong>汇灵窍</strong>：灵石挂机收益提升。</li>
+          <li><strong>淬髓窍</strong>：幻域唤灵髓收益提升。</li>
+          <li><strong>缘法窍</strong>：唤引时高稀有倾向微量提升。</li>
+          <li><strong>固本窍</strong>：生命上限提升。</li>
+          <li><strong>战意窍</strong>：幻域内攻击提升。</li>
+          <li>各重效果与面板数值一致，并与其它乘区<strong>叠乘</strong>；灵窍进度<strong>跨轮回保留</strong>。</li>
         </ul>
       </details>
     </div>`;
