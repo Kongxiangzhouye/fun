@@ -250,6 +250,13 @@ export function settleEstateCommission(state: GameState, now: number): EstateCom
   return { autoQueued, autoQueueReason, nextOfferType, nextOfferTitle };
 }
 
+export function tryAutoSettleEstateCommission(state: GameState, now: number): EstateCommissionSettleResult | null {
+  if (!state.estateCommission?.autoQueueEnabled) return null;
+  const active = state.estateCommission.active;
+  if (!active || active.completedAtMs == null) return null;
+  return settleEstateCommission(state, now);
+}
+
 export function abandonEstateCommission(state: GameState, now: number): boolean {
   if (!state.estateCommission?.active) return false;
   state.estateCommission.active = null;

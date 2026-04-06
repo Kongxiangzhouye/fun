@@ -3727,6 +3727,48 @@ h1 {
   gap: 8px;
 }
 
+.offline-auto-config {
+  display: grid;
+  gap: 6px;
+  padding: 8px 9px;
+  border-radius: 10px;
+  border: 1px solid rgba(114, 158, 232, 0.26);
+  background: linear-gradient(165deg, rgba(22, 35, 62, 0.46), rgba(15, 23, 41, 0.7));
+}
+
+.offline-auto-config-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.offline-auto-config-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.offline-auto-strategy-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.offline-auto-strategy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.offline-auto-policy-line,
+.offline-auto-tip-line {
+  margin: 0;
+}
+
 .offline-reroll-hint {
   display: inline-flex;
   align-items: center;
@@ -4058,6 +4100,14 @@ h1 {
 }
 
 .estate-commission-auto-tip {
+  margin: 0 0 8px;
+}
+
+.estate-commission-auto-state-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
   margin: 0 0 8px;
 }
 

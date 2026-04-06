@@ -21,6 +21,9 @@ import {
   UI_OFFLINE_REROLL_LOCKED,
   UI_OFFLINE_REROLL_COST,
   UI_OFFLINE_READOUT_SYNC,
+  UI_OFFLINE_AUTO_STRATEGY_STEADY,
+  UI_OFFLINE_AUTO_STRATEGY_BOOST,
+  UI_OFFLINE_AUTO_STRATEGY_STATUS,
   UI_OFFLINE_RESONANCE_NEXT_STACK,
   UI_OFFLINE_RESONANCE_NEXT_BONUS,
   UI_TIME_SEMANTIC_LIVE,
@@ -56,6 +59,12 @@ interface OfflineAdventurePanelModel {
   nextInstantLine: string;
   nextBoostLine: string;
   nextEssenceLine: string;
+  autoPolicyLabel: string;
+  autoStatusLabel: string;
+  autoStatusClass: "status-badge--ready" | "status-badge--pending";
+  autoTipLine: string;
+  autoPolicyEnabled: boolean;
+  autoPolicy: "steady" | "boost";
 }
 
 function buildOfflineAdventurePanelModel(
@@ -87,6 +96,19 @@ function buildOfflineAdventurePanelModel(
   const essenceDesc = pending
     ? `唤灵髓 +${pending.options[2].instantEssence}，筑灵髓 +${pending.options[2].zhuLingBonus ?? 0}（无灵石、无挂机增益）。`
     : "离线达到阈值后可选择双髓补给。";
+  const autoPolicyEnabled = !!state.offlineAdventure.autoPolicyEnabled;
+  const autoPolicy = state.offlineAdventure.autoPolicy === "boost" ? "boost" : "steady";
+  const autoPolicyLabel = `自动结算：${autoPolicyEnabled ? "开启" : "关闭"} · 当前策略：${
+    autoPolicy === "boost" ? "增益优先" : "稳态优先"
+  }`;
+  const autoStatusLabel = autoPolicyEnabled ? (pending ? "自动结算待执行" : "自动结算待命") : "自动结算关闭";
+  const autoStatusClass: "status-badge--ready" | "status-badge--pending" =
+    autoPolicyEnabled && pending ? "status-badge--ready" : "status-badge--pending";
+  const autoTipLine = autoPolicyEnabled
+    ? pending
+      ? "检测到待结算奇遇，将按当前策略自动结算。"
+      : "当前无待结算奇遇，下一次离线触发后将自动结算。"
+    : "点击下方策略按钮可开启自动结算；再次点击当前策略可关闭。";
   return {
     pending,
     boostLeftMs,
@@ -109,6 +131,12 @@ function buildOfflineAdventurePanelModel(
     nextInstantLine: `${offlineResonanceTypeZh("instant")}·下一档 ${instantPreview.nextStacks} 层：${instantPreview.summary}`,
     nextBoostLine: `${offlineResonanceTypeZh("boost")}·下一档 ${boostPreview.nextStacks} 层：${boostPreview.summary}`,
     nextEssenceLine: `${offlineResonanceTypeZh("essence")}·下一档 ${essencePreview.nextStacks} 层：${essencePreview.summary}`,
+    autoPolicyLabel,
+    autoStatusLabel,
+    autoStatusClass,
+    autoTipLine,
+    autoPolicyEnabled,
+    autoPolicy,
   };
 }
 
@@ -144,6 +172,27 @@ export function renderOfflineAdventurePanel(
         </p>
       </div>
       <p class="hint sm offline-boost-rule-line" id="offline-boost-rule-line"><img src="${UI_OFFLINE_READOUT_SYNC}" alt="" width="14" height="14" loading="lazy" />${offlineBoostRenewRuleText()}</p>
+      <div class="offline-auto-config" data-offline-auto-state="${vm.pending ? "ready" : "standby"}">
+        <div class="offline-auto-config-head">
+          <p class="hint sm offline-auto-config-title">
+            <img src="${UI_OFFLINE_AUTO_STRATEGY_STATUS}" alt="" width="14" height="14" loading="lazy" />
+            离线奇遇自动选择策略
+          </p>
+          <span class="status-badge ${vm.autoStatusClass}" id="offline-auto-status-badge">${vm.autoStatusLabel}</span>
+        </div>
+        <div class="offline-auto-strategy-row" role="group" aria-label="离线奇遇自动策略">
+          <button class="btn offline-auto-strategy-btn ${vm.autoPolicyEnabled && vm.autoPolicy === "steady" ? "btn-primary" : ""}" type="button" data-offline-auto-strategy="steady">
+            <img src="${UI_OFFLINE_AUTO_STRATEGY_STEADY}" alt="" width="14" height="14" loading="lazy" />
+            稳态优先
+          </button>
+          <button class="btn offline-auto-strategy-btn ${vm.autoPolicyEnabled && vm.autoPolicy === "boost" ? "btn-primary" : ""}" type="button" data-offline-auto-strategy="boost">
+            <img src="${UI_OFFLINE_AUTO_STRATEGY_BOOST}" alt="" width="14" height="14" loading="lazy" />
+            增益优先
+          </button>
+        </div>
+        <p class="hint sm offline-auto-policy-line" id="offline-auto-policy-line">${vm.autoPolicyLabel}</p>
+        <p class="hint sm offline-auto-tip-line" id="offline-auto-tip-line">${vm.autoTipLine}</p>
+      </div>
       <div class="offline-reroll-row">
         <span class="hint sm offline-reroll-hint" id="offline-reroll-hint">
           <img src="${UI_OFFLINE_REROLL_COST}" alt="" width="14" height="14" loading="lazy" />
@@ -285,6 +334,22 @@ export function updateOfflineAdventurePanelReadouts(
   const nextInstant = document.getElementById("offline-resonance-next-instant");
   const nextBoost = document.getElementById("offline-resonance-next-boost");
   const nextEssence = document.getElementById("offline-resonance-next-essence");
+  const autoStatusBadge = document.getElementById("offline-auto-status-badge");
+  const autoPolicyLine = document.getElementById("offline-auto-policy-line");
+  const autoTipLine = document.getElementById("offline-auto-tip-line");
+  const autoBtns = document.querySelectorAll("[data-offline-auto-strategy]");
+  autoBtns.forEach((btn) => {
+    const strategy = (btn as HTMLElement).dataset.offlineAutoStrategy;
+    const shouldActive = vm.autoPolicyEnabled && strategy === vm.autoPolicy;
+    btn.classList.toggle("btn-primary", shouldActive);
+  });
+  if (autoStatusBadge) {
+    autoStatusBadge.textContent = vm.autoStatusLabel;
+    autoStatusBadge.classList.toggle("status-badge--ready", vm.autoStatusClass === "status-badge--ready");
+    autoStatusBadge.classList.toggle("status-badge--pending", vm.autoStatusClass === "status-badge--pending");
+  }
+  if (autoPolicyLine) autoPolicyLine.textContent = vm.autoPolicyLabel;
+  if (autoTipLine) autoTipLine.textContent = vm.autoTipLine;
   if (nextInstant) {
     const t = nextInstant.querySelector("span");
     if (t) t.textContent = vm.nextInstantLine;

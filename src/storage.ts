@@ -361,8 +361,18 @@ export function serialize(state: GameState): string {
           activeBoostMult: state.offlineAdventure.activeBoostMult,
           resonanceType: state.offlineAdventure.resonanceType,
           resonanceStacks: state.offlineAdventure.resonanceStacks,
+          autoPolicyEnabled: state.offlineAdventure.autoPolicyEnabled,
+          autoPolicy: state.offlineAdventure.autoPolicy,
         }
-      : { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1, resonanceType: null, resonanceStacks: 0 },
+      : {
+          pending: null,
+          activeBoostUntilMs: 0,
+          activeBoostMult: 1,
+          resonanceType: null,
+          resonanceStacks: 0,
+          autoPolicyEnabled: false,
+          autoPolicy: "steady",
+        },
     estateCommission: {
       offer: state.estateCommission.offer ? { ...state.estateCommission.offer, reward: { ...state.estateCommission.offer.reward } } : null,
       active: state.estateCommission.active
@@ -592,9 +602,19 @@ export function deserialize(json: string): GameState {
         Number((oa as { resonanceStacks?: unknown }).resonanceStacks) >= 0
           ? Math.max(0, Math.floor(Number((oa as { resonanceStacks?: unknown }).resonanceStacks)))
           : 0,
+      autoPolicyEnabled: !!(oa as { autoPolicyEnabled?: unknown }).autoPolicyEnabled,
+      autoPolicy: (oa as { autoPolicy?: unknown }).autoPolicy === "boost" ? "boost" : "steady",
     };
   } else {
-    st.offlineAdventure = { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1, resonanceType: null, resonanceStacks: 0 };
+    st.offlineAdventure = {
+      pending: null,
+      activeBoostUntilMs: 0,
+      activeBoostMult: 1,
+      resonanceType: null,
+      resonanceStacks: 0,
+      autoPolicyEnabled: false,
+      autoPolicy: "steady",
+    };
   }
   normalizeOfflineAdventureState(st, Date.now());
   if (data.estateCommission && typeof data.estateCommission === "object") {

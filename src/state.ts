@@ -194,6 +194,8 @@ export function createInitialState(): GameState {
       activeBoostMult: 1,
       resonanceType: null,
       resonanceStacks: 0,
+      autoPolicyEnabled: false,
+      autoPolicy: "steady",
     },
     estateCommission: createEmptyEstateCommissionState(),
     spiritArrayLevel: 0,

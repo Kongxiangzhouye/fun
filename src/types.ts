@@ -160,6 +160,10 @@ export interface OfflineAdventureState {
   resonanceType: OfflineAdventureOptionState["id"] | null;
   /** 连选共鸣：连续选择同类型层数 */
   resonanceStacks: number;
+  /** 自动策略：为 true 时在有 pending 时自动结算 */
+  autoPolicyEnabled: boolean;
+  /** 自动策略偏好：稳态优先 / 增益优先 */
+  autoPolicy: "steady" | "boost";
 }
 
 export type EstateCommissionType = "resource" | "combat" | "cultivation";

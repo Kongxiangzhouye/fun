@@ -237,6 +237,31 @@ export function chooseOfflineAdventureOption(
   return true;
 }
 
+function autoPolicyPreferredOption(
+  state: GameState,
+): "instant" | "boost" {
+  return state.offlineAdventure.autoPolicy === "boost" ? "boost" : "instant";
+}
+
+export interface OfflineAdventureAutoSettleResult {
+  settled: boolean;
+  optionId: "instant" | "boost" | "essence" | null;
+}
+
+export function tryAutoSettleOfflineAdventurePending(
+  state: GameState,
+  now: number,
+): OfflineAdventureAutoSettleResult {
+  const pending = state.offlineAdventure.pending;
+  if (!state.offlineAdventure.autoPolicyEnabled || !pending) {
+    return { settled: false, optionId: null };
+  }
+  const preferred = autoPolicyPreferredOption(state);
+  const picked = pending.options.find((op) => op.id === preferred) ? preferred : "instant";
+  const ok = chooseOfflineAdventureOption(state, picked, now);
+  return { settled: ok, optionId: ok ? picked : null };
+}
+
 export function offlineAdventureBoostMult(state: GameState, now: number): number {
   const oa = state.offlineAdventure;
   if (!oa || oa.activeBoostUntilMs <= now) return 1;
@@ -258,6 +283,8 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
       activeBoostMult: 1,
       resonanceType: null,
       resonanceStacks: 0,
+      autoPolicyEnabled: false,
+      autoPolicy: "steady",
     };
     return;
   }
@@ -270,6 +297,8 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
   if (oa.resonanceType !== "instant" && oa.resonanceType !== "boost" && oa.resonanceType !== "essence") {
     oa.resonanceType = null;
   }
+  oa.autoPolicyEnabled = !!oa.autoPolicyEnabled;
+  if (oa.autoPolicy !== "steady" && oa.autoPolicy !== "boost") oa.autoPolicy = "steady";
   if (!Number.isFinite(oa.resonanceStacks) || oa.resonanceStacks < 0) oa.resonanceStacks = 0;
   oa.resonanceStacks = Math.max(0, Math.min(RESONANCE_STACK_CAP, Math.floor(oa.resonanceStacks)));
   if (!oa.pending) return;

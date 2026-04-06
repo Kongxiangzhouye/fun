@@ -566,6 +566,10 @@ export const UI_ESTATE_COMMISSION_AUTO_STRATEGY_ANY = asset("icon-estate-commiss
 export const UI_ESTATE_COMMISSION_AUTO_FEEDBACK = asset("icon-estate-commission-auto-feedback.svg");
 /** 洞府委托 · 托管下一单预览 */
 export const UI_ESTATE_COMMISSION_AUTO_NEXT = asset("icon-estate-commission-auto-next.svg");
+/** 洞府委托 · 自动续单状态（成功/运行） */
+export const UI_ESTATE_COMMISSION_AUTO_RENEW_ON = asset("icon-estate-commission-auto-renew-on.svg");
+/** 洞府委托 · 自动续单状态（关闭/受阻） */
+export const UI_ESTATE_COMMISSION_AUTO_RENEW_OFF = asset("icon-estate-commission-auto-renew-off.svg");
 /** 周常悬赏 · 状态快照徽记 */
 export const UI_WEEKLY_BOUNTY_STATE_SYNC = asset("icon-weekly-bounty-state-sync.svg");
 /** 闭关快进 · 触发离线奇遇提示 */
@@ -582,6 +586,12 @@ export const UI_TIME_SEMANTIC_LIVE = asset("icon-time-semantic-live.svg");
 export const UI_TIME_SEMANTIC_LOCKED = asset("icon-time-semantic-locked.svg");
 /** 离线奇遇 · 渲染与实时读数共用快照标记 */
 export const UI_OFFLINE_READOUT_SYNC = asset("offline-readout-sync.svg");
+/** 离线奇遇 · 自动选择策略（稳态优先） */
+export const UI_OFFLINE_AUTO_STRATEGY_STEADY = asset("offline-auto-strategy-steady.svg");
+/** 离线奇遇 · 自动选择策略（增益优先） */
+export const UI_OFFLINE_AUTO_STRATEGY_BOOST = asset("offline-auto-strategy-boost.svg");
+/** 离线奇遇 · 自动策略状态提示 */
+export const UI_OFFLINE_AUTO_STRATEGY_STATUS = asset("offline-auto-strategy-status.svg");
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);

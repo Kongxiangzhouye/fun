@@ -3,8 +3,13 @@ import { createInitialState } from "../state";
 import { applyTick, catchUpOffline, fastForward, maxOfflineSec } from "../gameLoop";
 import { ensureWeeklyBountyWeek, currentWeekKey, noteWeeklyBountyEstateCompletion } from "../systems/weeklyBounty";
 import { ensureCelestialStashWeek } from "../systems/celestialStash";
-import { chooseOfflineAdventureOption } from "../systems/offlineAdventure";
-import { acceptEstateCommission, settleEstateCommission } from "../systems/estateCommission";
+import {
+  chooseOfflineAdventureOption,
+  maybeQueueOfflineAdventure,
+  OFFLINE_ADVENTURE_TRIGGER_SEC,
+  tryAutoSettleOfflineAdventurePending,
+} from "../systems/offlineAdventure";
+import { acceptEstateCommission, settleEstateCommission, tryAutoSettleEstateCommission } from "../systems/estateCommission";
 import {
   serialize,
   deserialize,
@@ -258,6 +263,57 @@ function runEstateCommissionDueSettleSmoke(): void {
   assert.ok(settled, "completed commission should be settleable");
 }
 
+function runOfflineAdventureQueueNoOverwriteSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.lastTick = now - (OFFLINE_ADVENTURE_TRIGGER_SEC + 180) * 1000;
+  const offline = catchUpOffline(st, now);
+  assert.ok(offline.settledSec >= OFFLINE_ADVENTURE_TRIGGER_SEC, "offline settle should reach adventure threshold");
+  const queued1 = maybeQueueOfflineAdventure(st, offline.settledSec, now);
+  assert.equal(queued1, true, "first queue attempt should create pending adventure");
+  const firstTriggered = st.offlineAdventure.pending?.triggeredAtMs ?? 0;
+  const queued2 = maybeQueueOfflineAdventure(st, offline.settledSec + 600, now + 1000);
+  assert.equal(queued2, false, "existing pending should block overwrite");
+  assert.equal(st.offlineAdventure.pending?.triggeredAtMs ?? 0, firstTriggered, "pending adventure should stay untouched");
+}
+
+function runOfflineAdventureAutoPolicySmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.offlineAdventure.pending = {
+    triggeredAtMs: now,
+    settledSec: 4200,
+    options: [
+      { id: "instant", title: "I", desc: "", instantStones: "100", instantEssence: 1, boostMult: 1, boostDurationSec: 0 },
+      { id: "boost", title: "B", desc: "", instantStones: "0", instantEssence: 0, boostMult: 1.3, boostDurationSec: 3600 },
+      { id: "essence", title: "E", desc: "", instantStones: "0", instantEssence: 5, boostMult: 1, boostDurationSec: 0, zhuLingBonus: 3 },
+    ],
+    rerolled: false,
+    rerollCostStones: "190",
+  };
+  st.offlineAdventure.autoPolicyEnabled = false;
+  st.offlineAdventure.autoPolicy = "boost";
+  const off = tryAutoSettleOfflineAdventurePending(st, now);
+  assert.equal(off.settled, false, "disabled policy should not auto settle pending");
+  st.offlineAdventure.autoPolicyEnabled = true;
+  const on = tryAutoSettleOfflineAdventurePending(st, now);
+  assert.equal(on.settled, true, "enabled policy should auto settle pending");
+  assert.equal(on.optionId, "boost", "boost policy should pick boost option");
+  assert.equal(st.offlineAdventure.pending, null, "auto settled pending should be cleared");
+}
+
+function runEstateCommissionAutoSettleLoopSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.estateCommission.autoQueueEnabled = true;
+  assert.equal(acceptEstateCommission(st, now), true, "commission should be accepted");
+  assert.ok(st.estateCommission.active, "active commission should exist after accept");
+  if (!st.estateCommission.active) return;
+  st.estateCommission.active.completedAtMs = now;
+  const settled = tryAutoSettleEstateCommission(st, now + 1);
+  assert.ok(settled, "auto settle should complete when auto queue enabled and due");
+}
+
 function main(): void {
   runOfflineCapSmoke();
   runWeeklySyncSmoke();
@@ -271,6 +327,9 @@ function main(): void {
   runAutoSalvageAccumulatorRemainderSmoke();
   runFastForwardCrossWeekSyncSmoke();
   runEstateCommissionDueSettleSmoke();
+  runOfflineAdventureQueueNoOverwriteSmoke();
+  runOfflineAdventureAutoPolicySmoke();
+  runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");
 }

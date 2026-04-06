@@ -315,6 +315,7 @@ import {
   offlineAdventureBoostMult,
   previewOfflineAdventureResonance,
   rerollOfflineAdventureOptions,
+  tryAutoSettleOfflineAdventurePending,
 } from "./systems/offlineAdventure";
 import {
   abandonEstateCommission,
@@ -327,6 +328,7 @@ import {
   setEstateCommissionAutoQueueEnabled,
   setEstateCommissionAutoQueueStrategy,
   settleEstateCommission,
+  tryAutoSettleEstateCommission,
 } from "./systems/estateCommission";
 import { elementDamageMultiplier } from "./systems/elementCombat";
 import { playerBattleElement } from "./systems/playerElement";
@@ -971,6 +973,70 @@ function toastFastForwardTimelineHint(adventureQueued: boolean, fastForwardSec: 
     durationMs: 5200,
     className: "toast toast-fast-forward-hint feedback-toast",
   });
+}
+
+function maybeAutoSettleOfflineAdventure(now: number, source: "loop" | "resume" | "init" | "ui"): boolean {
+  const auto = tryAutoSettleOfflineAdventurePending(state, now);
+  if (!auto.settled || !auto.optionId) return false;
+  tryCompleteAchievements(state);
+  if (source !== "loop") {
+    if (auto.optionId === "boost") {
+      const leftMin = Math.ceil(offlineAdventureBoostLeftMs(state, now) / 60000);
+      tryToast(`离线奇遇已按策略自动结算：静修余韵（约 ${leftMin} 分）。`);
+    } else if (auto.optionId === "instant") {
+      tryToast("离线奇遇已按策略自动结算：灵脉馈赠。");
+    } else {
+      tryToast("离线奇遇已按策略自动结算。");
+    }
+  }
+  return true;
+}
+
+function maybeAutoSettleEstateCommission(now: number, source: "loop" | "resume" | "init"): boolean {
+  const settleResult = tryAutoSettleEstateCommission(state, now);
+  if (!settleResult) return false;
+  ensureEstateCommissionOffer(state, now);
+  tryCompleteAchievements(state);
+  if (source !== "loop") {
+    const bounty = weeklyBountyFeedbackState(state, now);
+    const autoFeedback =
+      settleResult.autoQueueReason === "accepted"
+        ? ` 托管续单成功：已自动接取「${settleResult.nextOfferTitle}」。`
+        : settleResult.autoQueueReason === "blocked_type"
+          ? ` 托管未续单：当前策略要求同类型，下一单为${estateCommissionTypeZh(settleResult.nextOfferType)}。`
+          : settleResult.autoQueueReason === "blocked_offer_missing"
+            ? " 托管未续单：未生成可接取的下一单。"
+            : "";
+    tryToast(`洞府委托已自动结算。周常进度：${formatWeeklyBountyFeedbackLine(bounty)}。${autoFeedback}`);
+  }
+  return true;
+}
+
+function runOfflineRecovery(now: number, source: "resume" | "init"): { offlineSettled: boolean; changed: boolean } {
+  const offline = catchUpOffline(state, now);
+  ensureWeeklyBountyWeek(state, now);
+  ensureCelestialStashWeek(state, now);
+  tickDailyLoginCalendar(state, now);
+  tickDailyFortune(state, now);
+  let changed = offline.settledSec > 0;
+  if (offline.settledSec > 0) {
+    const queued = maybeQueueOfflineAdventure(state, offline.settledSec, now);
+    changed = changed || queued;
+  }
+  const offlineAutoSettled = maybeAutoSettleOfflineAdventure(now, source);
+  changed = changed || offlineAutoSettled;
+  const estateAutoSettled = maybeAutoSettleEstateCommission(now, source);
+  changed = changed || estateAutoSettled;
+  if (offline.stoneGain.gt(0.01)) {
+    const sig = `${offline.rawAwaySec.toFixed(1)}|${offline.settledSec.toFixed(1)}|${offline.capSec.toFixed(1)}|${offline.stoneGain.toFixed(2)}`;
+    if (sig !== lastOfflineToastSig || now - lastOfflineToastAtMs > 6000) {
+      toastOfflineSettlement(offline);
+      lastOfflineToastSig = sig;
+      lastOfflineToastAtMs = now;
+    }
+    changed = true;
+  }
+  return { offlineSettled: offline.settledSec > 0, changed };
 }
 
 function showCurrencyHintById(id: string): void {
@@ -4590,6 +4656,26 @@ function bindEvents(rb: Decimal, _slots: number): void {
       render();
     });
   });
+  document.querySelectorAll("[data-offline-auto-strategy]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const strategy = (el as HTMLElement).dataset.offlineAutoStrategy;
+      if (strategy !== "steady" && strategy !== "boost") return;
+      const t = nowMs();
+      if (state.offlineAdventure.autoPolicyEnabled && state.offlineAdventure.autoPolicy === strategy) {
+        state.offlineAdventure.autoPolicyEnabled = false;
+        toast("离线奇遇自动结算已关闭。");
+      } else {
+        state.offlineAdventure.autoPolicyEnabled = true;
+        state.offlineAdventure.autoPolicy = strategy;
+        toast(strategy === "boost" ? "离线奇遇自动结算已开启：增益优先。" : "离线奇遇自动结算已开启：稳态优先。");
+      }
+      const autoSettled = maybeAutoSettleOfflineAdventure(t, "ui");
+      tryCompleteAchievements(state);
+      saveGame(state);
+      if (autoSettled) updateTopResourcePillsAndVigor(totalCardsInPool());
+      render();
+    });
+  });
   document.querySelectorAll("[data-estate-commission-accept]").forEach((el) => {
     el.addEventListener("click", () => {
       const t = nowMs();
@@ -5367,6 +5453,11 @@ function loop(): void {
     }
   }
   applyTick(state, now);
+  const autoSettledOfflineInLoop = maybeAutoSettleOfflineAdventure(now, "loop");
+  const autoSettledEstateInLoop = maybeAutoSettleEstateCommission(now, "loop");
+  if (autoSettledOfflineInLoop || autoSettledEstateInLoop) {
+    requestSave("自动结算闭环", true);
+  }
   if (!mobileLiteFx) updateModernVisualFx(now);
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
     activeHub = "battle";
@@ -6036,23 +6127,8 @@ function init(): void {
   // Daily state should refresh before offline settlement.
   tickDailyLoginCalendar(state, t);
   tickDailyFortune(state, t);
-  const offline = catchUpOffline(state, t);
-  ensureWeeklyBountyWeek(state, t);
-  ensureCelestialStashWeek(state, t);
-  tickDailyLoginCalendar(state, t);
-  tickDailyFortune(state, t);
-  if (offline.settledSec > 0) {
-    maybeQueueOfflineAdventure(state, offline.settledSec, t);
-  }
-  if (offline.stoneGain.gt(0.01)) {
-    const sig = `${offline.rawAwaySec.toFixed(1)}|${offline.settledSec.toFixed(1)}|${offline.capSec.toFixed(1)}|${offline.stoneGain.toFixed(2)}`;
-    if (sig !== lastOfflineToastSig || t - lastOfflineToastAtMs > 6000) {
-      toastOfflineSettlement(offline);
-      lastOfflineToastSig = sig;
-      lastOfflineToastAtMs = t;
-    }
-    saveGame(state);
-  }
+  const recovery = runOfflineRecovery(t, "init");
+  if (recovery.changed) saveGame(state);
   tryCompleteAchievements(state);
   for (const a of drainAchievementToastQueue()) {
     toastAchievement(a);
@@ -6085,6 +6161,13 @@ function init(): void {
       return;
     }
     if (document.visibilityState !== "visible") return;
+    const now = nowMs();
+    const recovery = runOfflineRecovery(now, "resume");
+    if (recovery.changed) {
+      saveGame(state);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      render();
+    }
     if (deferredDungeonToasts.length === 0) return;
     for (const m of deferredDungeonToasts) toast(m);
     deferredDungeonToasts.length = 0;

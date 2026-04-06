@@ -16,6 +16,8 @@ import {
   UI_ESTATE_COMMISSION_AUTO_STRATEGY_SAME,
   UI_ESTATE_COMMISSION_AUTO_FEEDBACK,
   UI_ESTATE_COMMISSION_AUTO_NEXT,
+  UI_ESTATE_COMMISSION_AUTO_RENEW_ON,
+  UI_ESTATE_COMMISSION_AUTO_RENEW_OFF,
   UI_ESTATE_COMMISSION_STREAK,
   UI_ESTATE_COMMISSION_REFRESH_COOLDOWN,
   UI_ESTATE_COMMISSION_REFRESH_BLOCKED,
@@ -62,6 +64,28 @@ function autoQueueFeedbackLine(state: GameState): string {
   }
   if (ec.autoQueueLastResult === "blocked_offer_missing") return "托管反馈：未续单（未生成下一单）。";
   return "托管反馈：等待当前委托结算后判定。";
+}
+
+function autoQueueRenewStatusLine(state: GameState): string {
+  const ec = state.estateCommission;
+  if (!ec.autoQueueEnabled) return "自动续单：已关闭";
+  if (ec.autoQueueLastResult === "accepted") return "自动续单：最近一次已成功续接";
+  if (ec.autoQueueLastResult === "blocked_type") return "自动续单：策略限制（同类型未命中）";
+  if (ec.autoQueueLastResult === "blocked_offer_missing") return "自动续单：待生成下一单";
+  return "自动续单：待当前委托结算后判定";
+}
+
+function autoQueueRenewIcon(state: GameState): string {
+  const ec = state.estateCommission;
+  if (!ec.autoQueueEnabled) return UI_ESTATE_COMMISSION_AUTO_RENEW_OFF;
+  if (ec.autoQueueLastResult === "blocked_type") return UI_ESTATE_COMMISSION_AUTO_RENEW_OFF;
+  return UI_ESTATE_COMMISSION_AUTO_RENEW_ON;
+}
+
+function autoQueueRenewBadgeClass(state: GameState): string {
+  const ec = state.estateCommission;
+  if (!ec.autoQueueEnabled || ec.autoQueueLastResult === "blocked_type") return "status-badge--pending";
+  return "status-badge--ready";
 }
 
 export function renderEstateCommissionPanel(
@@ -155,6 +179,16 @@ export function renderEstateCommissionPanel(
             : "托管已开启：结算后将自动接取下一单（不限类型）。"
           : "托管已关闭：结算后需手动接取下一单。"
       }</p>
+      <div class="estate-commission-auto-state-strip" data-estate-auto-state="${ec.autoQueueEnabled ? "enabled" : "disabled"}">
+        <span class="status-badge ${ec.autoQueueEnabled ? "status-badge--ready" : "status-badge--pending"}" id="estate-commission-auto-open-state">
+          <img src="${ec.autoQueueEnabled ? UI_ESTATE_COMMISSION_AUTO_QUEUE_ON : UI_ESTATE_COMMISSION_AUTO_QUEUE_OFF}" alt="" width="14" height="14" loading="lazy" />
+          托管：${ec.autoQueueEnabled ? "已开启" : "已关闭"}
+        </span>
+        <span class="status-badge ${autoQueueRenewBadgeClass(state)}" id="estate-commission-auto-renew-state">
+          <img src="${autoQueueRenewIcon(state)}" alt="" width="14" height="14" loading="lazy" />
+          ${autoQueueRenewStatusLine(state)}
+        </span>
+      </div>
       <div class="estate-commission-auto-info-block">
         <p class="hint sm estate-commission-auto-policy" id="estate-commission-auto-policy">
           <img src="${UI_ESTATE_COMMISSION_AUTO_FEEDBACK}" alt="" width="14" height="14" loading="lazy" />
@@ -226,6 +260,8 @@ export function updateEstateCommissionPanelReadouts(
   const autoPolicyEl = document.getElementById("estate-commission-auto-policy");
   const autoNextEl = document.getElementById("estate-commission-auto-next");
   const autoFeedbackEl = document.getElementById("estate-commission-auto-feedback");
+  const autoOpenStateEl = document.getElementById("estate-commission-auto-open-state");
+  const autoRenewStateEl = document.getElementById("estate-commission-auto-renew-state");
   const streak = getEstateCommissionStreakPreview(state);
   if (specLineEl) {
     specLineEl.textContent = streak.specializationType
@@ -277,5 +313,20 @@ export function updateEstateCommissionPanelReadouts(
     autoFeedbackEl.innerHTML =
       `<img src="${UI_ESTATE_COMMISSION_AUTO_FEEDBACK}" alt="" width="14" height="14" loading="lazy" />` +
       autoQueueFeedbackLine(state);
+  }
+  if (autoOpenStateEl) {
+    autoOpenStateEl.classList.toggle("status-badge--ready", state.estateCommission.autoQueueEnabled);
+    autoOpenStateEl.classList.toggle("status-badge--pending", !state.estateCommission.autoQueueEnabled);
+    autoOpenStateEl.innerHTML =
+      `<img src="${state.estateCommission.autoQueueEnabled ? UI_ESTATE_COMMISSION_AUTO_QUEUE_ON : UI_ESTATE_COMMISSION_AUTO_QUEUE_OFF}" alt="" width="14" height="14" loading="lazy" />` +
+      `托管：${state.estateCommission.autoQueueEnabled ? "已开启" : "已关闭"}`;
+  }
+  if (autoRenewStateEl) {
+    const ready = autoQueueRenewBadgeClass(state) === "status-badge--ready";
+    autoRenewStateEl.classList.toggle("status-badge--ready", ready);
+    autoRenewStateEl.classList.toggle("status-badge--pending", !ready);
+    autoRenewStateEl.innerHTML =
+      `<img src="${autoQueueRenewIcon(state)}" alt="" width="14" height="14" loading="lazy" />` +
+      autoQueueRenewStatusLine(state);
   }
 }
