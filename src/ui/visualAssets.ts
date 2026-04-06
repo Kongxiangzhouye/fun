@@ -14,6 +14,8 @@ import { ELEMENT_UI_FILES } from "../data/elementUi";
 import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
 import { GEAR_SLOT_UI_FILES } from "../data/gearSlotUi";
 import { GEAR_BASES } from "../data/gearBases";
+import { ACHIEVEMENTS_LIST_UI_FILES } from "../data/achievementsListUi";
+import { CHRONICLE_HEADERS_UI_FILES } from "../data/chronicleHeadersUi";
 import { DUNGEON_DUEL_UI_FILES } from "../data/dungeonDuelUi";
 import { GEAR_INVENTORY_UI_FILES } from "../data/gearInventoryUi";
 import { HUB_VEIN_FLAIR_UI_FILES } from "../data/hubVeinFlairUi";
@@ -169,69 +171,69 @@ export const UI_DUEL_BOSS_BADGE = asset(DUNGEON_DUEL_UI_FILES.bossBadge);
 export const UI_DUNGEON_REALM_CLASSIC = asset(DUNGEON_DUEL_UI_FILES.realmClassic);
 /** 星漩乱域模式单选项图标 */
 export const UI_DUNGEON_REALM_VORTEX = asset(DUNGEON_DUEL_UI_FILES.realmVortex);
-/** 道韵灵窍页标题装饰 */
-export const UI_HEAD_DAO_MERIDIAN = asset("deco-dao-meridian.svg");
+/** 道韵灵窍页标题装饰；与 `CHRONICLE_HEADERS_UI_FILES` 同源 */
+export const UI_HEAD_DAO_MERIDIAN = asset(CHRONICLE_HEADERS_UI_FILES.daoMeridianHead);
 /** 唤灵通鉴页标题 */
-export const UI_HEAD_CHRONICLE = asset("deco-chronicle-header.svg");
+export const UI_HEAD_CHRONICLE = asset(CHRONICLE_HEADERS_UI_FILES.chronicleHead);
 /** 通鉴页「最近铸灵」小标题旁装饰（与灵卡卷轴区分） */
-export const UI_GEAR_CHRONICLE_DECO = asset("deco-chronicle-gear.svg");
-/** 成就列表 · 铸灵系条目左侧小标 */
-export const UI_ACH_FORGE_DECO = asset("ach-forge-deco.svg");
+export const UI_GEAR_CHRONICLE_DECO = asset(CHRONICLE_HEADERS_UI_FILES.gearChronicleDeco);
+/** 成就列表 · 铸灵系条目左侧小标；与 `ACHIEVEMENTS_LIST_UI_FILES` 同源 */
+export const UI_ACH_FORGE_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.forge);
 /** 成就列表 · 高阶铸灵次数里程碑（余烬） */
-export const UI_ACH_FORGE_EMBER_DECO = asset("ach-forge-ember-deco.svg");
-export const UI_ACH_FORGE_NOVA_DECO = asset("ach-forge-nova-deco.svg");
+export const UI_ACH_FORGE_EMBER_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.forgeEmber);
+export const UI_ACH_FORGE_NOVA_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.forgeNova);
 /** 成就列表 · 灵卡池累计唤引系条目左侧小徽 */
-export const UI_ACH_GACHA_DECO = asset("ach-gacha-deco.svg");
+export const UI_ACH_GACHA_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.gacha);
 /** 成就列表 · 图鉴进度系条目左侧小徽 */
-export const UI_ACH_CODEX_DECO = asset("ach-codex-deco.svg");
+export const UI_ACH_CODEX_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.codex);
 /** 成就列表 · 高稀有灵卡首遇系条目左侧小徽 */
-export const UI_ACH_RARITY_DECO = asset("ach-rarity-deco.svg");
+export const UI_ACH_RARITY_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.rarity);
 /** 成就列表 · 训练（三艺）系条目左侧小标 */
-export const UI_ACH_TRAIN_DECO = asset("ach-train-deco.svg");
+export const UI_ACH_TRAIN_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.train);
 /** 成就列表 · 幻域系条目左侧小标 */
-export const UI_ACH_DUNGEON_DECO = asset("ach-dungeon-deco.svg");
+export const UI_ACH_DUNGEON_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.dungeon);
 /** 成就列表 · 幻域累计波次系条目左侧小徽 */
-export const UI_ACH_DUNGEON_WAVES_DECO = asset("ach-dungeon-waves-deco.svg");
+export const UI_ACH_DUNGEON_WAVES_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.dungeonWaves);
 /** 成就列表 · 幻域超高累计波次里程碑（浪涌） */
-export const UI_ACH_DUNGEON_WAVES_SURGE_DECO = asset("ach-dungeon-waves-surge-deco.svg");
+export const UI_ACH_DUNGEON_WAVES_SURGE_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.dungeonWavesSurge);
 /** 成就列表 · 灵息日历 / 连签系条目左侧小徽 */
-export const UI_ACH_LOGIN_DECO = asset("ach-login-deco.svg");
+export const UI_ACH_LOGIN_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.login);
 /** 成就列表 · 周常悬赏系条目左侧小徽 */
-export const UI_ACH_BOUNTY_DECO = asset("ach-bounty-deco.svg");
+export const UI_ACH_BOUNTY_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.bounty);
 /** 成就列表 · 周常悬赏超高清满周次里程碑（岁印） */
-export const UI_ACH_BOUNTY_BLOOM_DECO = asset("ach-bounty-bloom-deco.svg");
+export const UI_ACH_BOUNTY_BLOOM_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.bountyBloom);
 /** 成就列表 · 道韵灵窍系条目左侧小徽 */
-export const UI_ACH_MERIDIAN_DECO = asset("ach-meridian-deco.svg");
+export const UI_ACH_MERIDIAN_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.meridian);
 /** 成就列表 · 灵宠系条目左侧小徽 */
-export const UI_ACH_PET_DECO = asset("ach-pet-deco.svg");
+export const UI_ACH_PET_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.pet);
 /** 成就列表 · 纳灵阵图系条目左侧小徽 */
-export const UI_ACH_SPIRIT_ARRAY_DECO = asset("ach-spirit-array-deco.svg");
+export const UI_ACH_SPIRIT_ARRAY_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.spiritArray);
 /** 成就列表 · 灵宠唤引次数系条目左侧小徽 */
-export const UI_ACH_PET_PULL_DECO = asset("ach-pet-pull-deco.svg");
+export const UI_ACH_PET_PULL_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.petPull);
 /** 成就列表 · 灵宠唤引超高次数里程碑（绽华） */
-export const UI_ACH_PET_PULL_BLOOM_DECO = asset("ach-pet-pull-bloom-deco.svg");
+export const UI_ACH_PET_PULL_BLOOM_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.petPullBloom);
 /** 成就列表 · 轮回次数系条目左侧小徽 */
-export const UI_ACH_REINCARNATION_DECO = asset("ach-reincarnation-deco.svg");
+export const UI_ACH_REINCARNATION_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.reincarnation);
 /** 成就列表 · 灵田系条目左侧小徽 */
-export const UI_ACH_GARDEN_DECO = asset("ach-garden-deco.svg");
+export const UI_ACH_GARDEN_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.garden);
 /** 成就列表 · 灵田超高累计收获里程碑（穗花） */
-export const UI_ACH_GARDEN_BLOOM_DECO = asset("ach-garden-bloom-deco.svg");
+export const UI_ACH_GARDEN_BLOOM_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.gardenBloom);
 /** 成就列表 · 天机匣系条目左侧小徽 */
-export const UI_ACH_STASH_DECO = asset("ach-stash-deco.svg");
+export const UI_ACH_STASH_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.stash);
 /** 成就列表 · 天机匣超高累计兑换里程碑（渊匣） */
-export const UI_ACH_STASH_BLOOM_DECO = asset("ach-stash-bloom-deco.svg");
+export const UI_ACH_STASH_BLOOM_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.stashBloom);
 /** 成就列表 · 蓄灵池系条目左侧小徽 */
-export const UI_ACH_RESERVOIR_DECO = asset("ach-reservoir-deco.svg");
+export const UI_ACH_RESERVOIR_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.reservoir);
 /** 成就列表 · 蓄灵池超高累计收取里程碑（渊涌） */
-export const UI_ACH_RESERVOIR_BLOOM_DECO = asset("ach-reservoir-bloom-deco.svg");
+export const UI_ACH_RESERVOIR_BLOOM_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.reservoirBloom);
 /** 成就列表 · 心斋卦象系条目左侧小徽 */
-export const UI_ACH_FORTUNE_DECO = asset("ach-fortune-deco.svg");
+export const UI_ACH_FORTUNE_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.fortune);
 /** 成就列表 · 心斋卦象超高刷新次数里程碑（星环） */
-export const UI_ACH_FORTUNE_BLOOM_DECO = asset("ach-fortune-bloom-deco.svg");
+export const UI_ACH_FORTUNE_BLOOM_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.fortuneBloom);
 /** 成就列表 · 洞府蕴灵（共鸣线）系条目左侧小徽 */
-export const UI_ACH_VEIN_DECO = asset("ach-vein-deco.svg");
+export const UI_ACH_VEIN_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.vein);
 /** 成就列表 · 境界里程碑条目左侧小徽 */
-export const UI_ACH_REALM_DECO = asset("ach-realm-deco.svg");
+export const UI_ACH_REALM_DECO = asset(ACHIEVEMENTS_LIST_UI_FILES.realm);
 /** 修行札记 · 「挂机三艺」折叠标题旁 */
 export const UI_LORE_THREE_ARTS = asset("deco-lore-three-arts.svg");
 /** 修行札记 · 「周常悬赏」折叠标题旁 */
