@@ -35,6 +35,10 @@ function asset(name: string | null | undefined, fallback = UI_INLINE_FALLBACK): 
   return `${BASE}assets/ui/${name}`;
 }
 
+function inlineSvg(svg: string): string {
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
 /** 顶栏资源小图标；与 `HUD_BAR_UI_FILES` 同源 */
 export const UI_STONE = asset(HUD_BAR_UI_FILES.stone);
 export const UI_ESSENCE = asset(HUD_BAR_UI_FILES.essence);
@@ -115,6 +119,25 @@ export const UI_OFFLINE_IDLE_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.idleBadge
 /** 离线结算过渡光带（可用于摘要区块分隔） */
 export const UI_OFFLINE_TRANSITION_SHINE = asset(OFFLINE_SETTLEMENT_UI_FILES.transitionShine);
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
+
+/** 离线奇遇二选一 · 选项图标（内联 SVG） */
+export const UI_OFFLINE_EVENT_OPTION_SAFE = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.2l6.3 2.5v4.7c0 3.6-2.2 6.7-6.3 8.4-4.1-1.7-6.3-4.8-6.3-8.4V4.7L10 2.2z" stroke="#9db8ff" stroke-width="1.3"/><path d="M10 6.1v6.2M7.2 9.1h5.6" stroke="#e7efff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+);
+export const UI_OFFLINE_EVENT_OPTION_RISK = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 1.9l7 12.2c.4.8-.1 1.8-1 1.8H4c-.9 0-1.4-1-1-1.8L10 1.9z" stroke="#f2b879" stroke-width="1.3"/><path d="M10 6.2v4.8" stroke="#fff2e0" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="13.8" r=".9" fill="#fff2e0"/></svg>`,
+);
+
+/** 收益来源拆分与升级引导 · 图标（内联 SVG） */
+export const UI_INCOME_SOURCE_ICON_REALM = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#8fd0ff" stroke-width="1.3"/><path d="M10 4.5l1.6 3.1 3.5.5-2.5 2.4.6 3.4L10 12.3 6.8 14l.6-3.4L4.9 8l3.5-.4L10 4.5z" fill="#d7f0ff"/></svg>`,
+);
+export const UI_INCOME_SOURCE_ICON_DECK = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="4.1" y="3.4" width="10.4" height="13.1" rx="1.9" stroke="#9fc7a0" stroke-width="1.3"/><rect x="6.6" y="5.9" width="10.4" height="10.8" rx="1.9" stroke="#79af87" stroke-width="1.3"/><path d="M11.8 8.1l1 2 2.2.3-1.6 1.5.4 2.1-2-1.1-2 1.1.4-2.1-1.6-1.5 2.2-.3 1-2z" fill="#dff5e4"/></svg>`,
+);
+export const UI_INCOME_SOURCE_ICON_UPGRADE = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 3.1l4.8 5h-3v6h-3.6v-6h-3l4.8-5z" fill="#f7e8ac"/><rect x="3.6" y="14.5" width="12.8" height="2.2" rx="1.1" fill="#b08f4b"/></svg>`,
+);
 
 /** 分区标题与空状态插画（自绘 SVG）；主分区头图与 `HUB_SECTION_HEADER_UI_FILES` 同源 */
 export const UI_HEAD_DUNGEON = asset(HUB_SECTION_HEADER_UI_FILES.dungeon);

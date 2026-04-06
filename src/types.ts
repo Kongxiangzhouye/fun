@@ -112,6 +112,31 @@ export interface DailyFortuneState {
   fortuneId: string;
 }
 
+/** 离线奇遇：二选一中的单个方案 */
+export interface OfflineAdventureOptionState {
+  id: "instant" | "boost";
+  title: string;
+  desc: string;
+  instantStones: string;
+  instantEssence: number;
+  boostMult: number;
+  boostDurationSec: number;
+}
+
+/** 离线奇遇：等待玩家选择的结算快照 */
+export interface OfflineAdventurePendingState {
+  triggeredAtMs: number;
+  settledSec: number;
+  options: [OfflineAdventureOptionState, OfflineAdventureOptionState];
+}
+
+/** 离线奇遇系统持久状态 */
+export interface OfflineAdventureState {
+  pending: OfflineAdventurePendingState | null;
+  activeBoostUntilMs: number;
+  activeBoostMult: number;
+}
+
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */
 export type GearStatKey =
   | "life_flat"
@@ -525,6 +550,9 @@ export interface GameState {
 
   /** 心斋卦象（每日运势） */
   dailyFortune: DailyFortuneState;
+
+  /** 离线奇遇（二选一 + 限时挂机增益） */
+  offlineAdventure: OfflineAdventureState;
 
   /**
    * 纳灵阵图等级（灵府；轮回不重置）：提升全局灵石收益乘区

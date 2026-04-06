@@ -34,6 +34,7 @@ import {
 import {
   incomePerSecond,
   incomeBreakdownForDisplay,
+  incomeSourceBreakdownForDisplay,
   realmBreakthroughCostForState,
   upgradeCardLevelCost,
   upgradeCardLingShaCost,
@@ -185,7 +186,13 @@ import {
   UI_BOUNTY_CLAIM_ECHO_BADGE,
   UI_OFFLINE_IDLE_BADGE,
   UI_OFFLINE_SUMMARY_BADGE,
+  UI_OFFLINE_SUMMARY_DECO,
   UI_OFFLINE_TRANSITION_SHINE,
+  UI_OFFLINE_EVENT_OPTION_SAFE,
+  UI_OFFLINE_EVENT_OPTION_RISK,
+  UI_INCOME_SOURCE_ICON_REALM,
+  UI_INCOME_SOURCE_ICON_DECK,
+  UI_INCOME_SOURCE_ICON_UPGRADE,
   UI_DUNGEON_HIT_FLASH_DECO,
   UI_DUNGEON_HIT_TRACE_RING_DECO,
   UI_DUNGEON_CRIT_BURST_DECO,
@@ -201,7 +208,7 @@ import { renderDailyLoginPanel, updateDailyLoginPanelReadouts } from "./ui/daily
 import { claimDailyLoginReward, tickDailyLoginCalendar, toLocalYMD } from "./systems/dailyLoginCalendar";
 import { getActiveFortuneDef, tickDailyFortune } from "./systems/dailyFortune";
 import { renderCelestialStashPanel, updateCelestialStashPanelReadouts } from "./ui/celestialStashPanel";
-import { tryBuyCelestialOffer } from "./systems/celestialStash";
+import { ensureCelestialStashWeek, tryBuyCelestialOffer } from "./systems/celestialStash";
 import { tryUpgradeSpiritArray } from "./systems/spiritArray";
 import {
   reservoirCap,
@@ -272,6 +279,12 @@ import {
   petEssenceFindMult,
 } from "./systems/pets";
 import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
+import {
+  chooseOfflineAdventureOption,
+  maybeQueueOfflineAdventure,
+  offlineAdventureBoostLeftMs,
+  offlineAdventureBoostMult,
+} from "./systems/offlineAdventure";
 import { elementDamageMultiplier } from "./systems/elementCombat";
 import { playerBattleElement } from "./systems/playerElement";
 import { pullPet } from "./systems/petGacha";
@@ -3007,11 +3020,18 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const tunaPct = tunaReady ? 100 : Math.min(100, 100 - (100 * tunaLeft) / TUNA_COOLDOWN_MS);
 
   const br = incomeBreakdownForDisplay(state, totalCardsInPool());
+  const srcBr = incomeSourceBreakdownForDisplay(state, totalCardsInPool());
   const showRealmSplit = br.fromRealm.gt(1e-18);
   const showDeckSplit = br.fromDeck.gt(1e-18);
   const petIncomeHint = petSystemUnlocked(state) ? incomePetLineHtml(state) : "";
   const deckRealmPct = deckRealmBonusSum(state);
   const nextExplore = explorationHints(state);
+  const nextRealmIps = incomePerSecond({ ...state, realmLevel: state.realmLevel + 1 }, totalCardsInPool());
+  const realmDeltaIps = Decimal.max(0, nextRealmIps.minus(ips));
+  const realmPaybackSec = realmDeltaIps.gt(1e-9) ? rb.div(realmDeltaIps).toNumber() : Number.POSITIVE_INFINITY;
+  const realmUpgradeHint = realmDeltaIps.gt(1e-9)
+    ? `破境后每秒约 +${fmtDecimal(realmDeltaIps)}，预计回本约 ${fmtOfflineDurationSec(realmPaybackSec)}。`
+    : "破境后收益提升极小，建议优先补强灵卡或洞府。";
   const exploreBlock =
     nextExplore.length > 0
       ? `<div class="explore-block"><strong class="explore-title">下一探索</strong><ul class="explore-list">${nextExplore.map((h) => `<li>${h}</li>`).join("")}</ul></div>`
@@ -3038,6 +3058,11 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
 
   const fd = getActiveFortuneDef(state);
   const calDay = state.dailyFortune.calendarDay || toLocalYMD(nowMs());
+  const oaPending = state.offlineAdventure.pending;
+  const oaBoostLeftMs = offlineAdventureBoostLeftMs(state, now);
+  const oaBoostMul = offlineAdventureBoostMult(state, now);
+  const oaBoostTag =
+    oaBoostLeftMs > 0 ? `当前增益 ×${oaBoostMul.toFixed(2)}（剩余约 ${Math.ceil(oaBoostLeftMs / 60000)} 分）` : "当前无挂机增益";
   const fortuneBlock =
     u.tabDailyFortune && fd
       ? `<section class="panel daily-fortune-panel">
@@ -3056,6 +3081,93 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
     </section>`
       : "";
 
+  const offlineChoicePanel = `<section class="panel offline-event-panel">
+      <div class="panel-title-art-row panel-title-art-row--sub">
+        <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_BADGE}" alt="" width="24" height="24" loading="lazy" />
+        <h2>离线奇遇二选一</h2>
+      </div>
+      <p class="hint sm">离线达阈值会生成二选一；资源选项立即到账，增益选项会在持续时间后自动失效。${oaBoostTag}</p>
+      <div class="offline-choice-tabs" role="tablist" aria-label="离线奇遇选项">
+        <button type="button" class="offline-choice-tab is-active" aria-selected="true">${oaPending ? "可结算" : "待触发"}</button>
+        <button type="button" class="offline-choice-tab" aria-selected="false">${oaBoostLeftMs > 0 ? "增益生效中" : "增益未激活"}</button>
+      </div>
+      <div class="offline-choice-grid">
+        <article class="offline-choice-card ${oaPending ? "is-recommended" : ""}">
+          <div class="offline-choice-head">
+            <span class="status-badge status-badge--ready">
+              <img src="${UI_OFFLINE_EVENT_OPTION_SAFE}" alt="" width="14" height="14" loading="lazy" />
+              ${oaPending ? oaPending.options[0].title : "稳态回收"}
+            </span>
+            <span class="recommend-tag">${oaPending ? "可选" : "等待离线奇遇"}</span>
+          </div>
+          <p class="hint sm">${
+            oaPending
+              ? `即时获得 ${fmtDecimal(new Decimal(oaPending.options[0].instantStones))} 灵石 + ${oaPending.options[0].instantEssence} 唤灵髓。`
+              : "离线达到阈值后可选择立即资源奖励。"
+          }</p>
+          <button class="btn btn-primary" type="button" data-offline-choice="instant" ${oaPending ? "" : "disabled"}>选择本项</button>
+        </article>
+        <article class="offline-choice-card">
+          <div class="offline-choice-head">
+            <span class="status-badge status-badge--risk">
+              <img src="${UI_OFFLINE_EVENT_OPTION_RISK}" alt="" width="14" height="14" loading="lazy" />
+              ${oaPending ? oaPending.options[1].title : "静修余韵"}
+            </span>
+            <span class="status-badge ${oaBoostLeftMs > 0 ? "status-badge--ready" : "status-badge--pending"}">${
+              oaBoostLeftMs > 0 ? "生效中" : "可触发"
+            }</span>
+          </div>
+          <p class="hint sm">${
+            oaPending
+              ? `挂机收益 ×${oaPending.options[1].boostMult.toFixed(2)}，持续 ${Math.ceil(oaPending.options[1].boostDurationSec / 60)} 分钟。`
+              : "离线达到阈值后可选择限时挂机增益。"
+          }</p>
+          <button class="btn" type="button" data-offline-choice="boost" ${oaPending ? "" : "disabled"}>选择本项</button>
+        </article>
+      </div>
+    </section>`;
+
+  const incomeGuidePanel = `<section class="panel income-visual-panel">
+      <div class="panel-title-art-row panel-title-art-row--sub">
+        <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_DECO}" alt="" width="24" height="24" loading="lazy" />
+        <h2>收益来源拆分与升级引导</h2>
+      </div>
+      <div class="income-source-chip-row" aria-label="收益来源">
+        <span class="info-chip">
+          <img src="${UI_INCOME_SOURCE_ICON_REALM}" alt="" width="14" height="14" loading="lazy" />
+          境界原息
+        </span>
+        <span class="info-chip">
+          <img src="${UI_INCOME_SOURCE_ICON_DECK}" alt="" width="14" height="14" loading="lazy" />
+          灵卡原息
+        </span>
+        <span class="info-chip">
+          <img src="${UI_INCOME_SOURCE_ICON_UPGRADE}" alt="" width="14" height="14" loading="lazy" />
+          加成增益
+        </span>
+        <span class="info-chip info-chip--highlight">
+          <img src="${UI_INCOME_SOURCE_ICON_UPGRADE}" alt="" width="14" height="14" loading="lazy" />
+          升级建议
+        </span>
+      </div>
+      <div class="income-guide-cards">
+        <article class="income-guide-card">
+          <div class="income-guide-head">
+            <strong>来源拆分</strong>
+            <span class="status-badge status-badge--info">信息徽章</span>
+          </div>
+          <p class="hint sm">展示「境界原息 / 灵卡原息 / 增益附加」三段，数值可与总每秒收益对齐解释。</p>
+        </article>
+        <article class="income-guide-card">
+          <div class="income-guide-head">
+            <strong>升级引导</strong>
+            <span class="recommend-tag">优先强化</span>
+          </div>
+          <p class="hint sm">当资源足够时，引导按钮与标签采用高对比强调，便于移动端快速识别。</p>
+        </article>
+      </div>
+    </section>`;
+
   const core = `
     <section class="panel">
       <h2>灵脉汇聚</h2>
@@ -3063,8 +3175,9 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <div class="income-hero-label">每秒灵石</div>
         <div class="income-hero-value"><strong id="income-total-live">${fmtDecimal(ips)}</strong></div>
         <div class="income-split" id="income-split-live">
-          ${showRealmSplit ? `<span>境界基础 <strong id="income-realm-live">${fmtDecimal(br.fromRealm)}</strong> / 秒</span>` : ""}
-          ${showDeckSplit ? `<span>灵卡汇流 <strong id="income-deck-live">${fmtDecimal(br.fromDeck)}</strong> / 秒</span>` : ""}
+          ${showRealmSplit ? `<span>境界原息 <strong id="income-realm-live">${fmtDecimal(srcBr.realmCore)}</strong> / 秒</span>` : ""}
+          ${showDeckSplit ? `<span>灵卡原息 <strong id="income-deck-live">${fmtDecimal(srcBr.deckCore)}</strong> / 秒</span>` : ""}
+          <span>增益附加 <strong id="income-bonus-live">${fmtDecimal(srcBr.boostBonus)}</strong> / 秒</span>
       </div>
       ${petIncomeHint !== "" ? `<p class="hint sm income-pet-line" id="income-pet-line">${petIncomeHint}</p>` : ""}
       </div>
@@ -3091,6 +3204,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
           焚天${fireSynergyActive(state) ? (ftReady ? "（可施）" : `（${cdZh}后再行）`) : "（阵中需火灵≥三）"}
         </button>
       </div>
+      <p class="hint sm" id="realm-upgrade-preview">${realmUpgradeHint}</p>
       <div class="cooldown-row" id="row-tuna-cd">
         <span class="cooldown-label">吐纳回气</span>
         <div class="progress-track slim"><div class="progress-fill cd tuna" id="tuna-cd-bar" style="width:${tunaPct}%"></div></div>
@@ -3099,7 +3213,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       <p class="hint">图鉴收集 ${unique} / ${codex}${deckRealmPct > 0.001 ? ` · 卡组境界加成 ${deckRealmPct.toFixed(2)}%` : ""}</p>
     </section>`;
 
-  return reservoirBlock + fortuneBlock + core;
+  return reservoirBlock + fortuneBlock + offlineChoicePanel + incomeGuidePanel + core;
 }
 
 function renderGacha(
@@ -3464,6 +3578,26 @@ function renderVeinPage(): string {
       affordable = !maxed && canAfford(state, c);
     }
     const lvPct = (cur / VEIN_MAX_LEVEL) * 100;
+    let previewLine = "";
+    if (!maxed && (k === "huiLing" || k === "lingXi")) {
+      const nextState: GameState = {
+        ...state,
+        vein: { ...state.vein, [k]: cur + 1 },
+      };
+      const nextIps = incomePerSecond(nextState, poolN);
+      const dIps = Decimal.max(0, nextIps.minus(ipsNow));
+      if (dIps.gt(1e-9)) {
+        const c = k === "huiLing" ? huiLingUpgradeCost(cur) : lingXiUpgradeCost(cur);
+        const pb = c.div(dIps).toNumber();
+        previewLine = `升级后每秒约 +${fmtDecimal(dIps)}，预计回本 ${fmtOfflineDurationSec(pb)}。`;
+      } else {
+        previewLine = "升级后收益提升较小，可先补强其他线。";
+      }
+    } else if (!maxed && k === "guYuan") {
+      previewLine = "升级后降低破境消耗与受击压力，适合冲击高境界。";
+    } else if (!maxed) {
+      previewLine = "升级后提升共鸣积累与唤灵髓获取效率。";
+    }
     grid += `
       <div class="vein-card vein-card-visual">
         <h3>${VEIN_TITLES[k]} <span class="inv-meta">Lv.${cur}</span></h3>
@@ -3474,6 +3608,7 @@ function renderVeinPage(): string {
         <button class="btn btn-primary" type="button" data-vein="${k}" ${affordable ? "" : "disabled"}>
           ${maxed ? "已满" : `强化（${costLabel}）`}
         </button>
+        ${previewLine ? `<p class="hint sm">${previewLine}</p>` : ""}
       </div>`;
   }
   return `
@@ -4279,6 +4414,27 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   });
 
+  document.querySelectorAll("[data-offline-choice]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = (el as HTMLElement).dataset.offlineChoice;
+      if (id !== "instant" && id !== "boost") return;
+      const t = nowMs();
+      if (!chooseOfflineAdventureOption(state, id, t)) {
+        toast("当前没有可结算的离线奇遇。");
+        return;
+      }
+      tryCompleteAchievements(state);
+      saveGame(state);
+      if (id === "instant") {
+        toast("已选择灵脉馈赠：奖励已到账。");
+      } else {
+        const leftMin = Math.ceil(offlineAdventureBoostLeftMs(state, t) / 60000);
+        toast(`已选择静修余韵：挂机增益已生效（约 ${leftMin} 分）。`);
+      }
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-garden-plant]").forEach((el) => {
     el.addEventListener("click", () => {
       const raw = (el as HTMLElement).dataset.gardenPlant;
@@ -4894,13 +5050,25 @@ function updateTopResourcePillsAndVigor(pool: number): void {
 function updateEstateIdleLiveReadouts(now: number): void {
   const pool = totalCardsInPool();
   const ips = incomePerSecond(state, pool);
-  const br = incomeBreakdownForDisplay(state, pool);
+  const srcBr = incomeSourceBreakdownForDisplay(state, pool);
   const totalEl = document.getElementById("income-total-live");
   const realmEl = document.getElementById("income-realm-live");
   const deckEl = document.getElementById("income-deck-live");
+  const bonusEl = document.getElementById("income-bonus-live");
+  const realmPreviewEl = document.getElementById("realm-upgrade-preview");
   if (totalEl) totalEl.textContent = fmtDecimal(ips);
-  if (realmEl) realmEl.textContent = fmtDecimal(br.fromRealm);
-  if (deckEl) deckEl.textContent = fmtDecimal(br.fromDeck);
+  if (realmEl) realmEl.textContent = fmtDecimal(srcBr.realmCore);
+  if (deckEl) deckEl.textContent = fmtDecimal(srcBr.deckCore);
+  if (bonusEl) bonusEl.textContent = fmtDecimal(srcBr.boostBonus);
+  if (realmPreviewEl) {
+    const rb = realmBreakthroughCostForState(state);
+    const nextRealmIps = incomePerSecond({ ...state, realmLevel: state.realmLevel + 1 }, pool);
+    const dIps = Decimal.max(0, nextRealmIps.minus(ips));
+    const paybackSec = dIps.gt(1e-9) ? rb.div(dIps).toNumber() : Number.POSITIVE_INFINITY;
+    realmPreviewEl.textContent = dIps.gt(1e-9)
+      ? `破境后每秒约 +${fmtDecimal(dIps)}，预计回本约 ${fmtOfflineDurationSec(paybackSec)}。`
+      : "破境后收益提升极小，建议优先补强灵卡或洞府。";
+  }
   const huiSpan = document.getElementById("idle-vein-hui");
   const lingSpan = document.getElementById("idle-vein-ling");
   if (huiSpan) huiSpan.textContent = veinHuiLingMult(state.vein.huiLing).toFixed(2);
@@ -4965,6 +5133,37 @@ function updateEstateIdleLiveReadouts(now: number): void {
       if (sEl) sEl.textContent = `+${((fd.stoneMult - 1) * 100).toFixed(1)}%`;
       if (gEl) gEl.textContent = `+${((fd.dungeonMult - 1) * 100).toFixed(1)}%`;
     }
+  }
+  const oaPending = state.offlineAdventure.pending;
+  const oaBoostLeftMs = offlineAdventureBoostLeftMs(state, now);
+  const oaBoostMul = offlineAdventureBoostMult(state, now);
+  const tabs = document.querySelectorAll(".offline-choice-tab");
+  if (tabs[0]) tabs[0].textContent = oaPending ? "可结算" : "待触发";
+  if (tabs[1]) tabs[1].textContent = oaBoostLeftMs > 0 ? "增益生效中" : "增益未激活";
+  const btnInstant = document.querySelector("[data-offline-choice='instant']") as HTMLButtonElement | null;
+  const btnBoost = document.querySelector("[data-offline-choice='boost']") as HTMLButtonElement | null;
+  if (btnInstant) btnInstant.disabled = !oaPending;
+  if (btnBoost) btnBoost.disabled = !oaPending;
+  const cards = document.querySelectorAll(".offline-choice-card");
+  const card1Desc = cards[0]?.querySelector(".hint.sm");
+  const card2Desc = cards[1]?.querySelector(".hint.sm");
+  if (card1Desc) {
+    card1Desc.textContent = oaPending
+      ? `即时获得 ${fmtDecimal(new Decimal(oaPending.options[0].instantStones))} 灵石 + ${oaPending.options[0].instantEssence} 唤灵髓。`
+      : "离线达到阈值后可选择立即资源奖励。";
+  }
+  if (card2Desc) {
+    card2Desc.textContent = oaPending
+      ? `挂机收益 ×${oaPending.options[1].boostMult.toFixed(2)}，持续 ${Math.ceil(oaPending.options[1].boostDurationSec / 60)} 分钟。`
+      : "离线达到阈值后可选择限时挂机增益。";
+  }
+  const panelHint = document.querySelector(".offline-event-panel .hint.sm");
+  if (panelHint) {
+    panelHint.textContent =
+      `离线达阈值会生成二选一；资源选项立即到账，增益选项会在持续时间后自动失效。` +
+      (oaBoostLeftMs > 0
+        ? `当前增益 ×${oaBoostMul.toFixed(2)}（剩余约 ${Math.ceil(oaBoostLeftMs / 60000)} 分）`
+        : "当前无挂机增益");
   }
 }
 
@@ -5671,6 +5870,7 @@ function loop(): void {
 function init(): void {
   const t = nowMs();
   ensureWeeklyBountyWeek(state, t);
+  ensureCelestialStashWeek(state, t);
   mobileLiteFx = shouldUseMobileLiteFx();
   if (!mobileLiteFx) initPixiFxLayer();
   bindModernFxInteraction();
@@ -5680,6 +5880,13 @@ function init(): void {
   tickDailyLoginCalendar(state, t);
   tickDailyFortune(state, t);
   const offline = catchUpOffline(state, t);
+  ensureWeeklyBountyWeek(state, t);
+  ensureCelestialStashWeek(state, t);
+  tickDailyLoginCalendar(state, t);
+  tickDailyFortune(state, t);
+  if (offline.settledSec > 0) {
+    maybeQueueOfflineAdventure(state, offline.settledSec, t);
+  }
   if (offline.stoneGain.gt(0.01)) {
     const sig = `${offline.rawAwaySec.toFixed(1)}|${offline.settledSec.toFixed(1)}|${offline.capSec.toFixed(1)}|${offline.stoneGain.toFixed(2)}`;
     if (sig !== lastOfflineToastSig || t - lastOfflineToastAtMs > 6000) {

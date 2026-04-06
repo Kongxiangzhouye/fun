@@ -1,4 +1,4 @@
-import type { GameState, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
+import type { GameState, OfflineAdventureOptionState, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
 import { DECK_SIZE, DUNGEON_STAMINA_MAX, type GearInventorySortMode } from "./types";
 import { SAVE_VERSION, createInitialState } from "./state";
 import { CARDS } from "./data/cards";
@@ -131,6 +131,7 @@ export interface SerializedState {
   dailyLoginClaimedDate?: string | null;
   spiritReservoirStored?: string;
   dailyFortune?: GameState["dailyFortune"];
+  offlineAdventure?: GameState["offlineAdventure"];
   spiritArrayLevel?: number;
   lastTunaMs?: number;
   vein?: VeinSave;
@@ -317,6 +318,22 @@ export function serialize(state: GameState): string {
     dailyLoginClaimedDate: state.dailyLoginClaimedDate,
     spiritReservoirStored: state.spiritReservoirStored,
     dailyFortune: { ...state.dailyFortune },
+    offlineAdventure: state.offlineAdventure
+      ? {
+          pending: state.offlineAdventure.pending
+            ? {
+                triggeredAtMs: state.offlineAdventure.pending.triggeredAtMs,
+                settledSec: state.offlineAdventure.pending.settledSec,
+                options: state.offlineAdventure.pending.options.map((op) => ({ ...op })) as [
+                  OfflineAdventureOptionState,
+                  OfflineAdventureOptionState,
+                ],
+              }
+            : null,
+          activeBoostUntilMs: state.offlineAdventure.activeBoostUntilMs,
+          activeBoostMult: state.offlineAdventure.activeBoostMult,
+        }
+      : { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1 },
     spiritArrayLevel: state.spiritArrayLevel,
     lastTunaMs: state.lastTunaMs,
     vein: { ...state.vein },
@@ -447,6 +464,40 @@ export function deserialize(json: string): GameState {
       calendarDay: typeof data.dailyFortune.calendarDay === "string" ? data.dailyFortune.calendarDay : "",
       fortuneId: data.dailyFortune.fortuneId,
     };
+  }
+  if (data.offlineAdventure && typeof data.offlineAdventure === "object") {
+    const oa = data.offlineAdventure;
+    const activeBoostUntilMs = Number.isFinite(oa.activeBoostUntilMs)
+      ? Math.max(0, Math.floor(oa.activeBoostUntilMs))
+      : 0;
+    const activeBoostMult =
+      Number.isFinite(oa.activeBoostMult) && oa.activeBoostMult >= 1 ? Math.max(1, Number(oa.activeBoostMult)) : 1;
+    let pending: GameState["offlineAdventure"]["pending"] = null;
+    if (oa.pending && typeof oa.pending === "object" && Array.isArray(oa.pending.options) && oa.pending.options.length >= 2) {
+      const picked = oa.pending.options
+        .slice(0, 2)
+        .map((op) => ({
+          id: op.id === "boost" ? "boost" : "instant",
+          title: typeof op.title === "string" ? op.title : "",
+          desc: typeof op.desc === "string" ? op.desc : "",
+          instantStones: op.instantStones != null ? String(op.instantStones) : "0",
+          instantEssence: Number.isFinite(op.instantEssence) ? Math.max(0, Math.floor(Number(op.instantEssence))) : 0,
+          boostMult: Number.isFinite(op.boostMult) ? Math.max(1, Number(op.boostMult)) : 1,
+          boostDurationSec: Number.isFinite(op.boostDurationSec) ? Math.max(0, Math.floor(Number(op.boostDurationSec))) : 0,
+        })) as OfflineAdventureOptionState[];
+      pending = {
+        triggeredAtMs: Number.isFinite(oa.pending.triggeredAtMs) ? Math.max(0, Math.floor(oa.pending.triggeredAtMs)) : 0,
+        settledSec: Number.isFinite(oa.pending.settledSec) ? Math.max(0, Number(oa.pending.settledSec)) : 0,
+        options: [picked[0]!, picked[1]!],
+      };
+    }
+    st.offlineAdventure = {
+      pending,
+      activeBoostUntilMs,
+      activeBoostMult,
+    };
+  } else {
+    st.offlineAdventure = { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1 };
   }
   if (data.spiritArrayLevel != null && Number.isFinite(data.spiritArrayLevel)) {
     st.spiritArrayLevel = Math.floor(data.spiritArrayLevel);

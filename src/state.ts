@@ -181,6 +181,11 @@ export function createInitialState(): GameState {
     celestialStash: emptyCelestialStash(currentWeekKey(now)),
     spiritReservoirStored: "0",
     dailyFortune: { calendarDay: "", fortuneId: "fd_he" },
+    offlineAdventure: {
+      pending: null,
+      activeBoostUntilMs: 0,
+      activeBoostMult: 1,
+    },
     spiritArrayLevel: 0,
     daoMeridian: 0,
     pullChronicle: [],

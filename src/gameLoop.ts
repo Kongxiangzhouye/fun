@@ -168,11 +168,13 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
   let remainSec = dt;
   let cursorMs = state.lastTick;
   ensureWeeklyBountyWeek(state, cursorMs);
+  ensureCelestialStashWeek(state, cursorMs);
   while (remainSec > 1e-6) {
     const boundaryMs = nextWeeklyBoundaryMs(cursorMs);
     const segSec = Math.min(remainSec, Math.max(0, (boundaryMs - cursorMs) / 1000));
     if (segSec <= 1e-6) {
       ensureWeeklyBountyWeek(state, boundaryMs);
+      ensureCelestialStashWeek(state, boundaryMs);
       cursorMs = boundaryMs;
       continue;
     }
@@ -185,9 +187,11 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
     cursorMs = segEnd;
     remainSec -= segSec;
     ensureWeeklyBountyWeek(state, cursorMs);
+    ensureCelestialStashWeek(state, cursorMs);
   }
   state.lastTick = now;
   ensureWeeklyBountyWeek(state, now);
+  ensureCelestialStashWeek(state, now);
   return {
     stoneGain: gained,
     settledSec: dt,

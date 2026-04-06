@@ -11,6 +11,7 @@ import { petStoneIncomeMult } from "./systems/pets";
 import { daoMeridianStoneMult } from "./systems/daoMeridian";
 import { dailyFortuneStoneMult } from "./systems/dailyFortune";
 import { spiritArrayStoneMult } from "./systems/spiritArray";
+import { offlineAdventureBoostMult } from "./systems/offlineAdventure";
 
 /** 境界基础灵石/秒（指数成长，后期靠轮回与元升级） */
 export function realmBaseIncome(realmLevel: number): Decimal {
@@ -57,6 +58,7 @@ export function effectiveDeckSlots(state: GameState): number {
 
 /** 灵石/秒（五行构筑 + 洞府蕴灵；全局灵息系数已去刻度波动） */
 export function incomePerSecond(state: GameState, totalCardsInPool: number): Decimal {
+  const now = Date.now();
   const vigBase = idleLingXiFactor(state) * veinLingXiMult(state.vein.lingXi);
   const vigFactor = new Decimal(vigBase);
   const base = realmBaseIncome(state.realmLevel);
@@ -85,7 +87,8 @@ export function incomePerSecond(state: GameState, totalCardsInPool: number): Dec
     .mul(petStoneIncomeMult(state))
     .mul(daoMeridianStoneMult(state))
     .mul(dailyFortuneStoneMult(state))
-    .mul(spiritArrayStoneMult(state));
+    .mul(spiritArrayStoneMult(state))
+    .mul(offlineAdventureBoostMult(state, now));
 }
 
 /** 每秒灵石拆成「境界基息」与「灵卡汇流」，便于界面展示成长来源 */
@@ -93,6 +96,7 @@ export function incomeBreakdownForDisplay(
   state: GameState,
   totalCardsInPool: number,
 ): { total: Decimal; fromRealm: Decimal; fromDeck: Decimal } {
+  const now = Date.now();
   const vigBase = idleLingXiFactor(state) * veinLingXiMult(state.vein.lingXi);
   const vigFactor = new Decimal(vigBase);
   const base = realmBaseIncome(state.realmLevel);
@@ -121,7 +125,26 @@ export function incomeBreakdownForDisplay(
   const arr = spiritArrayStoneMult(state);
   const fromRealm = base.mul(mult).mul(meridian).mul(fortune).mul(arr);
   const fromDeck = deckProd.mul(mult).mul(meridian).mul(fortune).mul(arr);
-  return { total: fromRealm.plus(fromDeck), fromRealm, fromDeck };
+  const boosted = fromRealm.plus(fromDeck).mul(offlineAdventureBoostMult(state, now));
+  const boostMul = offlineAdventureBoostMult(state, now);
+  if (boostMul <= 1) return { total: boosted, fromRealm, fromDeck };
+  const scale = boosted.div(fromRealm.plus(fromDeck));
+  return { total: boosted, fromRealm: fromRealm.mul(scale), fromDeck: fromDeck.mul(scale) };
+}
+
+/** 每秒收益来源（3 项）：境界原息 / 灵卡原息 / 各类加成增益 */
+export function incomeSourceBreakdownForDisplay(
+  state: GameState,
+  totalCardsInPool: number,
+): { total: Decimal; realmCore: Decimal; deckCore: Decimal; boostBonus: Decimal } {
+  const total = incomePerSecond(state, totalCardsInPool);
+  const base = realmBaseIncome(state.realmLevel);
+  const deckProd = computeDeckProdDecimal(state);
+  const core = base.plus(deckProd);
+  const realmCore = base;
+  const deckCore = deckProd;
+  const boostBonus = Decimal.max(0, total.minus(core));
+  return { total, realmCore, deckCore, boostBonus };
 }
 
 export function upgradeCardLevelCost(level: number): Decimal {
