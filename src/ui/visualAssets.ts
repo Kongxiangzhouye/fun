@@ -159,6 +159,10 @@ export const UI_VEIN_GONGMING_LINK = asset(HUB_VEIN_FLAIR_UI_FILES.veinGongmingL
 export const UI_DUNGEON_READINESS_DECO = asset(DUNGEON_DUEL_UI_FILES.readinessDeco);
 /** 幻域周常词缀条左侧装饰 */
 export const UI_DUNGEON_AFFIX_DECO = asset(DUNGEON_DUEL_UI_FILES.affixDeco);
+/** 幻域周常词缀条 · 经典模式辅助装饰 */
+export const UI_DUNGEON_AFFIX_CLASSIC_DECO = asset(DUNGEON_DUEL_UI_FILES.affixClassicDeco);
+/** 幻域周常词缀条 · 星漩模式辅助装饰 */
+export const UI_DUNGEON_AFFIX_VORTEX_DECO = asset(DUNGEON_DUEL_UI_FILES.affixVortexDeco);
 /** 幻域·阵线对决舞台中央装饰 */
 export const UI_DUNGEON_DUEL_DECO = asset(DUNGEON_DUEL_UI_FILES.duelDeco);
 /** 阵线对决 · 命中闪光反馈 */

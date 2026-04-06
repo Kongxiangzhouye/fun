@@ -23,4 +23,6 @@ export const DUNGEON_DUEL_UI_FILES = {
   realmVortex: "deco-dungeon-realm-vortex.svg",
   realmClassicFrameDeco: "deco-dungeon-realm-classic-frame.svg",
   realmVortexFrameDeco: "deco-dungeon-realm-vortex-frame.svg",
+  affixClassicDeco: "deco-dungeon-affix-classic.svg",
+  affixVortexDeco: "deco-dungeon-affix-vortex.svg",
 } as const;

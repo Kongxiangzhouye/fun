@@ -8178,6 +8178,7 @@ p.gear-forge-tier-hint {
 /* —— 幻域 · 周常词缀 —— */
 .dungeon-affix-banner {
   display: flex;
+  position: relative;
   align-items: flex-start;
   gap: 12px;
   margin: 0 0 12px;
@@ -8246,6 +8247,19 @@ p.gear-forge-tier-hint {
 
 .dungeon-affix-text {
   min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.dungeon-affix-mode-deco {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  width: 124px;
+  height: 24px;
+  opacity: 0.86;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 4px rgba(32, 44, 90, 0.35));
 }
 
 .dungeon-affix-title {
@@ -8253,7 +8267,7 @@ p.gear-forge-tier-hint {
   font-size: 0.92rem;
   letter-spacing: 0.06em;
   color: #d8e4ff;
-  margin-bottom: 4px;
+  margin: 0 132px 4px 0;
 }
 
 .dungeon-affix-desc {
@@ -8288,6 +8302,20 @@ p.gear-forge-tier-hint {
   margin-left: 6px;
   opacity: 0.75;
   font-size: 0.76rem;
+}
+
+@media (max-width: 560px) {
+  .dungeon-affix-mode-deco {
+    width: 104px;
+    height: 20px;
+    right: 10px;
+    top: 8px;
+    opacity: 0.72;
+  }
+
+  .dungeon-affix-title {
+    margin-right: 110px;
+  }
 }
 
 /* —— 角色 · 道韵灵窍 —— */

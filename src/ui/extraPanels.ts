@@ -59,6 +59,8 @@ import {
   UI_DUNGEON_READINESS_DECO,
   UI_DUEL_BOSS_BADGE,
   UI_DUNGEON_AFFIX_DECO,
+  UI_DUNGEON_AFFIX_CLASSIC_DECO,
+  UI_DUNGEON_AFFIX_VORTEX_DECO,
   UI_DUNGEON_REALM_CLASSIC_FRAME_DECO,
   UI_DUNGEON_REALM_VORTEX_FRAME_DECO,
   ELEMENT_ICON,
@@ -397,9 +399,13 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
   const canEnter = canEnterDungeon(state, now);
   const edps = playerExpectedDpsDungeonAffix(state, now);
   const affix = getDungeonAffixForNow(now);
-  const affixFrameSrc = affix.id === "storm_sigil" || affix.id === "iron_march"
+  const isVortexAffix = affix.id === "storm_sigil" || affix.id === "iron_march";
+  const affixFrameSrc = isVortexAffix
     ? UI_DUNGEON_REALM_VORTEX_FRAME_DECO
     : UI_DUNGEON_REALM_CLASSIC_FRAME_DECO;
+  const affixModeDecoSrc = isVortexAffix
+    ? UI_DUNGEON_AFFIX_VORTEX_DECO
+    : UI_DUNGEON_AFFIX_CLASSIC_DECO;
   const weekLine = currentWeekKey(now);
   const pmax = playerMaxHp(state);
   const chp = state.combatHpCurrent;
@@ -439,6 +445,7 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
       </div>
       <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner" style="background-image:url('${affixFrameSrc}')">
         <img class="dungeon-affix-icon" src="${UI_DUNGEON_AFFIX_DECO}" alt="" width="40" height="40" loading="lazy" />
+        <img class="dungeon-affix-mode-deco" src="${affixModeDecoSrc}" alt="" width="124" height="24" loading="lazy" />
         <div class="dungeon-affix-text">
           <strong class="dungeon-affix-title" id="dungeon-affix-title">本周词缀 · ${affix.title}</strong>
           <p class="hint sm dungeon-affix-desc" id="dungeon-affix-desc">${affix.desc}<span class="dungeon-affix-wk">（周次 ${weekLine}）</span></p>
