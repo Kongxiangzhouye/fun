@@ -34,7 +34,7 @@ export function renderGameLoreHtml(): string {
         <summary><img src="${UI_LORE_GLOSSARY}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 术语速查（白话版）</summary>
         <ul class="game-lore-list">
           <li><strong>幻域</strong> = 副本；刷怪拿资源。</li>
-          <li><strong>破境</strong> = 升级境界；提升基础强度并解锁功能。</li>
+          <li><strong>破境</strong> = 升级境界；提升基础强度并解锁功能。境界达 <strong>10 / 20 / 30 / 50 / 75</strong> 重等可在<strong>成就</strong>领奖。</li>
           <li><strong>轮回</strong> = 重开本轮；会重置部分进度，但保留永久向强化。</li>
           <li><strong>洞府</strong> = 永久成长线；投入后跨轮回保留。</li>
           <li><strong>灵卡</strong> = 卡牌；上阵后提供产出与战斗效果。</li>

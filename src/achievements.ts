@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein";
+  listDeco?: "forge" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -42,6 +42,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "境界达到 10",
     rewardStones: 300,
     rewardEssence: 0,
+    listDeco: "realm",
   },
   {
     id: "realm_30",
@@ -49,6 +50,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "境界达到 30",
     rewardStones: 2000,
     rewardEssence: 35,
+    listDeco: "realm",
   },
   {
     id: "codex_half",
@@ -92,6 +94,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "境界达到 20",
     rewardStones: 900,
     rewardEssence: 18,
+    listDeco: "realm",
   },
   {
     id: "realm_50",
@@ -99,6 +102,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "境界达到 50",
     rewardStones: 12000,
     rewardEssence: 80,
+    listDeco: "realm",
+  },
+  {
+    id: "realm_75",
+    title: "归真照影",
+    desc: "境界达到 75",
+    rewardStones: 20000,
+    rewardEssence: 110,
+    listDeco: "realm",
   },
   {
     id: "first_ssr",
@@ -492,6 +504,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.realmLevel >= 20;
     case "realm_50":
       return state.realmLevel >= 50;
+    case "realm_75":
+      return state.realmLevel >= 75;
     case "first_ssr":
       return hasSsr(state);
     case "codex_full":
