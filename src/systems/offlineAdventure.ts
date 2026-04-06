@@ -237,10 +237,37 @@ export function chooseOfflineAdventureOption(
   return true;
 }
 
+function smartAutoPolicyPreferredOption(state: GameState, now: number): "instant" | "boost" | "essence" {
+  const pending = state.offlineAdventure.pending;
+  if (!pending) return "instant";
+  const instant = pending.options.find((op) => op.id === "instant");
+  const boost = pending.options.find((op) => op.id === "boost");
+  const essence = pending.options.find((op) => op.id === "essence");
+  if (!instant && !boost && !essence) return "instant";
+  const instantScore = instant
+    ? new Decimal(instant.instantStones || "0").div(220).toNumber() + instant.instantEssence * 0.95
+    : -1;
+  const boostActive = state.offlineAdventure.activeBoostUntilMs > now;
+  const boostScore = boost
+    ? Math.max(0, boost.boostMult - 1) * (boost.boostDurationSec / 60) * (boostActive ? 0.72 : 1.26)
+    : -1;
+  const zhuLingBonus = essence?.zhuLingBonus ?? 0;
+  const zhuLingNeedFactor = state.zhuLingEssence < Math.max(80, Math.floor(state.summonEssence * 0.5)) ? 1.28 : 1;
+  const essenceScore = essence ? (essence.instantEssence * 1.2 + zhuLingBonus * 1.7) * zhuLingNeedFactor : -1;
+  if (essenceScore >= boostScore && essenceScore >= instantScore) return "essence";
+  if (boostScore >= instantScore) return "boost";
+  return "instant";
+}
+
 function autoPolicyPreferredOption(
   state: GameState,
-): "instant" | "boost" {
-  return state.offlineAdventure.autoPolicy === "boost" ? "boost" : "instant";
+  now: number,
+): "instant" | "boost" | "essence" {
+  const policy = state.offlineAdventure.autoPolicy;
+  if (policy === "boost") return "boost";
+  if (policy === "essence") return "essence";
+  if (policy === "smart") return smartAutoPolicyPreferredOption(state, now);
+  return "instant";
 }
 
 export interface OfflineAdventureAutoSettleResult {
@@ -256,8 +283,12 @@ export function tryAutoSettleOfflineAdventurePending(
   if (!state.offlineAdventure.autoPolicyEnabled || !pending) {
     return { settled: false, optionId: null };
   }
-  const preferred = autoPolicyPreferredOption(state);
-  const picked = pending.options.find((op) => op.id === preferred) ? preferred : "instant";
+  const preferred = autoPolicyPreferredOption(state, now);
+  const picked = pending.options.find((op) => op.id === preferred)
+    ? preferred
+    : pending.options.find((op) => op.id === "instant")
+      ? "instant"
+      : pending.options[0]?.id ?? "instant";
   const ok = chooseOfflineAdventureOption(state, picked, now);
   return { settled: ok, optionId: ok ? picked : null };
 }
@@ -298,7 +329,9 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
     oa.resonanceType = null;
   }
   oa.autoPolicyEnabled = !!oa.autoPolicyEnabled;
-  if (oa.autoPolicy !== "steady" && oa.autoPolicy !== "boost") oa.autoPolicy = "steady";
+  if (oa.autoPolicy !== "steady" && oa.autoPolicy !== "boost" && oa.autoPolicy !== "essence" && oa.autoPolicy !== "smart") {
+    oa.autoPolicy = "steady";
+  }
   if (!Number.isFinite(oa.resonanceStacks) || oa.resonanceStacks < 0) oa.resonanceStacks = 0;
   oa.resonanceStacks = Math.max(0, Math.min(RESONANCE_STACK_CAP, Math.floor(oa.resonanceStacks)));
   if (!oa.pending) return;

@@ -603,7 +603,12 @@ export function deserialize(json: string): GameState {
           ? Math.max(0, Math.floor(Number((oa as { resonanceStacks?: unknown }).resonanceStacks)))
           : 0,
       autoPolicyEnabled: !!(oa as { autoPolicyEnabled?: unknown }).autoPolicyEnabled,
-      autoPolicy: (oa as { autoPolicy?: unknown }).autoPolicy === "boost" ? "boost" : "steady",
+      autoPolicy:
+        (oa as { autoPolicy?: unknown }).autoPolicy === "boost" ||
+        (oa as { autoPolicy?: unknown }).autoPolicy === "essence" ||
+        (oa as { autoPolicy?: unknown }).autoPolicy === "smart"
+          ? ((oa as { autoPolicy?: "boost" | "essence" | "smart" }).autoPolicy ?? "steady")
+          : "steady",
     };
   } else {
     st.offlineAdventure = {

@@ -23,7 +23,10 @@ import {
   UI_OFFLINE_READOUT_SYNC,
   UI_OFFLINE_AUTO_STRATEGY_STEADY,
   UI_OFFLINE_AUTO_STRATEGY_BOOST,
+  UI_OFFLINE_AUTO_STRATEGY_ESSENCE,
+  UI_OFFLINE_AUTO_STRATEGY_SMART,
   UI_OFFLINE_AUTO_STRATEGY_STATUS,
+  UI_OFFLINE_DECISION_GO,
   UI_OFFLINE_RESONANCE_NEXT_STACK,
   UI_OFFLINE_RESONANCE_NEXT_BONUS,
   UI_TIME_SEMANTIC_LIVE,
@@ -64,7 +67,29 @@ interface OfflineAdventurePanelModel {
   autoStatusClass: "status-badge--ready" | "status-badge--pending";
   autoTipLine: string;
   autoPolicyEnabled: boolean;
-  autoPolicy: "steady" | "boost";
+  autoPolicy: "steady" | "boost" | "essence" | "smart";
+  choiceInstantTitle: string;
+  choiceBoostTitle: string;
+  choiceEssenceTitle: string;
+  choiceInstantTag: string;
+  choiceBoostTag: string;
+  choiceEssenceTag: string;
+  decisionState: "ready" | "standby";
+  decisionTitle: string;
+  decisionLine: string;
+  decisionGoLabel: string;
+  decisionIcon: string;
+  decisionGo: "offline-adventure" | "battle-dungeon" | "estate-idle";
+  decisionGoHub: "estate" | "battle";
+  decisionGoSub: "idle" | "dungeon";
+  decisionGoTarget: string;
+}
+
+function autoPolicyLabelZh(policy: "steady" | "boost" | "essence" | "smart"): string {
+  if (policy === "boost") return "增益优先";
+  if (policy === "essence") return "髓潮优先";
+  if (policy === "smart") return "智能策略";
+  return "稳态优先";
 }
 
 function buildOfflineAdventurePanelModel(
@@ -97,9 +122,14 @@ function buildOfflineAdventurePanelModel(
     ? `唤灵髓 +${pending.options[2].instantEssence}，筑灵髓 +${pending.options[2].zhuLingBonus ?? 0}（无灵石、无挂机增益）。`
     : "离线达到阈值后可选择双髓补给。";
   const autoPolicyEnabled = !!state.offlineAdventure.autoPolicyEnabled;
-  const autoPolicy = state.offlineAdventure.autoPolicy === "boost" ? "boost" : "steady";
+  const autoPolicy =
+    state.offlineAdventure.autoPolicy === "boost" ||
+    state.offlineAdventure.autoPolicy === "essence" ||
+    state.offlineAdventure.autoPolicy === "smart"
+      ? state.offlineAdventure.autoPolicy
+      : "steady";
   const autoPolicyLabel = `自动结算：${autoPolicyEnabled ? "开启" : "关闭"} · 当前策略：${
-    autoPolicy === "boost" ? "增益优先" : "稳态优先"
+    autoPolicyLabelZh(autoPolicy)
   }`;
   const autoStatusLabel = autoPolicyEnabled ? (pending ? "自动结算待执行" : "自动结算待命") : "自动结算关闭";
   const autoStatusClass: "status-badge--ready" | "status-badge--pending" =
@@ -109,6 +139,61 @@ function buildOfflineAdventurePanelModel(
       ? "检测到待结算奇遇，将按当前策略自动结算。"
       : "当前无待结算奇遇，下一次离线触发后将自动结算。"
     : "点击下方策略按钮可开启自动结算；再次点击当前策略可关闭。";
+  const choiceInstantTitle = pending ? pending.options[0].title : "稳态回收";
+  const choiceBoostTitle = pending ? pending.options[1].title : "静修余韵";
+  const choiceEssenceTitle = pending ? pending.options[2].title : "髓潮归元";
+  const choiceInstantTag = pending ? "可选" : "等待离线奇遇";
+  const choiceBoostTag = boostLeftMs > 0 ? "生效中" : "可触发";
+  const choiceEssenceTag = pending ? "髓潮可领" : "髓潮待命";
+  let decisionState: "ready" | "standby" = "standby";
+  let decisionTitle = "推荐动作：等待下一次离线奇遇";
+  let decisionLine = "当前无待结算奇遇，达到离线阈值后此处将更新推荐动作。";
+  let decisionGoLabel = "前往离线奇遇";
+  let decisionIcon = UI_OFFLINE_AUTO_STRATEGY_SMART;
+  let decisionGo: "offline-adventure" | "battle-dungeon" | "estate-idle" = "offline-adventure";
+  let decisionGoHub: "estate" | "battle" = "estate";
+  let decisionGoSub: "idle" | "dungeon" = "idle";
+  let decisionGoTarget = "#offline-adventure-panel";
+  if (pending) {
+    decisionState = "ready";
+    if (autoPolicy === "boost") {
+      decisionTitle = "推荐动作：优先领取静修余韵";
+      decisionIcon = UI_OFFLINE_AUTO_STRATEGY_BOOST;
+    } else if (autoPolicy === "essence") {
+      decisionTitle = "推荐动作：优先领取髓潮归元";
+      decisionIcon = UI_OFFLINE_AUTO_STRATEGY_ESSENCE;
+    } else if (autoPolicy === "smart") {
+      decisionTitle = "推荐动作：智能策略建议先处理当前奇遇";
+      decisionIcon = UI_OFFLINE_AUTO_STRATEGY_SMART;
+    } else {
+      decisionTitle = "推荐动作：优先领取稳态回收";
+      decisionIcon = UI_OFFLINE_AUTO_STRATEGY_STEADY;
+    }
+    decisionLine = autoPolicyEnabled
+      ? "自动结算已开启；如需改选可先切换策略，再手动确认本轮奇遇。"
+      : "自动结算未开启；建议先手动处理本轮奇遇，再决定是否开启自动策略。";
+    decisionGoLabel = "前往离线奇遇面板";
+  } else if (boostLeftMs > 0) {
+    decisionState = "ready";
+    decisionTitle = "推荐动作：前往幻域推进高收益阶段";
+    decisionLine = `离线增益生效中（×${boostMul.toFixed(2)}），建议前往「历练·筑灵 > 幻域·战斗」吃满增益窗口。`;
+    decisionGoLabel = "前往幻域·战斗";
+    decisionIcon = UI_OFFLINE_AUTO_STRATEGY_BOOST;
+    decisionGo = "battle-dungeon";
+    decisionGoHub = "battle";
+    decisionGoSub = "dungeon";
+    decisionGoTarget = "#dungeon-panel";
+  } else {
+    decisionState = "standby";
+    decisionTitle = "推荐动作：先维持灵脉成长节奏";
+    decisionLine = "当前无待结算奇遇且无离线增益，建议回到灵脉页准备下一轮离线触发。";
+    decisionGoLabel = "前往灵脉·境界升级";
+    decisionIcon = UI_OFFLINE_AUTO_STRATEGY_STEADY;
+    decisionGo = "estate-idle";
+    decisionGoHub = "estate";
+    decisionGoSub = "idle";
+    decisionGoTarget = "#offline-adventure-panel";
+  }
   return {
     pending,
     boostLeftMs,
@@ -137,6 +222,21 @@ function buildOfflineAdventurePanelModel(
     autoTipLine,
     autoPolicyEnabled,
     autoPolicy,
+    choiceInstantTitle,
+    choiceBoostTitle,
+    choiceEssenceTitle,
+    choiceInstantTag,
+    choiceBoostTag,
+    choiceEssenceTag,
+    decisionState,
+    decisionTitle,
+    decisionLine,
+    decisionGoLabel,
+    decisionIcon,
+    decisionGo,
+    decisionGoHub,
+    decisionGoSub,
+    decisionGoTarget,
   };
 }
 
@@ -147,7 +247,7 @@ export function renderOfflineAdventurePanel(
   offlineResonanceTypeZh: (type: "instant" | "boost" | "essence" | null) => string,
 ): string {
   const vm = buildOfflineAdventurePanelModel(state, now, offlineResonanceTypeZh);
-  return `<section class="panel offline-event-panel">
+  return `<section class="panel offline-event-panel" id="offline-adventure-panel" data-offline-panel="adventure">
       <div class="panel-title-art-row panel-title-art-row--sub">
         <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_BADGE}" alt="" width="24" height="24" loading="lazy" />
         <h2>离线奇遇三选一</h2>
@@ -172,6 +272,31 @@ export function renderOfflineAdventurePanel(
         </p>
       </div>
       <p class="hint sm offline-boost-rule-line" id="offline-boost-rule-line"><img src="${UI_OFFLINE_READOUT_SYNC}" alt="" width="14" height="14" loading="lazy" />${offlineBoostRenewRuleText()}</p>
+      <div
+        class="offline-decision-panel"
+        id="offline-decision-panel"
+        data-offline-decision-state="${vm.decisionState}"
+        data-offline-decision-recommend="${vm.autoPolicy}"
+      >
+        <p class="hint sm offline-decision-title" id="offline-decision-title">
+          <img src="${vm.decisionIcon}" alt="" width="14" height="14" loading="lazy" />
+          <span>${vm.decisionTitle}</span>
+        </p>
+        <p class="hint sm offline-decision-line" id="offline-decision-line">${vm.decisionLine}</p>
+        <button
+          type="button"
+          id="offline-decision-go-btn"
+          class="btn btn-primary offline-decision-go-btn offline-decision-go-btn--${vm.decisionGo}"
+          data-offline-go="${vm.decisionGo}"
+          data-offline-go-hub="${vm.decisionGoHub}"
+          data-offline-go-sub="${vm.decisionGoSub}"
+          data-offline-go-target="${vm.decisionGoTarget}"
+          ${vm.decisionState === "ready" ? "" : "disabled"}
+        >
+          <img src="${UI_OFFLINE_DECISION_GO}" alt="" width="14" height="14" loading="lazy" />
+          <span id="offline-decision-go-label">${vm.decisionGoLabel}</span>
+        </button>
+      </div>
       <div class="offline-auto-config" data-offline-auto-state="${vm.pending ? "ready" : "standby"}">
         <div class="offline-auto-config-head">
           <p class="hint sm offline-auto-config-title">
@@ -181,13 +306,21 @@ export function renderOfflineAdventurePanel(
           <span class="status-badge ${vm.autoStatusClass}" id="offline-auto-status-badge">${vm.autoStatusLabel}</span>
         </div>
         <div class="offline-auto-strategy-row" role="group" aria-label="离线奇遇自动策略">
-          <button class="btn offline-auto-strategy-btn ${vm.autoPolicyEnabled && vm.autoPolicy === "steady" ? "btn-primary" : ""}" type="button" data-offline-auto-strategy="steady">
+          <button id="offline-auto-strategy-steady" class="btn offline-auto-strategy-btn ${vm.autoPolicyEnabled && vm.autoPolicy === "steady" ? "btn-primary" : ""}" type="button" data-offline-auto-strategy="steady">
             <img src="${UI_OFFLINE_AUTO_STRATEGY_STEADY}" alt="" width="14" height="14" loading="lazy" />
             稳态优先
           </button>
-          <button class="btn offline-auto-strategy-btn ${vm.autoPolicyEnabled && vm.autoPolicy === "boost" ? "btn-primary" : ""}" type="button" data-offline-auto-strategy="boost">
+          <button id="offline-auto-strategy-boost" class="btn offline-auto-strategy-btn ${vm.autoPolicyEnabled && vm.autoPolicy === "boost" ? "btn-primary" : ""}" type="button" data-offline-auto-strategy="boost">
             <img src="${UI_OFFLINE_AUTO_STRATEGY_BOOST}" alt="" width="14" height="14" loading="lazy" />
             增益优先
+          </button>
+          <button id="offline-auto-strategy-essence" class="btn offline-auto-strategy-btn ${vm.autoPolicyEnabled && vm.autoPolicy === "essence" ? "btn-primary" : ""}" type="button" data-offline-auto-strategy="essence">
+            <img src="${UI_OFFLINE_AUTO_STRATEGY_ESSENCE}" alt="" width="14" height="14" loading="lazy" />
+            髓潮优先
+          </button>
+          <button id="offline-auto-strategy-smart" class="btn offline-auto-strategy-btn ${vm.autoPolicyEnabled && vm.autoPolicy === "smart" ? "btn-primary" : ""}" type="button" data-offline-auto-strategy="smart">
+            <img src="${UI_OFFLINE_AUTO_STRATEGY_SMART}" alt="" width="14" height="14" loading="lazy" />
+            智能策略
           </button>
         </div>
         <p class="hint sm offline-auto-policy-line" id="offline-auto-policy-line">${vm.autoPolicyLabel}</p>
@@ -213,11 +346,11 @@ export function renderOfflineAdventurePanel(
           <div class="offline-choice-head">
             <span class="status-badge status-badge--ready">
               <img src="${UI_OFFLINE_EVENT_OPTION_SAFE}" alt="" width="14" height="14" loading="lazy" />
-              ${vm.pending ? vm.pending.options[0].title : "稳态回收"}
+              <span id="offline-choice-title-instant">${vm.choiceInstantTitle}</span>
             </span>
-            <span class="recommend-tag">${vm.pending ? "可选" : "等待离线奇遇"}</span>
+            <span class="recommend-tag" id="offline-choice-tag-instant">${vm.choiceInstantTag}</span>
           </div>
-          <p class="hint sm">${vm.instantDesc}</p>
+          <p class="hint sm offline-choice-desc">${vm.instantDesc}</p>
           <p class="hint sm offline-resonance-preview">
             <img src="${UI_OFFLINE_RESONANCE_INSTANT}" alt="" width="14" height="14" loading="lazy" />
             <span>${vm.instantPreview}</span>
@@ -228,13 +361,11 @@ export function renderOfflineAdventurePanel(
           <div class="offline-choice-head">
             <span class="status-badge status-badge--risk">
               <img src="${UI_OFFLINE_EVENT_OPTION_RISK}" alt="" width="14" height="14" loading="lazy" />
-              ${vm.pending ? vm.pending.options[1].title : "静修余韵"}
+              <span id="offline-choice-title-boost">${vm.choiceBoostTitle}</span>
             </span>
-            <span class="status-badge ${vm.boostLeftMs > 0 ? "status-badge--ready" : "status-badge--pending"}">${
-              vm.boostLeftMs > 0 ? "生效中" : "可触发"
-            }</span>
+            <span class="status-badge ${vm.boostLeftMs > 0 ? "status-badge--ready" : "status-badge--pending"}" id="offline-choice-tag-boost">${vm.choiceBoostTag}</span>
           </div>
-          <p class="hint sm">${vm.boostDesc}</p>
+          <p class="hint sm offline-choice-desc">${vm.boostDesc}</p>
           <p class="hint sm offline-resonance-preview">
             <img src="${UI_OFFLINE_RESONANCE_BOOST}" alt="" width="14" height="14" loading="lazy" />
             <span>${vm.boostPreview}</span>
@@ -245,11 +376,11 @@ export function renderOfflineAdventurePanel(
           <div class="offline-choice-head">
             <span class="status-badge status-badge--ready">
               <img src="${UI_OFFLINE_EVENT_OPTION_ESSENCE}" alt="" width="14" height="14" loading="lazy" />
-              ${vm.pending ? vm.pending.options[2].title : "髓潮归元"}
+              <span id="offline-choice-title-essence">${vm.choiceEssenceTitle}</span>
             </span>
-            <span class="recommend-tag">髓潮</span>
+            <span class="recommend-tag" id="offline-choice-tag-essence">${vm.choiceEssenceTag}</span>
           </div>
-          <p class="hint sm">${vm.essenceDesc}</p>
+          <p class="hint sm offline-choice-desc">${vm.essenceDesc}</p>
           <p class="hint sm offline-resonance-preview">
             <img src="${UI_OFFLINE_RESONANCE_ESSENCE}" alt="" width="14" height="14" loading="lazy" />
             <span>${vm.essencePreview}</span>
@@ -292,9 +423,13 @@ export function updateOfflineAdventurePanelReadouts(
       vm.rerollHintLine;
   }
   const cards = document.querySelectorAll(".offline-choice-card");
-  const card1Desc = cards[0]?.querySelector(".hint.sm");
-  const card2Desc = cards[1]?.querySelector(".hint.sm");
-  const card3Desc = cards[2]?.querySelector(".hint.sm");
+  const instantCard = cards[0] as HTMLElement | undefined;
+  if (instantCard) {
+    instantCard.classList.toggle("is-recommended", !!vm.pending);
+  }
+  const card1Desc = cards[0]?.querySelector(".offline-choice-desc");
+  const card2Desc = cards[1]?.querySelector(".offline-choice-desc");
+  const card3Desc = cards[2]?.querySelector(".offline-choice-desc");
   const card1Res = cards[0]?.querySelector(".offline-resonance-preview");
   const card2Res = cards[1]?.querySelector(".offline-resonance-preview");
   const card3Res = cards[2]?.querySelector(".offline-resonance-preview");
@@ -318,9 +453,7 @@ export function updateOfflineAdventurePanelReadouts(
     panelHint.innerHTML =
       `<img src="${vm.timeSemanticIcon}" alt="" width="14" height="14" loading="lazy" />` +
       `离线达阈值会生成三选一；灵脉/髓潮奖励立即到账，静修增益在持续时间后自动失效。` +
-      (vm.boostLeftMs > 0
-        ? `当前增益 ×${vm.boostMul.toFixed(2)}（剩余约 ${Math.ceil(vm.boostLeftMs / 60000)} 分）`
-        : "当前无挂机增益");
+      vm.boostTag;
   }
   const resonanceLine = document.getElementById("offline-resonance-line");
   if (resonanceLine) {
@@ -330,13 +463,33 @@ export function updateOfflineAdventurePanelReadouts(
     }
   }
   const boostRuleLine = document.getElementById("offline-boost-rule-line");
-  if (boostRuleLine) boostRuleLine.textContent = offlineBoostRenewRuleText();
+  if (boostRuleLine) {
+    boostRuleLine.innerHTML =
+      `<img src="${UI_OFFLINE_READOUT_SYNC}" alt="" width="14" height="14" loading="lazy" />` +
+      offlineBoostRenewRuleText();
+  }
   const nextInstant = document.getElementById("offline-resonance-next-instant");
   const nextBoost = document.getElementById("offline-resonance-next-boost");
   const nextEssence = document.getElementById("offline-resonance-next-essence");
   const autoStatusBadge = document.getElementById("offline-auto-status-badge");
   const autoPolicyLine = document.getElementById("offline-auto-policy-line");
   const autoTipLine = document.getElementById("offline-auto-tip-line");
+  const autoConfig = document.querySelector(".offline-auto-config");
+  if (autoConfig) {
+    autoConfig.setAttribute("data-offline-auto-state", vm.pending ? "ready" : "standby");
+  }
+  const choiceTitleInstant = document.getElementById("offline-choice-title-instant");
+  const choiceTitleBoost = document.getElementById("offline-choice-title-boost");
+  const choiceTitleEssence = document.getElementById("offline-choice-title-essence");
+  const choiceTagInstant = document.getElementById("offline-choice-tag-instant");
+  const choiceTagBoost = document.getElementById("offline-choice-tag-boost");
+  const choiceTagEssence = document.getElementById("offline-choice-tag-essence");
+  const decisionPanel = document.getElementById("offline-decision-panel");
+  const decisionTitleEl = document.getElementById("offline-decision-title");
+  const decisionTitle = decisionTitleEl?.querySelector("span");
+  const decisionLine = document.getElementById("offline-decision-line");
+  const decisionGoBtn = document.getElementById("offline-decision-go-btn") as HTMLButtonElement | null;
+  const decisionGoLabel = document.getElementById("offline-decision-go-label");
   const autoBtns = document.querySelectorAll("[data-offline-auto-strategy]");
   autoBtns.forEach((btn) => {
     const strategy = (btn as HTMLElement).dataset.offlineAutoStrategy;
@@ -350,6 +503,35 @@ export function updateOfflineAdventurePanelReadouts(
   }
   if (autoPolicyLine) autoPolicyLine.textContent = vm.autoPolicyLabel;
   if (autoTipLine) autoTipLine.textContent = vm.autoTipLine;
+  if (choiceTitleInstant) choiceTitleInstant.textContent = vm.choiceInstantTitle;
+  if (choiceTitleBoost) choiceTitleBoost.textContent = vm.choiceBoostTitle;
+  if (choiceTitleEssence) choiceTitleEssence.textContent = vm.choiceEssenceTitle;
+  if (choiceTagInstant) choiceTagInstant.textContent = vm.choiceInstantTag;
+  if (choiceTagBoost) {
+    choiceTagBoost.textContent = vm.choiceBoostTag;
+    choiceTagBoost.classList.toggle("status-badge--ready", vm.boostLeftMs > 0);
+    choiceTagBoost.classList.toggle("status-badge--pending", vm.boostLeftMs <= 0);
+  }
+  if (choiceTagEssence) choiceTagEssence.textContent = vm.choiceEssenceTag;
+  if (decisionPanel) {
+    decisionPanel.setAttribute("data-offline-decision-state", vm.decisionState);
+    decisionPanel.setAttribute("data-offline-decision-recommend", vm.autoPolicy);
+  }
+  const decisionTitleIcon = decisionTitleEl?.querySelector("img");
+  if (decisionTitleIcon instanceof HTMLImageElement) {
+    decisionTitleIcon.src = vm.decisionIcon;
+  }
+  if (decisionTitle) decisionTitle.textContent = vm.decisionTitle;
+  if (decisionLine) decisionLine.textContent = vm.decisionLine;
+  if (decisionGoBtn) {
+    decisionGoBtn.disabled = vm.decisionState !== "ready";
+    decisionGoBtn.dataset.offlineGo = vm.decisionGo;
+    decisionGoBtn.dataset.offlineGoHub = vm.decisionGoHub;
+    decisionGoBtn.dataset.offlineGoSub = vm.decisionGoSub;
+    decisionGoBtn.dataset.offlineGoTarget = vm.decisionGoTarget;
+    decisionGoBtn.className = `btn btn-primary offline-decision-go-btn offline-decision-go-btn--${vm.decisionGo}`;
+  }
+  if (decisionGoLabel) decisionGoLabel.textContent = vm.decisionGoLabel;
   if (nextInstant) {
     const t = nextInstant.querySelector("span");
     if (t) t.textContent = vm.nextInstantLine;

@@ -985,6 +985,8 @@ function maybeAutoSettleOfflineAdventure(now: number, source: "loop" | "resume" 
       tryToast(`离线奇遇已按策略自动结算：静修余韵（约 ${leftMin} 分）。`);
     } else if (auto.optionId === "instant") {
       tryToast("离线奇遇已按策略自动结算：灵脉馈赠。");
+    } else if (auto.optionId === "essence") {
+      tryToast("离线奇遇已按策略自动结算：髓潮归元。");
     } else {
       tryToast("离线奇遇已按策略自动结算。");
     }
@@ -4035,6 +4037,24 @@ function bindEvents(rb: Decimal, _slots: number): void {
     }
     render();
   };
+  const routeByOfflineDecision = (hub: HubId, sub: string, targetSelector: string): void => {
+    applyHub(hub);
+    if (hub === "estate") {
+      if (sub === "idle" || sub === "vein" || sub === "garden" || sub === "array") {
+        estateSub = sub;
+      }
+    } else if (hub === "battle") {
+      if (sub === "dungeon" || sub === "forge") {
+        battleSub = sub;
+      }
+    }
+    render();
+    requestAnimationFrame(() => {
+      const targetEl = document.querySelector(targetSelector) as HTMLElement | null;
+      if (!targetEl) return;
+      targetEl.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  };
 
   document.querySelectorAll("[data-hub]").forEach((el) => {
     el.addEventListener("click", () => {
@@ -4659,7 +4679,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.querySelectorAll("[data-offline-auto-strategy]").forEach((el) => {
     el.addEventListener("click", () => {
       const strategy = (el as HTMLElement).dataset.offlineAutoStrategy;
-      if (strategy !== "steady" && strategy !== "boost") return;
+      if (strategy !== "steady" && strategy !== "boost" && strategy !== "essence" && strategy !== "smart") return;
       const t = nowMs();
       if (state.offlineAdventure.autoPolicyEnabled && state.offlineAdventure.autoPolicy === strategy) {
         state.offlineAdventure.autoPolicyEnabled = false;
@@ -4667,13 +4687,31 @@ function bindEvents(rb: Decimal, _slots: number): void {
       } else {
         state.offlineAdventure.autoPolicyEnabled = true;
         state.offlineAdventure.autoPolicy = strategy;
-        toast(strategy === "boost" ? "离线奇遇自动结算已开启：增益优先。" : "离线奇遇自动结算已开启：稳态优先。");
+        const strategyText =
+          strategy === "boost"
+            ? "增益优先"
+            : strategy === "essence"
+              ? "髓潮优先"
+              : strategy === "smart"
+                ? "智能策略"
+                : "稳态优先";
+        toast(`离线奇遇自动结算已开启：${strategyText}。`);
       }
       const autoSettled = maybeAutoSettleOfflineAdventure(t, "ui");
       tryCompleteAchievements(state);
       saveGame(state);
       if (autoSettled) updateTopResourcePillsAndVigor(totalCardsInPool());
       render();
+    });
+  });
+  document.querySelectorAll("[data-offline-go]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const node = el as HTMLElement;
+      const hub = node.dataset.offlineGoHub;
+      const sub = node.dataset.offlineGoSub ?? "";
+      const targetSelector = node.dataset.offlineGoTarget ?? "#offline-adventure-panel";
+      if (hub !== "estate" && hub !== "battle") return;
+      routeByOfflineDecision(hub, sub, targetSelector);
     });
   });
   document.querySelectorAll("[data-estate-commission-accept]").forEach((el) => {

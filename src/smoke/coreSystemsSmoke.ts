@@ -300,6 +300,41 @@ function runOfflineAdventureAutoPolicySmoke(): void {
   assert.equal(on.settled, true, "enabled policy should auto settle pending");
   assert.equal(on.optionId, "boost", "boost policy should pick boost option");
   assert.equal(st.offlineAdventure.pending, null, "auto settled pending should be cleared");
+
+  st.offlineAdventure.pending = {
+    triggeredAtMs: now + 1,
+    settledSec: 4200,
+    options: [
+      { id: "instant", title: "I2", desc: "", instantStones: "100", instantEssence: 1, boostMult: 1, boostDurationSec: 0 },
+      { id: "boost", title: "B2", desc: "", instantStones: "0", instantEssence: 0, boostMult: 1.2, boostDurationSec: 1800 },
+      { id: "essence", title: "E2", desc: "", instantStones: "0", instantEssence: 8, boostMult: 1, boostDurationSec: 0, zhuLingBonus: 6 },
+    ],
+    rerolled: false,
+    rerollCostStones: "200",
+  };
+  st.offlineAdventure.autoPolicy = "essence";
+  const essence = tryAutoSettleOfflineAdventurePending(st, now + 1);
+  assert.equal(essence.settled, true, "essence policy should auto settle pending");
+  assert.equal(essence.optionId, "essence", "essence policy should pick essence option");
+  assert.equal(st.offlineAdventure.pending, null, "essence auto settled pending should be cleared");
+
+  st.offlineAdventure.pending = {
+    triggeredAtMs: now + 2,
+    settledSec: 4200,
+    options: [
+      { id: "instant", title: "I3", desc: "", instantStones: "30", instantEssence: 1, boostMult: 1, boostDurationSec: 0 },
+      { id: "boost", title: "B3", desc: "", instantStones: "0", instantEssence: 0, boostMult: 1.45, boostDurationSec: 7200 },
+      { id: "essence", title: "E3", desc: "", instantStones: "0", instantEssence: 1, boostMult: 1, boostDurationSec: 0, zhuLingBonus: 0 },
+    ],
+    rerolled: false,
+    rerollCostStones: "210",
+  };
+  st.offlineAdventure.activeBoostUntilMs = 0;
+  st.offlineAdventure.autoPolicy = "smart";
+  const smart = tryAutoSettleOfflineAdventurePending(st, now + 2);
+  assert.equal(smart.settled, true, "smart policy should auto settle pending");
+  assert.equal(smart.optionId, "boost", "smart policy should pick strongest option by heuristic");
+  assert.equal(st.offlineAdventure.pending, null, "smart auto settled pending should be cleared");
 }
 
 function runEstateCommissionAutoSettleLoopSmoke(): void {

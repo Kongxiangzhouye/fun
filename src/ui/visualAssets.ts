@@ -590,8 +590,14 @@ export const UI_OFFLINE_READOUT_SYNC = asset("offline-readout-sync.svg");
 export const UI_OFFLINE_AUTO_STRATEGY_STEADY = asset("offline-auto-strategy-steady.svg");
 /** 离线奇遇 · 自动选择策略（增益优先） */
 export const UI_OFFLINE_AUTO_STRATEGY_BOOST = asset("offline-auto-strategy-boost.svg");
+/** 离线奇遇 · 自动选择策略（髓潮优先预留） */
+export const UI_OFFLINE_AUTO_STRATEGY_ESSENCE = asset("offline-auto-strategy-essence.svg");
+/** 离线奇遇 · 自动选择策略（智能决策预留） */
+export const UI_OFFLINE_AUTO_STRATEGY_SMART = asset("offline-auto-strategy-smart.svg");
 /** 离线奇遇 · 自动策略状态提示 */
 export const UI_OFFLINE_AUTO_STRATEGY_STATUS = asset("offline-auto-strategy-status.svg");
+/** 离线奇遇 · 挂机决策面板前往动作 */
+export const UI_OFFLINE_DECISION_GO = asset("offline-decision-go.svg");
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);
