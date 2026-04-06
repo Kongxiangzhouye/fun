@@ -12,6 +12,7 @@ import {
   pushGearPullChronicle,
   pushPullChronicle,
   noteGearForgePull,
+  recordCardStarUpLifetime,
   recordMaxGearForgedRarity,
 } from "./systems/pullChronicle";
 import { daoMeridianLuckFlat } from "./systems/daoMeridian";
@@ -218,6 +219,7 @@ function applyPullToState(state: GameState, card: CardDef): PullResult {
   if (had) {
     if (o.stars < 5) {
       o.stars += 1;
+      recordCardStarUpLifetime(state);
       duplicateStars = true;
     } else {
       state.lingSha += compensationLingShaForMaxStarDup(card.rarity);

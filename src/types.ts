@@ -116,6 +116,10 @@ export interface LifetimeStatsState {
   gearEnhances: number;
   /** 天极（UR）装备精炼成功次数 */
   urGearRefines: number;
+  /** 灵卡等级提升成功次数（每次升 1 级计 1，含袖里乾坤批量） */
+  cardLevelUps: number;
+  /** 灵卡叠星成功次数（唤引重复卡升星计 1） */
+  cardStarUps: number;
 }
 
 /** 灵田作物 id */

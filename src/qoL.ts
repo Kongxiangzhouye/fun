@@ -2,6 +2,7 @@ import type { GameState, QoLFlags } from "./types";
 import { MAX_CARD_LEVEL } from "./types";
 import { upgradeCardLevelCost, upgradeCardLingShaCost } from "./economy";
 import { canAfford, subStones } from "./stones";
+import { recordCardLevelUpLifetime } from "./systems/pullChronicle";
 
 const COSTS: Record<keyof QoLFlags, number> = {
   tenPull: 1,
@@ -40,6 +41,7 @@ export function bulkUpgradeAllCards(state: GameState): number {
       if (canAfford(state, c) && state.lingSha >= ls && subStones(state, c)) {
         state.lingSha -= ls;
         o.level += 1;
+        recordCardLevelUpLifetime(state);
         upgraded += 1;
         changed = true;
       }

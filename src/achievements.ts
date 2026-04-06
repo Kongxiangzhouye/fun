@@ -544,6 +544,38 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "forgeNova",
   },
   {
+    id: "card_level_ups_60",
+    title: "灵阶六十",
+    desc: "灵卡等级提升累计 60 次",
+    rewardStones: 1600,
+    rewardEssence: 48,
+    listDeco: "gacha",
+  },
+  {
+    id: "card_level_ups_280",
+    title: "千阶铸卡",
+    desc: "灵卡等级提升累计 280 次",
+    rewardStones: 6400,
+    rewardEssence: 105,
+    listDeco: "codex",
+  },
+  {
+    id: "card_star_ups_40",
+    title: "星辉四十",
+    desc: "灵卡叠星成功累计 40 次",
+    rewardStones: 2200,
+    rewardEssence: 58,
+    listDeco: "gacha",
+  },
+  {
+    id: "card_star_ups_180",
+    title: "万星归垣",
+    desc: "灵卡叠星成功累计 180 次",
+    rewardStones: 8800,
+    rewardEssence: 128,
+    listDeco: "rarity",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -1041,6 +1073,14 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.urGearRefines ?? 0) >= 3;
     case "ur_refines_12":
       return (state.lifetimeStats?.urGearRefines ?? 0) >= 12;
+    case "card_level_ups_60":
+      return (state.lifetimeStats?.cardLevelUps ?? 0) >= 60;
+    case "card_level_ups_280":
+      return (state.lifetimeStats?.cardLevelUps ?? 0) >= 280;
+    case "card_star_ups_40":
+      return (state.lifetimeStats?.cardStarUps ?? 0) >= 40;
+    case "card_star_ups_180":
+      return (state.lifetimeStats?.cardStarUps ?? 0) >= 180;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

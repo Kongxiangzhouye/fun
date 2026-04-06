@@ -354,7 +354,11 @@ import {
   gearForgeIlvlBonus,
   GEAR_FORGE_TIER_MAX,
 } from "./systems/gearGachaTier";
-import { PULL_CHRONICLE_MAX, recordRealmBreakthroughLifetime } from "./systems/pullChronicle";
+import {
+  PULL_CHRONICLE_MAX,
+  recordCardLevelUpLifetime,
+  recordRealmBreakthroughLifetime,
+} from "./systems/pullChronicle";
 import { GEAR_BASES } from "./data/gearBases";
 import { isSlotTopPowerGear, salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
 import {
@@ -2061,6 +2065,7 @@ function tryUpgradeSelectedCard(): boolean {
   if (!subStones(state, c)) return false;
   state.lingSha -= ls;
   o.level += 1;
+  recordCardLevelUpLifetime(state);
   saveGame(state);
   toast("灵卡升阶有成");
   return true;

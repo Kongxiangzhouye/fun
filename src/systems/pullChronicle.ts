@@ -59,6 +59,8 @@ export function normalizeLifetimeStats(st: GameState): void {
       realmBreakthroughs: 0,
       gearEnhances: 0,
       urGearRefines: 0,
+      cardLevelUps: 0,
+      cardStarUps: 0,
     };
     return;
   }
@@ -145,6 +147,24 @@ export function normalizeLifetimeStats(st: GameState): void {
   const ur = st.lifetimeStats.urGearRefines;
   if (ur == null || !Number.isFinite(ur)) st.lifetimeStats.urGearRefines = 0;
   else st.lifetimeStats.urGearRefines = Math.max(0, Math.floor(ur));
+  const cl = st.lifetimeStats.cardLevelUps;
+  if (cl == null || !Number.isFinite(cl)) st.lifetimeStats.cardLevelUps = 0;
+  else st.lifetimeStats.cardLevelUps = Math.max(0, Math.floor(cl));
+  const cstar = st.lifetimeStats.cardStarUps;
+  if (cstar == null || !Number.isFinite(cstar)) st.lifetimeStats.cardStarUps = 0;
+  else st.lifetimeStats.cardStarUps = Math.max(0, Math.floor(cstar));
+}
+
+/** 灵卡升阶（等级 +1）成功后累加 */
+export function recordCardLevelUpLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.cardLevelUps += 1;
+}
+
+/** 灵卡叠星成功后累加 */
+export function recordCardStarUpLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.cardStarUps += 1;
 }
 
 /** 境界突破成功后累加终身统计（与周常悬赏分开调用） */

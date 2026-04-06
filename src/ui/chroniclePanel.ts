@@ -6,7 +6,9 @@ import { rarityZh } from "./rarityZh";
 import { gearTierClass, gearTierLabel } from "./gearVisualTier";
 import {
   UI_CHRONICLE_BATTLE_SKILL_STAT,
+  UI_CHRONICLE_CARD_LEVEL_STAT,
   UI_CHRONICLE_CARD_SALVAGE_STAT,
+  UI_CHRONICLE_CARD_STAR_STAT,
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
   UI_CHRONICLE_FORTUNE_STAT,
@@ -92,6 +94,20 @@ export function renderChroniclePanel(state: GameState): string {
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">灵卡累计唤引</span>
           <strong class="chronicle-stat-val">${state.totalPulls} 次</strong>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--card-star">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_CARD_STAR_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵卡叠星</span>
+            <strong class="chronicle-stat-val">${ls.cardStarUps} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--card-level">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_CARD_LEVEL_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵卡升阶</span>
+            <strong class="chronicle-stat-val">${ls.cardLevelUps} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--pet-pull">
           <img class="chronicle-stat-ico" src="${UI_CHRONICLE_PET_PULL_STAT}" alt="" width="32" height="32" loading="lazy" />

@@ -656,6 +656,23 @@ function runFenTianBurstAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
 }
 
+function runCardLevelAndStarAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("card_level_ups_60"), "card level 60 should start locked");
+  st.lifetimeStats.cardLevelUps = 60;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "card_level_ups_60"), "60 card level ups should unlock");
+  st.lifetimeStats.cardLevelUps = 280;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "card_level_ups_280"), "280 card level ups should unlock");
+  st.lifetimeStats.cardStarUps = 40;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "card_star_ups_40"), "40 card star ups should unlock");
+  st.lifetimeStats.cardStarUps = 180;
+  const d = tryCompleteAchievements(st);
+  assert.ok(d.some((x) => x.id === "card_star_ups_180"), "180 card star ups should unlock");
+}
+
 function runGearEnhanceAndUrRefineAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("gear_enhances_40"), "gear enhance 40 should start locked");
@@ -872,6 +889,7 @@ function main(): void {
   runPetFeedAndGardenPlantAchievementsSmoke();
   runSkillLevelAndRealmBreakthroughAchievementsSmoke();
   runGearEnhanceAndUrRefineAchievementsSmoke();
+  runCardLevelAndStarAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

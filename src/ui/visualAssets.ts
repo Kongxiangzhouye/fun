@@ -75,6 +75,10 @@ export const UI_CHRONICLE_BATTLE_SKILL_STAT = asset("chronicle-battle-skill-stat
 export const UI_CHRONICLE_GEAR_SALVAGE_STAT = asset("chronicle-gear-salvage-stat.svg");
 /** 唤灵通鉴 · 灵卡分解累计小标 */
 export const UI_CHRONICLE_CARD_SALVAGE_STAT = asset("chronicle-card-salvage-stat.svg");
+/** 唤灵通鉴 · 灵卡升阶累计小标 */
+export const UI_CHRONICLE_CARD_LEVEL_STAT = asset("chronicle-card-level-stat.svg");
+/** 唤灵通鉴 · 灵卡叠星累计小标 */
+export const UI_CHRONICLE_CARD_STAR_STAT = asset("chronicle-card-star-stat.svg");
 /** 唤灵通鉴 · 灵脉升级累计小标 */
 export const UI_CHRONICLE_VEIN_UPGRADE_STAT = asset("chronicle-vein-upgrade-stat.svg");
 /** 唤灵通鉴 · 离线奇遇结算累计小标 */
