@@ -409,6 +409,7 @@ export function serialize(state: GameState): string {
       gardenHarvests: state.weeklyBounty.gardenHarvests,
       tuna: state.weeklyBounty.tuna,
       breakthroughs: state.weeklyBounty.breakthroughs,
+      estateCompletions: state.weeklyBounty.estateCompletions,
       claimed: [...state.weeklyBounty.claimed],
       milestoneClaimed: [...state.weeklyBounty.milestoneClaimed],
     },
@@ -724,6 +725,7 @@ export function deserialize(json: string): GameState {
       gardenHarvests: data.weeklyBounty.gardenHarvests ?? 0,
       tuna: data.weeklyBounty.tuna ?? 0,
       breakthroughs: data.weeklyBounty.breakthroughs ?? 0,
+      estateCompletions: data.weeklyBounty.estateCompletions ?? 0,
       claimed: Array.isArray(data.weeklyBounty.claimed) ? [...data.weeklyBounty.claimed] : [],
       milestoneClaimed: Array.isArray(data.weeklyBounty.milestoneClaimed)
         ? [...data.weeklyBounty.milestoneClaimed]

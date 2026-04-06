@@ -102,6 +102,8 @@ export interface WeeklyBountyState {
   gardenHarvests: number;
   tuna: number;
   breakthroughs: number;
+  /** 本周洞府委托完成次数 */
+  estateCompletions: number;
   claimed: string[];
   /** 本周已领取的里程奖励 id（如 wb_ms_2） */
   milestoneClaimed: string[];

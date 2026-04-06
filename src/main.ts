@@ -2242,6 +2242,10 @@ const BOUNTY_ACTION_ROUTES: Record<string, () => void> = {
     activeHub = "estate";
     estateSub = "vein";
   },
+  estate_commission: () => {
+    activeHub = "estate";
+    estateSub = "idle";
+  },
 };
 
 function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
@@ -2399,7 +2403,7 @@ function renderDiscoverabilityHint(): string {
         text = "常用入口：奖励自动发放；若不清楚玩法入口，先看「角色→功能预览·导航」。";
         break;
       case "bounty":
-        text = "常用入口：周常悬赏按本地每周一刷新；幻域、唤引、灵田、吐纳与破境均可推进条目。";
+        text = "常用入口：周常悬赏按本地每周一刷新；幻域、唤引、铸灵、灵田、吐纳、破境与洞府委托均可推进条目。";
         break;
       case "chronicle":
         text = "常用入口：唤灵通鉴记录最近灵卡唤引；境界铸灵不计入列表。";
@@ -4604,16 +4608,20 @@ function bindEvents(rb: Decimal, _slots: number): void {
   });
   document.querySelectorAll("[data-estate-commission-settle]").forEach((el) => {
     el.addEventListener("click", () => {
-      if (!settleEstateCommission(state)) {
+      const t = nowMs();
+      if (!settleEstateCommission(state, t)) {
         toast("委托尚未完成。");
         return;
       }
-      ensureEstateCommissionOffer(state, nowMs());
+      ensureEstateCommissionOffer(state, t);
       tryCompleteAchievements(state);
       saveGame(state);
       const streak = state.estateCommission.streak;
       const autoAccepted = !!state.estateCommission.active;
-      toast(`委托结算完成，奖励已到账（连携 ${streak}）。${autoAccepted ? " 托管已自动接取下一单。" : ""}`);
+      const bounty = weeklyBountyFeedbackState(state, t);
+      toast(
+        `委托结算完成，奖励已到账（连携 ${streak}）。周常进度：${formatWeeklyBountyFeedbackLine(bounty)}。${autoAccepted ? " 托管已自动接取下一单。" : ""}`,
+      );
       updateTopResourcePillsAndVigor(totalCardsInPool());
       render();
     });

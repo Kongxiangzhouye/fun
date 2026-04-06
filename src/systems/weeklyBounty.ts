@@ -11,10 +11,17 @@ export function currentWeekKey(now: number): string {
   return `${mon.getFullYear()}-${String(mon.getMonth() + 1).padStart(2, "0")}-${String(mon.getDate()).padStart(2, "0")}`;
 }
 
-export type WeeklyBountyKind = "waves" | "cardPulls" | "gearForges" | "gardenHarvests" | "tuna" | "breakthroughs";
+export type WeeklyBountyKind =
+  | "waves"
+  | "cardPulls"
+  | "gearForges"
+  | "gardenHarvests"
+  | "tuna"
+  | "breakthroughs"
+  | "estateCompletions";
 
 /** 周常悬赏卡片角标（与 `bountyPanel` / `public/assets/ui/bounty-*-deco.svg` 对应） */
-export type WeeklyBountyCardDeco = "waves" | "pulls" | "forge" | "garden" | "tuna" | "realm";
+export type WeeklyBountyCardDeco = "waves" | "pulls" | "forge" | "garden" | "tuna" | "realm" | "estate";
 
 export interface WeeklyBountyTaskDef {
   id: string;
@@ -131,6 +138,16 @@ export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
     rewardEssence: 18,
     cardDeco: "realm",
   },
+  {
+    id: "wb_estate",
+    title: "洞府委托",
+    desc: "本周完成洞府委托 4 次",
+    target: 4,
+    kind: "estateCompletions",
+    rewardStones: 260,
+    rewardEssence: 14,
+    cardDeco: "estate",
+  },
 ];
 
 /** 当周全部条目均已领取时，终身累计「清满周」次数（每周最多 +1） */
@@ -153,6 +170,7 @@ export function emptyWeeklyBounty(weekKey: string): GameState["weeklyBounty"] {
     gardenHarvests: 0,
     tuna: 0,
     breakthroughs: 0,
+    estateCompletions: 0,
     claimed: [],
     milestoneClaimed: [],
   };
@@ -164,7 +182,7 @@ export function normalizeWeeklyBounty(st: GameState, now = Date.now()): void {
     st.weeklyBounty = emptyWeeklyBounty(wk);
     return;
   }
-  for (const k of ["waves", "cardPulls", "gearForges", "gardenHarvests", "tuna", "breakthroughs"] as const) {
+  for (const k of ["waves", "cardPulls", "gearForges", "gardenHarvests", "tuna", "breakthroughs", "estateCompletions"] as const) {
     const v = st.weeklyBounty[k];
     if (v == null || !Number.isFinite(v) || v < 0) st.weeklyBounty[k] = 0;
     else st.weeklyBounty[k] = Math.floor(v);
@@ -219,6 +237,8 @@ function countForKind(state: GameState, kind: WeeklyBountyKind): number {
       return state.weeklyBounty.tuna;
     case "breakthroughs":
       return state.weeklyBounty.breakthroughs;
+    case "estateCompletions":
+      return state.weeklyBounty.estateCompletions;
     default:
       return 0;
   }
@@ -266,7 +286,8 @@ export type WeeklyBountyGoAction =
   | "gear_forge"
   | "garden"
   | "tuna"
-  | "breakthrough";
+  | "breakthrough"
+  | "estate_commission";
 
 export interface WeeklyBountyNextAction {
   taskId: string;
@@ -359,6 +380,11 @@ export function noteWeeklyBountyTuna(state: GameState, nowMs?: number): void {
 export function noteWeeklyBountyBreakthrough(state: GameState, nowMs?: number): void {
   ensureWeeklyBountyWeek(state, normalizeWeeklyBountyEventNow(nowMs));
   state.weeklyBounty.breakthroughs += 1;
+}
+
+export function noteWeeklyBountyEstateCompletion(state: GameState, nowMs?: number): void {
+  ensureWeeklyBountyWeek(state, normalizeWeeklyBountyEventNow(nowMs));
+  state.weeklyBounty.estateCompletions += 1;
 }
 
 /** 领取单个悬赏；成功返回 true */
@@ -523,6 +549,9 @@ function weeklyBountyTaskPriority(state: GameState, def: WeeklyBountyTaskDef, sn
     case "breakthroughs":
       p += 80;
       break;
+    case "estateCompletions":
+      p += 105;
+      break;
     case "gearForges":
       p += 55;
       break;
@@ -555,6 +584,8 @@ function actionForTaskKind(kind: WeeklyBountyKind): WeeklyBountyGoAction {
       return "tuna";
     case "breakthroughs":
       return "breakthrough";
+    case "estateCompletions":
+      return "estate_commission";
     default:
       return "dungeon";
   }

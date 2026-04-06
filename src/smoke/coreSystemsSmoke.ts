@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createInitialState } from "../state";
 import { applyTick, catchUpOffline, fastForward, maxOfflineSec } from "../gameLoop";
-import { ensureWeeklyBountyWeek, currentWeekKey } from "../systems/weeklyBounty";
+import { ensureWeeklyBountyWeek, currentWeekKey, noteWeeklyBountyEstateCompletion } from "../systems/weeklyBounty";
 import { ensureCelestialStashWeek } from "../systems/celestialStash";
 import { chooseOfflineAdventureOption } from "../systems/offlineAdventure";
 import {
@@ -77,6 +77,7 @@ function runWeeklySyncSmoke(): void {
   ensureWeeklyBountyWeek(st, Date.now());
   assert.equal(st.weeklyBounty.weekKey, currentWeekKey(Date.now()), "weekly key should sync to current week");
   assert.equal(st.weeklyBounty.waves, 0, "cross-week sync should reset old progress");
+  assert.equal(st.weeklyBounty.estateCompletions, 0, "cross-week sync should reset estate completion progress");
 
   const cross = createInitialState();
   const monday = new Date();
@@ -89,6 +90,17 @@ function runWeeklySyncSmoke(): void {
   cross.lastTick = startMs;
   catchUpOffline(cross, endMs);
   assert.equal(cross.weeklyBounty.weekKey, currentWeekKey(endMs), "offline cross-week settlement should sync week key");
+}
+
+function runWeeklyEstateCrossWeekResetSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  const beforeWeek = currentWeekKey(now - 8 * 24 * 3600 * 1000);
+  st.weeklyBounty.weekKey = beforeWeek;
+  st.weeklyBounty.estateCompletions = 3;
+  noteWeeklyBountyEstateCompletion(st, now);
+  assert.equal(st.weeklyBounty.weekKey, currentWeekKey(now), "estate completion event should sync weekly key");
+  assert.equal(st.weeklyBounty.estateCompletions, 1, "estate completion should reset then count in new week");
 }
 
 function runSerializeRoundtripSmoke(): void {
@@ -234,6 +246,7 @@ function runFastForwardCrossWeekSyncSmoke(): void {
 function main(): void {
   runOfflineCapSmoke();
   runWeeklySyncSmoke();
+  runWeeklyEstateCrossWeekResetSmoke();
   runSerializeRoundtripSmoke();
   runSaveSlotSwitchIsolationSmoke();
   runImportExportRoundtripSmoke();

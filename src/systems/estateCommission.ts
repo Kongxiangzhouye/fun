@@ -9,6 +9,7 @@ import type {
   GameState,
 } from "../types";
 import { addStones } from "../stones";
+import { noteWeeklyBountyEstateCompletion } from "./weeklyBounty";
 
 const COMMISSION_TYPES: EstateCommissionType[] = ["resource", "combat", "cultivation"];
 const ESTATE_REFRESH_COOLDOWN_MS = 45_000;
@@ -182,7 +183,7 @@ export function estateCommissionTimeLeftMs(state: GameState, now: number): numbe
   return Math.max(0, active.dueAtMs - now);
 }
 
-export function settleEstateCommission(state: GameState): boolean {
+export function settleEstateCommission(state: GameState, now: number): boolean {
   const active = state.estateCommission?.active;
   if (!active || active.completedAtMs == null) return false;
   const completedType = active.offer.type;
@@ -201,8 +202,8 @@ export function settleEstateCommission(state: GameState): boolean {
   state.estateCommission.refreshCount = 0;
   state.estateCommission.refreshCooldownUntilMs = 0;
   state.estateCommission.active = null;
+  noteWeeklyBountyEstateCompletion(state, now);
   if (state.estateCommission.autoQueueEnabled) {
-    const now = Date.now();
     ensureEstateCommissionOffer(state, now);
     const offer = state.estateCommission.offer;
     const strategy = state.estateCommission.autoQueueStrategy;

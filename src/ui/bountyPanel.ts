@@ -20,6 +20,7 @@ import {
   UI_BOUNTY_GARDEN_DECO,
   UI_BOUNTY_TUNA_DECO,
   UI_BOUNTY_REALM_DECO,
+  UI_BOUNTY_ESTATE_DECO,
   UI_BOUNTY_STREAK_BADGE,
   UI_BOUNTY_COMPLETE_BADGE,
   UI_BOUNTY_PENDING_BADGE,
@@ -44,6 +45,7 @@ const BOUNTY_CARD_DECO_SRC: Record<WeeklyBountyCardDeco, string> = {
   garden: UI_BOUNTY_GARDEN_DECO,
   tuna: UI_BOUNTY_TUNA_DECO,
   realm: UI_BOUNTY_REALM_DECO,
+  estate: UI_BOUNTY_ESTATE_DECO,
 };
 
 function bountyTaskView(taskState: WeeklyBountyTaskDisplayState): {
@@ -146,7 +148,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
         <img class="panel-title-art-icon" src="${UI_HEAD_BOUNTY}" alt="" width="28" height="28" loading="lazy" />
         <h2>周常悬赏</h2>
       </div>
-      <p class="hint">每周一（本地时间）刷新进度与领取状态。完成条目可领取灵石与唤灵髓。</p>
+      <p class="hint">每周一（本地时间）刷新进度与领取状态。幻域、唤引、铸灵、灵田、吐纳、破境、洞府委托均可推进条目。</p>
       <p class="hint sm bounty-week-line"><img class="bounty-week-focus-ribbon-ico" src="${UI_BOUNTY_WEEKLY_FOCUS_RIBBON}" alt="" width="72" height="18" loading="lazy" /><img class="bounty-week-focus-ico" src="${UI_BOUNTY_WAVES_FOCUS_BADGE}" alt="" width="16" height="16" loading="lazy" />当前周次：<strong>${wk}</strong>${isLastDayOfWeek ? `<img class="bounty-last-day-alert-badge" src="${UI_BOUNTY_LAST_DAY_ALERT_BADGE}" alt="本周最后一天提示" width="18" height="18" loading="lazy" />` : ""}</p>
       <div class="bounty-next-target" id="bounty-next-target">
         <span class="bounty-next-target-kicker">本周建议目标</span>

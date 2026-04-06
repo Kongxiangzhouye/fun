@@ -298,6 +298,8 @@ export const UI_BOUNTY_GARDEN_DECO = asset(WEEKLY_BOUNTY_UI_FILES.garden);
 export const UI_BOUNTY_TUNA_DECO = asset(WEEKLY_BOUNTY_UI_FILES.tuna);
 /** 周常悬赏 · 破境精进 */
 export const UI_BOUNTY_REALM_DECO = asset(WEEKLY_BOUNTY_UI_FILES.realm);
+/** 周常悬赏 · 洞府委托 */
+export const UI_BOUNTY_ESTATE_DECO = asset(WEEKLY_BOUNTY_UI_FILES.estate);
 /** 周常悬赏 · 一键领取按钮内图标 */
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset(WEEKLY_BOUNTY_UI_FILES.claimAll);
 /** 周常悬赏 · 领取反馈爆闪徽记 */
@@ -558,6 +560,12 @@ export const UI_FAST_FORWARD_TIME_ADVANCE = asset("icon-fast-forward-time-advanc
 export const UI_FAST_FORWARD_WEEKLY_SYNC = asset("icon-fast-forward-weekly-sync.svg");
 /** 闭关快进 · 天机匣周键同步提示 */
 export const UI_FAST_FORWARD_STASH_SYNC = asset("icon-fast-forward-stash-sync.svg");
+/** 时间语义 · 收益倍率实时态 */
+export const UI_TIME_SEMANTIC_LIVE = asset("icon-time-semantic-live.svg");
+/** 时间语义 · 收益倍率到期态 */
+export const UI_TIME_SEMANTIC_LOCKED = asset("icon-time-semantic-locked.svg");
+/** 离线奇遇 · 渲染与实时读数共用快照标记 */
+export const UI_OFFLINE_READOUT_SYNC = asset("offline-readout-sync.svg");
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);

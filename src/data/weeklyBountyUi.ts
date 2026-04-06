@@ -6,6 +6,7 @@ export const WEEKLY_BOUNTY_UI_FILES = {
   garden: "bounty-garden-deco.svg",
   tuna: "bounty-tuna-deco.svg",
   realm: "bounty-realm-deco.svg",
+  estate: "bounty-estate-deco.svg",
   claimAll: "bounty-claim-all-deco.svg",
   claimBurst: "bounty-claim-burst.svg",
   claimEchoBadge: "bounty-weekly-claim-echo-badge.svg",

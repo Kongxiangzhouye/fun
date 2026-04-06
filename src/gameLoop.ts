@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import type { GameState } from "./types";
 import { ESSENCE_COST_SINGLE, ESSENCE_COST_GEAR_SINGLE, MAX_OFFLINE_SEC_BASE, TUNA_COOLDOWN_MS } from "./types";
-import { incomePerSecond, realmBreakthroughCostForState } from "./economy";
+import { incomePerSecondAt, realmBreakthroughCostForState } from "./economy";
 import { totalCardsInPool } from "./storage";
 import { tryCompleteAchievements } from "./achievements";
 import { addStones, stones, subStones, canAfford } from "./stones";
@@ -139,7 +139,7 @@ export function applyTick(state: GameState, now: number): void {
     tickCombatHpRegen(state, dt);
     tickDungeon(state, dt, tickNow);
     tickEstateCommission(state, tickNow);
-    const ips = incomePerSecond(state, totalCardsInPool());
+    const ips = incomePerSecondAt(state, totalCardsInPool(), tickNow);
     if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips);
     addStones(state, ips.mul(dt));
     if (state.autoSalvageAccumSec == null || !Number.isFinite(state.autoSalvageAccumSec)) state.autoSalvageAccumSec = 0;
@@ -206,6 +206,12 @@ interface OfflineLikeAdvanceResult {
   settledSec: number;
 }
 
+function nextOfflineBoostBoundaryMs(state: GameState, cursorMs: number): number {
+  const until = state.offlineAdventure.activeBoostUntilMs;
+  if (!Number.isFinite(until) || until <= cursorMs) return Number.POSITIVE_INFINITY;
+  return until;
+}
+
 function advanceOfflineLikeTimeline(
   state: GameState,
   startMs: number,
@@ -213,15 +219,15 @@ function advanceOfflineLikeTimeline(
   finalWeekSyncMs: number,
 ): OfflineLikeAdvanceResult {
   if (settledSec <= 1e-6) return { gained: new Decimal(0), settledSec: 0 };
-  const ips = incomePerSecond(state, totalCardsInPool());
-  const mult = earthOfflineIncomeMult(state);
   let gained = new Decimal(0);
   let remainSec = settledSec;
   let cursorMs = startMs;
   ensureWeeklyBountyWeek(state, cursorMs);
   ensureCelestialStashWeek(state, cursorMs);
   while (remainSec > 1e-6) {
-    const boundaryMs = nextWeeklyBoundaryMs(cursorMs);
+    const weekBoundaryMs = nextWeeklyBoundaryMs(cursorMs);
+    const boostBoundaryMs = nextOfflineBoostBoundaryMs(state, cursorMs);
+    const boundaryMs = Math.min(weekBoundaryMs, boostBoundaryMs);
     const segSec = Math.min(remainSec, Math.max(0, (boundaryMs - cursorMs) / 1000));
     if (segSec <= 1e-6) {
       ensureWeeklyBountyWeek(state, boundaryMs);
@@ -229,6 +235,8 @@ function advanceOfflineLikeTimeline(
       cursorMs = boundaryMs;
       continue;
     }
+    const ips = incomePerSecondAt(state, totalCardsInPool(), cursorMs);
+    const mult = earthOfflineIncomeMult(state);
     const segGain = ips.mul(segSec).mul(mult);
     applyOfflineLikeProgress(state, segSec, segGain, ips, mult);
     const segStart = cursorMs;

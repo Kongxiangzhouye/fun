@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
+import Decimal from "decimal.js";
 import { createInitialState } from "../state";
 import { pullOne, UR_PITY_MAX } from "../gacha";
 import { catchUpOffline, maxOfflineSec } from "../gameLoop";
+import { incomePerSecondAt } from "../economy";
+import { earthOfflineIncomeMult } from "../deckSynergy";
 import { WEEKLY_BOUNTY_TASKS, noteWeeklyBountyWave, weeklyBountyProgress } from "../systems/weeklyBounty";
+import { totalCardsInPool } from "../storage";
 
 function runUrPitySmoke(): void {
   const st = createInitialState();
@@ -33,10 +37,26 @@ function runDungeonWeeklyLinkSmoke(): void {
   assert.equal(after, before + 2, "副本推进应联动累计到周常波次进度");
 }
 
+function runOfflineBoostExpiryBoundarySmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  const durationSec = 3600;
+  st.lastTick = now - durationSec * 1000;
+  st.offlineAdventure.activeBoostMult = 1.5;
+  st.offlineAdventure.activeBoostUntilMs = st.lastTick + 1800 * 1000;
+  const baseIps = incomePerSecondAt(st, totalCardsInPool(), st.lastTick).div(1.5);
+  const expected = baseIps.mul(1800 * 1.5 + 1800).mul(earthOfflineIncomeMult(st));
+  const out = catchUpOffline(st, now);
+  const delta = out.stoneGain.sub(expected).abs();
+  const tolerance = Decimal.max(1, expected.mul(0.002));
+  assert.ok(delta.lte(tolerance), `跨过离线增益到期点时收益不应整段高倍率结算: delta=${delta.toFixed(3)}`);
+}
+
 function main(): void {
   runUrPitySmoke();
   runOfflineCapBoundarySmoke();
   runDungeonWeeklyLinkSmoke();
+  runOfflineBoostExpiryBoundarySmoke();
   // eslint-disable-next-line no-console
   console.log("progression smoke passed");
 }

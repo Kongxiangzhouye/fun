@@ -56,9 +56,9 @@ export function effectiveDeckSlots(state: GameState): number {
   return Math.min(DECK_SIZE, 4 + state.meta.deckSlots);
 }
 
-/** 灵石/秒（五行构筑 + 洞府蕴灵；全局灵息系数已去刻度波动） */
-export function incomePerSecond(state: GameState, totalCardsInPool: number): Decimal {
-  const now = Date.now();
+/** 灵石/秒（五行构筑 + 洞府蕴灵；显式时间语义） */
+export function incomePerSecondAt(state: GameState, totalCardsInPool: number, nowMs: number): Decimal {
+  const now = nowMs;
   const vigBase = idleLingXiFactor(state) * veinLingXiMult(state.vein.lingXi);
   const vigFactor = new Decimal(vigBase);
   const base = realmBaseIncome(state.realmLevel);
@@ -91,12 +91,18 @@ export function incomePerSecond(state: GameState, totalCardsInPool: number): Dec
     .mul(offlineAdventureBoostMult(state, now));
 }
 
+/** 兼容旧调用：未传时间时使用当前时刻。 */
+export function incomePerSecond(state: GameState, totalCardsInPool: number): Decimal {
+  return incomePerSecondAt(state, totalCardsInPool, Date.now());
+}
+
 /** 每秒灵石拆成「境界基息」与「灵卡汇流」，便于界面展示成长来源 */
 export function incomeBreakdownForDisplay(
   state: GameState,
   totalCardsInPool: number,
+  nowMs = Date.now(),
 ): { total: Decimal; fromRealm: Decimal; fromDeck: Decimal } {
-  const now = Date.now();
+  const now = nowMs;
   const vigBase = idleLingXiFactor(state) * veinLingXiMult(state.vein.lingXi);
   const vigFactor = new Decimal(vigBase);
   const base = realmBaseIncome(state.realmLevel);
@@ -136,8 +142,9 @@ export function incomeBreakdownForDisplay(
 export function incomeSourceBreakdownForDisplay(
   state: GameState,
   totalCardsInPool: number,
+  nowMs = Date.now(),
 ): { total: Decimal; realmCore: Decimal; deckCore: Decimal; boostBonus: Decimal } {
-  const total = incomePerSecond(state, totalCardsInPool);
+  const total = incomePerSecondAt(state, totalCardsInPool, nowMs);
   const base = realmBaseIncome(state.realmLevel);
   const deckProd = computeDeckProdDecimal(state);
   const core = base.plus(deckProd);

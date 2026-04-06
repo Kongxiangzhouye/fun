@@ -3770,6 +3770,12 @@ h1 {
   gap: 6px;
 }
 
+.offline-panel-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .offline-resonance-line,
 .offline-boost-rule-line {
   border-radius: 8px;
