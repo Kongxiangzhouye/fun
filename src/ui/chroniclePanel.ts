@@ -12,6 +12,7 @@ import {
   UI_CHRONICLE_CARD_SALVAGE_STAT,
   UI_CHRONICLE_CARD_STAR_STAT,
   UI_CHRONICLE_CARD_TEN_PULL_STAT,
+  UI_CHRONICLE_TOTAL_CARD_PULLS_STAT,
   UI_CHRONICLE_CARD_SINGLE_PULL_STAT,
   UI_CHRONICLE_GEAR_TEN_PULL_STAT,
   UI_CHRONICLE_GEAR_SINGLE_PULL_STAT,
@@ -118,9 +119,12 @@ export function renderChroniclePanel(state: GameState): string {
             <strong class="chronicle-stat-val">${ls.realmBreakthroughs} 次</strong>
           </div>
         </div>
-        <div class="chronicle-stat-card">
-          <span class="chronicle-stat-lbl">灵卡累计唤引</span>
-          <strong class="chronicle-stat-val">${state.totalPulls} 次</strong>
+        <div class="chronicle-stat-card chronicle-stat-card--total-card-pulls">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_TOTAL_CARD_PULLS_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵卡累计唤引</span>
+            <strong class="chronicle-stat-val">${state.totalPulls} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--card-ten-pull">
           <img class="chronicle-stat-ico" src="${UI_CHRONICLE_CARD_TEN_PULL_STAT}" alt="" width="32" height="32" loading="lazy" />

@@ -112,6 +112,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "gacha",
   },
   {
+    id: "pulls_3000",
+    title: "愿潮三千",
+    desc: "累计灵卡唤引 3000 次",
+    rewardStones: 28000,
+    rewardEssence: 320,
+    listDeco: "gacha",
+  },
+  {
+    id: "pulls_8000",
+    title: "唤尽千嶂",
+    desc: "累计灵卡唤引 8000 次",
+    rewardStones: 52000,
+    rewardEssence: 480,
+    listDeco: "petPullBloom",
+  },
+  {
     id: "card_ten_sessions_5",
     title: "十连初愿",
     desc: "灵卡十连唤引完成累计 5 次",
@@ -1249,6 +1265,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.totalPulls >= 500;
     case "pulls_1000":
       return state.totalPulls >= 1000;
+    case "pulls_3000":
+      return state.totalPulls >= 3000;
+    case "pulls_8000":
+      return state.totalPulls >= 8000;
     case "card_ten_sessions_5":
       return (state.lifetimeStats?.cardTenPullSessions ?? 0) >= 5;
     case "card_ten_sessions_30":

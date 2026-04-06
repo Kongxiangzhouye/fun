@@ -776,6 +776,17 @@ function runZaoHuaYuSpentAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "zao_hua_yu_spent_23"));
 }
 
+function runTotalPullsMilestoneAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("pulls_3000"));
+  st.totalPulls = 3000;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "pulls_3000"));
+  st.totalPulls = 8000;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "pulls_8000"));
+}
+
 function runCardTenPullSessionAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("card_ten_sessions_5"));
@@ -1196,6 +1207,7 @@ function main(): void {
   runEstateCommissionAchievementsSmoke();
   runReincarnationTierAchievementsSmoke();
   runRealmLevelTierAchievementsSmoke();
+  runTotalPullsMilestoneAchievementsSmoke();
   runBattleSkillAndGearSalvageAchievementsSmoke();
   runCardSalvageAndVeinAchievementsSmoke();
   runOfflineAdventureAndMetaAchievementsSmoke();
