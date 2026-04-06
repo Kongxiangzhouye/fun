@@ -190,6 +190,8 @@ export const UI_ACH_GARDEN_BLOOM_DECO = asset("ach-garden-bloom-deco.svg");
 export const UI_ACH_STASH_DECO = asset("ach-stash-deco.svg");
 /** 成就列表 · 蓄灵池系条目左侧小徽 */
 export const UI_ACH_RESERVOIR_DECO = asset("ach-reservoir-deco.svg");
+/** 成就列表 · 蓄灵池超高累计收取里程碑（渊涌） */
+export const UI_ACH_RESERVOIR_BLOOM_DECO = asset("ach-reservoir-bloom-deco.svg");
 /** 成就列表 · 心斋卦象系条目左侧小徽 */
 export const UI_ACH_FORTUNE_DECO = asset("ach-fortune-deco.svg");
 /** 成就列表 · 洞府蕴灵（共鸣线）系条目左侧小徽 */

@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "petPullBloom" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
+  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "petPullBloom" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "reservoir" | "reservoirBloom" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -352,6 +352,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "reservoir",
   },
   {
+    id: "spirit_reservoir_200",
+    title: "蓄灵渊深",
+    desc: "从蓄灵池累计收取 200 次灵石",
+    rewardStones: 3200,
+    rewardEssence: 88,
+    listDeco: "reservoirBloom",
+  },
+  {
     id: "daily_fortune_1",
     title: "心斋有象",
     desc: "经历 1 次卦象日更替",
@@ -621,6 +629,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 1;
     case "spirit_reservoir_50":
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 50;
+    case "spirit_reservoir_200":
+      return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 200;
     case "daily_fortune_1":
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
     case "daily_fortune_30":
