@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "naming": "Filenames from GARDEN_CROPS[].artFile in src/systems/spiritGarden.ts; served as public/assets/ui/<file>.",
+  "crops": [
+    { "id": "qing_grass", "name": "青心草", "file": "garden-crop-qing.svg" },
+    { "id": "cloud_shroom", "name": "云芝", "file": "garden-crop-cloud.svg" },
+    { "id": "jade_mist", "name": "玉露花", "file": "garden-crop-jade.svg" }
+  ]
+}
