@@ -139,6 +139,7 @@ import {
   UI_HEAD_COMBAT,
   UI_HUB_SECTION_FLAIR,
   UI_HEAD_SPIRIT_RESERVOIR,
+  UI_SPIRIT_RESERVOIR_AUTO,
   UI_SPIRIT_RESERVOIR_ETA,
   UI_HEAD_DAILY_FORTUNE,
   UI_ACH_FORGE_DECO,
@@ -236,6 +237,7 @@ import {
   canClaimSpiritReservoir,
   claimSpiritReservoir,
   formatSpiritReservoirEtaLine,
+  tryAutoClaimSpiritReservoirIfFull,
 } from "./systems/spiritReservoir";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
@@ -3287,6 +3289,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const canRs = canClaimSpiritReservoir(state);
   const rEtaLine = formatSpiritReservoirEtaLine(state, ips);
   const reservoirNearFull = rPct >= 80 && rPct < 100;
+  const reservoirFull = rPct >= 99.999;
   const reservoirBlock = u.tabSpiritReservoir
     ? `<section class="panel spirit-reservoir-panel">
       <div class="panel-title-art-row">
@@ -3294,7 +3297,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <h2>蓄灵池</h2>
       </div>
       <p class="hint">额外积蓄约 <strong>9%</strong> 当前每秒灵石等效的灵流（与上方主收益并行）；达上限后不再累积。</p>
-      <div class="spirit-reservoir-bar-wrap${reservoirNearFull ? " spirit-reservoir-bar-wrap--near-full" : ""}" id="spirit-reservoir-bar-wrap">
+      <div class="spirit-reservoir-bar-wrap${reservoirNearFull ? " spirit-reservoir-bar-wrap--near-full" : ""}${reservoirFull ? " spirit-reservoir-bar-wrap--full" : ""}" id="spirit-reservoir-bar-wrap">
         <div class="spirit-reservoir-bar"><div class="spirit-reservoir-bar-fill" id="spirit-reservoir-bar-fill" style="width:${rPct}%"></div></div>
         <p class="hint sm spirit-reservoir-readout"><span id="spirit-reservoir-stored">${fmtDecimal(rs)}</span> / <span id="spirit-reservoir-cap">${fmtDecimal(rc)}</span> 灵石</p>
       </div>
@@ -3302,6 +3305,11 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <img class="spirit-reservoir-eta-ico" src="${UI_SPIRIT_RESERVOIR_ETA}" alt="" width="16" height="16" loading="lazy" />
         <span id="spirit-reservoir-eta">${rEtaLine}</span>
       </p>
+      <label class="spirit-reservoir-auto-row">
+        <input type="checkbox" id="chk-spirit-reservoir-auto-claim" data-ui-pref="autoClaimSpiritReservoir" ${state.uiPrefs.autoClaimSpiritReservoir ? "checked" : ""} />
+        <img class="spirit-reservoir-auto-ico" src="${UI_SPIRIT_RESERVOIR_AUTO}" alt="" width="18" height="18" loading="lazy" />
+        <span class="spirit-reservoir-auto-text">蓄满时自动收取并计入灵石</span>
+      </label>
       <button type="button" class="btn ${canRs ? "btn-primary" : ""}" id="btn-spirit-reservoir-claim" ${canRs ? "" : "disabled"}>${canRs ? "收取蓄灵" : "暂无蓄灵"}</button>
     </section>`
     : "";
@@ -4197,6 +4205,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       if (t === "reduceMotion") state.uiPrefs.reduceMotion = checked;
       else if (t === "compactNumbers") state.uiPrefs.compactNumbers = checked;
       else if (t === "soundMuted") state.uiPrefs.soundMuted = checked;
+      else if (t === "autoClaimSpiritReservoir") state.uiPrefs.autoClaimSpiritReservoir = checked;
       else return;
       saveGame(state);
       render();
@@ -5327,7 +5336,10 @@ function updateEstateIdleLiveReadouts(now: number): void {
     const wrap = document.getElementById("spirit-reservoir-bar-wrap");
     if (wrap) {
       wrap.classList.toggle("spirit-reservoir-bar-wrap--near-full", rPct >= 80 && rPct < 100);
+      wrap.classList.toggle("spirit-reservoir-bar-wrap--full", rPct >= 99.999);
     }
+    const autoChk = document.getElementById("chk-spirit-reservoir-auto-claim") as HTMLInputElement | null;
+    if (autoChk) autoChk.checked = state.uiPrefs.autoClaimSpiritReservoir;
     const etaEl = document.getElementById("spirit-reservoir-eta");
     if (etaEl) etaEl.textContent = formatSpiritReservoirEtaLine(state, ips);
     if (elS) elS.textContent = fmtDecimal(rs);
@@ -5403,6 +5415,16 @@ function loop(): void {
     }
   }
   applyTick(state, now);
+  const autoReservoir = tryAutoClaimSpiritReservoirIfFull(state);
+  if (autoReservoir) {
+    tryCompleteAchievements(state);
+    requestSave("蓄灵满溢自动收取", true);
+    toast(`蓄灵已满，已自动收取 ${fmtDecimal(autoReservoir)} 灵石`);
+    if (typeof document !== "undefined") {
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      updateEstateIdleLiveReadouts(now);
+    }
+  }
   const autoSettledOfflineInLoop = maybeAutoSettleOfflineAdventure(now, "loop");
   const autoSettledEstateInLoop = maybeAutoSettleEstateCommission(now, "loop");
   if (autoSettledOfflineInLoop || autoSettledEstateInLoop) {

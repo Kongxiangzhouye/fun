@@ -12,6 +12,7 @@ import {
   tryAutoSettleOfflineAdventurePending,
 } from "../systems/offlineAdventure";
 import { acceptEstateCommission, settleEstateCommission, tryAutoSettleEstateCommission } from "../systems/estateCommission";
+import { reservoirCap, tryAutoClaimSpiritReservoirIfFull } from "../systems/spiritReservoir";
 import {
   serialize,
   deserialize,
@@ -444,6 +445,17 @@ function runOfflineAdventurePendingNormalizeSmoke(): void {
   assert.equal(pending?.options[2].id, "essence", "normalized options should backfill essence");
 }
 
+function runSpiritReservoirAutoClaimSmoke(): void {
+  const st = createInitialState();
+  st.realmLevel = 3;
+  st.uiPrefs.autoClaimSpiritReservoir = true;
+  const cap = reservoirCap(st);
+  st.spiritReservoirStored = cap.toString();
+  const got = tryAutoClaimSpiritReservoirIfFull(st);
+  assert.ok(got != null && got.gt(0), "auto-claim should return positive amount when full");
+  assert.equal(st.spiritReservoirStored, "0", "pool should empty after claim");
+}
+
 function runDaoEssenceBreakdownSmoke(): void {
   const st = createInitialState();
   st.peakSpiritStonesThisLife = "1000000";
@@ -487,6 +499,7 @@ function main(): void {
   runOfflineAdventureAutoRerollBudgetSmoke();
   runOfflineAdventurePendingNormalizeSmoke();
   runDaoEssenceBreakdownSmoke();
+  runSpiritReservoirAutoClaimSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");

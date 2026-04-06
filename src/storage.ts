@@ -813,6 +813,7 @@ export function deserialize(json: string): GameState {
     compactNumbers: data.uiPrefs?.compactNumbers !== false,
     soundMuted: !!data.uiPrefs?.soundMuted,
     masterVolume: normalizeMasterVolume(data.uiPrefs?.masterVolume),
+    autoClaimSpiritReservoir: !!data.uiPrefs?.autoClaimSpiritReservoir,
   };
 
   if (data.pets && typeof data.pets === "object") {

@@ -57,6 +57,17 @@ export function canClaimSpiritReservoir(state: GameState): boolean {
   return reservoirStored(state).gt(0);
 }
 
+/** 偏好开启且池内已达上限时自动收取一次；否则返回 null */
+export function tryAutoClaimSpiritReservoirIfFull(state: GameState): Decimal | null {
+  if (!state.uiPrefs.autoClaimSpiritReservoir) return null;
+  if (!spiritReservoirUnlocked(state)) return null;
+  const cap = reservoirCap(state);
+  if (cap.lte(0)) return null;
+  if (reservoirStored(state).lt(cap)) return null;
+  const got = claimSpiritReservoir(state);
+  return got.gt(0) ? got : null;
+}
+
 /** 按当前灵石/秒推算距离蓄灵池蓄满还需秒数；已满返回 0；无增速返回 null */
 export function secondsToReservoirFull(state: GameState, incomePerSec: Decimal): number | null {
   if (!spiritReservoirUnlocked(state)) return null;

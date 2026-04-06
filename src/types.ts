@@ -453,6 +453,8 @@ export interface UiPrefs {
   soundMuted: boolean;
   /** 主音量 0–1（未静音时对 Web Audio / 后续音效生效） */
   masterVolume: number;
+  /** 蓄灵池蓄满时自动收取（需已解锁蓄灵池） */
+  autoClaimSpiritReservoir: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */
