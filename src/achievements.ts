@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden";
+  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -264,6 +264,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "在天机匣完成 1 次兑换",
     rewardStones: 120,
     rewardEssence: 8,
+    listDeco: "stash",
+  },
+  {
+    id: "celestial_stash_25",
+    title: "天机常顾",
+    desc: "在天机匣累计兑换 25 次",
+    rewardStones: 1900,
+    rewardEssence: 58,
+    listDeco: "stash",
   },
   {
     id: "spirit_reservoir_1",
@@ -490,6 +499,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 12;
     case "celestial_stash_1":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
+    case "celestial_stash_25":
+      return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 25;
     case "spirit_reservoir_1":
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 1;
     case "daily_fortune_1":
