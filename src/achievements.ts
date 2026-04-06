@@ -10,8 +10,8 @@ export interface AchievementDef {
   rewardStones: number;
   /** 唤灵髓 */
   rewardEssence: number;
-  /** 成就列表左侧小装饰（铸灵系 / 训练系等） */
-  listDeco?: "forge" | "train" | "dungeon";
+  /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
+  listDeco?: "forge" | "train" | "dungeon" | "login";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -170,6 +170,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "登录连签达到 7 日",
     rewardStones: 280,
     rewardEssence: 20,
+    listDeco: "login",
   },
   {
     id: "login_streak_30",
@@ -177,6 +178,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "登录连签达到 30 日",
     rewardStones: 1200,
     rewardEssence: 45,
+    listDeco: "login",
+  },
+  {
+    id: "login_streak_60",
+    title: "灵息贯日",
+    desc: "登录连签达到 60 日",
+    rewardStones: 3200,
+    rewardEssence: 85,
+    listDeco: "login",
   },
   {
     id: "celestial_stash_1",
@@ -344,6 +354,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dailyStreak >= 7;
     case "login_streak_30":
       return state.dailyStreak >= 30;
+    case "login_streak_60":
+      return state.dailyStreak >= 60;
     case "celestial_stash_1":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
     case "spirit_reservoir_1":

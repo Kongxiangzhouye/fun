@@ -117,6 +117,7 @@ export function renderGameLoreHtml(): string {
           <li>按<strong>本地日历日</strong>：每日可<strong>领取一次</strong>奖励；跨日刷新领取资格与连签逻辑。</li>
           <li>若昨日已登录且今日继续登录，<strong>连签 +1</strong>；若中断则连签从 <strong>1</strong> 重新计数。</li>
           <li>奖励含灵石与唤灵髓，随连签数提高（具体数值见面板预览）。</li>
+          <li>连签达到 <strong>7 / 30 / 60</strong> 日可在<strong>成就</strong>中领取额外灵石与唤灵髓（与每日灵息礼独立）。</li>
           <li>连签与领取记录<strong>不随轮回清空</strong>。</li>
         </ul>
       </details>
