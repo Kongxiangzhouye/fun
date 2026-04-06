@@ -12,6 +12,8 @@ export const GEAR_BASES: GearBaseDef[] = [
   { id: "blade_wrought", name: "锻纹剑", slot: "weapon", baseItemLevel: 12 },
   { id: "robe_scholar", name: "学者袍", slot: "body", baseItemLevel: 12 },
   { id: "ring_moon", name: "月痕指环", slot: "ring", baseItemLevel: 12 },
+  { id: "spear_cloud", name: "穿云枪", slot: "weapon", baseItemLevel: 12 },
+  { id: "boots_void", name: "虚行靴", slot: "body", baseItemLevel: 12 },
 ];
 
 export function getGearBase(id: string): GearBaseDef | undefined {

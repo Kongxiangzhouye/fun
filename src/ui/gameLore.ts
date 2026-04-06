@@ -33,7 +33,7 @@ export function renderGameLoreHtml(): string {
       <details class="game-lore-block" open>
         <summary><img src="${UI_LORE_GLOSSARY}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 术语速查（白话版）</summary>
         <ul class="game-lore-list">
-          <li><strong>幻域</strong> = 副本；刷怪拿资源。</li>
+          <li><strong>幻域</strong> = 历练副本；刷怪拿<strong>筑灵髓</strong>等。底部页签「<strong>历练·筑灵</strong>」含副本与聚灵阵唤引、铸灵。</li>
           <li><strong>破境</strong> = 升级境界；提升基础强度并解锁功能。境界达 <strong>10 / 20 / 30 / 50 / 75</strong> 重等可在<strong>成就</strong>领奖。</li>
           <li><strong>轮回</strong> = 重开本轮；会重置部分进度，但保留永久向强化。</li>
           <li><strong>洞府</strong> = 永久成长线；投入后跨轮回保留。</li>
@@ -46,7 +46,8 @@ export function renderGameLoreHtml(): string {
         <summary><img src="${UI_LORE_RESOURCES}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 资源与灵石分流</summary>
         <ul class="game-lore-list">
           <li><strong>灵石</strong>：破境、洞府蕴灵、灵卡升阶等主要消耗。</li>
-          <li><strong>唤灵髓</strong>：幻域产出为主，用于聚灵阵唤引与境界铸灵；不可用灵石直接购买。</li>
+          <li><strong>唤灵髓</strong>：聚灵共鸣满百、心法、灵宠、部分周常与成就等；不可用灵石直接购买。</li>
+          <li><strong>筑灵髓</strong>：<strong>历练副本（幻域）</strong>通关与击杀掉落为主；<strong>聚灵阵灵卡唤引、境界铸灵（单抽/十连）</strong>在「历练·筑灵」页消耗筑灵髓；副本入场费亦用筑灵髓；不可用灵石直接购买。</li>
           <li><strong>灵砂 / 玄铁</strong>：分解灵卡 / 装备获得，用于升阶与强化。</li>
           <li>灵卡池<strong>累计唤引</strong>达特定次数可在<strong>成就</strong>领奖（如 <strong>1 / 50 / 100 / 200 / 500 / 1000</strong> 次等）。</li>
           <li>身法、装备与统计汇总在右下角<strong>角色</strong>面板。</li>
@@ -59,7 +60,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>汇灵</strong>：全局灵石效率乘区。</li>
           <li><strong>灵息</strong>：在汇灵等乘区之后，再叠一层灵石效率（约每级 +2.2%，与汇灵叠乘）。</li>
           <li><strong>固元</strong>：以道韵淬炼道基，降低破境灵石消耗。</li>
-          <li><strong>共鸣</strong>：与「聚灵共鸣」进度、幻域唤灵髓结算共用同一乘区（与法篆、词条等叠乘，满级约 +32%）。「共鸣」达 <strong>40 / 80</strong> 级可在<strong>成就</strong>领奖。</li>
+          <li><strong>共鸣</strong>：与「聚灵共鸣」进度、幻域<strong>筑灵髓</strong>结算共用同一乘区（与法篆、词条等叠乘，满级约 +32%）。「共鸣」达 <strong>40 / 80</strong> 级可在<strong>成就</strong>领奖。</li>
           <li>洞府等级<strong>轮回不重置</strong>，可长期投入。</li>
         </ul>
       </details>
@@ -157,11 +158,12 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary><img src="${UI_LORE_DUNGEON}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 幻域副本</summary>
+        <summary><img src="${UI_LORE_DUNGEON}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 历练副本（幻域）</summary>
         <ul class="game-lore-list">
-          <li>首通主要掉落<strong>唤灵髓</strong>；<strong>整关清完</strong>后统一入背包。复刷关会额外给灵砂。</li>
+          <li>首通与击杀主要掉落<strong>筑灵髓</strong>；<strong>整关清完</strong>后结算入袋（无单独背包装备格，见「装备与铸灵」）。复刷关会额外给灵砂。</li>
+          <li><strong>聚灵阵唤引、境界铸灵</strong>已并入本页底部，与副本共用顶栏<strong>筑灵髓</strong>显示。</li>
           <li><strong>幻域生命</strong>为全局状态，进关不会自动回满；接战恢复慢，游走较快。</li>
-          <li>进入波次<strong>不消耗</strong>唤灵髓；阵亡<strong>不损失</strong>灵石，并被送至灵息之地；回满后可<strong>勾选自动进本</strong>或手动进入该关。每次进关<strong>重整阵势与满血敌阵</strong>。</li>
+          <li>进入关卡需消耗<strong>筑灵髓</strong>作入场费（具体见面板）；阵亡<strong>不损失</strong>灵石，并被送至灵息之地；回满后可<strong>勾选自动进本</strong>或手动进入该关。每次进关<strong>重整阵势与满血敌阵</strong>。</li>
           <li>已通关波次可复刷（髓收益降低）。</li>
           <li><strong>阵线对决</strong>：敌我各按攻击间隔<strong>离散出伤 / 承击</strong>，顶条为敌阵总灵压；剑气 / 凶煞读条对齐期望 DPS 与敌方节奏，便于对照数值。</li>
           <li>五行克制会影响伤害；<strong>化劲</strong>可在无敌帧内化解敌方一击。</li>
@@ -183,12 +185,13 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary><img src="${UI_LORE_GEAR}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 行囊与铸灵</summary>
+        <summary><img src="${UI_LORE_GEAR}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 装备与铸灵</summary>
         <ul class="game-lore-list">
-          <li><strong>行囊</strong>：武器 / 衣甲 / 戒指三槽可装备；可<strong>锁定</strong>以防分解与自动分解误吞。</li>
-          <li><strong>铸灵池</strong>：消耗<strong>唤灵髓</strong>铸灵，随机基底与稀有度；连续未出珍品以上会累积珍品保底计数。累计铸灵达 <strong>1 / 50 / 200 / 500 / 1000</strong> 次等可在<strong>成就</strong>领奖（另有珍品、天极稀有度里程碑）。</li>
-          <li><strong>强化 / 精炼</strong>：消耗<strong>玄铁</strong>提升强化等级；UR 可继续精炼（细则见背包页）。</li>
-          <li><strong>分解</strong>：多余装备可分解为玄铁；可在行囊内勾选自动分解的品阶。</li>
+          <li><strong>三槽位</strong>：武器 / 衣甲 / 戒指仅可各穿一件，<strong>无装备背包</strong>；新装备要么<strong>替换</strong>该槽（旧件按规则拆解返玄铁），要么<strong>摧毁</strong>较差件。可<strong>锁定</strong>当前槽以防误替换。</li>
+          <li><strong>筑灵阶与战力</strong>：装备带有<strong>筑灵阶</strong>（多档）与随机词条，阶位越高可 roll 出越强词条；面板显示<strong>战力</strong>便于比对。</li>
+          <li><strong>铸灵</strong>：在「<strong>历练·筑灵</strong>」页消耗<strong>筑灵髓</strong>，随机部位与词条；连续未出珍品以上会累积珍品保底计数。累计铸灵达 <strong>1 / 50 / 200 / 500 / 1000</strong> 次等可在<strong>成就</strong>领奖（另有珍品、天极稀有度里程碑）。</li>
+          <li><strong>强化 / 精炼</strong>：消耗<strong>玄铁</strong>提升强化等级；高稀有可继续精炼（细则见养成→背包装备说明区）。</li>
+          <li><strong>拆解</strong>：替换或卸下时旧件拆解为玄铁（锁定槽不可随意卸下，逻辑见面板提示）。</li>
         </ul>
       </details>
 
@@ -199,7 +202,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>幻域</strong>：累计唤引≥1、或境界≥二重、或幻域累计击溃≥1 波（欢迎引导未完成时可能暂不可见）。</li>
           <li><strong>修炼</strong>：幻域至少通关一波、或境界≥三重、或累计唤引≥六次。</li>
           <li><strong>心法</strong>（修炼页）：与<strong>幻域</strong>入口同条件。</li>
-          <li><strong>背包装备 / 境界铸灵</strong>：获得第一件装备，或累计唤引≥十次。</li>
+          <li><strong>装备界面 / 境界铸灵</strong>：获得第一件装备，或累计唤引≥十次。</li>
           <li><strong>洞府蕴灵</strong>：完成一次唤引，或境界≥二重。</li>
           <li><strong>万象图鉴</strong>：累计唤引≥5次，或境界≥四重。</li>
           <li><strong>唤灵通鉴</strong>：累计唤引≥1次。</li>
@@ -226,7 +229,7 @@ export function renderGameLoreHtml(): string {
         <ul class="game-lore-list">
           <li><strong>上阵</strong>：点空阵位再点仓库，或先点仓库再点阵位；点已有卡的阵位可选中该卡。升阶需灵砂。</li>
           <li>境界达到 <strong>${REINCARNATION_REALM_REQ}</strong> 后可轮回：清空境界、灵石、卡组与持有卡牌；保留图鉴邂逅、成就与元强化。道韵按本轮灵石巅峰等规则结算。</li>
-          <li>累计轮回 <strong>1 / 3 / 5 / 10</strong> 次可在<strong>成就</strong>领取阶段性奖励（灵石与唤灵髓等）。</li>
+          <li>累计轮回 <strong>1 / 3 / 5 / 10</strong> 次可在<strong>成就</strong>领取阶段性奖励（灵石与唤灵髓、筑灵髓等）。</li>
         </ul>
       </details>
 
@@ -238,7 +241,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>灵脉共鸣</strong>：每级全局挂机效率 +8%。</li>
           <li><strong>祈愿加护</strong>：每级略提高唤引高稀有权重。</li>
           <li><strong>额外槽位</strong>：每级卡组 +1 阵位，最多强化 2 级（总槽位上限 6）。</li>
-          <li><strong>轮回赠髓</strong>：每级提高轮回后的初始唤灵髓。</li>
+          <li><strong>轮回赠髓</strong>：每级提高轮回后的初始唤灵髓与筑灵髓。</li>
           <li><strong>灵石心印</strong>：每级灵石获取 +6%。</li>
           <li>除「额外槽位」外，各条目最高可升至 <strong>20</strong> 级；花费道韵随等级递增。</li>
           <li><strong>造化玉</strong>：与道韵不同，用于「角色」等处解锁便利功能（如十连、自动抽卡等），多来自成就等。</li>
@@ -251,7 +254,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>入口</strong>：「角色」→ 道韵灵窍（解锁后可见）。解锁条件与「功能解锁一览」中<strong>道韵灵窍</strong>条目一致。</li>
           <li>共 <strong>5</strong> 重，依次消耗道韵点亮；下一重花费为 <strong>18 / 36 / 54 / 72 / 96</strong>（已满则不再显示）。</li>
           <li><strong>汇灵窍</strong>：灵石挂机收益提升。</li>
-          <li><strong>淬髓窍</strong>：幻域唤灵髓收益提升。</li>
+          <li><strong>淬髓窍</strong>：幻域<strong>筑灵髓</strong>收益提升。</li>
           <li><strong>缘法窍</strong>：唤引时高稀有倾向微量提升。</li>
           <li><strong>固本窍</strong>：生命上限提升。</li>
           <li><strong>战意窍</strong>：幻域内攻击提升。</li>

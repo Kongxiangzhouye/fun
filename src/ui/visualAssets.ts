@@ -41,6 +41,16 @@ export const GEAR_SLOT_ICON: Record<"weapon" | "body" | "ring", string> = {
   ring: asset("gear-ring.png"),
 };
 
+/** 各装备基底立绘（`public/assets/ui/gear-base-<baseId>.png`）；有映射则用立绘，否则回退槽位图标 */
+export const GEAR_BASE_PORTRAIT: Record<string, string> = {};
+
+export function gearPortraitSrc(
+  baseId: string,
+  slot: "weapon" | "body" | "ring",
+): string {
+  return GEAR_BASE_PORTRAIT[baseId] ?? GEAR_SLOT_ICON[slot];
+}
+
 /** 抽卡页装饰、共鸣图标、保底星印（自绘 SVG） */
 export const UI_GACHA_DECOR = asset("gacha-decor.svg");
 export const UI_RESONANCE_CORE = asset("resonance-core.svg");

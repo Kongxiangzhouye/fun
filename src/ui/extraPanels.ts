@@ -36,7 +36,7 @@ import { BATTLE_SKILLS } from "../data/battleSkills";
 import { battleSkillPullCost, describeBattleSkillLevels } from "../systems/battleSkills";
 import { rarityZh } from "./rarityZh";
 import {
-  GEAR_SLOT_ICON,
+  gearPortraitSrc,
   PET_PORTRAIT,
   UI_ESSENCE,
   UI_EMPTY_GEAR,
@@ -604,7 +604,7 @@ export function renderGearPanel(
       <div class="gear-row equipped ${locked ? "is-locked" : ""}">
         <div class="gear-row-visual">
           <div class="gear-icon-wrap rarity-${g.rarity}">
-            <img src="${GEAR_SLOT_ICON[g.slot]}" alt="" width="32" height="32" loading="lazy" class="gear-slot-icon" />
+            <img src="${gearPortraitSrc(g.baseId, g.slot)}" alt="" width="32" height="32" loading="lazy" class="gear-slot-icon" />
           </div>
           <div>
           <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade} · ilvl ${g.itemLevel}
@@ -657,7 +657,7 @@ export function renderGearPanel(
       detailBlock = `<div class="gear-equipped-detail" id="gear-equipped-detail">
         <div class="gear-equipped-detail-head">
           <div class="gear-icon-wrap rarity-${g.rarity}">
-            <img src="${GEAR_SLOT_ICON[g.slot]}" alt="" width="40" height="40" loading="lazy" class="gear-slot-icon" />
+            <img src="${gearPortraitSrc(g.baseId, g.slot)}" alt="" width="40" height="40" loading="lazy" class="gear-slot-icon" />
           </div>
           <div>
             <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade} · ilvl ${g.itemLevel}
