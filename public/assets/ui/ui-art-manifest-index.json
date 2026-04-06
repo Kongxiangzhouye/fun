@@ -3,6 +3,8 @@
   "description": "Entry points for static UI art manifests (HUD, empty states, gacha pool, panel chrome, player profile, hub headers, hub vein flair, dungeon duel, chronicle headers, achievements list, lore journal, feature page heads, gear inventory, weekly bounty, gear, pets, garden, elements, rarity). Not loaded at runtime.",
   "conventions": "ui-art-conventions.json",
   "categories": "ui-art-manifest-categories.json",
+  "handoffManifest": "ui-art-handoff-manifest.json",
+  "importProfiles": "ui-art-import-profiles.json",
   "qualityChecklist": "ui-art-qc-checklist.json",
   "manifests": [
     { "id": "hud_bar_icons", "file": "hud-bar-icons-manifest.json" },

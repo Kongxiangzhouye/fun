@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "id": "ui_icon_png",
+      "match": "*.png",
+      "usage": "HUD/背包/状态图标",
+      "import": {
+        "alpha": true,
+        "mipmap": false,
+        "compression": "high_quality",
+        "colorSpace": "sRGB",
+        "pixelSnap": true
+      },
+      "packing": {
+        "atlasGroup": "ui_icons",
+        "allowRotation": false,
+        "padding": 4
+      }
+    },
+    {
+      "id": "ui_panel_svg",
+      "match": "*.svg",
+      "usage": "面板装饰与可缩放矢量",
+      "import": {
+        "rasterizeAt": 2.0,
+        "mipmap": false,
+        "colorSpace": "sRGB"
+      },
+      "packing": {
+        "atlasGroup": "ui_chrome",
+        "allowRotation": false,
+        "padding": 8
+      }
+    }
+  ]
+}
