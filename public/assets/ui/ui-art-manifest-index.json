@@ -1,9 +1,10 @@
 {
   "version": 1,
-  "description": "Entry points for static UI art manifests (gear, pets, garden). Not loaded at runtime.",
+  "description": "Entry points for static UI art manifests (gear, pets, garden, elements). Not loaded at runtime.",
   "manifests": [
     { "id": "gear_bases", "file": "gear-bases-manifest.json" },
     { "id": "pet_portraits", "file": "pet-portraits-manifest.json" },
-    { "id": "garden_crops", "file": "garden-crops-manifest.json" }
+    { "id": "garden_crops", "file": "garden-crops-manifest.json" },
+    { "id": "element_icons", "file": "element-icons-manifest.json" }
   ]
 }
