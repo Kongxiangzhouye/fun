@@ -3,6 +3,15 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Weekly surge + dungeon weakness ping feedback add-on (P1)",
+      "highlights": [
+        "Added weekly surge badge SVG to support fast recognition for end-of-week bounty push moments.",
+        "Added dungeon weakness ping SVG decal to reinforce weak-point confirmation during high-pressure combat windows.",
+        "Synced weekly/dungeon manifests, source maps, and visual asset export keys without business-logic changes."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Dungeon parry + weekly overdue feedback fill (P1)",
       "highlights": [
         "Added dungeon parry spark SVG decal to improve high-frequency defensive confirmation readability.",

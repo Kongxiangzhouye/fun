@@ -10,6 +10,7 @@ export const DUNGEON_DUEL_UI_FILES = {
   hitConfirmRingDeco: "deco-dungeon-hit-confirm-ring.svg",
   comboChainDeco: "deco-dungeon-combo-chain.svg",
   parrySparkDeco: "deco-dungeon-parry-spark.svg",
+  weaknessPingDeco: "deco-dungeon-weakness-ping.svg",
   staggerPulseDeco: "deco-dungeon-stagger-pulse.svg",
   finisherSealDeco: "deco-dungeon-finisher-seal.svg",
   gaugeSword: "deco-duel-gauge-sword.svg",
