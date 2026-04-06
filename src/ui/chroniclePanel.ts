@@ -11,9 +11,11 @@ import {
   UI_CHRONICLE_FENTIAN_STAT,
   UI_CHRONICLE_FORTUNE_STAT,
   UI_CHRONICLE_GARDEN_HARVEST_STAT,
+  UI_CHRONICLE_GARDEN_PLANT_STAT,
   UI_CHRONICLE_GEAR_SALVAGE_STAT,
   UI_CHRONICLE_META_UPGRADE_STAT,
   UI_CHRONICLE_OFFLINE_ADVENTURE_STAT,
+  UI_CHRONICLE_PET_FEED_STAT,
   UI_CHRONICLE_PET_PULL_STAT,
   UI_CHRONICLE_TUNA_STAT,
   UI_CHRONICLE_VEIN_UPGRADE_STAT,
@@ -87,6 +89,13 @@ export function renderChroniclePanel(state: GameState): string {
             <strong class="chronicle-stat-val">${state.petPullsTotal} 次</strong>
           </div>
         </div>
+        <div class="chronicle-stat-card chronicle-stat-card--pet-feed">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_PET_FEED_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵宠喂养</span>
+            <strong class="chronicle-stat-val">${ls.petFeeds} 次</strong>
+          </div>
+        </div>
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">累计铸灵</span>
           <strong class="chronicle-stat-val">${ls.gearForgesTotal} 次</strong>
@@ -150,6 +159,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">灵田收获</span>
             <strong class="chronicle-stat-val">${state.spiritGarden.totalHarvests} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--garden-plant">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_GARDEN_PLANT_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵田种植</span>
+            <strong class="chronicle-stat-val">${ls.gardenPlants} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--resonance">

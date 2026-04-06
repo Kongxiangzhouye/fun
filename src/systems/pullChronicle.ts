@@ -53,6 +53,8 @@ export function normalizeLifetimeStats(st: GameState): void {
       veinUpgrades: 0,
       offlineAdventureCompletions: 0,
       metaUpgrades: 0,
+      petFeeds: 0,
+      gardenPlants: 0,
     };
     return;
   }
@@ -121,6 +123,12 @@ export function normalizeLifetimeStats(st: GameState): void {
   const mu = st.lifetimeStats.metaUpgrades;
   if (mu == null || !Number.isFinite(mu)) st.lifetimeStats.metaUpgrades = 0;
   else st.lifetimeStats.metaUpgrades = Math.max(0, Math.floor(mu));
+  const pf = st.lifetimeStats.petFeeds;
+  if (pf == null || !Number.isFinite(pf)) st.lifetimeStats.petFeeds = 0;
+  else st.lifetimeStats.petFeeds = Math.max(0, Math.floor(pf));
+  const gp = st.lifetimeStats.gardenPlants;
+  if (gp == null || !Number.isFinite(gp)) st.lifetimeStats.gardenPlants = 0;
+  else st.lifetimeStats.gardenPlants = Math.max(0, Math.floor(gp));
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */

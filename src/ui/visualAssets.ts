@@ -81,6 +81,10 @@ export const UI_CHRONICLE_VEIN_UPGRADE_STAT = asset("chronicle-vein-upgrade-stat
 export const UI_CHRONICLE_OFFLINE_ADVENTURE_STAT = asset("chronicle-offline-adventure-stat.svg");
 /** 唤灵通鉴 · 轮回元强化累计小标 */
 export const UI_CHRONICLE_META_UPGRADE_STAT = asset("chronicle-meta-upgrade-stat.svg");
+/** 唤灵通鉴 · 灵宠喂养累计小标 */
+export const UI_CHRONICLE_PET_FEED_STAT = asset("chronicle-pet-feed-stat.svg");
+/** 唤灵通鉴 · 灵田种植累计小标 */
+export const UI_CHRONICLE_GARDEN_PLANT_STAT = asset("chronicle-garden-plant-stat.svg");
 /** 偏好设置 · 轮回确认框开关旁 */
 export const UI_PREF_CONFIRM_REINCARNATION = asset("ui-pref-confirm-reincarnation.svg");
 /** 偏好设置 · 动态标签标题开关旁 */

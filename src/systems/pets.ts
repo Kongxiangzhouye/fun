@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import type { GameState, PetId } from "../types";
+import { normalizeLifetimeStats } from "./pullChronicle";
 import { getPetDef, PET_DEFS, PET_RARITY_POWER, type PetDef } from "../data/pets";
 
 /** 与策划一致：累计通关幻域波次 ≥ 此值后开放灵宠池 */
@@ -199,6 +200,8 @@ export function feedPet(state: GameState, id: PetId): boolean {
     p.level = level;
     p.xp = xp;
   }
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.petFeeds += 1;
   return true;
 }
 

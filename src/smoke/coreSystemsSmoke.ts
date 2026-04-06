@@ -656,6 +656,23 @@ function runFenTianBurstAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
 }
 
+function runPetFeedAndGardenPlantAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("pet_feeds_100"), "pet feeds 100 should start locked");
+  st.lifetimeStats.petFeeds = 100;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "pet_feeds_100"), "100 pet feeds should unlock");
+  st.lifetimeStats.petFeeds = 500;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "pet_feeds_500"), "500 pet feeds should unlock");
+  st.lifetimeStats.gardenPlants = 80;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "garden_plants_80"), "80 garden plants should unlock");
+  st.lifetimeStats.gardenPlants = 320;
+  const d = tryCompleteAchievements(st);
+  assert.ok(d.some((x) => x.id === "garden_plants_320"), "320 garden plants should unlock");
+}
+
 function runOfflineAdventureAndMetaAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("offline_adventure_35"), "offline 35 should start locked");
@@ -818,6 +835,7 @@ function main(): void {
   runBattleSkillAndGearSalvageAchievementsSmoke();
   runCardSalvageAndVeinAchievementsSmoke();
   runOfflineAdventureAndMetaAchievementsSmoke();
+  runPetFeedAndGardenPlantAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

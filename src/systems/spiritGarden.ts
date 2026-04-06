@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { normalizeLifetimeStats } from "./pullChronicle";
 import type { GameState, GardenCropId } from "../types";
 import { addStones, canAfford, subStones } from "../stones";
 import { noteWeeklyBountyGardenHarvest } from "./weeklyBounty";
@@ -101,6 +102,8 @@ export function plantCrop(state: GameState, plotIndex: number, crop: GardenCropI
   plot.crop = crop;
   plot.plantedAtMs = now;
   plot.lastCrop = crop;
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.gardenPlants += 1;
   return true;
 }
 

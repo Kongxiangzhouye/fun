@@ -448,6 +448,38 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "reincarnation",
   },
   {
+    id: "pet_feeds_100",
+    title: "饲灵百课",
+    desc: "灵宠喂养成功累计 100 次",
+    rewardStones: 1400,
+    rewardEssence: 48,
+    listDeco: "pet",
+  },
+  {
+    id: "pet_feeds_500",
+    title: "千饲同心",
+    desc: "灵宠喂养成功累计 500 次",
+    rewardStones: 5600,
+    rewardEssence: 115,
+    listDeco: "petPullBloom",
+  },
+  {
+    id: "garden_plants_80",
+    title: "青田初播",
+    desc: "灵田种植成功累计 80 次",
+    rewardStones: 900,
+    rewardEssence: 35,
+    listDeco: "garden",
+  },
+  {
+    id: "garden_plants_320",
+    title: "四时轮种",
+    desc: "灵田种植成功累计 320 次",
+    rewardStones: 4200,
+    rewardEssence: 92,
+    listDeco: "gardenBloom",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -921,6 +953,14 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.metaUpgrades ?? 0) >= 30;
     case "meta_upgrades_120":
       return (state.lifetimeStats?.metaUpgrades ?? 0) >= 120;
+    case "pet_feeds_100":
+      return (state.lifetimeStats?.petFeeds ?? 0) >= 100;
+    case "pet_feeds_500":
+      return (state.lifetimeStats?.petFeeds ?? 0) >= 500;
+    case "garden_plants_80":
+      return (state.lifetimeStats?.gardenPlants ?? 0) >= 80;
+    case "garden_plants_320":
+      return (state.lifetimeStats?.gardenPlants ?? 0) >= 320;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

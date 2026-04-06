@@ -10345,6 +10345,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--pet-feed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(110, 170, 120, 0.4);
+  background: linear-gradient(145deg, rgba(18, 42, 28, 0.6), rgba(10, 18, 14, 0.72));
+}
+
+.chronicle-stat-card--pet-feed .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--pet-feed .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--fortune {
   display: flex;
   align-items: center;
@@ -10375,6 +10392,23 @@ p.gear-forge-tier-hint {
 }
 
 .chronicle-stat-card--garden-harvest .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.chronicle-stat-card--garden-plant {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(120, 160, 80, 0.36);
+  background: linear-gradient(145deg, rgba(28, 44, 22, 0.58), rgba(12, 20, 10, 0.7));
+}
+
+.chronicle-stat-card--garden-plant .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--garden-plant .chronicle-stat-ico {
   flex-shrink: 0;
   opacity: 0.95;
 }

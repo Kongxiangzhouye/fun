@@ -104,6 +104,10 @@ export interface LifetimeStatsState {
   offlineAdventureCompletions: number;
   /** 轮回元强化（道韵购买）成功次数（终身，含自动） */
   metaUpgrades: number;
+  /** 灵宠喂养成功次数（每次消耗唤灵髓喂养计 1，含自动） */
+  petFeeds: number;
+  /** 灵田种植成功次数（每次播种计 1，含自动续种） */
+  gardenPlants: number;
 }
 
 /** 灵田作物 id */
