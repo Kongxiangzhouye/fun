@@ -6,6 +6,8 @@ import {
   UI_SAVE_DOWNLOAD_DECO,
   UI_SAVE_IMPORT_BADGE_WARN,
   UI_SAVE_IMPORT_TIP_DECO,
+  UI_SAVE_SAVED_ICON,
+  UI_SAVE_SAVING_ICON,
   UI_SAVE_SLOT_LABEL_DECO,
   UI_SAVE_SLOTS_DECO,
 } from "./visualAssets";
@@ -91,6 +93,16 @@ export function renderSaveToolsPanel(fmtPlaytimeSec: (sec: number) => string): s
       </button>
       <input type="text" id="import-input" class="import-input" placeholder="粘贴存档字符串" />
       <button class="btn" type="button" id="btn-import">导入存档</button>
+    </div>
+    <div class="save-schedule-feedback" id="save-schedule-feedback" role="status" aria-live="polite" aria-atomic="true">
+      <span class="loading-chip save-saving-indicator" id="save-saving-indicator">
+        <img src="${UI_SAVE_SAVING_ICON}" alt="" width="14" height="14" loading="lazy" />
+        <span id="save-saving-text">统一存盘调度：待机</span>
+      </span>
+      <span class="status-badge status-badge--ready save-saved-indicator" id="save-saved-indicator" hidden>
+        <img src="${UI_SAVE_SAVED_ICON}" alt="" width="14" height="14" loading="lazy" />
+        已保存
+      </span>
     </div>
     <section class="save-import-result-panel is-idle" id="save-import-result-panel" aria-live="polite" aria-atomic="true">
       <header class="save-import-result-head">

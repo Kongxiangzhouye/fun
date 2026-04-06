@@ -144,6 +144,22 @@ export const UI_ASYNC_LOADING_CHIP_ICON = inlineSvg(
 export const UI_ASYNC_HINT_DECO = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.1" y="3.3" width="13.8" height="13.4" rx="3.1" stroke="#8bb6ff" stroke-width="1.3"/><path d="M7.1 10h5.8M7.8 6.9h4.4M8.4 13.1h3.2" stroke="#dce8ff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
 );
+/** 自动回收计时 · 状态 chip 图标 */
+export const UI_AUTO_RECYCLE_TIMER_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#83c9ff" stroke-width="1.4"/><path d="M10 6.1v4.1l2.5 1.7" stroke="#dff1ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.2 3.9h2.1M11.7 3.9h2.1" stroke="#83c9ff" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+);
+/** 统一存盘调度 · saving 指示图标 */
+export const UI_SAVE_SAVING_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M4 3.4h9l3 3v10.2H4V3.4z" stroke="#8eb7ff" stroke-width="1.3"/><rect x="6.2" y="5.6" width="5.9" height="3.1" rx="0.8" stroke="#dce8ff" stroke-width="1.1"/><path d="M6.1 12.1h7.8" stroke="#dce8ff" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+);
+/** 统一存盘调度 · 已保存提示图标 */
+export const UI_SAVE_SAVED_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.4" stroke="#6dd5a7" stroke-width="1.4"/><path d="M6.4 10.1l2.2 2.3 5-5.1" stroke="#d7ffe9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+);
+/** smoke 开发信息区 · 标签图标 */
+export const UI_SMOKE_DEV_BADGE = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.9" y="3.3" width="14.2" height="13.4" rx="2.9" stroke="#c4b5ff" stroke-width="1.3"/><path d="M6.1 8.1h7.8M6.1 11h5.3" stroke="#ece4ff" stroke-width="1.4" stroke-linecap="round"/><circle cx="13.9" cy="13.2" r="1.1" fill="#d8c8ff"/></svg>`,
+);
 /** 拆分反馈模块统一外观 · toast 图标 */
 export const UI_FEEDBACK_TOAST_ICON = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.8" y="4.1" width="14.4" height="11.8" rx="2.8" stroke="#9ab9ff" stroke-width="1.3"/><path d="M6.2 8.1h7.6M6.2 11h5.1" stroke="#e4ecff" stroke-width="1.4" stroke-linecap="round"/></svg>`,

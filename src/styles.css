@@ -2861,6 +2861,10 @@ h1 {
   background: rgba(56, 110, 98, 0.3);
 }
 
+.recycle-timer-chip {
+  border-style: dashed;
+}
+
 .async-hint {
   color: rgba(192, 208, 236, 0.94);
   border: 1px dashed rgba(130, 166, 228, 0.32);
@@ -3790,6 +3794,41 @@ h1 {
   background: linear-gradient(160deg, rgba(23, 31, 51, 0.82), rgba(12, 18, 30, 0.9));
 }
 
+.smoke-dev-panel {
+  border-color: rgba(161, 132, 255, 0.34);
+  background: linear-gradient(165deg, rgba(30, 24, 49, 0.86), rgba(16, 14, 29, 0.96));
+}
+
+.smoke-dev-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.smoke-dev-note {
+  margin: 0 0 8px !important;
+}
+
+.smoke-dev-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.smoke-dev-card {
+  border-radius: 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(154, 137, 232, 0.34);
+  background: linear-gradient(170deg, rgba(54, 41, 88, 0.34), rgba(22, 19, 39, 0.74));
+}
+
+.smoke-dev-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #e9e0ff;
+}
+
 .income-guide-head {
   display: flex;
   align-items: center;
@@ -3800,7 +3839,8 @@ h1 {
 
 @media (max-width: 768px) {
   .offline-choice-grid,
-  .income-guide-cards {
+  .income-guide-cards,
+  .smoke-dev-grid {
     grid-template-columns: 1fr;
   }
 
@@ -3936,6 +3976,34 @@ h1 {
   margin-top: 8px;
   padding-top: 0;
   border-top: 0;
+}
+
+.save-tools-panel .save-schedule-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 8px;
+  margin-top: 8px;
+}
+
+.save-tools-panel .save-saving-indicator {
+  border-color: rgba(131, 169, 240, 0.38);
+  background: rgba(47, 68, 112, 0.26);
+}
+
+.save-tools-panel .save-saving-indicator.is-active {
+  border-color: rgba(119, 199, 255, 0.5);
+  background: rgba(40, 86, 122, 0.3);
+}
+
+.save-tools-panel .save-saving-indicator.is-active img {
+  animation: save-indicator-spin 0.9s linear infinite;
+}
+
+.save-tools-panel .save-saved-indicator {
+  color: #d8ffec;
+  border-color: rgba(96, 206, 159, 0.42);
+  background: rgba(38, 98, 77, 0.3);
 }
 
 .save-tools-panel .reset-strip {
@@ -4252,6 +4320,21 @@ h1 {
     min-height: 20px;
     padding: 0 8px;
     font-size: 0.7rem;
+  }
+
+  .save-tools-panel .save-schedule-feedback .loading-chip,
+  .save-tools-panel .save-schedule-feedback .status-badge {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@keyframes save-indicator-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

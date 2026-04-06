@@ -77,6 +77,7 @@ import {
   UI_DUNGEON_AUTO_BADGE_OFF,
   UI_ASYNC_LOADING_CHIP_ICON,
   UI_ASYNC_HINT_DECO,
+  UI_AUTO_RECYCLE_TIMER_ICON,
   UI_FEEDBACK_PANEL_ICON,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
@@ -470,6 +471,18 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
   const asyncHintText = d.active
     ? "战场反馈按需刷新中（优先战斗数值与交互）"
     : "入口与预览按需加载，先渲染核心操作";
+  const recycleVisualState = d.active
+    ? "战斗进行中"
+    : sanctuaryIdle
+      ? "回收执行中"
+      : cd > 0
+        ? `回收冷却 ${Math.ceil(cd / 1000)} 秒`
+        : "回收待机";
+  const recycleHintText = d.active
+    ? "自动回收计时切换为战斗态，优先保持主战信息可读。"
+    : sanctuaryIdle
+      ? "处于回气所可视态，回满后将尝试自动回收进本。"
+      : "当前展示入口态计时，支持移动端快速判断可进本状态。";
 
   return `
     <section class="panel dungeon-strip-panel${panelRunClass}"${panelRunStyle}>
@@ -489,9 +502,13 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
           <img src="${UI_ASYNC_LOADING_CHIP_ICON}" alt="" width="14" height="14" loading="lazy" />
           ${d.active ? "战斗流已加载" : "轻量预加载中"}
         </span>
+        <span class="loading-chip recycle-timer-chip ${d.active || sanctuaryIdle ? "is-active" : ""}">
+          <img src="${UI_AUTO_RECYCLE_TIMER_ICON}" alt="" width="14" height="14" loading="lazy" />
+          自动回收计时 · ${recycleVisualState}
+        </span>
         <span class="async-hint">
           <img src="${UI_ASYNC_HINT_DECO}" alt="" width="14" height="14" loading="lazy" />
-          ${asyncHintText}
+          ${asyncHintText} · ${recycleHintText}
         </span>
       </div>
       <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner">

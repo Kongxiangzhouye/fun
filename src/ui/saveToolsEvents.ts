@@ -24,10 +24,28 @@ export interface SaveToolsEventDeps {
 
 export function bindSaveToolsEvents(deps: SaveToolsEventDeps): void {
   const { getState, setState, saveGame, toast, render, triggerDownloadSaveBackup, afterStateReplaced } = deps;
+  let saveFeedbackTimer = 0;
+  const paintSaveScheduleFeedback = (mode: "saving" | "saved", detail: string): void => {
+    const savingEl = document.getElementById("save-saving-indicator");
+    const savingTextEl = document.getElementById("save-saving-text");
+    const savedEl = document.getElementById("save-saved-indicator");
+    if (savingTextEl) savingTextEl.textContent = `统一存盘调度：${detail}`;
+    if (savingEl) savingEl.classList.toggle("is-active", mode === "saving");
+    if (savedEl) savedEl.hidden = mode !== "saved";
+    if (saveFeedbackTimer) window.clearTimeout(saveFeedbackTimer);
+    if (mode === "saved") {
+      saveFeedbackTimer = window.setTimeout(() => {
+        if (savedEl) savedEl.hidden = true;
+        if (savingTextEl) savingTextEl.textContent = "统一存盘调度：待机";
+      }, 1500);
+    }
+  };
 
   document.getElementById("btn-save")?.addEventListener("click", () => {
     const state = getState();
+    paintSaveScheduleFeedback("saving", "写入中");
     saveGame(state);
+    paintSaveScheduleFeedback("saved", "本机槽位写入成功");
     toast("已保存到本机。");
     setSaveImportFeedback("success", "本机保存完成", "当前进度已写入活动存档位。", "可继续导出备份，或切换至其他槽位。");
   });
@@ -74,7 +92,9 @@ export function bindSaveToolsEvents(deps: SaveToolsEventDeps): void {
       }
       setState(switched.value);
       afterStateReplaced();
+      paintSaveScheduleFeedback("saving", "切换槽位并写入中");
       saveGame(switched.value);
+      paintSaveScheduleFeedback("saved", `槽位 ${slot + 1} 已激活`);
       toast(`已切换到存档位 ${slot + 1}`);
       setSaveImportFeedback("success", "切换成功", `已切换到槽位 ${slot + 1}。`, "切换前已尝试保存当前槽，并在载入前完成目标槽校验。");
       render();
@@ -133,7 +153,9 @@ export function bindSaveToolsEvents(deps: SaveToolsEventDeps): void {
     }
     setState(next.value);
     afterStateReplaced();
+    paintSaveScheduleFeedback("saving", "导入后写入中");
     saveGame(next.value);
+    paintSaveScheduleFeedback("saved", "导入存档已落盘");
     toast("存档导入成功。");
     setSaveImportFeedback("success", "导入成功", "已通过校验并写入存档，界面已刷新。", "失败场景不会覆盖当前进度。");
     render();

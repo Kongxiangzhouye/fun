@@ -17,7 +17,7 @@ import {
 } from "./types";
 import {
   loadGame,
-  saveGame,
+  saveGame as writeSaveGame,
   exportSave,
   totalCardsInPool,
   clearSaveAndNewGame,
@@ -190,6 +190,7 @@ import {
   UI_DUNGEON_WEAKNESS_PING_DECO,
   UI_DUNGEON_STAGGER_PULSE_DECO,
   UI_FEEDBACK_TOAST_ICON,
+  UI_SMOKE_DEV_BADGE,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -749,6 +750,10 @@ let lastDodgeFailToastAt = 0;
 const AUTO_ENTER_FAIL_TOAST_GAP_MS = 3000;
 let lastAutoEnterFailToastAt = 0;
 let lastAutoEnterFailReason = "";
+const SAVE_REQUEST_DEBOUNCE_MS = 220;
+let saveRequestTimer = 0;
+let saveRequestPending = false;
+let saveFeedbackTimer = 0;
 let lastOfflineToastSig = "";
 let lastOfflineToastAtMs = 0;
 let lastCombatPower = 0;
@@ -900,6 +905,54 @@ function maybeToastAutoEnterFailure(now: number): void {
     return;
   }
   lastAutoEnterFailReason = "";
+}
+
+function paintSaveScheduleFeedback(mode: "saving" | "saved", detail: string): void {
+  const savingEl = document.getElementById("save-saving-indicator");
+  const savingTextEl = document.getElementById("save-saving-text");
+  const savedEl = document.getElementById("save-saved-indicator");
+  if (savingTextEl) savingTextEl.textContent = `统一存盘调度：${detail}`;
+  if (savingEl) savingEl.classList.toggle("is-active", mode === "saving");
+  if (savedEl) savedEl.hidden = mode !== "saved";
+  if (saveFeedbackTimer) window.clearTimeout(saveFeedbackTimer);
+  if (mode === "saved") {
+    saveFeedbackTimer = window.setTimeout(() => {
+      const idleTextEl = document.getElementById("save-saving-text");
+      const idleSavedEl = document.getElementById("save-saved-indicator");
+      if (idleSavedEl) idleSavedEl.hidden = true;
+      if (idleTextEl) idleTextEl.textContent = "统一存盘调度：待机";
+    }, 1500);
+  }
+}
+
+function flushSaveRequest(detail = "状态已落盘"): void {
+  if (!saveRequestPending) return;
+  saveRequestPending = false;
+  if (saveRequestTimer) {
+    window.clearTimeout(saveRequestTimer);
+    saveRequestTimer = 0;
+  }
+  paintSaveScheduleFeedback("saving", "合并写入中");
+  writeSaveGame(state);
+  paintSaveScheduleFeedback("saved", detail);
+}
+
+function requestSave(detail = "状态变更", immediate = false): void {
+  saveRequestPending = true;
+  paintSaveScheduleFeedback("saving", detail);
+  if (immediate) {
+    flushSaveRequest("关键操作已保存");
+    return;
+  }
+  if (saveRequestTimer) window.clearTimeout(saveRequestTimer);
+  saveRequestTimer = window.setTimeout(() => {
+    saveRequestTimer = 0;
+    flushSaveRequest("状态已合并保存");
+  }, SAVE_REQUEST_DEBOUNCE_MS);
+}
+
+function saveGame(_state: GameState): void {
+  requestSave();
 }
 
 /** 顶栏货币：长按显示说明（仅长按，避免与日常操作冲突） */
@@ -2856,6 +2909,7 @@ function render(): void {
     ${unlockDetailsBlock}
     ${renderFloatingSubNav(u)}
     ${renderDiscoverabilityHint()}
+    ${renderSmokeDevInfoPanel()}
     ${renderHubContent(ips, rb, canBreak, u, pityUr, slots)}
     </div>
     </main>
@@ -2879,6 +2933,31 @@ function render(): void {
       el.scrollTop = Math.min(preservedHubScrollTop, maxTop);
     });
   }
+}
+
+function renderSmokeDevInfoPanel(): string {
+  if (!import.meta.env.DEV) return "";
+  return `<section class="panel smoke-dev-panel" id="smoke-dev-panel" role="region" aria-label="开发信息 smoke">
+    <div class="panel-title-art-row panel-title-art-row--sub">
+      <img class="panel-title-art-icon" src="${UI_SMOKE_DEV_BADGE}" alt="" width="24" height="24" loading="lazy" />
+      <h2>Smoke 开发信息</h2>
+    </div>
+    <div class="smoke-dev-chip-row">
+      <span class="status-badge status-badge--info">开发可视</span>
+      <span class="status-badge status-badge--pending">仅 DEV 环境显示</span>
+    </div>
+    <p class="hint sm smoke-dev-note">用于展示 smoke 相关调试结论、回归检查口径与短期观测项；不影响线上业务逻辑。</p>
+    <div class="smoke-dev-grid" aria-label="smoke 信息占位">
+      <article class="smoke-dev-card">
+        <strong>回归检查</strong>
+        <p class="hint sm">建议填入：核心循环、存档写入、战斗入口、离线结算。</p>
+      </article>
+      <article class="smoke-dev-card">
+        <strong>观测指标</strong>
+        <p class="hint sm">建议填入：耗时阈值、异常次数、触发路径标签。</p>
+      </article>
+    </div>
+  </section>`;
 }
 
 function qoLRow(label: string, kind: keyof QoLFlags, desc: string): string {
@@ -4058,6 +4137,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
     cultivateSub = "deck";
     characterSub = "stats";
     autoEnterPromptHandled = false;
+    lastAutoEnterFailToastAt = 0;
+    lastAutoEnterFailReason = "";
     flyCreditsDismissed = false;
     toast("存档已重置。");
     render();
@@ -4645,6 +4726,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
       selectedInvId = null;
       refineTargetId = null;
       autoEnterPromptHandled = false;
+      lastAutoEnterFailToastAt = 0;
+      lastAutoEnterFailReason = "";
       flyCreditsDismissed = false;
     },
   });
@@ -4969,7 +5052,7 @@ function loop(): void {
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
     activeHub = "battle";
     lastAutoEnterFailReason = "";
-    saveGame(state);
+    requestSave("自动回收进本", true);
     toast(`灵息已盈，已传送至第 ${state.dungeon.wave} 关`);
     render();
   } else if (typeof document !== "undefined") {
@@ -4991,12 +5074,12 @@ function loop(): void {
       const ok = confirm(`幻域已解锁，是否立即进入第 1 关？`);
       if (ok && enterDungeon(state, 1)) {
         activeHub = "battle";
-        saveGame(state);
+        requestSave("自动进本确认", true);
         toast(`已进入第 1 关`);
         render();
       } else if (!ok) {
         state.dungeon.autoEnterConsumed = true;
-        saveGame(state);
+        requestSave("自动进本取消", true);
       }
     }
   }
@@ -5059,7 +5142,7 @@ function loop(): void {
     if (m.startsWith("破阵胜利")) tryToastDungeonVictory(m);
     else if (m.includes("首领")) tryToastDungeonVictory(m);
     else tryToast(m);
-    saveGame(state);
+    requestSave("副本结算提示");
   }
   /** 阵亡/暂离出本：仍在幻域页时整页重绘，避免底部生命/地图卡在进本前状态 */
   if (
@@ -5087,7 +5170,7 @@ function loop(): void {
   toastTimer += loopIntervalMs();
   if (toastTimer >= 5000) {
     toastTimer = 0;
-    saveGame(state);
+    requestSave("周期自动保存");
   }
   const pool = totalCardsInPool();
   if (activeHub === "estate" && estateSub === "idle") {
@@ -5678,10 +5761,17 @@ function init(): void {
     { passive: false },
   );
   document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      flushSaveRequest("页面切后台前已保存");
+      return;
+    }
     if (document.visibilityState !== "visible") return;
     if (deferredDungeonToasts.length === 0) return;
     for (const m of deferredDungeonToasts) toast(m);
     deferredDungeonToasts.length = 0;
+  });
+  window.addEventListener("beforeunload", () => {
+    flushSaveRequest("页面关闭前已保存");
   });
   const runLoop = (): void => {
     loop();
