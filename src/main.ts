@@ -56,7 +56,7 @@ import {
   type PullResult,
 } from "./gacha";
 import { CARDS, getCard } from "./data/cards";
-import { rarityRank } from "./data/rarityRank";
+import { RARITY_ORDER_ASC, rarityRank } from "./data/rarityRank";
 import { tryCompleteAchievements, drainAchievementToastQueue, ACHIEVEMENTS, type AchievementDef } from "./achievements";
 import { countUniqueOwned, SAVE_VERSION } from "./state";
 import pkg from "../package.json";
@@ -2338,16 +2338,14 @@ function handleGlobalKeyboardShortcuts(e: KeyboardEvent): void {
   render();
 }
 
-const GEAR_FORGE_RARITY_RANK_LABELS = ["N", "R", "SR", "SSR", "UR"] as const;
-
 function buildDataOverviewExportText(st: GameState): string {
   const d = st.dungeon;
   const lt = st.lifetimeStats;
   const pool = totalCardsInPool();
   const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
   const rarityPeak =
-    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_FORGE_RARITY_RANK_LABELS.length
-      ? GEAR_FORGE_RARITY_RANK_LABELS[lt.maxGearRarityRankForged]
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < RARITY_ORDER_ASC.length
+      ? RARITY_ORDER_ASC[lt.maxGearRarityRankForged]
       : "—";
   const slotIdx = getActiveSlotIndex();
   const lines: string[] = [
@@ -2401,8 +2399,8 @@ function renderDataOverviewPanel(): string {
   const owned = countUniqueOwned(st);
   const gearN = Object.keys(st.gearInventory).length;
   const rarityPeak =
-    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_FORGE_RARITY_RANK_LABELS.length
-      ? GEAR_FORGE_RARITY_RANK_LABELS[lt.maxGearRarityRankForged]
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < RARITY_ORDER_ASC.length
+      ? RARITY_ORDER_ASC[lt.maxGearRarityRankForged]
       : "—";
   const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
 
@@ -2512,8 +2510,8 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
   set("data-overview-lt-forge", String(lt.gearForgesTotal));
   const rarityPeak =
-    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_FORGE_RARITY_RANK_LABELS.length
-      ? GEAR_FORGE_RARITY_RANK_LABELS[lt.maxGearRarityRankForged]
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < RARITY_ORDER_ASC.length
+      ? RARITY_ORDER_ASC[lt.maxGearRarityRankForged]
       : "—";
   set("data-overview-lt-rarity", rarityPeak);
   set("data-overview-lt-bounty-weeks", String(lt.weeklyBountyFullWeeks));

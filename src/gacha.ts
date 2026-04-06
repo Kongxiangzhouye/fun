@@ -1,5 +1,5 @@
 import type { CardDef, GameState, GearItem, Rarity } from "./types";
-import { rarityRank } from "./data/rarityRank";
+import { RARITY_ORDER_DESC, rarityRank } from "./data/rarityRank";
 import { CARDS } from "./data/cards";
 import { ensureOwned } from "./state";
 import { nextRand01 } from "./rng";
@@ -61,8 +61,7 @@ function pickRarity(state: GameState): Rarity {
 
   const total = w.N + w.R + w.SR + w.SSR + w.UR;
   let r = nextRand01(state) * total;
-  const order: Rarity[] = ["UR", "SSR", "SR", "R", "N"];
-  for (const ra of order) {
+  for (const ra of RARITY_ORDER_DESC) {
     r -= w[ra];
     if (r <= 0) return ra;
   }

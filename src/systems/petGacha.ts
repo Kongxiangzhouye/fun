@@ -1,6 +1,6 @@
 import type { GameState, PetId, Rarity } from "../types";
 import { nextRand01 } from "../rng";
-import { rarityRank } from "../data/rarityRank";
+import { RARITY_ORDER_ASC, rarityRank } from "../data/rarityRank";
 import { PET_DEFS } from "../data/pets";
 import { PET_PULL_COST, addPetXp, petSystemUnlocked } from "./pets";
 
@@ -16,8 +16,7 @@ function pickPetRarity(state: GameState): Rarity {
   const w = RARITY_WEIGHT;
   const total = w.N + w.R + w.SR + w.SSR + w.UR;
   let r = nextRand01(state) * total;
-  const order: Rarity[] = ["N", "R", "SR", "SSR", "UR"];
-  for (const ra of order) {
+  for (const ra of RARITY_ORDER_ASC) {
     r -= w[ra];
     if (r < 0) return ra;
   }

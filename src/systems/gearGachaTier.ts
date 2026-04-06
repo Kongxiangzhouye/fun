@@ -1,4 +1,5 @@
 import type { GameState, Rarity } from "../types";
+import { RARITY_ORDER_DESC } from "../data/rarityRank";
 import { nextRand01 } from "../rng";
 import { daoMeridianLuckFlat } from "./daoMeridian";
 
@@ -57,9 +58,8 @@ export function rollGearRarityForForge(state: GameState, tier: number): Rarity {
 
   const total = wN + wR + wSr + wSsr + wUr;
   let r = nextRand01(state) * total;
-  const order: Rarity[] = ["UR", "SSR", "SR", "R", "N"];
   const wMap: Record<Rarity, number> = { N: wN, R: wR, SR: wSr, SSR: wSsr, UR: wUr };
-  for (const ra of order) {
+  for (const ra of RARITY_ORDER_DESC) {
     r -= wMap[ra];
     if (r <= 0) return ra;
   }
