@@ -170,6 +170,8 @@ export const UI_ACH_DUNGEON_WAVES_SURGE_DECO = asset("ach-dungeon-waves-surge-de
 export const UI_ACH_LOGIN_DECO = asset("ach-login-deco.svg");
 /** 成就列表 · 周常悬赏系条目左侧小徽 */
 export const UI_ACH_BOUNTY_DECO = asset("ach-bounty-deco.svg");
+/** 成就列表 · 周常悬赏超高清满周次里程碑（岁印） */
+export const UI_ACH_BOUNTY_BLOOM_DECO = asset("ach-bounty-bloom-deco.svg");
 /** 成就列表 · 道韵灵窍系条目左侧小徽 */
 export const UI_ACH_MERIDIAN_DECO = asset("ach-meridian-deco.svg");
 /** 成就列表 · 灵宠系条目左侧小徽 */

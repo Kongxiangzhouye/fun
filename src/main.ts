@@ -152,6 +152,7 @@ import {
   UI_ACH_DUNGEON_WAVES_SURGE_DECO,
   UI_ACH_LOGIN_DECO,
   UI_ACH_BOUNTY_DECO,
+  UI_ACH_BOUNTY_BLOOM_DECO,
   UI_ACH_MERIDIAN_DECO,
   UI_ACH_PET_DECO,
   UI_ACH_SPIRIT_ARRAY_DECO,
@@ -3218,6 +3219,8 @@ function renderAch(): string {
               ? `<img class="ach-deco-icon" src="${UI_ACH_LOGIN_DECO}" alt="" width="22" height="22" loading="lazy" />`
               : a.listDeco === "bounty"
                 ? `<img class="ach-deco-icon" src="${UI_ACH_BOUNTY_DECO}" alt="" width="22" height="22" loading="lazy" />`
+                : a.listDeco === "bountyBloom"
+                  ? `<img class="ach-deco-icon" src="${UI_ACH_BOUNTY_BLOOM_DECO}" alt="" width="22" height="22" loading="lazy" />`
                 : a.listDeco === "meridian"
                   ? `<img class="ach-deco-icon" src="${UI_ACH_MERIDIAN_DECO}" alt="" width="22" height="22" loading="lazy" />`
                   : a.listDeco === "pet"

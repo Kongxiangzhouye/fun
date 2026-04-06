@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "petPullBloom" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "stashBloom" | "reservoir" | "reservoirBloom" | "fortune" | "fortuneBloom" | "vein" | "realm" | "gacha" | "codex" | "rarity";
+  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "bountyBloom" | "meridian" | "pet" | "array" | "petPull" | "petPullBloom" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "stashBloom" | "reservoir" | "reservoirBloom" | "fortune" | "fortuneBloom" | "vein" | "realm" | "gacha" | "codex" | "rarity";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -318,6 +318,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 2200,
     rewardEssence: 65,
     listDeco: "bounty",
+  },
+  {
+    id: "weekly_bounty_week_full_24",
+    title: "岁律廿四",
+    desc: "累计 24 次单周清满周常悬赏",
+    rewardStones: 4800,
+    rewardEssence: 125,
+    listDeco: "bountyBloom",
   },
   {
     id: "celestial_stash_1",
@@ -637,6 +645,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 1;
     case "weekly_bounty_week_full_12":
       return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 12;
+    case "weekly_bounty_week_full_24":
+      return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 24;
     case "celestial_stash_1":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
     case "celestial_stash_25":
