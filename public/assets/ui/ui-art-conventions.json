@@ -26,6 +26,7 @@
     "gardenCropIcon": "GARDEN_CROPS[].artFile in src/systems/spiritGarden.ts"
   },
   "aggregateManifestIndex": "ui-art-manifest-index.json",
+  "manifestCategories": "ui-art-manifest-categories.json",
   "patterns": {
     "gearBasePortrait": "gear-base-<baseId>.png — <baseId> from src/data/gearBases.ts; URL built in src/ui/visualAssets.ts"
   }
