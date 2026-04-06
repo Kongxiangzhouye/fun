@@ -66,6 +66,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       biGuanCompletions: 0,
       cardTenPullSessions: 0,
       gearTenPullSessions: 0,
+      dailyLoginDayClaims: 0,
     };
     return;
   }
@@ -173,6 +174,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   const g10 = st.lifetimeStats.gearTenPullSessions;
   if (g10 == null || !Number.isFinite(g10)) st.lifetimeStats.gearTenPullSessions = 0;
   else st.lifetimeStats.gearTenPullSessions = Math.max(0, Math.floor(g10));
+  const dlc = st.lifetimeStats.dailyLoginDayClaims;
+  if (dlc == null || !Number.isFinite(dlc)) st.lifetimeStats.dailyLoginDayClaims = 0;
+  else st.lifetimeStats.dailyLoginDayClaims = Math.max(0, Math.floor(dlc));
 }
 
 /** 灵卡池十连唤引完整结算一次后累加 */

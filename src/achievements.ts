@@ -680,6 +680,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "login",
   },
   {
+    id: "daily_login_claims_25",
+    title: "灵息日积",
+    desc: "累计领取 25 次当日灵息礼",
+    rewardStones: 380,
+    rewardEssence: 22,
+    listDeco: "login",
+  },
+  {
+    id: "daily_login_claims_100",
+    title: "灵息千程",
+    desc: "累计领取 100 次当日灵息礼",
+    rewardStones: 1800,
+    rewardEssence: 58,
+    listDeco: "login",
+  },
+  {
     id: "weekly_bounty_week_full_1",
     title: "悬赏初满",
     desc: "任意一周完成并领取全部周常悬赏条目",
@@ -1075,6 +1091,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.playtimeSec ?? 0) >= 86400;
     case "login_calendar_week_full":
       return (state.lifetimeStats?.loginCalendarFullWeeks ?? 0) >= 1;
+    case "daily_login_claims_25":
+      return (state.lifetimeStats?.dailyLoginDayClaims ?? 0) >= 25;
+    case "daily_login_claims_100":
+      return (state.lifetimeStats?.dailyLoginDayClaims ?? 0) >= 100;
     case "weekly_bounty_week_full_1":
       return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 1;
     case "weekly_bounty_week_full_12":

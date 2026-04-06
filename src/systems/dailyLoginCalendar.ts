@@ -119,6 +119,8 @@ export function claimDailyLoginReward(state: GameState, now: number): boolean {
     }
   }
 
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.dailyLoginDayClaims += 1;
   return true;
 }
 

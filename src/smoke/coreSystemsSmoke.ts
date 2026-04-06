@@ -702,6 +702,17 @@ function runGearTenPullSessionAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "gear_ten_sessions_15"));
 }
 
+function runDailyLoginClaimAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("daily_login_claims_25"));
+  st.lifetimeStats.dailyLoginDayClaims = 25;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "daily_login_claims_25"));
+  st.lifetimeStats.dailyLoginDayClaims = 100;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "daily_login_claims_100"));
+}
+
 function runPullGearTenLifetimeStatSmoke(): void {
   const st = createInitialState();
   st.totalPulls = 20;
@@ -983,6 +994,7 @@ function main(): void {
   runCardTenPullSessionAchievementsSmoke();
   runPullTenLifetimeStatSmoke();
   runGearTenPullSessionAchievementsSmoke();
+  runDailyLoginClaimAchievementsSmoke();
   runPullGearTenLifetimeStatSmoke();
   runEstateCommissionAchievementsSmoke();
   runReincarnationTierAchievementsSmoke();

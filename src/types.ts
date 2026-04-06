@@ -130,6 +130,8 @@ export interface LifetimeStatsState {
   cardTenPullSessions: number;
   /** 境界铸灵十铸完成次数（每次完整十铸计 1） */
   gearTenPullSessions: number;
+  /** 灵息日历「当日灵息礼」成功领取次数（每领取一个本地日计 1） */
+  dailyLoginDayClaims: number;
 }
 
 /** 灵田作物 id */
