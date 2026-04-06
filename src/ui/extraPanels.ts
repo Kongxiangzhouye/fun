@@ -30,6 +30,7 @@ import {
   skillXpPerSecond,
   xpToNextLevel,
 } from "../systems/skillTraining";
+import { rarityRank } from "../data/rarityRank";
 import { getGearBase } from "../data/gearBases";
 import { gearItemPower, xuanTieEnhanceCost } from "../systems/gearCraft";
 import { BATTLE_SKILLS } from "../data/battleSkills";
@@ -74,9 +75,6 @@ import {
   xpToNextPetLevel,
   petDungeonAtkAdditive,
 } from "../systems/pets";
-
-/** 灵宠列表：稀有度天极 → 凡品 */
-const PET_RARITY_ORDER_DESC: Rarity[] = ["UR", "SSR", "SR", "R", "N"];
 
 const EL_ZH: Record<Element, string> = {
   metal: "金",
@@ -826,7 +824,7 @@ export function renderPetPanel(state: GameState): string {
   const canPull = state.summonEssence >= PET_PULL_COST;
   const bonusLine = describePetBonusesSummary(state);
   const defsSorted = [...PET_DEFS].sort(
-    (a, b) => PET_RARITY_ORDER_DESC.indexOf(a.rarity) - PET_RARITY_ORDER_DESC.indexOf(b.rarity),
+    (a, b) => rarityRank(b.rarity) - rarityRank(a.rarity),
   );
   let cards = "";
   for (const def of defsSorted) {

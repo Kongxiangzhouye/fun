@@ -10,6 +10,8 @@ export const GARDEN_CROPS: Record<
   {
     name: string;
     desc: string;
+    /** `public/assets/ui/<artFile>`，与 UI 图标同源 */
+    artFile: string;
     plantCost: Decimal;
     growSec: number;
     harvestLingSha: number;
@@ -20,6 +22,7 @@ export const GARDEN_CROPS: Record<
   qing_grass: {
     name: "青心草",
     desc: "入门灵草，成熟快，适合过渡。",
+    artFile: "garden-crop-qing.svg",
     plantCost: new Decimal(80),
     growSec: 45,
     harvestLingSha: 4,
@@ -29,6 +32,7 @@ export const GARDEN_CROPS: Record<
   cloud_shroom: {
     name: "云芝",
     desc: "菌类灵材，灵砂收益更高。",
+    artFile: "garden-crop-cloud.svg",
     plantCost: new Decimal(400),
     growSec: 240,
     harvestLingSha: 18,
@@ -38,6 +42,7 @@ export const GARDEN_CROPS: Record<
   jade_mist: {
     name: "玉露花",
     desc: "珍稀花卉，成熟时偶结唤灵髓。",
+    artFile: "garden-crop-jade.svg",
     plantCost: new Decimal(2000),
     growSec: 720,
     harvestLingSha: 55,

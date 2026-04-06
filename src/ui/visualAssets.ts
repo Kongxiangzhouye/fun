@@ -5,6 +5,7 @@
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
 import { GEAR_BASES } from "../data/gearBases";
 import { PET_DEFS } from "../data/pets";
+import { GARDEN_CROPS } from "../systems/spiritGarden";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -270,12 +271,10 @@ export const UI_EMPTY_GEAR = asset("art-empty-gear.svg");
 export const UI_EMPTY_PET = asset("art-empty-pet.svg");
 export const UI_EMPTY_UNLOCK = asset("art-empty-unlock.svg");
 
-/** 灵田作物图标（自绘 SVG） */
-export const GARDEN_CROP_IMG: Record<GardenCropId, string> = {
-  qing_grass: asset("garden-crop-qing.svg"),
-  cloud_shroom: asset("garden-crop-cloud.svg"),
-  jade_mist: asset("garden-crop-jade.svg"),
-};
+/** 灵田作物图标（自绘 SVG）；与 `GARDEN_CROPS[].artFile` 同源 */
+export const GARDEN_CROP_IMG: Record<GardenCropId, string> = Object.fromEntries(
+  (Object.keys(GARDEN_CROPS) as GardenCropId[]).map((id) => [id, asset(GARDEN_CROPS[id].artFile)]),
+) as Record<GardenCropId, string>;
 
 /** 灵宠立绘（SVG）；与 `PET_DEFS[].artFile` 同源 */
 export const PET_PORTRAIT: Record<PetId, string> = Object.fromEntries(
