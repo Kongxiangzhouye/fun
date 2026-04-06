@@ -160,6 +160,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "forgeEmber",
   },
   {
+    id: "gear_single_pulls_60",
+    title: "铸灵一瞬",
+    desc: "境界铸灵单抽累计 60 次",
+    rewardStones: 720,
+    rewardEssence: 0,
+    listDeco: "forge",
+  },
+  {
+    id: "gear_single_pulls_240",
+    title: "铸灵千锤",
+    desc: "境界铸灵单抽累计 240 次",
+    rewardStones: 3600,
+    rewardEssence: 0,
+    listDeco: "forgeNova",
+  },
+  {
     id: "realm_20",
     title: "道台初筑",
     desc: "境界达到 20",
@@ -1085,6 +1101,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.gearTenPullSessions ?? 0) >= 3;
     case "gear_ten_sessions_15":
       return (state.lifetimeStats?.gearTenPullSessions ?? 0) >= 15;
+    case "gear_single_pulls_60":
+      return (state.lifetimeStats?.gearSinglePullActions ?? 0) >= 60;
+    case "gear_single_pulls_240":
+      return (state.lifetimeStats?.gearSinglePullActions ?? 0) >= 240;
     case "realm_20":
       return state.realmLevel >= 20;
     case "realm_50":

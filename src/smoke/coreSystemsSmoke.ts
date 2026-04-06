@@ -48,7 +48,7 @@ import {
 import { canClaimDailyLoginReward, claimDailyLoginReward } from "../systems/dailyLoginCalendar";
 import { getUiUnlocks } from "../uiUnlocks";
 import { tryCompleteAchievements } from "../achievements";
-import { pullOne, pullTen, pullGearTen } from "../gacha";
+import { pullOne, pullTen, pullGearOne, pullGearTen } from "../gacha";
 import { incomePerSecondAt } from "../economy";
 import { advanceInGameHour } from "../inGameClock";
 import { spiritTideActive, spiritTideStoneMult } from "../systems/spiritTide";
@@ -760,6 +760,28 @@ function runPullGearTenLifetimeStatSmoke(): void {
   assert.equal(st.lifetimeStats.gearTenPullSessions, 0);
   pullGearTen(st);
   assert.equal(st.lifetimeStats.gearTenPullSessions, 1);
+  assert.equal(st.lifetimeStats.gearSinglePullActions, 0, "gear ten-pull should not increment single-pull actions");
+}
+
+function runGearSinglePullLifetimeSmoke(): void {
+  const st = createInitialState();
+  st.totalPulls = 20;
+  st.zhuLingEssence = 999999;
+  assert.equal(st.lifetimeStats.gearSinglePullActions, 0);
+  const r = pullGearOne(st);
+  assert.ok(r.ok && r.gear);
+  assert.equal(st.lifetimeStats.gearSinglePullActions, 1);
+}
+
+function runGearSinglePullAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("gear_single_pulls_60"));
+  st.lifetimeStats.gearSinglePullActions = 60;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "gear_single_pulls_60"));
+  st.lifetimeStats.gearSinglePullActions = 240;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "gear_single_pulls_240"));
 }
 
 function runCardLevelAndStarAchievementsSmoke(): void {
@@ -1061,6 +1083,8 @@ function main(): void {
   runGearTenPullSessionAchievementsSmoke();
   runDailyLoginClaimAchievementsSmoke();
   runPullGearTenLifetimeStatSmoke();
+  runGearSinglePullLifetimeSmoke();
+  runGearSinglePullAchievementsSmoke();
   runEstateCommissionAchievementsSmoke();
   runReincarnationTierAchievementsSmoke();
   runBattleSkillAndGearSalvageAchievementsSmoke();

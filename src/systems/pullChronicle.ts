@@ -70,6 +70,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       offlineStoneSettlements: 0,
       maxInGameDayReached: 1,
       cardSinglePullActions: 0,
+      gearSinglePullActions: 0,
     };
     return;
   }
@@ -193,12 +194,21 @@ export function normalizeLifetimeStats(st: GameState): void {
   const cspa = st.lifetimeStats.cardSinglePullActions;
   if (cspa == null || !Number.isFinite(cspa)) st.lifetimeStats.cardSinglePullActions = 0;
   else st.lifetimeStats.cardSinglePullActions = Math.max(0, Math.floor(cspa));
+  const gspa = st.lifetimeStats.gearSinglePullActions;
+  if (gspa == null || !Number.isFinite(gspa)) st.lifetimeStats.gearSinglePullActions = 0;
+  else st.lifetimeStats.gearSinglePullActions = Math.max(0, Math.floor(gspa));
 }
 
 /** 灵卡池单抽（非十连内部逐抽）成功结算一次后累加 */
 export function recordCardSinglePullLifetime(state: GameState): void {
   normalizeLifetimeStats(state);
   state.lifetimeStats.cardSinglePullActions += 1;
+}
+
+/** 境界铸灵单抽（非十铸内部逐抽）成功结算一次后累加 */
+export function recordGearSinglePullLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.gearSinglePullActions += 1;
 }
 
 /** 离线回补结算产生灵石时累加（与闭关快进 `fastForward` 区分） */

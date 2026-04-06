@@ -15,6 +15,7 @@ import {
   recordCardStarUpLifetime,
   recordCardTenPullSessionLifetime,
   recordCardSinglePullLifetime,
+  recordGearSinglePullLifetime,
   recordGearTenPullSessionLifetime,
   recordMaxGearForgedRarity,
 } from "./systems/pullChronicle";
@@ -258,8 +259,10 @@ export function pullOne(state: GameState, opts?: { countAsSinglePullAction?: boo
 }
 
 /** 境界铸灵单抽：仅装备，不占灵卡 UR/SSR 保底计数；另有珍品+独立保底（随铸灵阶缩短） */
+/** @param opts.countAsSingleGearPullAction 为 false 时不计「单铸次数」（供十铸内部逐抽使用） */
 export function pullGearOne(
   state: GameState,
+  opts?: { countAsSingleGearPullAction?: boolean },
 ): {
   ok: true;
   gear: GearItem;
@@ -272,6 +275,9 @@ export function pullGearOne(
   const forceSrPlus = state.gearPityPulls >= maxP - 1;
   const g = forceSrPlus ? generateRandomGear(state, pickPityGearRarity(state)) : generateRandomGear(state);
   const result = finalizeGearPull(state, g);
+  if (opts?.countAsSingleGearPullAction !== false) {
+    recordGearSinglePullLifetime(state);
+  }
   return {
     ok: true,
     gear: g,
@@ -284,16 +290,17 @@ export function pullGearOne(
 
 /** 十铸：前 9 次正常；若前 9 次无珍品+，第 10 次必为珍品+（与灵卡十连逻辑对齐） */
 export function pullGearTen(state: GameState): GearItem[] {
+  const tenOpts = { countAsSingleGearPullAction: false as const };
   const out: GearItem[] = [];
   for (let i = 0; i < 9; i++) {
-    const r = pullGearOne(state);
+    const r = pullGearOne(state, tenOpts);
     if (!r.ok || !r.gear) break;
     out.push(r.gear);
   }
   if (out.length < 9) return out;
   const hasSrPlus = out.some((g) => rarityRank(g.rarity) >= rarityRank("SR"));
   if (hasSrPlus) {
-    const r = pullGearOne(state);
+    const r = pullGearOne(state, tenOpts);
     if (r.ok && r.gear) out.push(r.gear);
     if (out.length === 10) recordGearTenPullSessionLifetime(state);
     return out;

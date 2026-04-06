@@ -973,6 +973,7 @@ export function deserialize(json: string): GameState {
         Math.floor(data.inGameDay ?? 1),
       ),
       cardSinglePullActions: Math.max(0, Math.floor(data.lifetimeStats.cardSinglePullActions ?? 0)),
+      gearSinglePullActions: Math.max(0, Math.floor(data.lifetimeStats.gearSinglePullActions ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

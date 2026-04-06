@@ -138,6 +138,8 @@ export interface LifetimeStatsState {
   maxInGameDayReached: number;
   /** 灵卡单抽结算次数（每次单抽入口计 1；十连内部的逐抽不计入） */
   cardSinglePullActions: number;
+  /** 境界铸灵单抽结算次数（每次单抽入口计 1；十铸内部的逐抽不计入） */
+  gearSinglePullActions: number;
 }
 
 /** 灵田作物 id */

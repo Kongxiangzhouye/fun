@@ -89,6 +89,8 @@ export const UI_CHRONICLE_CARD_TEN_PULL_STAT = asset("chronicle-card-ten-pull-st
 export const UI_CHRONICLE_CARD_SINGLE_PULL_STAT = asset("chronicle-card-single-pull-stat.svg");
 /** 唤灵通鉴 · 境界铸灵十铸累计小标 */
 export const UI_CHRONICLE_GEAR_TEN_PULL_STAT = asset("chronicle-gear-ten-pull-stat.svg");
+/** 唤灵通鉴 · 境界铸灵单抽累计小标 */
+export const UI_CHRONICLE_GEAR_SINGLE_PULL_STAT = asset("chronicle-gear-single-pull-stat.svg");
 /** 唤灵通鉴 · 灵潮时辰累计小标；修炼页灵潮提示条共用 */
 export const UI_CHRONICLE_SPIRIT_TIDE_STAT = asset("chronicle-spirit-tide-stat.svg");
 /** 唤灵通鉴 · 纳灵阵图绘阵累计小标 */

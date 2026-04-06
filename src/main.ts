@@ -2954,6 +2954,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `灵卡十连完成次数: ${lt.cardTenPullSessions}`,
     `灵卡单抽累计次数: ${lt.cardSinglePullActions}`,
     `境界铸灵十铸完成次数: ${lt.gearTenPullSessions}`,
+    `境界铸灵单抽累计次数: ${lt.gearSinglePullActions}`,
     `本轮唤引次数: ${st.pullsThisLife ?? 0}`,
     `灵宠唤引累计: ${st.petPullsTotal}`,
     `图鉴解锁: ${st.codexUnlocked.size} / ${pool}`,
@@ -3039,6 +3040,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">灵卡十连完成次数</span><strong class="d-val" id="data-overview-lt-card-ten">${lt.cardTenPullSessions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵卡单抽累计次数</span><strong class="d-val" id="data-overview-lt-card-single">${lt.cardSinglePullActions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">境界十铸完成次数</span><strong class="d-val" id="data-overview-lt-gear-ten">${lt.gearTenPullSessions}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">境界单铸累计次数</span><strong class="d-val" id="data-overview-lt-gear-single">${lt.gearSinglePullActions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">本轮唤引次数</span><strong class="d-val" id="data-overview-pulls-life">${st.pullsThisLife ?? 0}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵宠唤引累计</span><strong class="d-val" id="data-overview-pet-pulls">${st.petPullsTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">图鉴解锁</span><strong class="d-val" id="data-overview-codex">${codex} / ${pool}</strong></div>
@@ -3105,6 +3107,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-card-ten", String(lt.cardTenPullSessions));
   set("data-overview-lt-card-single", String(lt.cardSinglePullActions));
   set("data-overview-lt-gear-ten", String(lt.gearTenPullSessions));
+  set("data-overview-lt-gear-single", String(lt.gearSinglePullActions));
   set("data-overview-pulls-life", String(st.pullsThisLife ?? 0));
   set("data-overview-pet-pulls", String(st.petPullsTotal));
   set("data-overview-codex", `${st.codexUnlocked.size} / ${pool}`);
