@@ -6420,13 +6420,13 @@ html.ui-reduce-motion *::after {
 }
 
 .dungeon-duel-fx-hit-deco {
-  width: 152px;
-  height: 152px;
+  width: 160px;
+  height: 160px;
 }
 
 .dungeon-duel-fx-crit-deco {
-  width: 176px;
-  height: 176px;
+  width: 184px;
+  height: 184px;
   mix-blend-mode: screen;
 }
 

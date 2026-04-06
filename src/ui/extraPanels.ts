@@ -269,8 +269,8 @@ function renderDungeonMapHtml(state: GameState): string {
               <div class="dungeon-engage-ring dungeon-duel-engage-ring"></div>
               <div class="fx-aoe-ring"></div>
             </div>
-            <img class="dungeon-duel-fx-deco dungeon-duel-fx-hit-deco" id="dungeon-duel-fx-hit-deco" src="${UI_DUNGEON_HIT_CONFIRM_RING_DECO}" alt="" width="152" height="152" loading="lazy" />
-            <img class="dungeon-duel-fx-deco dungeon-duel-fx-crit-deco" id="dungeon-duel-fx-crit-deco" src="${UI_DUNGEON_CRIT_ECHO_DECO}" alt="" width="176" height="176" loading="lazy" />
+            <img class="dungeon-duel-fx-deco dungeon-duel-fx-hit-deco" id="dungeon-duel-fx-hit-deco" src="${UI_DUNGEON_HIT_CONFIRM_RING_DECO}" alt="" width="160" height="160" loading="lazy" />
+            <img class="dungeon-duel-fx-deco dungeon-duel-fx-crit-deco" id="dungeon-duel-fx-crit-deco" src="${UI_DUNGEON_CRIT_ECHO_DECO}" alt="" width="184" height="184" loading="lazy" />
             <img class="dungeon-duel-fx-deco dungeon-duel-fx-guard-deco" src="${UI_DUNGEON_GUARD_BREAK_DECO}" alt="" width="168" height="168" loading="lazy" />
           </div>
           ${floatOverlay}

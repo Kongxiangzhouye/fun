@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "naming": "Filenames from DUNGEON_DUEL_UI_FILES in src/data/dungeonDuelUi.ts; served as public/assets/ui/<file>.",
+  "naming": "Filenames from DUNGEON_DUEL_UI_FILES in src/data/dungeonDuelUi.ts; served as public/assets/ui/<file>. 2026-04-06 refresh: hitConfirmRingDeco + critEchoDeco.",
   "assets": [
     { "id": "readinessDeco", "file": "deco-dungeon-readiness-ribbon.svg" },
     { "id": "affixDeco", "file": "deco-dungeon-affix.svg" },

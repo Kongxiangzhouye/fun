@@ -1,16 +1,22 @@
-<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="dungeon crit echo combo feedback">
   <defs>
     <linearGradient id="critEchoA" x1="16" y1="14" x2="80" y2="84" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFD2A1"/>
-      <stop offset="0.52" stop-color="#FF8E68"/>
-      <stop offset="1" stop-color="#A86CFF"/>
+      <stop stop-color="#FFD8A8"/>
+      <stop offset="0.5" stop-color="#FF916A"/>
+      <stop offset="1" stop-color="#B07AFF"/>
+    </linearGradient>
+    <linearGradient id="critEchoB" x1="24" y1="28" x2="72" y2="68" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFEED7"/>
+      <stop offset="1" stop-color="#FFD0B0" stop-opacity="0"/>
     </linearGradient>
   </defs>
   <circle cx="48" cy="48" r="38" fill="#160D1E" stroke="url(#critEchoA)" stroke-width="2.4" opacity="0.96"/>
-  <circle cx="48" cy="48" r="30" fill="none" stroke="url(#critEchoA)" stroke-width="1.2" opacity="0.32" stroke-dasharray="4 4"/>
-  <circle cx="48" cy="48" r="22" fill="none" stroke="url(#critEchoA)" stroke-width="1.4" opacity="0.48" stroke-dasharray="2.6 3.8"/>
-  <path d="M48 21 L55 37 L73 40 L59 52 L63 71 L48 62 L33 71 L37 52 L23 40 L41 37 Z" fill="url(#critEchoA)" opacity="0.22"/>
-  <path d="M48 30 L53 41 L65 43 L56 51 L58 63 L48 57 L38 63 L40 51 L31 43 L43 41 Z" fill="url(#critEchoA)" opacity="0.9"/>
-  <path d="M48 35 V58" stroke="#FFF1E3" stroke-width="2.2" stroke-linecap="round" opacity="0.9"/>
-  <circle cx="48" cy="64.5" r="3.2" fill="#FFF1E3" opacity="0.96"/>
+  <circle cx="48" cy="48" r="30" fill="none" stroke="url(#critEchoA)" stroke-width="1.2" opacity="0.34" stroke-dasharray="4.2 4"/>
+  <circle cx="48" cy="48" r="22" fill="none" stroke="url(#critEchoA)" stroke-width="1.4" opacity="0.5" stroke-dasharray="2.6 3.8"/>
+  <path d="M48 21 L55 37 L73 40 L59 52 L63 71 L48 62 L33 71 L37 52 L23 40 L41 37 Z" fill="url(#critEchoA)" opacity="0.24"/>
+  <path d="M48 30 L53 41 L65 43 L56 51 L58 63 L48 57 L38 63 L40 51 L31 43 L43 41 Z" fill="url(#critEchoA)" opacity="0.92"/>
+  <path d="M39 39 L57 57 M57 39 L39 57" stroke="url(#critEchoB)" stroke-width="1.8" stroke-linecap="round" opacity="0.88"/>
+  <path d="M48 35 V58" stroke="#FFF0E3" stroke-width="2.2" stroke-linecap="round" opacity="0.92"/>
+  <circle cx="48" cy="64.5" r="3.2" fill="#FFF0E3" opacity="0.97"/>
+  <path d="M25 48 H31 M65 48 H71 M48 25 V31 M48 65 V71" stroke="#FFD4B5" stroke-width="1.6" stroke-linecap="round" opacity="0.62"/>
 </svg>

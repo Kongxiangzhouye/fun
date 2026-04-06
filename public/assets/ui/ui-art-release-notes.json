@@ -3,6 +3,15 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Dungeon duel hit/crit/combo readability refresh (P1)",
+      "highlights": [
+        "Refined hit-confirm ring SVG to strengthen center-lock clarity in rapid hit confirmation moments.",
+        "Refined crit-echo SVG to improve crit burst carryover readability during combo streak windows.",
+        "Synced dungeon duel manifest/index wording and source-map comments while keeping runtime keys stable."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Weekly and dungeon high-frequency feedback touch-up (P1)",
       "highlights": [
         "Added weekly waves-focus badge SVG to support faster status recognition in recurring bounty loops.",

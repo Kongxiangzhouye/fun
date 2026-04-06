@@ -173,11 +173,11 @@ export const UI_DUNGEON_DUEL_DECO = asset(DUNGEON_DUEL_UI_FILES.duelDeco);
 export const UI_DUNGEON_HIT_FLASH_DECO = asset(DUNGEON_DUEL_UI_FILES.hitFlashDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 暴击爆发反馈 */
 export const UI_DUNGEON_CRIT_BURST_DECO = asset(DUNGEON_DUEL_UI_FILES.critBurstDeco, UI_DUNGEON_DUEL_DECO);
-/** 阵线对决 · 暴击回响反馈（高频连击场景） */
+/** 阵线对决 · 暴击回响反馈（高频连击场景，2026-04-06 版） */
 export const UI_DUNGEON_CRIT_ECHO_DECO = asset(DUNGEON_DUEL_UI_FILES.critEchoDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 破防/破绽反馈 */
 export const UI_DUNGEON_GUARD_BREAK_DECO = asset(DUNGEON_DUEL_UI_FILES.guardBreakDeco, UI_DUNGEON_DUEL_DECO);
-/** 阵线对决 · 命中确认环反馈（弱敌清线时更易读） */
+/** 阵线对决 · 命中确认环反馈（弱敌清线时更易读，2026-04-06 版） */
 export const UI_DUNGEON_HIT_CONFIRM_RING_DECO = asset(
   DUNGEON_DUEL_UI_FILES.hitConfirmRingDeco,
   UI_DUNGEON_DUEL_DECO,

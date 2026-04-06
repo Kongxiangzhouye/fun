@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Entry points for static UI art manifests (HUD, empty states, gacha pool, panel chrome, offline settlement, player profile, hub headers, hub vein flair, dungeon duel with battle feedback decals/seals plus crit-echo, hit-confirm ring, and combo-chain overlays, realm display frame accents, and affix banner mode decos, chronicle headers, achievements list, lore journal, feature page heads, gear inventory, weekly bounty with feedback badges including pending status and waves-focus feedback, gear, pets, garden, elements, rarity). Not loaded at runtime.",
+  "description": "Entry points for static UI art manifests (HUD, empty states, gacha pool, panel chrome, offline settlement, player profile, hub headers, hub vein flair, dungeon duel with battle feedback decals/seals plus refreshed crit-echo and hit-confirm ring high-frequency overlays, combo-chain overlays, realm display frame accents, and affix banner mode decos, chronicle headers, achievements list, lore journal, feature page heads, gear inventory, weekly bounty with feedback badges including pending status and waves-focus feedback, gear, pets, garden, elements, rarity). Not loaded at runtime.",
   "conventions": "ui-art-conventions.json",
   "categories": "ui-art-manifest-categories.json",
   "handoffManifest": "ui-art-handoff-manifest.json",

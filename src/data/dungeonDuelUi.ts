@@ -1,4 +1,4 @@
-/** 幻域备战、阵线对决、模式选择与进离本按钮等装饰（`public/assets/ui/`） */
+/** 幻域备战、阵线对决、模式选择与进离本按钮等装饰（`public/assets/ui/`，含命中/暴击/连击高频反馈位） */
 export const DUNGEON_DUEL_UI_FILES = {
   readinessDeco: "deco-dungeon-readiness-ribbon.svg",
   affixDeco: "deco-dungeon-affix.svg",
