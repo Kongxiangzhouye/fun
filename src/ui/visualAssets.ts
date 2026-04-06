@@ -21,7 +21,7 @@ import { LORE_JOURNAL_UI_FILES } from "../data/loreJournalUi";
 import { OFFLINE_SETTLEMENT_UI_FILES } from "../data/offlineSettlementUi";
 import { PANEL_CHROME_UI_FILES } from "../data/panelChromeUi";
 import { PLAYER_PROFILE_UI_FILES } from "../data/playerProfileUi";
-import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
+import { GEAR_TIER_BADGE_UI_FILES, RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
 import { WEEKLY_BOUNTY_UI_FILES } from "../data/weeklyBountyUi";
 import { PET_DEFS } from "../data/pets";
 import { GARDEN_CROPS } from "../systems/spiritGarden";
@@ -33,6 +33,10 @@ const UI_INLINE_FALLBACK =
 function asset(name: string | null | undefined, fallback = UI_INLINE_FALLBACK): string {
   if (!name || typeof name !== "string") return fallback;
   return `${BASE}assets/ui/${name}`;
+}
+
+function inlineSvg(svg: string): string {
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 /** 顶栏资源小图标；与 `HUD_BAR_UI_FILES` 同源 */
@@ -50,6 +54,17 @@ export const UI_XUAN_TIE = asset(HUD_BAR_UI_FILES.xuanTie);
 /** SSR / UR 灵卡角标（与五行底图分离）；与 `RARITY_BADGE_UI_FILES` 同源 */
 export const RARITY_BADGE_SSR = asset(RARITY_BADGE_UI_FILES.SSR);
 export const RARITY_BADGE_UR = asset(RARITY_BADGE_UI_FILES.UR);
+export const GEAR_TIER_BADGE: Record<number, string> = {
+  1: asset(GEAR_TIER_BADGE_UI_FILES.T1),
+  2: asset(GEAR_TIER_BADGE_UI_FILES.T2),
+  3: asset(GEAR_TIER_BADGE_UI_FILES.T3),
+  4: asset(GEAR_TIER_BADGE_UI_FILES.T4),
+  5: asset(GEAR_TIER_BADGE_UI_FILES.T5),
+  6: asset(GEAR_TIER_BADGE_UI_FILES.T6),
+  7: asset(GEAR_TIER_BADGE_UI_FILES.T7),
+  8: asset(GEAR_TIER_BADGE_UI_FILES.T8),
+  9: asset(GEAR_TIER_BADGE_UI_FILES.T9),
+};
 
 /** 五行灵卡小图标；与 `ELEMENT_UI_FILES` 同源 */
 export const ELEMENT_ICON: Record<Element, string> = Object.fromEntries(
@@ -96,6 +111,102 @@ export const UI_SOUND_PREFS_DECO = asset(PLAYER_PROFILE_UI_FILES.soundPrefsDeco)
 export const UI_SAVE_SLOTS_DECO = asset(PLAYER_PROFILE_UI_FILES.saveSlotsDeco);
 /** 存档管理 · 槽位备注（本机标签） */
 export const UI_SAVE_SLOT_LABEL_DECO = asset(PLAYER_PROFILE_UI_FILES.saveSlotLabelDeco);
+/** 存档导入反馈 · 成功状态徽章 */
+export const UI_SAVE_IMPORT_BADGE_SUCCESS = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#67d7a3" stroke-width="1.6"/><path d="M6.3 10.3l2.4 2.5 5-5.2" stroke="#cffff0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+);
+/** 存档导入反馈 · 警告状态徽章 */
+export const UI_SAVE_IMPORT_BADGE_WARN = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.5l7 12.1c.4.8-.1 1.8-1 1.8H4c-.9 0-1.4-1-1-1.8L10 2.5z" stroke="#f3c27d" stroke-width="1.4"/><path d="M10 7.2v4.2" stroke="#fff1da" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="13.9" r=".9" fill="#fff1da"/></svg>`,
+);
+/** 存档导入反馈 · 失败状态徽章 */
+export const UI_SAVE_IMPORT_BADGE_FAIL = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#f18989" stroke-width="1.6"/><path d="M7 7l6 6M13 7l-6 6" stroke="#ffe4e4" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+);
+/** 存档导入反馈 · 提示条图标 */
+export const UI_SAVE_IMPORT_TIP_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.2" y="3.4" width="13.6" height="13.2" rx="3.2" stroke="#8cb4ff" stroke-width="1.3"/><path d="M10 5.8v4.7M10 13.2h.01" stroke="#dce8ff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+);
+/** 存档反馈统一样式 · 成功 chip 图标 */
+export const UI_FEEDBACK_CHIP_SUCCESS = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.4" stroke="#6dd5a7" stroke-width="1.4"/><path d="M6.5 10.2l2.1 2.2 4.8-4.9" stroke="#d6ffe8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+);
+/** 存档反馈统一样式 · 警告 chip 图标 */
+export const UI_FEEDBACK_CHIP_WARN = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.4l6.9 11.9c.4.8-.1 1.7-1 1.7H4.1c-.9 0-1.4-.9-1-1.7L10 2.4z" stroke="#f3c27d" stroke-width="1.4"/><path d="M10 7.1v4.4" stroke="#fff1da" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="13.8" r=".9" fill="#fff1da"/></svg>`,
+);
+/** 存档反馈统一样式 · 错误 chip 图标 */
+export const UI_FEEDBACK_CHIP_ERROR = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.4" stroke="#f18989" stroke-width="1.4"/><path d="M7.1 7.1l5.8 5.8M12.9 7.1l-5.8 5.8" stroke="#ffe4e4" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+);
+/** 周更状态同步 · 轻量 badge 图标 */
+export const UI_WEEKLY_SYNC_BADGE = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12.4" rx="2.8" stroke="#8eb7ff" stroke-width="1.3"/><path d="M6.3 8.1h7.4M6.3 10.9h4.6" stroke="#dce8ff" stroke-width="1.4" stroke-linecap="round"/><path d="M12.6 5.2v-1.5M7.4 5.2v-1.5" stroke="#8eb7ff" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+);
+/** 周更状态同步 · 提示图标 */
+export const UI_WEEKLY_SYNC_HINT = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="#8fb5ff" stroke-width="1.3"/><path d="M10 6.4v3.8M10 13h.01" stroke="#dce8ff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+);
+/** 主流程模块拆分 · panel header 图标 */
+export const UI_FLOW_PANEL_HEADER_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.8" y="4.1" width="14.4" height="11.8" rx="2.6" stroke="#9db8ff" stroke-width="1.3"/><path d="M5.9 8.1h8.2M5.9 11h5.2" stroke="#e2ebff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+);
+/** 主流程模块拆分 · section tag 图标 */
+export const UI_FLOW_SECTION_TAG_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M3.2 6.1a2 2 0 0 1 2-2h6.6l4.1 4.1v6a2 2 0 0 1-2 2H5.2a2 2 0 0 1-2-2v-8z" stroke="#86c5ff" stroke-width="1.3"/><circle cx="7.2" cy="8" r="1.1" fill="#d7f0ff"/></svg>`,
+);
+/** 主流程模块拆分 · compact action row 图标 */
+export const UI_FLOW_ACTION_ROW_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.1" y="4.5" width="13.8" height="3" rx="1.5" stroke="#9ec7a0" stroke-width="1.2"/><rect x="3.1" y="8.7" width="9.8" height="3" rx="1.5" stroke="#9ec7a0" stroke-width="1.2"/><rect x="3.1" y="12.9" width="12.1" height="3" rx="1.5" stroke="#9ec7a0" stroke-width="1.2"/></svg>`,
+);
+/** 幻域自动进本开关 · 开启状态徽章 */
+export const UI_DUNGEON_AUTO_BADGE_ON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.6" y="4.2" width="14.8" height="11.6" rx="5.8" stroke="#74d8b2" stroke-width="1.4"/><circle cx="12.9" cy="10" r="3.1" fill="#c9ffe8"/><path d="M6 10h2.5" stroke="#74d8b2" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+);
+/** 幻域自动进本开关 · 关闭状态徽章 */
+export const UI_DUNGEON_AUTO_BADGE_OFF = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.6" y="4.2" width="14.8" height="11.6" rx="5.8" stroke="#9aa7c7" stroke-width="1.4"/><circle cx="7.1" cy="10" r="3.1" fill="#d8dfef"/><path d="M11.6 10H14" stroke="#9aa7c7" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+);
+/** 按需加载流程 · loading chip 图标 */
+export const UI_ASYNC_LOADING_CHIP_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="6.8" stroke="#8db8ff" stroke-width="1.5"/><path d="M10 5.7v4.2l2.8 1.7" stroke="#d8e6ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+);
+/** 按需加载流程 · async hint 图标 */
+export const UI_ASYNC_HINT_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.1" y="3.3" width="13.8" height="13.4" rx="3.1" stroke="#8bb6ff" stroke-width="1.3"/><path d="M7.1 10h5.8M7.8 6.9h4.4M8.4 13.1h3.2" stroke="#dce8ff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+);
+/** 自动回收计时 · 状态 chip 图标 */
+export const UI_AUTO_RECYCLE_TIMER_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#83c9ff" stroke-width="1.4"/><path d="M10 6.1v4.1l2.5 1.7" stroke="#dff1ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.2 3.9h2.1M11.7 3.9h2.1" stroke="#83c9ff" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+);
+/** 统一存盘调度 · saving 指示图标 */
+export const UI_SAVE_SAVING_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M4 3.4h9l3 3v10.2H4V3.4z" stroke="#8eb7ff" stroke-width="1.3"/><rect x="6.2" y="5.6" width="5.9" height="3.1" rx="0.8" stroke="#dce8ff" stroke-width="1.1"/><path d="M6.1 12.1h7.8" stroke="#dce8ff" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+);
+/** 统一存盘调度 · 已保存提示图标 */
+export const UI_SAVE_SAVED_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.4" stroke="#6dd5a7" stroke-width="1.4"/><path d="M6.4 10.1l2.2 2.3 5-5.1" stroke="#d7ffe9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+);
+/** smoke 开发信息区 · 标签图标 */
+export const UI_SMOKE_DEV_BADGE = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.9" y="3.3" width="14.2" height="13.4" rx="2.9" stroke="#c4b5ff" stroke-width="1.3"/><path d="M6.1 8.1h7.8M6.1 11h5.3" stroke="#ece4ff" stroke-width="1.4" stroke-linecap="round"/><circle cx="13.9" cy="13.2" r="1.1" fill="#d8c8ff"/></svg>`,
+);
+/** smoke 信息板 · 回归检查卡图标占位 */
+export const UI_SMOKE_DEV_REGRESSION_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.2" y="3.3" width="13.6" height="13.4" rx="2.8" stroke="#c4b5ff" stroke-width="1.3"/><path d="M6.4 7.4h7.2M6.4 10h5.2M6.4 12.6h3.2" stroke="#ece4ff" stroke-width="1.35" stroke-linecap="round"/></svg>`,
+);
+/** smoke 信息板 · 指标观测卡图标占位 */
+export const UI_SMOKE_DEV_METRIC_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M4.1 15.6h11.8" stroke="#bca9ff" stroke-width="1.3" stroke-linecap="round"/><rect x="5.1" y="10.2" width="2.2" height="4.4" rx=".9" fill="#dfd1ff"/><rect x="8.9" y="7.8" width="2.2" height="6.8" rx=".9" fill="#cfbdff"/><rect x="12.7" y="5.4" width="2.2" height="9.2" rx=".9" fill="#c0abff"/></svg>`,
+);
+/** 拆分反馈模块统一外观 · toast 图标 */
+export const UI_FEEDBACK_TOAST_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.8" y="4.1" width="14.4" height="11.8" rx="2.8" stroke="#9ab9ff" stroke-width="1.3"/><path d="M6.2 8.1h7.6M6.2 11h5.1" stroke="#e4ecff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+);
+/** 拆分反馈模块统一外观 · panel 图标 */
+export const UI_FEEDBACK_PANEL_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M3.2 5.1A2.1 2.1 0 0 1 5.3 3h9.4a2.1 2.1 0 0 1 2.1 2.1v9.8a2.1 2.1 0 0 1-2.1 2.1H5.3a2.1 2.1 0 0 1-2.1-2.1V5.1z" stroke="#8dc2ff" stroke-width="1.3"/><path d="M6.3 7.1h7.4M6.3 10h7.4M6.3 12.9h4.6" stroke="#d8ebff" stroke-width="1.35" stroke-linecap="round"/></svg>`,
+);
 /** 快捷键说明浮层标题图标 */
 export const UI_KEYBOARD_HELP_DECO = asset(PLAYER_PROFILE_UI_FILES.keyboardHelpDeco);
 /** 关于游戏浮层标题图标 */
@@ -115,6 +226,25 @@ export const UI_OFFLINE_IDLE_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.idleBadge
 /** 离线结算过渡光带（可用于摘要区块分隔） */
 export const UI_OFFLINE_TRANSITION_SHINE = asset(OFFLINE_SETTLEMENT_UI_FILES.transitionShine);
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
+
+/** 离线奇遇二选一 · 选项图标（内联 SVG） */
+export const UI_OFFLINE_EVENT_OPTION_SAFE = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.2l6.3 2.5v4.7c0 3.6-2.2 6.7-6.3 8.4-4.1-1.7-6.3-4.8-6.3-8.4V4.7L10 2.2z" stroke="#9db8ff" stroke-width="1.3"/><path d="M10 6.1v6.2M7.2 9.1h5.6" stroke="#e7efff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+);
+export const UI_OFFLINE_EVENT_OPTION_RISK = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 1.9l7 12.2c.4.8-.1 1.8-1 1.8H4c-.9 0-1.4-1-1-1.8L10 1.9z" stroke="#f2b879" stroke-width="1.3"/><path d="M10 6.2v4.8" stroke="#fff2e0" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="13.8" r=".9" fill="#fff2e0"/></svg>`,
+);
+
+/** 收益来源拆分与升级引导 · 图标（内联 SVG） */
+export const UI_INCOME_SOURCE_ICON_REALM = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#8fd0ff" stroke-width="1.3"/><path d="M10 4.5l1.6 3.1 3.5.5-2.5 2.4.6 3.4L10 12.3 6.8 14l.6-3.4L4.9 8l3.5-.4L10 4.5z" fill="#d7f0ff"/></svg>`,
+);
+export const UI_INCOME_SOURCE_ICON_DECK = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="4.1" y="3.4" width="10.4" height="13.1" rx="1.9" stroke="#9fc7a0" stroke-width="1.3"/><rect x="6.6" y="5.9" width="10.4" height="10.8" rx="1.9" stroke="#79af87" stroke-width="1.3"/><path d="M11.8 8.1l1 2 2.2.3-1.6 1.5.4 2.1-2-1.1-2 1.1.4-2.1-1.6-1.5 2.2-.3 1-2z" fill="#dff5e4"/></svg>`,
+);
+export const UI_INCOME_SOURCE_ICON_UPGRADE = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 3.1l4.8 5h-3v6h-3.6v-6h-3l4.8-5z" fill="#f7e8ac"/><rect x="3.6" y="14.5" width="12.8" height="2.2" rx="1.1" fill="#b08f4b"/></svg>`,
+);
 
 /** 分区标题与空状态插画（自绘 SVG）；主分区头图与 `HUB_SECTION_HEADER_UI_FILES` 同源 */
 export const UI_HEAD_DUNGEON = asset(HUB_SECTION_HEADER_UI_FILES.dungeon);
@@ -390,4 +520,9 @@ export function rarityBadgeSrc(rarity: Rarity): string | null {
   if (rarity === "SSR") return RARITY_BADGE_SSR;
   if (rarity === "UR") return RARITY_BADGE_UR;
   return null;
+}
+
+export function gearTierBadgeSrc(tier: number): string {
+  const normalized = Math.max(1, Math.min(9, Math.floor(tier)));
+  return GEAR_TIER_BADGE[normalized] ?? GEAR_TIER_BADGE[1] ?? UI_INLINE_FALLBACK;
 }

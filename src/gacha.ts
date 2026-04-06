@@ -200,10 +200,11 @@ function commitGearPullMeta(
   }
   noteGearForgePull(state, 1);
   noteWeeklyBountyGearForges(state, 1);
-  recordMaxGearForgedRarity(state, g.rarity);
+  recordMaxGearForgedRarity(state, g.rarity, g.gearGrade);
   pushGearPullChronicle(state, {
     baseId: g.baseId,
     rarity: g.rarity,
+    gearTier: g.gearTier,
     displayName: g.displayName,
   });
   return result;

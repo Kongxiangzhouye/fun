@@ -14,7 +14,13 @@ export default defineConfig({
     sourcemap: isCi,
     rollupOptions: {
       output: {
-        manualChunks: undefined,
+        manualChunks(id) {
+          if (id.includes("node_modules/pixi.js") || id.includes("node_modules/gsap")) return "vendor-fx";
+          if (id.includes("node_modules/decimal.js")) return "vendor-math";
+          if (id.includes("/src/systems/dungeon") || id.includes("/src/systems/combatHp")) return "feature-dungeon";
+          if (id.includes("/src/ui/extraPanels") || id.includes("/src/ui/visualAssets")) return "feature-ui";
+          return undefined;
+        },
       },
     },
   },

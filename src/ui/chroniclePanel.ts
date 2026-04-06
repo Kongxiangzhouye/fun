@@ -3,6 +3,7 @@ import { getCard } from "../data/cards";
 import { fmtDecimal, stones } from "../stones";
 import { PULL_CHRONICLE_MAX } from "../systems/pullChronicle";
 import { rarityZh } from "./rarityZh";
+import { gearTierClass, gearTierLabel } from "./gearVisualTier";
 import { UI_GEAR_CHRONICLE_DECO, UI_HEAD_CHRONICLE } from "./visualAssets";
 
 function fmtTime(atMs: number): string {
@@ -33,11 +34,11 @@ export function renderChroniclePanel(state: GameState): string {
       ? `<tbody><tr><td colspan="3" class="chronicle-empty-cell"><p class="hint chronicle-empty">暂无铸灵记录。去底部「抽卡 → 境界铸灵」铸灵后，会在此显示最近 ${PULL_CHRONICLE_MAX} 条。</p></td></tr></tbody>`
       : `<tbody>${state.gearPullChronicle
           .map((e) => {
-            const rz = rarityZh(e.rarity);
-            return `<tr class="chronicle-tr rarity-${e.rarity}">
+            const rz = gearTierLabel(e.gearTier);
+            return `<tr class="chronicle-tr ${gearTierClass(e.gearTier)}">
           <td class="chronicle-td-time">${fmtTime(e.atMs)}</td>
           <td class="chronicle-td-name">${e.displayName}</td>
-          <td class="chronicle-td-r">${rz}</td>
+          <td class="chronicle-td-r ${gearTierClass(e.gearTier)} gear-tier-text">${rz}</td>
         </tr>`;
           })
           .join("")}</tbody>`;

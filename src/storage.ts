@@ -1,4 +1,4 @@
-import type { GameState, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
+import type { GameState, OfflineAdventureOptionState, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
 import { DECK_SIZE, DUNGEON_STAMINA_MAX, type GearInventorySortMode } from "./types";
 import { SAVE_VERSION, createInitialState } from "./state";
 import { CARDS } from "./data/cards";
@@ -23,6 +23,7 @@ import {
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
 import { normalizeGearGrade } from "./systems/gearCraft";
+import { legacyGearRank5ToRank9 } from "./ui/gearVisualTier";
 
 type VeinSave = GameState["vein"];
 type SkillsSave = GameState["skills"];
@@ -42,8 +43,14 @@ export const SAVE_SLOT_COUNT = 3;
 /** 存档位备注最大字符数 */
 export const SAVE_SLOT_LABEL_MAX = 20;
 
+export type SaveLoadResult<T> = { ok: true; value: T } | { ok: false; error: string };
+
 function storageKeyForSlot(slot: number): string {
   return `idle-gacha-realm-v1-slot-${slot}`;
+}
+
+function isValidSaveSlot(slot: number): boolean {
+  return Number.isInteger(slot) && slot >= 0 && slot < SAVE_SLOT_COUNT;
 }
 
 let slotsMigrationChecked = false;
@@ -122,6 +129,8 @@ export interface SerializedState {
   biGuanCooldownUntil?: number;
   qoL?: Partial<QoLFlags>;
   lastAutoGachaMs?: number;
+  lastAutoGearForgeMs?: number;
+  lastAutoBossChallengeMs?: number;
   trueEndingSeen?: boolean;
   tutorialStep?: number;
   firstOpenTodayMs?: number;
@@ -131,6 +140,7 @@ export interface SerializedState {
   dailyLoginClaimedDate?: string | null;
   spiritReservoirStored?: string;
   dailyFortune?: GameState["dailyFortune"];
+  offlineAdventure?: GameState["offlineAdventure"];
   spiritArrayLevel?: number;
   lastTunaMs?: number;
   vein?: VeinSave;
@@ -166,6 +176,8 @@ export interface SerializedState {
   dungeonPortalTargetWave?: number;
   dungeonSanctuaryAutoEnter?: boolean;
   dungeonDeferBoss?: boolean;
+  autoGearForge?: boolean;
+  autoBossChallenge?: boolean;
 }
 
 function normalizeDungeonState(st: GameState): void {
@@ -308,6 +320,8 @@ export function serialize(state: GameState): string {
     biGuanCooldownUntil: state.biGuanCooldownUntil,
     qoL: { ...state.qoL },
     lastAutoGachaMs: state.lastAutoGachaMs,
+    lastAutoGearForgeMs: state.lastAutoGearForgeMs,
+    lastAutoBossChallengeMs: state.lastAutoBossChallengeMs,
     trueEndingSeen: state.trueEndingSeen,
     tutorialStep: state.tutorialStep,
     firstOpenTodayMs: state.firstOpenTodayMs,
@@ -317,6 +331,22 @@ export function serialize(state: GameState): string {
     dailyLoginClaimedDate: state.dailyLoginClaimedDate,
     spiritReservoirStored: state.spiritReservoirStored,
     dailyFortune: { ...state.dailyFortune },
+    offlineAdventure: state.offlineAdventure
+      ? {
+          pending: state.offlineAdventure.pending
+            ? {
+                triggeredAtMs: state.offlineAdventure.pending.triggeredAtMs,
+                settledSec: state.offlineAdventure.pending.settledSec,
+                options: state.offlineAdventure.pending.options.map((op) => ({ ...op })) as [
+                  OfflineAdventureOptionState,
+                  OfflineAdventureOptionState,
+                ],
+              }
+            : null,
+          activeBoostUntilMs: state.offlineAdventure.activeBoostUntilMs,
+          activeBoostMult: state.offlineAdventure.activeBoostMult,
+        }
+      : { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1 },
     spiritArrayLevel: state.spiritArrayLevel,
     lastTunaMs: state.lastTunaMs,
     vein: { ...state.vein },
@@ -366,6 +396,8 @@ export function serialize(state: GameState): string {
     dungeonPortalTargetWave: state.dungeonPortalTargetWave,
     dungeonSanctuaryAutoEnter: state.dungeonSanctuaryAutoEnter,
     dungeonDeferBoss: state.dungeonDeferBoss,
+    autoGearForge: state.autoGearForge,
+    autoBossChallenge: state.autoBossChallenge,
   };
   return JSON.stringify(s);
 }
@@ -448,6 +480,40 @@ export function deserialize(json: string): GameState {
       fortuneId: data.dailyFortune.fortuneId,
     };
   }
+  if (data.offlineAdventure && typeof data.offlineAdventure === "object") {
+    const oa = data.offlineAdventure;
+    const activeBoostUntilMs = Number.isFinite(oa.activeBoostUntilMs)
+      ? Math.max(0, Math.floor(oa.activeBoostUntilMs))
+      : 0;
+    const activeBoostMult =
+      Number.isFinite(oa.activeBoostMult) && oa.activeBoostMult >= 1 ? Math.max(1, Number(oa.activeBoostMult)) : 1;
+    let pending: GameState["offlineAdventure"]["pending"] = null;
+    if (oa.pending && typeof oa.pending === "object" && Array.isArray(oa.pending.options) && oa.pending.options.length >= 2) {
+      const picked = oa.pending.options
+        .slice(0, 2)
+        .map((op) => ({
+          id: op.id === "boost" ? "boost" : "instant",
+          title: typeof op.title === "string" ? op.title : "",
+          desc: typeof op.desc === "string" ? op.desc : "",
+          instantStones: op.instantStones != null ? String(op.instantStones) : "0",
+          instantEssence: Number.isFinite(op.instantEssence) ? Math.max(0, Math.floor(Number(op.instantEssence))) : 0,
+          boostMult: Number.isFinite(op.boostMult) ? Math.max(1, Number(op.boostMult)) : 1,
+          boostDurationSec: Number.isFinite(op.boostDurationSec) ? Math.max(0, Math.floor(Number(op.boostDurationSec))) : 0,
+        })) as OfflineAdventureOptionState[];
+      pending = {
+        triggeredAtMs: Number.isFinite(oa.pending.triggeredAtMs) ? Math.max(0, Math.floor(oa.pending.triggeredAtMs)) : 0,
+        settledSec: Number.isFinite(oa.pending.settledSec) ? Math.max(0, Number(oa.pending.settledSec)) : 0,
+        options: [picked[0]!, picked[1]!],
+      };
+    }
+    st.offlineAdventure = {
+      pending,
+      activeBoostUntilMs,
+      activeBoostMult,
+    };
+  } else {
+    st.offlineAdventure = { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1 };
+  }
   if (data.spiritArrayLevel != null && Number.isFinite(data.spiritArrayLevel)) {
     st.spiritArrayLevel = Math.floor(data.spiritArrayLevel);
   }
@@ -482,6 +548,8 @@ export function deserialize(json: string): GameState {
     autoTuna: data.qoL?.autoTuna ?? false,
   };
   st.lastAutoGachaMs = data.lastAutoGachaMs ?? 0;
+  st.lastAutoGearForgeMs = data.lastAutoGearForgeMs ?? 0;
+  st.lastAutoBossChallengeMs = data.lastAutoBossChallengeMs ?? 0;
   st.trueEndingSeen = data.trueEndingSeen ?? false;
 
   if (data.skills) {
@@ -572,7 +640,8 @@ export function deserialize(json: string): GameState {
     st.weeklyBounty = emptyWeeklyBounty(currentWeekKey(st.lastTick));
   }
   normalizeWeeklyBounty(st);
-  ensureWeeklyBountyWeek(st, Date.now());
+  const syncNow = Date.now();
+  ensureWeeklyBountyWeek(st, syncNow);
   if (data.celestialStash && typeof data.celestialStash.weekKey === "string") {
     st.celestialStash = {
       weekKey: data.celestialStash.weekKey,
@@ -581,7 +650,7 @@ export function deserialize(json: string): GameState {
   } else {
     st.celestialStash = emptyCelestialStash(currentWeekKey(st.lastTick));
   }
-  ensureCelestialStashWeek(st, Date.now());
+  ensureCelestialStashWeek(st, syncNow);
   if (data.daoMeridian != null && Number.isFinite(data.daoMeridian)) {
     st.daoMeridian = Math.floor(data.daoMeridian);
   }
@@ -599,9 +668,21 @@ export function deserialize(json: string): GameState {
     st.gearPullChronicle = data.gearPullChronicle.map((e) => ({
       atMs: e.atMs ?? 0,
       baseId: e.baseId ?? "",
+      gearTier:
+        Number.isFinite((e as { gearTier?: unknown }).gearTier) && Number((e as { gearTier?: unknown }).gearTier) >= 1
+          ? Math.max(1, Math.min(9, Math.floor(Number((e as { gearTier?: unknown }).gearTier))))
+          : e.rarity === "UR"
+            ? 7
+            : e.rarity === "SSR"
+              ? 6
+              : e.rarity === "SR"
+                ? 4
+                : e.rarity === "R"
+                  ? 2
+                  : 1,
       rarity: e.rarity ?? "N",
       displayName: e.displayName ?? "",
-    }));
+    })) as GameState["gearPullChronicle"];
   }
   normalizeGearPullChronicle(st);
   if (data.lifetimeStats && typeof data.lifetimeStats === "object") {
@@ -613,7 +694,10 @@ export function deserialize(json: string): GameState {
       gearForgesTotal: Math.max(0, Math.floor(data.lifetimeStats.gearForgesTotal ?? 0)),
       maxGearRarityRankForged: Math.max(
         0,
-        Math.min(4, Math.floor(data.lifetimeStats.maxGearRarityRankForged ?? 0)),
+        (() => {
+          const raw = Math.floor(data.lifetimeStats.maxGearRarityRankForged ?? 0);
+          return raw <= 4 ? legacyGearRank5ToRank9(raw) : Math.min(8, raw);
+        })(),
       ),
       weeklyBountyFullWeeks: Math.max(0, Math.floor(data.lifetimeStats.weeklyBountyFullWeeks ?? 0)),
       lastWeeklyBountyFullWeekKey:
@@ -639,6 +723,9 @@ export function deserialize(json: string): GameState {
       ? !!data.dungeonSanctuaryAutoEnter
       : true;
   st.dungeonDeferBoss = data.dungeonDeferBoss !== undefined && data.dungeonDeferBoss !== null ? !!data.dungeonDeferBoss : true;
+  st.autoGearForge = data.autoGearForge !== undefined && data.autoGearForge !== null ? !!data.autoGearForge : false;
+  st.autoBossChallenge =
+    data.autoBossChallenge !== undefined && data.autoBossChallenge !== null ? !!data.autoBossChallenge : false;
   clampCombatHpToMax(st);
 
   normalizePetsState(st);
@@ -647,6 +734,30 @@ export function deserialize(json: string): GameState {
   applyRngMigrate(st, data);
   st.version = SAVE_VERSION;
   return st;
+}
+
+function deserializeStrict(json: string): SaveLoadResult<GameState> {
+  let data: SerializedState;
+  try {
+    data = JSON.parse(json) as SerializedState;
+  } catch {
+    return { ok: false, error: "存档内容不是有效 JSON。" };
+  }
+  if (!data || typeof data !== "object") {
+    return { ok: false, error: "存档格式无效：缺少对象结构。" };
+  }
+  if (!Number.isFinite(data.version ?? NaN) || (data.version ?? 0) < 1) {
+    return { ok: false, error: "存档版本字段无效。" };
+  }
+  const realmOk = Number.isFinite(data.realmLevel ?? NaN) && Number(data.realmLevel) >= 1;
+  const pullsOk = Number.isFinite(data.totalPulls ?? NaN) && Number(data.totalPulls) >= 0;
+  const stonesOk =
+    typeof data.spiritStones === "string" ||
+    (typeof data.spiritStones === "number" && Number.isFinite(data.spiritStones));
+  if (!realmOk || !pullsOk || !stonesOk) {
+    return { ok: false, error: "存档缺少核心字段或字段类型不正确。" };
+  }
+  return { ok: true, value: deserialize(json) };
 }
 
 function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameState {
@@ -689,6 +800,10 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.biGuanCooldownUntil = 0;
   st.qoL = { tenPull: false, bulkLevel: false, autoRealm: false, autoGacha: false, autoTuna: false };
   st.lastAutoGachaMs = 0;
+  st.lastAutoGearForgeMs = 0;
+  st.lastAutoBossChallengeMs = 0;
+  st.autoGearForge = false;
+  st.autoBossChallenge = false;
   st.trueEndingSeen = false;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 };
   st.pullsThisLife = 0;
@@ -813,9 +928,8 @@ export function peekSlotSummary(slot: number): { empty: boolean; realmLevel?: nu
 /** 将内存中的进度写入指定槽（用于复制；不切换激活槽） */
 export function copyCurrentToSlot(target: number, current: GameState): void {
   ensureSaveSlotsMigrated();
-  if (target < 0 || target >= SAVE_SLOT_COUNT) return;
+  if (!isValidSaveSlot(target)) return;
   try {
-    current.version = SAVE_VERSION;
     localStorage.setItem(storageKeyForSlot(target), serialize(current));
   } catch {
     /* ignore */
@@ -826,26 +940,33 @@ export function copyCurrentToSlot(target: number, current: GameState): void {
  * 先刷写当前槽，再切换激活槽并载入目标槽（空槽则新开局）。
  * 返回新的 GameState，调用方应替换全局 `state` 并重绘。
  */
-export function switchToSaveSlot(slot: number, current: GameState): GameState {
+export function switchToSaveSlot(slot: number, current: GameState): SaveLoadResult<GameState> {
   ensureSaveSlotsMigrated();
-  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return current;
+  if (!isValidSaveSlot(slot)) return { ok: false, error: "目标存档位不存在或索引非法。" };
   const from = getActiveSlotIndex();
-  if (slot === from) return current;
+  if (slot === from) return { ok: true, value: current };
   try {
-    current.version = SAVE_VERSION;
+    const raw = localStorage.getItem(storageKeyForSlot(slot));
+    let nextState: GameState;
+    if (raw) {
+      const parsed = deserializeStrict(raw);
+      if (!parsed.ok) {
+        return { ok: false, error: `目标槽位存档损坏：${parsed.error}` };
+      }
+      nextState = parsed.value;
+    } else {
+      nextState = createInitialState();
+    }
     localStorage.setItem(storageKeyForSlot(from), serialize(current));
     setActiveSlotIndex(slot);
-    const raw = localStorage.getItem(storageKeyForSlot(slot));
-    if (raw) return deserialize(raw);
-    return createInitialState();
+    return { ok: true, value: nextState };
   } catch {
-    return current;
+    return { ok: false, error: "存档位切换失败：本地存储写入异常。" };
   }
 }
 
 export function saveGame(state: GameState): void {
   try {
-    state.version = SAVE_VERSION;
     ensureSaveSlotsMigrated();
     const slot = getActiveSlotIndex();
     localStorage.setItem(storageKeyForSlot(slot), serialize(state));
@@ -891,20 +1012,20 @@ export function exportSave(state: GameState): string {
   return encodeUtf8Base64(serialize(state));
 }
 
-export function importSave(b64: string): GameState | null {
+export function importSave(b64: string): SaveLoadResult<GameState> {
   const raw = b64.trim();
-  if (!raw) return null;
+  if (!raw) return { ok: false, error: "导入内容为空。" };
   const normalized = normalizeBase64Input(raw);
   try {
     const json = decodeUtf8Base64(normalized);
-    return deserialize(json);
+    return deserializeStrict(json);
   } catch {
     // Fallback for older exports using escape/unescape based encoding.
     try {
       const legacy = decodeURIComponent(escape(atob(normalized)));
-      return deserialize(legacy);
+      return deserializeStrict(legacy);
     } catch {
-      return null;
+      return { ok: false, error: "字符串无法解码为有效存档。" };
     }
   }
 }

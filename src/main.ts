@@ -17,23 +17,17 @@ import {
 } from "./types";
 import {
   loadGame,
-  saveGame,
+  saveGame as writeSaveGame,
   exportSave,
-  importSave,
   totalCardsInPool,
   clearSaveAndNewGame,
   SAVE_SLOT_COUNT,
   getActiveSlotIndex,
-  peekSlotSummary,
-  switchToSaveSlot,
-  copyCurrentToSlot,
-  getSlotLabel,
-  setSlotLabel,
-  SAVE_SLOT_LABEL_MAX,
 } from "./storage";
 import {
   incomePerSecond,
   incomeBreakdownForDisplay,
+  incomeSourceBreakdownForDisplay,
   realmBreakthroughCostForState,
   upgradeCardLevelCost,
   upgradeCardLingShaCost,
@@ -54,7 +48,7 @@ import {
   type PullResult,
 } from "./gacha";
 import { CARDS, getCard } from "./data/cards";
-import { RARITY_ORDER_ASC, rarityRank } from "./data/rarityRank";
+import { rarityRank } from "./data/rarityRank";
 import { tryCompleteAchievements, drainAchievementToastQueue, ACHIEVEMENTS, type AchievementDef } from "./achievements";
 import { countUniqueOwned, SAVE_VERSION } from "./state";
 import pkg from "../package.json";
@@ -96,15 +90,16 @@ import type {
   GearInventorySortMode,
 } from "./types";
 import Decimal from "decimal.js";
-import { gsap } from "gsap";
-import { Application, Container, Graphics, type Ticker } from "pixi.js";
+import type { Application, Container, Graphics, Ticker } from "pixi.js";
 import { gearItemPower } from "./systems/gearCraft";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
 import { sessionFunFlavorLine, onTitleSpiritPet, bindKonamiEasterEgg } from "./funBits";
 import {
-  formatDungeonActiveMeta,
+  DUNGEON_HELP_BLURB,
+  formatDungeonActiveHelpMeta,
   formatDungeonActiveMetaBrief,
+  renderBattleEquippedStrip,
   renderDungeonPanel,
   renderTrainPanel,
   renderBattleSkillPanel,
@@ -126,6 +121,7 @@ import {
   UI_XUAN_TIE,
   RARITY_BADGE_SSR,
   RARITY_BADGE_UR,
+  gearTierBadgeSrc,
   cardPortraitClass,
   rarityBadgeSrc,
   UI_GACHA_DECOR,
@@ -170,12 +166,9 @@ import {
   UI_ACH_FORTUNE_BLOOM_DECO,
   UI_ACH_VEIN_DECO,
   UI_ACH_REALM_DECO,
-  UI_SAVE_DOWNLOAD_DECO,
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
   UI_SOUND_PREFS_DECO,
-  UI_SAVE_SLOTS_DECO,
-  UI_SAVE_SLOT_LABEL_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
   UI_DATA_EXPORT_DECO,
@@ -185,7 +178,13 @@ import {
   UI_BOUNTY_CLAIM_ECHO_BADGE,
   UI_OFFLINE_IDLE_BADGE,
   UI_OFFLINE_SUMMARY_BADGE,
+  UI_OFFLINE_SUMMARY_DECO,
   UI_OFFLINE_TRANSITION_SHINE,
+  UI_OFFLINE_EVENT_OPTION_SAFE,
+  UI_OFFLINE_EVENT_OPTION_RISK,
+  UI_INCOME_SOURCE_ICON_REALM,
+  UI_INCOME_SOURCE_ICON_DECK,
+  UI_INCOME_SOURCE_ICON_UPGRADE,
   UI_DUNGEON_HIT_FLASH_DECO,
   UI_DUNGEON_HIT_TRACE_RING_DECO,
   UI_DUNGEON_CRIT_BURST_DECO,
@@ -193,7 +192,12 @@ import {
   UI_DUNGEON_PARRY_SPARK_DECO,
   UI_DUNGEON_WEAKNESS_PING_DECO,
   UI_DUNGEON_STAGGER_PULSE_DECO,
+  UI_FEEDBACK_TOAST_ICON,
+  UI_SMOKE_DEV_BADGE,
+  UI_SMOKE_DEV_METRIC_ICON,
+  UI_SMOKE_DEV_REGRESSION_ICON,
 } from "./ui/visualAssets";
+import { GEAR_TIER_LABELS, gearTierClass, gearTierLabel, gearVisualTier } from "./ui/gearVisualTier";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
 import { renderBountyPanel, refreshBountyPanelLiveIfVisible } from "./ui/bountyPanel";
@@ -201,7 +205,7 @@ import { renderDailyLoginPanel, updateDailyLoginPanelReadouts } from "./ui/daily
 import { claimDailyLoginReward, tickDailyLoginCalendar, toLocalYMD } from "./systems/dailyLoginCalendar";
 import { getActiveFortuneDef, tickDailyFortune } from "./systems/dailyFortune";
 import { renderCelestialStashPanel, updateCelestialStashPanelReadouts } from "./ui/celestialStashPanel";
-import { tryBuyCelestialOffer } from "./systems/celestialStash";
+import { ensureCelestialStashWeek, tryBuyCelestialOffer } from "./systems/celestialStash";
 import { tryUpgradeSpiritArray } from "./systems/spiritArray";
 import {
   reservoirCap,
@@ -212,6 +216,10 @@ import {
 } from "./systems/spiritReservoir";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
+import { renderSaveToolsPanel } from "./ui/saveToolsView";
+import { setupSaveToolsBridge } from "./ui/saveToolsBridge";
+import { bindDungeonInteractions } from "./ui/dungeonInteractions";
+import { showHtmlFeedbackToast, showPlainFeedbackToast } from "./ui/feedbackToasts";
 import { tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
 import {
   claimAllCompletableWeeklyBounties,
@@ -272,6 +280,12 @@ import {
   petEssenceFindMult,
 } from "./systems/pets";
 import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
+import {
+  chooseOfflineAdventureOption,
+  maybeQueueOfflineAdventure,
+  offlineAdventureBoostLeftMs,
+  offlineAdventureBoostMult,
+} from "./systems/offlineAdventure";
 import { elementDamageMultiplier } from "./systems/elementCombat";
 import { playerBattleElement } from "./systems/playerElement";
 import { pullPet } from "./systems/petGacha";
@@ -444,6 +458,45 @@ const DUEL_HIT_FLOAT_GAP_MS = 120;
 const DUEL_CRIT_FLOAT_GAP_MS = 200;
 const DUEL_WEAK_FLOAT_GAP_MS = 300;
 const DUEL_MISS_FLOAT_GAP_MS = 150;
+const ZHULING_RATE_SAMPLE_INTERVAL_MS = 2500;
+const ZHULING_RATE_WINDOW_MS = 30000;
+type ZhuLingRateSample = { at: number; total: number };
+let zhuLingRateSamples: ZhuLingRateSample[] = [];
+let lastZhuLingRateSampleAt = 0;
+let zhuLingRateEstimatePerSec = 0;
+
+function formatZhuLingRateLabel(ratePerSec: number): string {
+  if (!(ratePerSec > 0.004)) return "历练";
+  return `≈+${ratePerSec >= 10 ? ratePerSec.toFixed(1) : ratePerSec.toFixed(2)}/秒`;
+}
+
+/** 基于近期副本整数掉落估算筑灵髓每秒效率（不受消费影响） */
+function updateZhuLingRateEstimate(now: number): void {
+  const total = Math.max(0, Math.floor(state.lifetimeStats?.dungeonEssenceIntGained ?? 0));
+  if (lastZhuLingRateSampleAt <= 0) {
+    lastZhuLingRateSampleAt = now;
+    zhuLingRateSamples = [{ at: now, total }];
+    zhuLingRateEstimatePerSec = 0;
+    return;
+  }
+  const latest = zhuLingRateSamples[zhuLingRateSamples.length - 1];
+  const shouldSample = now - lastZhuLingRateSampleAt >= ZHULING_RATE_SAMPLE_INTERVAL_MS || total !== latest?.total;
+  if (!shouldSample) return;
+  lastZhuLingRateSampleAt = now;
+  zhuLingRateSamples.push({ at: now, total });
+  const minAt = now - ZHULING_RATE_WINDOW_MS;
+  while (zhuLingRateSamples.length > 2 && zhuLingRateSamples[0]!.at < minAt) zhuLingRateSamples.shift();
+  const first = zhuLingRateSamples[0];
+  const last = zhuLingRateSamples[zhuLingRateSamples.length - 1];
+  if (!first || !last || last.at <= first.at) return;
+  const dtSec = (last.at - first.at) / 1000;
+  const gain = Math.max(0, last.total - first.total);
+  const raw = dtSec > 0 ? gain / dtSec : 0;
+  const target = state.dungeon.active ? raw : 0;
+  const alpha = state.dungeon.active ? 0.45 : 0.3;
+  zhuLingRateEstimatePerSec += (target - zhuLingRateEstimatePerSec) * alpha;
+  if (zhuLingRateEstimatePerSec < 0.001) zhuLingRateEstimatePerSec = 0;
+}
 const reducedMotionQuery =
   typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 let prefersReducedMotion = reducedMotionQuery?.matches ?? false;
@@ -453,11 +506,51 @@ let modernFxPointerY = 0.2;
 let motionUiFxBound = false;
 let mobileLiteFx = false;
 let pixiFxBooted = false;
+type GsapRuntime = typeof import("gsap")["gsap"];
+type PixiRuntime = {
+  ApplicationCtor: typeof import("pixi.js").Application;
+  ContainerCtor: typeof import("pixi.js").Container;
+  GraphicsCtor: typeof import("pixi.js").Graphics;
+};
+let gsapRuntime: GsapRuntime | null = null;
+let gsapLoading: Promise<GsapRuntime | null> | null = null;
+let pixiRuntime: PixiRuntime | null = null;
+let pixiLoading: Promise<PixiRuntime | null> | null = null;
 let pixiApp: Application | null = null;
 let pixiLayer: Container | null = null;
 let loopTimer: number | null = null;
 type PixiParticle = { g: Graphics; vx: number; vy: number; ttl: number; life: number };
 const pixiParticles: PixiParticle[] = [];
+
+async function getGsapRuntime(): Promise<GsapRuntime | null> {
+  if (gsapRuntime) return gsapRuntime;
+  if (!gsapLoading) {
+    gsapLoading = import("gsap")
+      .then((mod) => {
+        gsapRuntime = mod.gsap;
+        return gsapRuntime;
+      })
+      .catch(() => null);
+  }
+  return gsapLoading;
+}
+
+async function getPixiRuntime(): Promise<PixiRuntime | null> {
+  if (pixiRuntime) return pixiRuntime;
+  if (!pixiLoading) {
+    pixiLoading = import("pixi.js")
+      .then((mod) => {
+        pixiRuntime = {
+          ApplicationCtor: mod.Application,
+          ContainerCtor: mod.Container,
+          GraphicsCtor: mod.Graphics,
+        };
+        return pixiRuntime;
+      })
+      .catch(() => null);
+  }
+  return pixiLoading;
+}
 
 function motionReduced(): boolean {
   return prefersReducedMotion || !!state.uiPrefs.reduceMotion;
@@ -476,7 +569,9 @@ function initPixiFxLayer(): void {
   pixiFxBooted = true;
   void (async () => {
     try {
-      const app = new Application();
+      const runtime = await getPixiRuntime();
+      if (!runtime) return;
+      const app = new runtime.ApplicationCtor();
       await app.init({
         width: Math.max(1, window.innerWidth),
         height: Math.max(1, window.innerHeight),
@@ -488,7 +583,7 @@ function initPixiFxLayer(): void {
       const canvas = app.canvas as HTMLCanvasElement;
       canvas.className = "modern-pixi-layer";
       document.body.appendChild(canvas);
-      const layer = new Container();
+      const layer = new runtime.ContainerCtor();
       app.stage.addChild(layer);
       app.ticker.add((ticker: Ticker) => {
         const deltaMs = ticker.deltaMS;
@@ -525,12 +620,12 @@ function initPixiFxLayer(): void {
 }
 
 function emitPixiBurst(clientX: number, clientY: number, intensity: "normal" | "high" = "normal"): void {
-  if (!pixiApp || !pixiLayer || motionReduced()) return;
+  if (!pixiApp || !pixiLayer || motionReduced() || !pixiRuntime) return;
   const n = intensity === "high" ? 30 : 14;
   const speed = intensity === "high" ? 7.6 : 5.4;
   const palette = intensity === "high" ? [0xfff2b1, 0xffb6f8, 0x8fe8ff, 0xaac4ff] : [0x9bb8ff, 0x81d8ff, 0x9ff1d4];
   for (let i = 0; i < n; i += 1) {
-    const g = new Graphics();
+    const g = new pixiRuntime.GraphicsCtor();
     const r = intensity === "high" ? 1.8 + Math.random() * 3.6 : 1.3 + Math.random() * 2.2;
     const c = palette[(Math.random() * palette.length) | 0]!;
     g.circle(0, 0, r);
@@ -561,6 +656,12 @@ function playRevealOverlayIntro(overlay: HTMLElement, liteFx: boolean): void {
     overlay.classList.add("gacha-reveal-active");
     return;
   }
+  if (!gsapRuntime) {
+    void getGsapRuntime();
+    overlay.classList.add("gacha-reveal-active");
+    return;
+  }
+  const gsap = gsapRuntime;
   const content = overlay.querySelector(".gacha-reveal-content") as HTMLElement | null;
   const cards = [...overlay.querySelectorAll(".gacha-reveal-card")] as HTMLElement[];
   gsap.set(overlay, { opacity: 0 });
@@ -582,6 +683,12 @@ function playRevealOverlayExit(overlay: HTMLElement, liteFx: boolean, done: () =
     window.setTimeout(done, 140);
     return;
   }
+  if (!gsapRuntime) {
+    void getGsapRuntime();
+    window.setTimeout(done, 140);
+    return;
+  }
+  const gsap = gsapRuntime;
   const content = overlay.querySelector(".gacha-reveal-content") as HTMLElement | null;
   gsap.to(content, {
     opacity: 0,
@@ -655,17 +762,11 @@ function tryToast(msg: string): void {
 const TOAST_DUNGEON_VICTORY_MS = 6000;
 
 function toastDungeonVictory(msg: string): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
-  const el = document.createElement("div");
-  el.className = "toast toast-dungeon-victory";
-  const body = document.createElement("div");
-  body.className = "toast-msg";
-  body.textContent = msg;
-  el.appendChild(body);
-  appendToastProgress(el, TOAST_DUNGEON_VICTORY_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), TOAST_DUNGEON_VICTORY_MS);
+  showPlainFeedbackToast(msg, {
+    iconSrc: UI_FEEDBACK_TOAST_ICON,
+    durationMs: TOAST_DUNGEON_VICTORY_MS,
+    className: "toast toast-dungeon-victory feedback-toast",
+  });
   void resumeAudioContext().then(() => playUiBlip(state));
 }
 
@@ -694,6 +795,10 @@ let lastDodgeFailToastAt = 0;
 const AUTO_ENTER_FAIL_TOAST_GAP_MS = 3000;
 let lastAutoEnterFailToastAt = 0;
 let lastAutoEnterFailReason = "";
+const SAVE_REQUEST_DEBOUNCE_MS = 220;
+let saveRequestTimer = 0;
+let saveRequestPending = false;
+let saveFeedbackTimer = 0;
 let lastOfflineToastSig = "";
 let lastOfflineToastAtMs = 0;
 let lastCombatPower = 0;
@@ -725,44 +830,16 @@ const CURRENCY_HINTS: Record<string, string> = {
     "战力\n\n综合攻、防、生命、暴击、闪避等战斗属性的总分。会随装备、境界、技能、轮回、灵宠等实时变化。",
 };
 
-function appendToastProgress(el: HTMLElement, durationMs: number): void {
-  const track = document.createElement("div");
-  track.className = "toast-progress";
-  track.setAttribute("aria-hidden", "true");
-  const bar = document.createElement("span");
-  bar.className = "toast-progress-bar";
-  bar.style.animationDuration = `${durationMs}ms`;
-  track.appendChild(bar);
-  el.appendChild(track);
-}
-
 function toast(msg: string): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
-  const el = document.createElement("div");
-  el.className = "toast";
-  const body = document.createElement("div");
-  body.className = "toast-msg";
-  body.textContent = msg;
-  if (msg.includes("\n")) body.style.whiteSpace = "pre-line";
-  el.appendChild(body);
-  appendToastProgress(el, TOAST_DURATION_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), TOAST_DURATION_MS);
+  showPlainFeedbackToast(msg, { iconSrc: UI_FEEDBACK_TOAST_ICON, durationMs: TOAST_DURATION_MS });
 }
 
 function toastCurrencyHint(text: string): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
-  const el = document.createElement("div");
-  el.className = "toast toast-currency-hint";
-  const body = document.createElement("div");
-  body.className = "toast-msg";
-  body.textContent = text;
-  el.appendChild(body);
-  appendToastProgress(el, CURRENCY_HINT_TOAST_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), CURRENCY_HINT_TOAST_MS);
+  showPlainFeedbackToast(text, {
+    iconSrc: UI_FEEDBACK_TOAST_ICON,
+    durationMs: CURRENCY_HINT_TOAST_MS,
+    className: "toast toast-currency-hint feedback-toast",
+  });
 }
 
 function playBountyClaimBurstFx(anchor: HTMLElement | null): void {
@@ -795,8 +872,6 @@ function playBountyClaimBurstFx(anchor: HTMLElement | null): void {
 }
 
 function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
   const capSec = summary.capSec;
   const away = fmtOfflineDurationSec(summary.rawAwaySec);
   const settled = fmtOfflineDurationSec(summary.settledSec);
@@ -804,11 +879,7 @@ function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
   const isIdleSettlement = summary.stoneGain.lte(0.5);
   const offlineBadgeSrc = isIdleSettlement ? UI_OFFLINE_IDLE_BADGE : UI_OFFLINE_SUMMARY_BADGE;
   const offlineTitle = isIdleSettlement ? "离线空转结算" : "离线收益结算";
-  const el = document.createElement("div");
-  el.className = "toast toast-offline";
-  const body = document.createElement("div");
-  body.className = "toast-msg toast-msg-offline";
-  body.innerHTML =
+  const html =
     `<div class="toast-offline-head">` +
     `<img class="toast-offline-badge" src="${offlineBadgeSrc}" alt="" width="18" height="18" loading="lazy" />` +
     `<strong>${offlineTitle}</strong>` +
@@ -817,10 +888,11 @@ function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
     `<div class="toast-offline-line">结算时长：${settled} / 上限：${cap}${summary.wasCapped ? "（已触顶）" : ""}</div>` +
     `<img class="toast-offline-shine" src="${UI_OFFLINE_TRANSITION_SHINE}" alt="" width="180" height="8" loading="lazy" />` +
     `<div class="toast-offline-gain">灵石 +${fmtDecimal(summary.stoneGain)}</div>`;
-  el.appendChild(body);
-  appendToastProgress(el, TOAST_DURATION_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), TOAST_DURATION_MS);
+  showHtmlFeedbackToast(html, {
+    iconSrc: UI_FEEDBACK_TOAST_ICON,
+    durationMs: TOAST_DURATION_MS,
+    className: "toast toast-offline feedback-toast",
+  });
 }
 
 function showCurrencyHintById(id: string): void {
@@ -880,6 +952,54 @@ function maybeToastAutoEnterFailure(now: number): void {
   lastAutoEnterFailReason = "";
 }
 
+function paintSaveScheduleFeedback(mode: "saving" | "saved", detail: string): void {
+  const savingEl = document.getElementById("save-saving-indicator");
+  const savingTextEl = document.getElementById("save-saving-text");
+  const savedEl = document.getElementById("save-saved-indicator");
+  if (savingTextEl) savingTextEl.textContent = `统一存盘调度：${detail}`;
+  if (savingEl) savingEl.classList.toggle("is-active", mode === "saving");
+  if (savedEl) savedEl.hidden = mode !== "saved";
+  if (saveFeedbackTimer) window.clearTimeout(saveFeedbackTimer);
+  if (mode === "saved") {
+    saveFeedbackTimer = window.setTimeout(() => {
+      const idleTextEl = document.getElementById("save-saving-text");
+      const idleSavedEl = document.getElementById("save-saved-indicator");
+      if (idleSavedEl) idleSavedEl.hidden = true;
+      if (idleTextEl) idleTextEl.textContent = "统一存盘调度：待机";
+    }, 1500);
+  }
+}
+
+function flushSaveRequest(detail = "状态已落盘"): void {
+  if (!saveRequestPending) return;
+  saveRequestPending = false;
+  if (saveRequestTimer) {
+    window.clearTimeout(saveRequestTimer);
+    saveRequestTimer = 0;
+  }
+  paintSaveScheduleFeedback("saving", "合并写入中");
+  writeSaveGame(state);
+  paintSaveScheduleFeedback("saved", detail);
+}
+
+function requestSave(detail = "状态变更", immediate = false): void {
+  saveRequestPending = true;
+  paintSaveScheduleFeedback("saving", detail);
+  if (immediate) {
+    flushSaveRequest("关键操作已保存");
+    return;
+  }
+  if (saveRequestTimer) window.clearTimeout(saveRequestTimer);
+  saveRequestTimer = window.setTimeout(() => {
+    saveRequestTimer = 0;
+    flushSaveRequest("状态已合并保存");
+  }, SAVE_REQUEST_DEBOUNCE_MS);
+}
+
+function saveGame(_state: GameState): void {
+  requestSave();
+}
+
 /** 顶栏货币：长按显示说明（仅长按，避免与日常操作冲突） */
 function setupCurrencyHintInteractions(): void {
   let timer: number | null = null;
@@ -921,22 +1041,17 @@ function setupCurrencyHintInteractions(): void {
 }
 
 function toastAchievement(a: AchievementDef): void {
-  const w = document.getElementById("toast-wrap");
-  if (!w) return;
-  const el = document.createElement("div");
-  el.className = "toast toast-achievement";
   const reward =
     (a.rewardStones > 0 ? `灵石 +${fmtNumZh(a.rewardStones)} ` : "") +
     (a.rewardEssence > 0 ? `唤灵髓 +${a.rewardEssence}` : "");
-  const body = document.createElement("div");
-  body.className = "toast-msg toast-msg-achievement";
-  body.innerHTML = `<div class="toast-ach-title">功业达成</div><div class="toast-ach-name">${a.title}</div><div class="toast-ach-desc">${a.desc}</div>${
+  const html = `<div class="toast-ach-title">功业达成</div><div class="toast-ach-name">${a.title}</div><div class="toast-ach-desc">${a.desc}</div>${
     reward ? `<div class="toast-ach-reward">${reward}</div>` : ""
   }`;
-  el.appendChild(body);
-  appendToastProgress(el, TOAST_ACHIEVEMENT_DURATION_MS);
-  w.appendChild(el);
-  window.setTimeout(() => el.remove(), TOAST_ACHIEVEMENT_DURATION_MS);
+  showHtmlFeedbackToast(html, {
+    iconSrc: UI_FEEDBACK_TOAST_ICON,
+    durationMs: TOAST_ACHIEVEMENT_DURATION_MS,
+    className: "toast toast-achievement feedback-toast",
+  });
 }
 
 function formatPullResults(results: PullResult[]): string {
@@ -1056,15 +1171,10 @@ function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toas
   window.setTimeout(() => finish(), autoMs);
 }
 
-function highestGearRarityInList(gears: GearItem[]): Rarity {
-  let best: Rarity = "N";
-  let bestRank = rarityRank(best);
+function highestGearTierInList(gears: GearItem[]): number {
+  let best = 1;
   for (const g of gears) {
-    const rr = rarityRank(g.rarity);
-    if (rr > bestRank) {
-      best = g.rarity;
-      bestRank = rr;
-    }
+    best = Math.max(best, gearVisualTier(g));
   }
   return best;
 }
@@ -1078,19 +1188,19 @@ function showGearRevealOverlay(
 ): void {
   const overlay = document.createElement("div");
   const liteFx = shouldUseLiteRevealFx();
-  const hi = highestGearRarityInList(gears);
+  const hi = highestGearTierInList(gears);
   const single = gears.length === 1;
   const r0 = gears[0]!.rarity;
-  const orbTier = single ? r0 : hi;
+  const orbTier = single ? gearVisualTier(gears[0]!) : hi;
   const fx = liteFx ? "rift" : pickRevealFxVariant();
   const cardSalt = Math.floor(Math.random() * 9);
-  overlay.className = `gacha-reveal-overlay gacha-gear ${liteFx ? "gacha-reveal-lite" : ""} ${single ? `gacha-single reveal-${r0}` : `gacha-ten reveal-hi-${hi}`}`;
+  overlay.className = `gacha-reveal-overlay gacha-gear ${liteFx ? "gacha-reveal-lite" : ""} ${single ? `gacha-single reveal-${r0}` : `gacha-ten reveal-hi-${Math.min(9, hi)}`}`;
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
-  const hasHigh = hi === "UR" || hi === "SSR";
+  const hasHigh = hi >= 6;
   if (!liteFx && hasHigh && typeof navigator !== "undefined" && navigator.vibrate) {
     try {
-      navigator.vibrate(hi === "UR" ? [18, 45, 25] : [15, 30, 15]);
+      navigator.vibrate(hi >= 8 ? [18, 45, 25] : [15, 30, 15]);
     } catch {
       /* ignore */
     }
@@ -1098,17 +1208,18 @@ function showGearRevealOverlay(
   if (hasHigh) {
     emitPixiBurst(window.innerWidth * 0.5, window.innerHeight * 0.34, "high");
   }
-  const gearRarityCorner = (r: Rarity): string =>
-    r === "SSR"
-      ? `<img class="gacha-reveal-rarity-badge" src="${RARITY_BADGE_SSR}" alt="" width="36" height="36" />`
-      : r === "UR"
-        ? `<img class="gacha-reveal-rarity-badge" src="${RARITY_BADGE_UR}" alt="" width="40" height="40" />`
-        : "";
+  const gearRarityCorner = (tier: number): string => {
+    const label = gearTierLabel(tier);
+    return `<img class="gacha-reveal-rarity-badge gacha-reveal-rarity-badge--gear" src="${gearTierBadgeSrc(tier)}" alt="${label}" width="42" height="42" />`;
+  };
   const cardsHtml = gears
     .map((g, i) => {
       const pre = g.prefixes.length + g.suffixes.length;
       const cardFx = pickCardFxVariant(i, cardSalt);
       const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0));
+      const visualTier = gearVisualTier(g);
+      const visualTierCls = gearTierClass(visualTier);
+      const visualTierLabel = gearTierLabel(visualTier);
       const replaceTag =
         i === 0 && replaceExpectation
           ? `<span class="gacha-reveal-card-replace-tag ${
@@ -1121,10 +1232,10 @@ function showGearRevealOverlay(
               replaceExpectation === "upgrade" ? "提升" : replaceExpectation === "downgrade" ? "降级" : "持平"
             }（${fmtSignedPowerDelta(powerDelta)}）</span>`
           : "";
-      return `<div class="gacha-reveal-card ${liteFx ? "card-fx-lite" : `card-fx-${cardFx}`} gear-reveal rarity-${g.rarity} tier-${g.rarity}" style="--stagger:${liteFx ? 0 : i}">
-        ${gearRarityCorner(g.rarity)}
+      return `<div class="gacha-reveal-card ${liteFx ? "card-fx-lite" : `card-fx-${cardFx}`} gear-reveal rarity-${g.rarity} ${visualTierCls}" style="--stagger:${liteFx ? 0 : i}">
+        ${gearRarityCorner(visualTier)}
         <span class="gacha-reveal-card-name">${g.displayName}</span>
-        <span class="gacha-reveal-card-r">${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade ?? "?"} · ilvl ${g.itemLevel}</span>
+        <span class="gacha-reveal-card-r ${visualTierCls} gear-tier-text">${visualTierLabel} · 筑灵阶 ${g.gearGrade ?? "?"} · ilvl ${g.itemLevel}</span>
         <span class="gacha-reveal-card-tag">战力 ${fmtNumZh(gearItemPower(g, slotLv))} · ${pre} 条词缀 · 槽位强化 ${slotLv}</span>
         ${replaceTag}
       </div>`;
@@ -2002,7 +2113,7 @@ function renderTopBar(
       <span class="res-chip-stack">
         <span class="res-lbl">筑灵髓</span>
         <strong id="pill-zhuling">${Math.floor(state.zhuLingEssence)}</strong>
-        <span class="res-delta res-delta-zhuling" id="pill-zhuling-delta">历练</span>
+        <span class="res-delta res-delta-zhuling" id="pill-zhuling-delta">${formatZhuLingRateLabel(zhuLingRateEstimatePerSec)}</span>
       </span>
     </span>
     <span class="res-chip res-chip-key" data-currency-hint-id="realm">
@@ -2259,6 +2370,19 @@ function renderDiscoverabilityHint(): string {
     text = "常用入口：历练已拆为二级模块——「幻域·战斗」与「境界·铸灵」，可在页内上方切换。";
   }
   if (!text) return "";
+  if (activeHub === "battle" && battleSub === "dungeon") {
+    const live = state.dungeon.active
+      ? `<p class="hint sm discoverability-help-live" id="discoverability-help-live-meta">${formatDungeonActiveHelpMeta(state, nowMs())}</p>`
+      : "";
+    return `<div class="hint sm discoverability-hint">
+      <p class="discoverability-hint-main">${text}</p>
+      <details class="discoverability-help-details">
+        <summary>战斗说明（原 ? 面板）</summary>
+        <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
+        ${live}
+      </details>
+    </div>`;
+  }
   return `<p class="hint sm discoverability-hint">${text}</p>`;
 }
 
@@ -2295,7 +2419,7 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
     return `<div class="character-hub-root">${renderDataOverviewPanel()}</div>`;
   }
   if (characterSub === "archive") {
-    return `<div class="character-hub-root">${renderSaveToolsPanel()}</div>`;
+    return `<div class="character-hub-root">${renderSaveToolsPanel(fmtPlaytimeSec)}</div>`;
   }
   return `<div class="character-hub-root">${renderPlayerStatsBlock(state)}${renderCombatStatsPanel()}</div>`;
 }
@@ -2543,8 +2667,8 @@ function buildDataOverviewExportText(st: GameState): string {
   const pool = totalCardsInPool();
   const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
   const rarityPeak =
-    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < RARITY_ORDER_ASC.length
-      ? RARITY_ORDER_ASC[lt.maxGearRarityRankForged]
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length
+      ? GEAR_TIER_LABELS[lt.maxGearRarityRankForged]
       : "—";
   const slotIdx = getActiveSlotIndex();
   const lines: string[] = [
@@ -2598,8 +2722,8 @@ function renderDataOverviewPanel(): string {
   const owned = countUniqueOwned(st);
   const gearN = Object.keys(st.gearInventory).length;
   const rarityPeak =
-    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < RARITY_ORDER_ASC.length
-      ? RARITY_ORDER_ASC[lt.maxGearRarityRankForged]
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length
+      ? GEAR_TIER_LABELS[lt.maxGearRarityRankForged]
       : "—";
   const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
 
@@ -2709,8 +2833,8 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
   set("data-overview-lt-forge", String(lt.gearForgesTotal));
   const rarityPeak =
-    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < RARITY_ORDER_ASC.length
-      ? RARITY_ORDER_ASC[lt.maxGearRarityRankForged]
+    lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length
+      ? GEAR_TIER_LABELS[lt.maxGearRarityRankForged]
       : "—";
   set("data-overview-lt-rarity", rarityPeak);
   set("data-overview-lt-bounty-weeks", String(lt.weeklyBountyFullWeeks));
@@ -2720,82 +2844,6 @@ function updateDataOverviewReadouts(): void {
 
 function escapeHtmlAttr(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function renderSaveSlotRow(i: number): string {
-  const active = getActiveSlotIndex();
-  const sum = peekSlotSummary(i);
-  const meta = sum.empty ? "空槽" : `境界 ${sum.realmLevel} · ${fmtPlaytimeSec(sum.playtimeSec ?? 0)}`;
-  const isActive = i === active;
-  const labelVal = escapeHtmlAttr(getSlotLabel(i));
-  return `<li class="save-slot-row">
-    <div class="save-slot-main">
-      <div class="save-slot-title-row">
-        <strong class="save-slot-title">槽位 ${i + 1}</strong>
-        ${isActive ? `<span class="save-slot-badge">当前</span>` : ""}
-      </div>
-      <span class="save-slot-meta">${meta}</span>
-      <div class="save-slot-label-row">
-        <label class="save-slot-label-field" for="save-slot-label-${i}">备注</label>
-        <input
-          type="text"
-          id="save-slot-label-${i}"
-          class="save-slot-label-input"
-          data-save-slot-label="${i}"
-          maxlength="${SAVE_SLOT_LABEL_MAX}"
-          autocomplete="off"
-          placeholder="本机备注，最多 ${SAVE_SLOT_LABEL_MAX} 字"
-          value="${labelVal}"
-        />
-      </div>
-    </div>
-    <div class="save-slot-actions">
-      ${
-        !isActive
-          ? `<button type="button" class="btn save-slot-btn" data-save-slot-activate="${i}">切换到此槽</button><button type="button" class="btn save-slot-btn" data-save-slot-copy="${i}">将当前复制到此槽</button>`
-          : ""
-      }
-    </div>
-  </li>`;
-}
-
-function renderSaveToolsPanel(): string {
-  const rows = Array.from({ length: SAVE_SLOT_COUNT }, (_, i) => renderSaveSlotRow(i)).join("");
-  return `<section class="panel save-tools-panel">
-    <h2>存档管理</h2>
-    <p class="hint">保存/导出/导入与重置都集中在这里。重置前建议先导出备份。</p>
-    <div class="save-slots-block">
-      <div class="save-slots-head">
-        <img class="save-slots-head-ico" src="${UI_SAVE_SLOTS_DECO}" alt="" width="26" height="26" loading="lazy" />
-        <h3 class="save-slots-heading">本机存档位</h3>
-        <img
-          class="save-slots-label-head-ico"
-          src="${UI_SAVE_SLOT_LABEL_DECO}"
-          alt=""
-          width="22"
-          height="22"
-          loading="lazy"
-          title="槽位备注仅保存在本机，不随导出存档字符串迁移"
-        />
-      </div>
-      <p class="hint sm save-slots-hint">共 ${SAVE_SLOT_COUNT} 个独立槽位；可填备注区分周目。切换前会自动保存当前槽；空槽切换将新开局。备注不写入导出字符串。</p>
-      <ul class="save-slots-list">${rows}</ul>
-    </div>
-    <div class="footer-tools">
-      <button class="btn" type="button" id="btn-save">保存到本机</button>
-      <button class="btn" type="button" id="btn-export">导出存档字符串</button>
-      <button class="btn btn-save-download" type="button" id="btn-save-download">
-        <img src="${UI_SAVE_DOWNLOAD_DECO}" alt="" width="18" height="18" class="btn-save-download-ico" loading="lazy" />
-        下载备份文件
-      </button>
-      <input type="text" id="import-input" class="import-input" placeholder="粘贴存档字符串" />
-      <button class="btn" type="button" id="btn-import">导入存档</button>
-    </div>
-    <div class="reset-strip">
-      <button type="button" class="btn btn-danger" id="btn-reset-world">重置存档</button>
-      <span class="reset-strip-hint">会清空当前存档并从头开始，建议先导出备份</span>
-    </div>
-  </section>`;
 }
 
 function renderHubContent(
@@ -2915,6 +2963,7 @@ function render(): void {
     ${unlockDetailsBlock}
     ${renderFloatingSubNav(u)}
     ${renderDiscoverabilityHint()}
+    ${renderSmokeDevInfoPanel()}
     ${renderHubContent(ips, rb, canBreak, u, pityUr, slots)}
     </div>
     </main>
@@ -2938,6 +2987,39 @@ function render(): void {
       el.scrollTop = Math.min(preservedHubScrollTop, maxTop);
     });
   }
+}
+
+function renderSmokeDevInfoPanel(): string {
+  if (!import.meta.env.DEV) return "";
+  return `<section class="panel smoke-dev-panel" id="smoke-dev-panel" role="region" aria-label="开发信息 smoke">
+    <div class="panel-title-art-row panel-title-art-row--sub">
+      <img class="panel-title-art-icon" src="${UI_SMOKE_DEV_BADGE}" alt="" width="24" height="24" loading="lazy" />
+      <h2>Smoke 开发信息</h2>
+    </div>
+    <div class="smoke-dev-chip-row">
+      <span class="status-badge status-badge--info">开发可视</span>
+      <span class="status-badge status-badge--pending">仅 DEV 环境显示</span>
+    </div>
+    <p class="hint sm smoke-dev-note">用于展示 smoke 相关调试结论、回归检查口径与短期观测项；不影响线上业务逻辑。</p>
+    <div class="smoke-dev-grid" aria-label="smoke 信息占位">
+      <article class="smoke-dev-card">
+        <div class="smoke-dev-card-head">
+          <img class="smoke-dev-card-ico" src="${UI_SMOKE_DEV_REGRESSION_ICON}" alt="" width="16" height="16" loading="lazy" />
+          <strong>回归检查</strong>
+        </div>
+        <p class="smoke-dev-card-tag">progression smoke</p>
+        <p class="hint sm">建议填入：核心循环、存档写入、战斗入口、离线结算。</p>
+      </article>
+      <article class="smoke-dev-card">
+        <div class="smoke-dev-card-head">
+          <img class="smoke-dev-card-ico" src="${UI_SMOKE_DEV_METRIC_ICON}" alt="" width="16" height="16" loading="lazy" />
+          <strong>观测指标</strong>
+        </div>
+        <p class="smoke-dev-card-tag">开发态信息板</p>
+        <p class="hint sm">建议填入：耗时阈值、异常次数、触发路径标签。</p>
+      </article>
+    </div>
+  </section>`;
 }
 
 function qoLRow(label: string, kind: keyof QoLFlags, desc: string): string {
@@ -3007,11 +3089,18 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const tunaPct = tunaReady ? 100 : Math.min(100, 100 - (100 * tunaLeft) / TUNA_COOLDOWN_MS);
 
   const br = incomeBreakdownForDisplay(state, totalCardsInPool());
+  const srcBr = incomeSourceBreakdownForDisplay(state, totalCardsInPool());
   const showRealmSplit = br.fromRealm.gt(1e-18);
   const showDeckSplit = br.fromDeck.gt(1e-18);
   const petIncomeHint = petSystemUnlocked(state) ? incomePetLineHtml(state) : "";
   const deckRealmPct = deckRealmBonusSum(state);
   const nextExplore = explorationHints(state);
+  const nextRealmIps = incomePerSecond({ ...state, realmLevel: state.realmLevel + 1 }, totalCardsInPool());
+  const realmDeltaIps = Decimal.max(0, nextRealmIps.minus(ips));
+  const realmPaybackSec = realmDeltaIps.gt(1e-9) ? rb.div(realmDeltaIps).toNumber() : Number.POSITIVE_INFINITY;
+  const realmUpgradeHint = realmDeltaIps.gt(1e-9)
+    ? `破境后每秒约 +${fmtDecimal(realmDeltaIps)}，预计回本约 ${fmtOfflineDurationSec(realmPaybackSec)}。`
+    : "破境后收益提升极小，建议优先补强灵卡或洞府。";
   const exploreBlock =
     nextExplore.length > 0
       ? `<div class="explore-block"><strong class="explore-title">下一探索</strong><ul class="explore-list">${nextExplore.map((h) => `<li>${h}</li>`).join("")}</ul></div>`
@@ -3038,6 +3127,11 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
 
   const fd = getActiveFortuneDef(state);
   const calDay = state.dailyFortune.calendarDay || toLocalYMD(nowMs());
+  const oaPending = state.offlineAdventure.pending;
+  const oaBoostLeftMs = offlineAdventureBoostLeftMs(state, now);
+  const oaBoostMul = offlineAdventureBoostMult(state, now);
+  const oaBoostTag =
+    oaBoostLeftMs > 0 ? `当前增益 ×${oaBoostMul.toFixed(2)}（剩余约 ${Math.ceil(oaBoostLeftMs / 60000)} 分）` : "当前无挂机增益";
   const fortuneBlock =
     u.tabDailyFortune && fd
       ? `<section class="panel daily-fortune-panel">
@@ -3056,6 +3150,95 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
     </section>`
       : "";
 
+  const offlineChoicePanel = oaPending
+    ? `<section class="panel offline-event-panel">
+      <div class="panel-title-art-row panel-title-art-row--sub">
+        <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_BADGE}" alt="" width="24" height="24" loading="lazy" />
+        <h2>离线奇遇二选一</h2>
+      </div>
+      <p class="hint sm">离线达阈值会生成二选一；资源选项立即到账，增益选项会在持续时间后自动失效。${oaBoostTag}</p>
+      <div class="offline-choice-tabs" role="tablist" aria-label="离线奇遇选项">
+        <button type="button" class="offline-choice-tab is-active" aria-selected="true">${oaPending ? "可结算" : "待触发"}</button>
+        <button type="button" class="offline-choice-tab" aria-selected="false">${oaBoostLeftMs > 0 ? "增益生效中" : "增益未激活"}</button>
+      </div>
+      <div class="offline-choice-grid">
+        <article class="offline-choice-card ${oaPending ? "is-recommended" : ""}">
+          <div class="offline-choice-head">
+            <span class="status-badge status-badge--ready">
+              <img src="${UI_OFFLINE_EVENT_OPTION_SAFE}" alt="" width="14" height="14" loading="lazy" />
+              ${oaPending ? oaPending.options[0].title : "稳态回收"}
+            </span>
+            <span class="recommend-tag">${oaPending ? "可选" : "等待离线奇遇"}</span>
+          </div>
+          <p class="hint sm">${
+            oaPending
+              ? `即时获得 ${fmtDecimal(new Decimal(oaPending.options[0].instantStones))} 灵石 + ${oaPending.options[0].instantEssence} 唤灵髓。`
+              : "离线达到阈值后可选择立即资源奖励。"
+          }</p>
+          <button class="btn btn-primary" type="button" data-offline-choice="instant" ${oaPending ? "" : "disabled"}>选择本项</button>
+        </article>
+        <article class="offline-choice-card">
+          <div class="offline-choice-head">
+            <span class="status-badge status-badge--risk">
+              <img src="${UI_OFFLINE_EVENT_OPTION_RISK}" alt="" width="14" height="14" loading="lazy" />
+              ${oaPending ? oaPending.options[1].title : "静修余韵"}
+            </span>
+            <span class="status-badge ${oaBoostLeftMs > 0 ? "status-badge--ready" : "status-badge--pending"}">${
+              oaBoostLeftMs > 0 ? "生效中" : "可触发"
+            }</span>
+          </div>
+          <p class="hint sm">${
+            oaPending
+              ? `挂机收益 ×${oaPending.options[1].boostMult.toFixed(2)}，持续 ${Math.ceil(oaPending.options[1].boostDurationSec / 60)} 分钟。`
+              : "离线达到阈值后可选择限时挂机增益。"
+          }</p>
+          <button class="btn" type="button" data-offline-choice="boost" ${oaPending ? "" : "disabled"}>选择本项</button>
+        </article>
+      </div>
+    </section>`
+    : "";
+
+  const incomeGuidePanel = `<section class="panel income-visual-panel">
+      <div class="panel-title-art-row panel-title-art-row--sub">
+        <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_DECO}" alt="" width="24" height="24" loading="lazy" />
+        <h2>收益来源拆分与升级引导</h2>
+      </div>
+      <div class="income-source-chip-row" aria-label="收益来源">
+        <span class="info-chip">
+          <img src="${UI_INCOME_SOURCE_ICON_REALM}" alt="" width="14" height="14" loading="lazy" />
+          境界原息
+        </span>
+        <span class="info-chip">
+          <img src="${UI_INCOME_SOURCE_ICON_DECK}" alt="" width="14" height="14" loading="lazy" />
+          灵卡原息
+        </span>
+        <span class="info-chip">
+          <img src="${UI_INCOME_SOURCE_ICON_UPGRADE}" alt="" width="14" height="14" loading="lazy" />
+          加成增益
+        </span>
+        <span class="info-chip info-chip--highlight">
+          <img src="${UI_INCOME_SOURCE_ICON_UPGRADE}" alt="" width="14" height="14" loading="lazy" />
+          升级建议
+        </span>
+      </div>
+      <div class="income-guide-cards">
+        <article class="income-guide-card">
+          <div class="income-guide-head">
+            <strong>来源拆分</strong>
+            <span class="status-badge status-badge--info">信息徽章</span>
+          </div>
+          <p class="hint sm">展示「境界原息 / 灵卡原息 / 增益附加」三段，数值可与总每秒收益对齐解释。</p>
+        </article>
+        <article class="income-guide-card">
+          <div class="income-guide-head">
+            <strong>升级引导</strong>
+            <span class="recommend-tag">优先强化</span>
+          </div>
+          <p class="hint sm">当资源足够时，引导按钮与标签采用高对比强调，便于移动端快速识别。</p>
+        </article>
+      </div>
+    </section>`;
+
   const core = `
     <section class="panel">
       <h2>灵脉汇聚</h2>
@@ -3063,8 +3246,9 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <div class="income-hero-label">每秒灵石</div>
         <div class="income-hero-value"><strong id="income-total-live">${fmtDecimal(ips)}</strong></div>
         <div class="income-split" id="income-split-live">
-          ${showRealmSplit ? `<span>境界基础 <strong id="income-realm-live">${fmtDecimal(br.fromRealm)}</strong> / 秒</span>` : ""}
-          ${showDeckSplit ? `<span>灵卡汇流 <strong id="income-deck-live">${fmtDecimal(br.fromDeck)}</strong> / 秒</span>` : ""}
+          ${showRealmSplit ? `<span>境界原息 <strong id="income-realm-live">${fmtDecimal(srcBr.realmCore)}</strong> / 秒</span>` : ""}
+          ${showDeckSplit ? `<span>灵卡原息 <strong id="income-deck-live">${fmtDecimal(srcBr.deckCore)}</strong> / 秒</span>` : ""}
+          <span>增益附加 <strong id="income-bonus-live">${fmtDecimal(srcBr.boostBonus)}</strong> / 秒</span>
       </div>
       ${petIncomeHint !== "" ? `<p class="hint sm income-pet-line" id="income-pet-line">${petIncomeHint}</p>` : ""}
       </div>
@@ -3091,6 +3275,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
           焚天${fireSynergyActive(state) ? (ftReady ? "（可施）" : `（${cdZh}后再行）`) : "（阵中需火灵≥三）"}
         </button>
       </div>
+      <p class="hint sm" id="realm-upgrade-preview">${realmUpgradeHint}</p>
       <div class="cooldown-row" id="row-tuna-cd">
         <span class="cooldown-label">吐纳回气</span>
         <div class="progress-track slim"><div class="progress-fill cd tuna" id="tuna-cd-bar" style="width:${tunaPct}%"></div></div>
@@ -3099,7 +3284,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       <p class="hint">图鉴收集 ${unique} / ${codex}${deckRealmPct > 0.001 ? ` · 卡组境界加成 ${deckRealmPct.toFixed(2)}%` : ""}</p>
     </section>`;
 
-  return reservoirBlock + fortuneBlock + core;
+  return reservoirBlock + fortuneBlock + offlineChoicePanel + incomeGuidePanel + core;
 }
 
 function renderGacha(
@@ -3140,10 +3325,10 @@ function renderGacha(
             <thead><tr><th>时间</th><th>装备</th><th>稀有度</th></tr></thead>
             <tbody>${state.gearPullChronicle
               .map(
-                (e) => `<tr class="chronicle-tr rarity-${e.rarity}">
+                (e) => `<tr class="chronicle-tr ${gearTierClass(e.gearTier)}">
                   <td class="chronicle-td-time">${fmtChronicleTime(e.atMs)}</td>
                   <td class="chronicle-td-name">${e.displayName}</td>
-                  <td class="chronicle-td-r">${rarityZh(e.rarity)}</td>
+                  <td class="chronicle-td-r ${gearTierClass(e.gearTier)} gear-tier-text">${gearTierLabel(e.gearTier)}</td>
                 </tr>`,
               )
               .join("")}</tbody>
@@ -3253,10 +3438,10 @@ function renderGacha(
   const gearDetailBlock = `<details class="gacha-detail-block">
       <summary class="gacha-detail-summary">查看详情：铸灵池当前概率、综合期望与下一阶预告</summary>
       <div class="gacha-detail-content">
-        <p class="hint sm">当前：铸灵阶 ${currentForgeTier}/${GEAR_FORGE_TIER_MAX} · 珍品+保底上限 ${gearNow.pityCap} 唤 · 保底计数 ${state.gearPityPulls}/${gearNow.pityCap} · 运势系数 ×${gearLuck.toFixed(3)}。</p>
-        <p class="hint sm">当前单铸概率：凡品 ${pct(gearNow.probs.N)} · 灵品 ${pct(gearNow.probs.R)} · 珍品 ${pct(gearNow.probs.SR)} · 绝品 ${pct(gearNow.probs.SSR)} · 天极 ${pct(gearNow.probs.UR)} · 珍品+ 合计 ${pct(gearSrPlusNow)}。</p>
+        <p class="hint sm">当前：铸灵阶 ${currentForgeTier}/${GEAR_FORGE_TIER_MAX} · 高胚保底上限 ${gearNow.pityCap} 唤 · 保底计数 ${state.gearPityPulls}/${gearNow.pityCap} · 运势系数 ×${gearLuck.toFixed(3)}。</p>
+        <p class="hint sm">当前单铸底胚概率：N ${pct(gearNow.probs.N)} · R ${pct(gearNow.probs.R)} · SR ${pct(gearNow.probs.SR)} · SSR ${pct(gearNow.probs.SSR)} · UR ${pct(gearNow.probs.UR)}。最终显示按 9 品阶（凡品→至宝）结合筑灵阶换算。</p>
         <p class="hint sm">当前综合期望：平均 ilvl 约 ${gearNow.ilvlAvg} · 平均筑灵阶约 ${gearNow.gradeExpected.toFixed(2)} / 48。</p>
-        <p class="hint sm">下一阶（${nextForgeTier}）预估：珍品+ ${pct(gearSrPlusNext)}（当前 ${pct(gearSrPlusNow)}）· 天极 ${pct(gearNext.probs.UR)}（当前 ${pct(gearNow.probs.UR)}）· 平均 ilvl 约 ${gearNext.ilvlAvg} · 平均筑灵阶约 ${gearNext.gradeExpected.toFixed(2)} / 48 · 保底上限 ${gearNext.pityCap} 唤。</p>
+        <p class="hint sm">下一阶（${nextForgeTier}）预估：高胚+ ${pct(gearSrPlusNext)}（当前 ${pct(gearSrPlusNow)}）· UR 底胚 ${pct(gearNext.probs.UR)}（当前 ${pct(gearNow.probs.UR)}）· 平均 ilvl 约 ${gearNext.ilvlAvg} · 平均筑灵阶约 ${gearNext.gradeExpected.toFixed(2)} / 48 · 保底上限 ${gearNext.pityCap} 唤。</p>
       </div>
     </details>`;
   const resFrac = ((state.wishResonance % 100) + 100) % 100;
@@ -3390,6 +3575,7 @@ function renderGacha(
       ${gearDetailBlock}
       <div class="gacha-actions">
         <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 筑灵髓）</button>
+        <button class="btn" type="button" id="btn-toggle-auto-gear-forge">${state.autoGearForge ? "自动单铸：开" : "自动单铸：关"}</button>
       </div>
       <div id="pull-output-gear" class="pull-result pull-result-gear"></div>
       <h3 class="sub-h chronicle-sub-h chronicle-sub-h--gear">最近境界铸灵</h3>
@@ -3464,6 +3650,26 @@ function renderVeinPage(): string {
       affordable = !maxed && canAfford(state, c);
     }
     const lvPct = (cur / VEIN_MAX_LEVEL) * 100;
+    let previewLine = "";
+    if (!maxed && (k === "huiLing" || k === "lingXi")) {
+      const nextState: GameState = {
+        ...state,
+        vein: { ...state.vein, [k]: cur + 1 },
+      };
+      const nextIps = incomePerSecond(nextState, poolN);
+      const dIps = Decimal.max(0, nextIps.minus(ipsNow));
+      if (dIps.gt(1e-9)) {
+        const c = k === "huiLing" ? huiLingUpgradeCost(cur) : lingXiUpgradeCost(cur);
+        const pb = c.div(dIps).toNumber();
+        previewLine = `升级后每秒约 +${fmtDecimal(dIps)}，预计回本 ${fmtOfflineDurationSec(pb)}。`;
+      } else {
+        previewLine = "升级后收益提升较小，可先补强其他线。";
+      }
+    } else if (!maxed && k === "guYuan") {
+      previewLine = "升级后降低破境消耗与受击压力，适合冲击高境界。";
+    } else if (!maxed) {
+      previewLine = "升级后提升共鸣积累与唤灵髓获取效率。";
+    }
     grid += `
       <div class="vein-card vein-card-visual">
         <h3>${VEIN_TITLES[k]} <span class="inv-meta">Lv.${cur}</span></h3>
@@ -3474,6 +3680,7 @@ function renderVeinPage(): string {
         <button class="btn btn-primary" type="button" data-vein="${k}" ${affordable ? "" : "disabled"}>
           ${maxed ? "已满" : `强化（${costLabel}）`}
         </button>
+        ${previewLine ? `<p class="hint sm">${previewLine}</p>` : ""}
       </div>`;
   }
   return `
@@ -3995,6 +4202,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
     cultivateSub = "deck";
     characterSub = "stats";
     autoEnterPromptHandled = false;
+    lastAutoEnterFailToastAt = 0;
+    lastAutoEnterFailReason = "";
     flyCreditsDismissed = false;
     toast("存档已重置。");
     render();
@@ -4075,10 +4284,28 @@ function bindEvents(rb: Decimal, _slots: number): void {
   };
 
   const runGearPull = (n: 1) => {
+    void n;
     if (!getUiUnlocks(state).tabGear) {
       toast("境界铸灵未解锁：获得 1 件装备，或累计抽卡达到 10 次后开放。");
       return;
     }
+    const applyGearPullUiPatch = (pullHtml: string, equipped: boolean): void => {
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const btnPullGear = document.getElementById("btn-pull-gear-1") as HTMLButtonElement | null;
+      if (btnPullGear) btnPullGear.disabled = state.zhuLingEssence < ESSENCE_COST_GEAR_SINGLE;
+      const out = document.getElementById("pull-output-gear");
+      if (out) {
+        out.innerHTML = pullHtml;
+        out.classList.add("pull-burst");
+        setTimeout(() => out.classList.remove("pull-burst"), 450);
+      }
+      if (equipped) {
+        const strip = document.getElementById("battle-equipped-strip");
+        if (strip) {
+          strip.outerHTML = renderBattleEquippedStrip(state, battleEquippedStripExpanded);
+        }
+      }
+    };
     const cost = ESSENCE_COST_GEAR_SINGLE;
     if (state.zhuLingEssence < cost) return;
     state.zhuLingEssence -= cost;
@@ -4091,36 +4318,42 @@ function bindEvents(rb: Decimal, _slots: number): void {
     const g = r.gear;
     tryCompleteAchievements(state);
     saveGame(state);
+    const visualTier = gearVisualTier(g);
+    const visualTierLabel = gearTierLabel(visualTier);
     const pullHtml = r.equipped
-      ? `<span class="pull-tag">${g.displayName} · ${rarityZh(g.rarity)}</span>`
-      : `<span class="pull-tag">${g.displayName} · ${rarityZh(g.rarity)}</span><p class="hint sm">未超过当前部位战力，已分解为玄铁 +${r.salvagedXuanTie}</p>`;
+      ? `<span class="pull-tag">${g.displayName} · ${visualTierLabel}</span>`
+      : `<span class="pull-tag">${g.displayName} · ${visualTierLabel}</span><p class="hint sm">未超过当前部位战力，已分解为玄铁 +${r.salvagedXuanTie}</p>`;
     if (!r.equipped) {
-      render();
-      queueMicrotask(() => {
-        const out = document.getElementById("pull-output-gear");
-        if (!out) return;
-        out.innerHTML = pullHtml;
-        out.classList.add("pull-burst");
-        setTimeout(() => out.classList.remove("pull-burst"), 450);
-      });
+      applyGearPullUiPatch(pullHtml, false);
       return;
     }
-    const toastMsg = `铸灵：${g.displayName}「${rarityZh(g.rarity)}」`;
+    const toastMsg = `铸灵：${g.displayName}「${visualTierLabel}」`;
     showGearRevealOverlay([g], toastMsg, () => {
-      render();
-      queueMicrotask(() => {
-        const out = document.getElementById("pull-output-gear");
-        if (!out) return;
-        out.innerHTML = pullHtml;
-        out.classList.add("pull-burst");
-        setTimeout(() => out.classList.remove("pull-burst"), 450);
-      });
+      applyGearPullUiPatch(pullHtml, true);
     }, r.replaceExpectation, r.powerDelta);
   };
 
   document.getElementById("btn-pull-1")?.addEventListener("click", () => runCardPull(1));
   document.getElementById("btn-pull-10")?.addEventListener("click", () => runCardPull(10));
   document.getElementById("btn-pull-gear-1")?.addEventListener("click", () => runGearPull(1));
+  document.getElementById("btn-toggle-auto-gear-forge")?.addEventListener("click", () => {
+    state.autoGearForge = !state.autoGearForge;
+    saveGame(state);
+    const btn = document.getElementById("btn-toggle-auto-gear-forge") as HTMLButtonElement | null;
+    if (btn) btn.textContent = state.autoGearForge ? "自动单铸：开" : "自动单铸：关";
+    toast(state.autoGearForge ? "已开启自动单铸" : "已关闭自动单铸");
+  });
+  document.querySelectorAll<HTMLElement>('[data-toggle-auto-boss-challenge="1"]').forEach((el) => {
+    el.addEventListener("click", () => {
+      state.autoBossChallenge = !state.autoBossChallenge;
+      saveGame(state);
+      const txt = state.autoBossChallenge ? "自动挑战首领：开" : "自动挑战首领：关";
+      document.querySelectorAll<HTMLElement>('[data-toggle-auto-boss-challenge="1"]').forEach((node) => {
+        node.textContent = txt;
+      });
+      toast(state.autoBossChallenge ? "已开启自动挑战首领" : "已关闭自动挑战首领");
+    });
+  });
 
   document.getElementById("main-content")?.addEventListener("click", handleDeckPanelClick);
   document.getElementById("main-content")?.addEventListener("keydown", (e) => {
@@ -4276,6 +4509,27 @@ function bindEvents(rb: Decimal, _slots: number): void {
       } else {
         toast("资源不足或已达上限");
       }
+    });
+  });
+
+  document.querySelectorAll("[data-offline-choice]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = (el as HTMLElement).dataset.offlineChoice;
+      if (id !== "instant" && id !== "boost") return;
+      const t = nowMs();
+      if (!chooseOfflineAdventureOption(state, id, t)) {
+        toast("当前没有可结算的离线奇遇。");
+        return;
+      }
+      tryCompleteAchievements(state);
+      saveGame(state);
+      if (id === "instant") {
+        toast("已选择灵脉馈赠：奖励已到账。");
+      } else {
+        const leftMin = Math.ceil(offlineAdventureBoostLeftMs(state, t) / 60000);
+        toast(`已选择静修余韵：挂机增益已生效（约 ${leftMin} 分）。`);
+      }
+      render();
     });
   });
 
@@ -4471,114 +4725,24 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   }
 
-  const readEntryWave = (): number => {
-    const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
-    const raw = inp?.valueAsNumber;
-    const d = state.dungeon;
-    const cap = dungeonFrontierWave(state);
-    if (raw == null || !Number.isFinite(raw)) return Math.max(1, Math.min(cap, d.entryWave));
-    return Math.max(1, Math.min(cap, Math.floor(raw)));
-  };
-
-  document.getElementById("btn-dungeon-entry-frontier")?.addEventListener("click", () => {
-    const n = dungeonFrontierWave(state);
-    const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
-    if (inp) inp.value = String(n);
-    state.dungeon.entryWave = n;
-    saveGame(state);
-    render();
-  });
-
-  document.getElementById("btn-dungeon-enter")?.addEventListener("click", () => {
-    const w = readEntryWave();
-    state.dungeon.entryWave = w;
-    const now = nowMs();
-    if (!canEnterDungeon(state, now)) {
-      toast("当前无法进入：冷却中或仍在副本内。");
-      return;
-    }
-    if (!canEnterAtWave(state, w)) {
-      toast("无法从该波进入：已超过当前可推进范围，或该波不可选。");
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？`)) return;
-    if (enterDungeon(state, w)) {
-      saveGame(state);
-      toast(`已进入幻域（自第 ${w} 波）`);
-      render();
-    } else {
-      toast("无法进入副本（冷却或其它限制）");
-    }
-  });
-
-  document.getElementById("sanctuary-auto-enter")?.addEventListener("change", (e) => {
-    const el = e.target as HTMLInputElement;
-    state.dungeonSanctuaryAutoEnter = el.checked;
-    saveGame(state);
-    render();
-  });
-  document.getElementById("btn-sanctuary-portal")?.addEventListener("click", () => {
-    const now = nowMs();
-    const w = state.dungeonPortalTargetWave;
-    if (!state.dungeonSanctuaryMode || state.dungeon.active || w < 1) return;
-    const pmax = playerMaxHp(state);
-    if (state.combatHpCurrent < pmax - 0.25) {
-      toast("灵息未满");
-      return;
-    }
-    if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
-      toast("当前无法进入该关卡。");
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？`)) return;
-    if (enterDungeon(state, w)) {
+  bindDungeonInteractions({
+    state,
+    nowMs,
+    save: () => saveGame(state),
+    render,
+    toast,
+    tryToastDungeonVictory,
+    setActiveHubBattle: () => {
       activeHub = "battle";
-      saveGame(state);
-      toast(`已进入第 ${w} 关`);
-      render();
-    } else {
-      toast("无法进入副本");
-    }
-  });
-  document.getElementById("btn-dungeon-help")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const p = document.getElementById("dungeon-help-popover");
-    const b = document.getElementById("btn-dungeon-help");
-    if (!p || !b) return;
-    p.hidden = !p.hidden;
-    b.setAttribute("aria-expanded", p.hidden ? "false" : "true");
-  });
-  const onDungeonLivePointerUp = (e: PointerEvent): void => {
-    if (!state.dungeon.active) return;
-    const d = state.dungeon;
-    const interWaveWait = d.mobs.length === 0 && d.interWaveCooldownUntil > nowMs();
-    if (interWaveWait) return;
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    const el = e.target as HTMLElement | null;
-    if (el?.closest("button, a, input, textarea, select, label, [role='button']")) return;
-    tryQueueDungeonDodgeWithFeedback();
-  };
-  document.getElementById("dungeon-live-root")?.addEventListener("pointerup", onDungeonLivePointerUp);
-  document.getElementById("btn-dungeon-challenge-boss")?.addEventListener("click", () => {
-    const snap = dungeonBossPrepSnapshot(state);
-    if (!snap.canChallenge) {
-      tryToastDungeonVictory(snap.challengeHint);
-      return;
-    }
-    const r = requestBossChallenge(state);
-    if (!r.ok) {
-      tryToastDungeonVictory(r.msg);
-      return;
-    }
-    saveGame(state);
-    tryToastDungeonVictory(r.msg);
-    render();
-  });
-  document.getElementById("btn-dungeon-boss-next-entry")?.addEventListener("click", () => {
-    state.dungeonDeferBoss = false;
-    saveGame(state);
-    toast("已切换为首领战：下次进入该波将面对首领。");
-    render();
+    },
+    canEnterDungeon,
+    canEnterAtWave,
+    dungeonFrontierWave,
+    enterDungeon,
+    playerMaxHp,
+    tryQueueDungeonDodgeWithFeedback,
+    dungeonBossPrepSnapshot,
+    requestBossChallenge,
   });
 
   document.querySelectorAll("[data-skill-train]").forEach((el) => {
@@ -4638,104 +4802,23 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   }
 
-  document.getElementById("btn-save")?.addEventListener("click", () => {
-    saveGame(state);
-    toast("已保存到本机。");
-  });
-
-  document.getElementById("btn-export")?.addEventListener("click", () => {
-    const s = exportSave(state);
-    void navigator.clipboard.writeText(s).then(
-      () => toast("存档字符串已复制到剪贴板。"),
-      () => {
-        const pasted = window.prompt("剪贴板不可用，请手动复制以下完整存档字符串：", s);
-        if (pasted == null) {
-          toast("导出未完成：请重试或检查剪贴板权限。");
-        } else {
-          toast("已显示完整存档字符串，请手动复制。");
-        }
-      },
-    );
-  });
-
-  document.getElementById("btn-save-download")?.addEventListener("click", () => {
-    triggerDownloadSaveBackup();
-  });
-
-  document.querySelectorAll("[data-save-slot-activate]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const slot = Number((btn as HTMLElement).dataset.saveSlotActivate);
-      if (!Number.isFinite(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) return;
-      if (slot === getActiveSlotIndex()) return;
-      if (peekSlotSummary(slot).empty) {
-        const ok = confirm(
-          `存档位 ${slot + 1} 当前为空。切换后将从此槽开始新开局（当前槽会先保存）。确定吗？`,
-        );
-        if (!ok) return;
-      }
-      state = switchToSaveSlot(slot, state);
+  setupSaveToolsBridge({
+    getState: () => state,
+    setState: (next) => {
+      state = next;
+    },
+    saveGame,
+    toast,
+    render,
+    triggerDownloadSaveBackup,
+    resetTransientUiState: () => {
       selectedInvId = null;
       refineTargetId = null;
       autoEnterPromptHandled = false;
+      lastAutoEnterFailToastAt = 0;
+      lastAutoEnterFailReason = "";
       flyCreditsDismissed = false;
-      saveGame(state);
-      toast(`已切换到存档位 ${slot + 1}`);
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-save-slot-copy]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const slot = Number((btn as HTMLElement).dataset.saveSlotCopy);
-      if (!Number.isFinite(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) return;
-      if (slot === getActiveSlotIndex()) return;
-      const sum = peekSlotSummary(slot);
-      if (!sum.empty) {
-        const ok = confirm(`将用当前进度覆盖存档位 ${slot + 1} 的已有存档。确定吗？`);
-        if (!ok) return;
-      }
-      copyCurrentToSlot(slot, state);
-      toast(`已复制当前进度到存档位 ${slot + 1}`);
-      render();
-    });
-  });
-
-  document.querySelectorAll(".save-slot-label-input").forEach((el) => {
-    el.addEventListener("change", () => {
-      const inp = el as HTMLInputElement;
-      const slot = Number(inp.dataset.saveSlotLabel);
-      if (!Number.isFinite(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) return;
-      setSlotLabel(slot, inp.value);
-      inp.value = getSlotLabel(slot);
-    });
-  });
-
-  document.getElementById("btn-import")?.addEventListener("click", () => {
-    const inp = document.getElementById("import-input") as HTMLInputElement | null;
-    const raw = inp?.value?.trim();
-    if (!raw) {
-      toast("请先粘贴存档字符串。");
-      inp?.focus();
-      return;
-    }
-    const next = importSave(raw);
-    if (!next) {
-      toast("导入失败：字符串无效。");
-      return;
-    }
-    const curExport = exportSave(state);
-    if (raw !== curExport) {
-      const ok = confirm("导入会覆盖当前进度，建议先导出备份。确认继续导入吗？");
-      if (!ok) return;
-    }
-    state = next;
-    selectedInvId = null;
-    refineTargetId = null;
-    autoEnterPromptHandled = false;
-    flyCreditsDismissed = false;
-    saveGame(state);
-    toast("存档导入成功。");
-    render();
+    },
   });
 
   document.querySelector(".app-title-spirit")?.addEventListener("click", () => {
@@ -4872,6 +4955,8 @@ function updateTopResourcePillsAndVigor(pool: number): void {
   const eps = essenceIncomePerSecondFromResonance(state);
   const ped = document.getElementById("pill-essence-delta");
   if (ped) ped.textContent = `+${eps >= 0.1 ? eps.toFixed(2) : eps.toFixed(3)}/秒`;
+  const pzd = document.getElementById("pill-zhuling-delta");
+  if (pzd) pzd.textContent = formatZhuLingRateLabel(zhuLingRateEstimatePerSec);
   if (u.tabGear) {
     setPillStrong("pill-ling-sha", String(state.lingSha));
     setPillStrong("pill-xuan-tie", String(state.xuanTie));
@@ -4894,13 +4979,25 @@ function updateTopResourcePillsAndVigor(pool: number): void {
 function updateEstateIdleLiveReadouts(now: number): void {
   const pool = totalCardsInPool();
   const ips = incomePerSecond(state, pool);
-  const br = incomeBreakdownForDisplay(state, pool);
+  const srcBr = incomeSourceBreakdownForDisplay(state, pool);
   const totalEl = document.getElementById("income-total-live");
   const realmEl = document.getElementById("income-realm-live");
   const deckEl = document.getElementById("income-deck-live");
+  const bonusEl = document.getElementById("income-bonus-live");
+  const realmPreviewEl = document.getElementById("realm-upgrade-preview");
   if (totalEl) totalEl.textContent = fmtDecimal(ips);
-  if (realmEl) realmEl.textContent = fmtDecimal(br.fromRealm);
-  if (deckEl) deckEl.textContent = fmtDecimal(br.fromDeck);
+  if (realmEl) realmEl.textContent = fmtDecimal(srcBr.realmCore);
+  if (deckEl) deckEl.textContent = fmtDecimal(srcBr.deckCore);
+  if (bonusEl) bonusEl.textContent = fmtDecimal(srcBr.boostBonus);
+  if (realmPreviewEl) {
+    const rb = realmBreakthroughCostForState(state);
+    const nextRealmIps = incomePerSecond({ ...state, realmLevel: state.realmLevel + 1 }, pool);
+    const dIps = Decimal.max(0, nextRealmIps.minus(ips));
+    const paybackSec = dIps.gt(1e-9) ? rb.div(dIps).toNumber() : Number.POSITIVE_INFINITY;
+    realmPreviewEl.textContent = dIps.gt(1e-9)
+      ? `破境后每秒约 +${fmtDecimal(dIps)}，预计回本约 ${fmtOfflineDurationSec(paybackSec)}。`
+      : "破境后收益提升极小，建议优先补强灵卡或洞府。";
+  }
   const huiSpan = document.getElementById("idle-vein-hui");
   const lingSpan = document.getElementById("idle-vein-ling");
   if (huiSpan) huiSpan.textContent = veinHuiLingMult(state.vein.huiLing).toFixed(2);
@@ -4966,6 +5063,37 @@ function updateEstateIdleLiveReadouts(now: number): void {
       if (gEl) gEl.textContent = `+${((fd.dungeonMult - 1) * 100).toFixed(1)}%`;
     }
   }
+  const oaPending = state.offlineAdventure.pending;
+  const oaBoostLeftMs = offlineAdventureBoostLeftMs(state, now);
+  const oaBoostMul = offlineAdventureBoostMult(state, now);
+  const tabs = document.querySelectorAll(".offline-choice-tab");
+  if (tabs[0]) tabs[0].textContent = oaPending ? "可结算" : "待触发";
+  if (tabs[1]) tabs[1].textContent = oaBoostLeftMs > 0 ? "增益生效中" : "增益未激活";
+  const btnInstant = document.querySelector("[data-offline-choice='instant']") as HTMLButtonElement | null;
+  const btnBoost = document.querySelector("[data-offline-choice='boost']") as HTMLButtonElement | null;
+  if (btnInstant) btnInstant.disabled = !oaPending;
+  if (btnBoost) btnBoost.disabled = !oaPending;
+  const cards = document.querySelectorAll(".offline-choice-card");
+  const card1Desc = cards[0]?.querySelector(".hint.sm");
+  const card2Desc = cards[1]?.querySelector(".hint.sm");
+  if (card1Desc) {
+    card1Desc.textContent = oaPending
+      ? `即时获得 ${fmtDecimal(new Decimal(oaPending.options[0].instantStones))} 灵石 + ${oaPending.options[0].instantEssence} 唤灵髓。`
+      : "离线达到阈值后可选择立即资源奖励。";
+  }
+  if (card2Desc) {
+    card2Desc.textContent = oaPending
+      ? `挂机收益 ×${oaPending.options[1].boostMult.toFixed(2)}，持续 ${Math.ceil(oaPending.options[1].boostDurationSec / 60)} 分钟。`
+      : "离线达到阈值后可选择限时挂机增益。";
+  }
+  const panelHint = document.querySelector(".offline-event-panel .hint.sm");
+  if (panelHint) {
+    panelHint.textContent =
+      `离线达阈值会生成二选一；资源选项立即到账，增益选项会在持续时间后自动失效。` +
+      (oaBoostLeftMs > 0
+        ? `当前增益 ×${oaBoostMul.toFixed(2)}（剩余约 ${Math.ceil(oaBoostLeftMs / 60000)} 分）`
+        : "当前无挂机增益");
+  }
 }
 
 /** 灵府·灵田：生长条与收获按钮（仅在该子页时 DOM 存在） */
@@ -4997,6 +5125,7 @@ function updateEstateGardenLiveReadouts(now: number): void {
 function loop(): void {
   syncDecimalFormatFromState(state);
   const now = nowMs();
+  updateZhuLingRateEstimate(now);
   ensureWeeklyBountyWeek(state, now);
   if (lastUiWeekKey !== state.weeklyBounty.weekKey) {
     const prevWeekKey = lastUiWeekKey;
@@ -5015,7 +5144,7 @@ function loop(): void {
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
     activeHub = "battle";
     lastAutoEnterFailReason = "";
-    saveGame(state);
+    requestSave("自动回收进本", true);
     toast(`灵息已盈，已传送至第 ${state.dungeon.wave} 关`);
     render();
   } else if (typeof document !== "undefined") {
@@ -5037,12 +5166,12 @@ function loop(): void {
       const ok = confirm(`幻域已解锁，是否立即进入第 1 关？`);
       if (ok && enterDungeon(state, 1)) {
         activeHub = "battle";
-        saveGame(state);
+        requestSave("自动进本确认", true);
         toast(`已进入第 1 关`);
         render();
       } else if (!ok) {
         state.dungeon.autoEnterConsumed = true;
-        saveGame(state);
+        requestSave("自动进本取消", true);
       }
     }
   }
@@ -5097,7 +5226,9 @@ function loop(): void {
   if (state.dungeon.pendingKillToast) {
     const k = state.dungeon.pendingKillToast;
     state.dungeon.pendingKillToast = null;
-    toast(k);
+    if (activeHub === "battle" && battleSub === "dungeon") {
+      toast(k);
+    }
   }
   if (state.dungeon.pendingToast) {
     const m = state.dungeon.pendingToast;
@@ -5105,7 +5236,7 @@ function loop(): void {
     if (m.startsWith("破阵胜利")) tryToastDungeonVictory(m);
     else if (m.includes("首领")) tryToastDungeonVictory(m);
     else tryToast(m);
-    saveGame(state);
+    requestSave("副本结算提示");
   }
   /** 阵亡/暂离出本：仍在幻域页时整页重绘，避免底部生命/地图卡在进本前状态 */
   if (
@@ -5133,7 +5264,7 @@ function loop(): void {
   toastTimer += loopIntervalMs();
   if (toastTimer >= 5000) {
     toastTimer = 0;
-    saveGame(state);
+    requestSave("周期自动保存");
   }
   const pool = totalCardsInPool();
   if (activeHub === "estate" && estateSub === "idle") {
@@ -5390,10 +5521,10 @@ function loop(): void {
     const hpPct = d.playerMax > 0 ? Math.min(100, (100 * Math.max(0, d.playerHp)) / d.playerMax) : 0;
     const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
     const interWaveWait = d.mobs.length === 0 && d.interWaveCooldownUntil > now;
-    const metaEl = document.getElementById("dungeon-active-meta");
+    const helpMetaEl = document.getElementById("discoverability-help-live-meta");
     const metaBriefEl = document.getElementById("dungeon-active-meta-brief");
-    if (metaEl && !interWaveWait) {
-      metaEl.textContent = formatDungeonActiveMeta(state, now);
+    if (helpMetaEl && !interWaveWait) {
+      helpMetaEl.textContent = formatDungeonActiveHelpMeta(state, now);
     }
     if (metaBriefEl && !interWaveWait) {
       metaBriefEl.textContent = formatDungeonActiveMetaBrief(state, now);
@@ -5554,11 +5685,8 @@ function loop(): void {
     if (idleEdps && footEdps) idleEdps.textContent = footEdps.textContent;
     if (idleChp && footChp) idleChp.textContent = footChp.textContent;
     if (idlePmax && footPmax) idlePmax.textContent = footPmax.textContent;
-    const elElapsed = document.getElementById("dungeon-session-elapsed");
     const elEta = document.getElementById("dungeon-eta-remaining");
     if (d.active && d.sessionEnterAtMs > 0) {
-      const elapsedSec = (now - d.sessionEnterAtMs) / 1000;
-      if (elElapsed) elElapsed.textContent = fmtDungeonDur(elapsedSec);
       const poolHp = totalAliveMobHpSum(d);
       const edps = playerExpectedDpsDungeonAffix(state, now);
       if (elEta) {
@@ -5567,7 +5695,6 @@ function loop(): void {
         else elEta.textContent = fmtDungeonDur(poolHp / edps);
       }
     } else {
-      if (elElapsed) elElapsed.textContent = "—";
       if (elEta) elEta.textContent = "—";
     }
   }
@@ -5671,6 +5798,7 @@ function loop(): void {
 function init(): void {
   const t = nowMs();
   ensureWeeklyBountyWeek(state, t);
+  ensureCelestialStashWeek(state, t);
   mobileLiteFx = shouldUseMobileLiteFx();
   if (!mobileLiteFx) initPixiFxLayer();
   bindModernFxInteraction();
@@ -5680,6 +5808,13 @@ function init(): void {
   tickDailyLoginCalendar(state, t);
   tickDailyFortune(state, t);
   const offline = catchUpOffline(state, t);
+  ensureWeeklyBountyWeek(state, t);
+  ensureCelestialStashWeek(state, t);
+  tickDailyLoginCalendar(state, t);
+  tickDailyFortune(state, t);
+  if (offline.settledSec > 0) {
+    maybeQueueOfflineAdventure(state, offline.settledSec, t);
+  }
   if (offline.stoneGain.gt(0.01)) {
     const sig = `${offline.rawAwaySec.toFixed(1)}|${offline.settledSec.toFixed(1)}|${offline.capSec.toFixed(1)}|${offline.stoneGain.toFixed(2)}`;
     if (sig !== lastOfflineToastSig || t - lastOfflineToastAtMs > 6000) {
@@ -5716,10 +5851,17 @@ function init(): void {
     { passive: false },
   );
   document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      flushSaveRequest("页面切后台前已保存");
+      return;
+    }
     if (document.visibilityState !== "visible") return;
     if (deferredDungeonToasts.length === 0) return;
     for (const m of deferredDungeonToasts) toast(m);
     deferredDungeonToasts.length = 0;
+  });
+  window.addEventListener("beforeunload", () => {
+    flushSaveRequest("页面关闭前已保存");
   });
   const runLoop = (): void => {
     loop();
