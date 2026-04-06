@@ -40,13 +40,13 @@ export interface OfflineCatchUpSummary {
   wasCapped: boolean;
 }
 
-function tryAutoRealm(state: GameState): void {
+function tryAutoRealm(state: GameState, now: number): void {
   if (!state.qoL.autoRealm) return;
   const rb = realmBreakthroughCostForState(state);
   if (!canAfford(state, rb)) return;
   if (!subStones(state, rb)) return;
   state.realmLevel += 1;
-  noteWeeklyBountyBreakthrough(state);
+  noteWeeklyBountyBreakthrough(state, now);
 }
 
 function tryAutoTuna(state: GameState, now: number): void {
@@ -91,7 +91,7 @@ export function applyTick(state: GameState, now: number): void {
   const ips = incomePerSecond(state, totalCardsInPool());
   if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips);
   addStones(state, ips.mul(dt));
-  tryAutoRealm(state);
+  tryAutoRealm(state, tickNow);
   tryAutoTuna(state, tickNow);
   tryAutoGacha(state, tickNow);
   autoSalvageAccumSec += dt;

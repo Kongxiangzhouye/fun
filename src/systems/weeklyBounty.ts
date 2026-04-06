@@ -189,33 +189,37 @@ export function weeklyBountyTaskState(state: GameState, def: WeeklyBountyTaskDef
   return isWeeklyBountyComplete(state, def) ? "claimable" : "pending";
 }
 
-export function noteWeeklyBountyWave(state: GameState): void {
-  ensureWeeklyBountyWeek(state, Date.now());
+function normalizeWeeklyBountyEventNow(nowMs?: number): number {
+  return Number.isFinite(nowMs) ? (nowMs as number) : Date.now();
+}
+
+export function noteWeeklyBountyWave(state: GameState, nowMs?: number): void {
+  ensureWeeklyBountyWeek(state, normalizeWeeklyBountyEventNow(nowMs));
   state.weeklyBounty.waves += 1;
 }
 
-export function noteWeeklyBountyCardPulls(state: GameState, n: number): void {
-  ensureWeeklyBountyWeek(state, Date.now());
+export function noteWeeklyBountyCardPulls(state: GameState, n: number, nowMs?: number): void {
+  ensureWeeklyBountyWeek(state, normalizeWeeklyBountyEventNow(nowMs));
   state.weeklyBounty.cardPulls += Math.max(0, Math.floor(n));
 }
 
-export function noteWeeklyBountyGearForges(state: GameState, n: number): void {
-  ensureWeeklyBountyWeek(state, Date.now());
+export function noteWeeklyBountyGearForges(state: GameState, n: number, nowMs?: number): void {
+  ensureWeeklyBountyWeek(state, normalizeWeeklyBountyEventNow(nowMs));
   state.weeklyBounty.gearForges += Math.max(0, Math.floor(n));
 }
 
-export function noteWeeklyBountyGardenHarvest(state: GameState): void {
-  ensureWeeklyBountyWeek(state, Date.now());
+export function noteWeeklyBountyGardenHarvest(state: GameState, nowMs?: number): void {
+  ensureWeeklyBountyWeek(state, normalizeWeeklyBountyEventNow(nowMs));
   state.weeklyBounty.gardenHarvests += 1;
 }
 
-export function noteWeeklyBountyTuna(state: GameState): void {
-  ensureWeeklyBountyWeek(state, Date.now());
+export function noteWeeklyBountyTuna(state: GameState, nowMs?: number): void {
+  ensureWeeklyBountyWeek(state, normalizeWeeklyBountyEventNow(nowMs));
   state.weeklyBounty.tuna += 1;
 }
 
-export function noteWeeklyBountyBreakthrough(state: GameState): void {
-  ensureWeeklyBountyWeek(state, Date.now());
+export function noteWeeklyBountyBreakthrough(state: GameState, nowMs?: number): void {
+  ensureWeeklyBountyWeek(state, normalizeWeeklyBountyEventNow(nowMs));
   state.weeklyBounty.breakthroughs += 1;
 }
 

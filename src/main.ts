@@ -190,6 +190,7 @@ import {
   UI_DUNGEON_HIT_CONFIRM_RING_DECO,
   UI_DUNGEON_CRIT_BURST_DECO,
   UI_DUNGEON_CRIT_ECHO_DECO,
+  UI_DUNGEON_PARRY_SPARK_DECO,
   UI_DUNGEON_STAGGER_PULSE_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
@@ -3575,7 +3576,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.getElementById("btn-realm")?.addEventListener("click", () => {
     if (canAfford(state, rb) && subStones(state, rb)) {
       state.realmLevel += 1;
-      noteWeeklyBountyBreakthrough(state);
+      noteWeeklyBountyBreakthrough(state, nowMs());
       if (state.tutorialStep === 7) {
         state.tutorialStep = 0;
         toast("破境成功。新手引导已完成。");
@@ -4881,29 +4882,32 @@ function loop(): void {
       mapEl.classList.toggle("duel-combo-high", d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.comboHighStacks);
       mapEl.classList.toggle(
         "duel-fx-hit",
-        !prefersReducedMotion && mapNow - duelFloatBurstAtMs < 140,
+        !prefersReducedMotion && mapNow - duelFloatBurstAtMs < DUNGEON_DUEL_FEEDBACK.duelFxHitMs,
       );
       mapEl.classList.toggle(
         "duel-fx-hit-deco-on",
-        !prefersReducedMotion && mapNow - duelHitFlashAtMs < 170,
+        !prefersReducedMotion && mapNow - duelHitFlashAtMs < DUNGEON_DUEL_FEEDBACK.duelFxHitDecoMs,
       );
       mapEl.classList.toggle(
         "duel-fx-crit-deco-on",
-        !prefersReducedMotion && mapNow - duelCritBurstAtMs < 260,
+        !prefersReducedMotion && mapNow - duelCritBurstAtMs < DUNGEON_DUEL_FEEDBACK.duelFxCritDecoMs,
       );
       mapEl.classList.toggle(
         "duel-fx-guard-deco-on",
-        !prefersReducedMotion && mapNow - duelGuardBreakAtMs < 320,
+        !prefersReducedMotion && mapNow - duelGuardBreakAtMs < DUNGEON_DUEL_FEEDBACK.duelFxGuardDecoMs,
       );
       mapEl.classList.toggle(
         "duel-hp-low",
         d.playerMax > 0 && d.playerHp / d.playerMax < 0.28,
       );
       mapEl.classList.toggle("duel-is-boss", !!(tgt?.isBoss));
+      const iframesRemainMs = Math.max(0, d.dodgeIframesUntil - now);
       const hitDecoSrc =
-        d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.hitDecoComboThreshold
-          ? UI_DUNGEON_HIT_CONFIRM_RING_DECO
-          : UI_DUNGEON_HIT_FLASH_DECO;
+        iframesRemainMs >= DUNGEON_DUEL_FEEDBACK.parryHitDecoIframesRemainMs
+          ? UI_DUNGEON_PARRY_SPARK_DECO
+          : d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.hitDecoComboThreshold
+            ? UI_DUNGEON_HIT_CONFIRM_RING_DECO
+            : UI_DUNGEON_HIT_FLASH_DECO;
       const critDecoSrc =
         d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.critDecoComboThreshold
           ? UI_DUNGEON_CRIT_ECHO_DECO

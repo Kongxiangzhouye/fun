@@ -24,7 +24,7 @@ export function tryTuna(state: GameState, nowMs: number): number {
   const gain = tunaStoneReward(state.realmLevel);
   addStones(state, gain);
   state.lastTunaMs = nowMs;
-  noteWeeklyBountyTuna(state);
+  noteWeeklyBountyTuna(state, nowMs);
   return gain;
 }
 

@@ -308,6 +308,11 @@ export const DUNGEON_DUEL_FEEDBACK = {
   hitDecoComboThreshold: 3,
   critDecoComboThreshold: 7,
   comboChainDecoThreshold: 5,
+  duelFxHitMs: 140,
+  duelFxHitDecoMs: 170,
+  duelFxCritDecoMs: 260,
+  duelFxGuardDecoMs: 320,
+  parryHitDecoIframesRemainMs: 180,
 } as const;
 
 function initDuelBattleState(state: GameState, now: number): void {
@@ -1339,7 +1344,7 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
   d.maxWaveRecord = Math.max(d.maxWaveRecord, clearedWave);
   d.entryWave = Math.min(d.maxWaveRecord + 1, clearedWave + 1);
   d.totalWavesCleared += 1;
-  noteWeeklyBountyWave(state);
+  noteWeeklyBountyWave(state, now);
   d.wave = clearedWave + 1;
   d.playerMax = playerMaxHp(state);
   d.playerHp = Math.min(d.playerHp, d.playerMax);

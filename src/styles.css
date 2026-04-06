@@ -8055,6 +8055,17 @@ p.gear-forge-tier-hint {
   color: #d3f7dd;
 }
 
+.bounty-feedback-pill--overdue {
+  border-color: rgba(173, 136, 81, 0.45);
+  background: rgba(48, 33, 18, 0.58);
+}
+
+.bounty-feedback-pill--overdue.is-overdue {
+  border-color: rgba(224, 160, 86, 0.72);
+  background: rgba(85, 52, 22, 0.55);
+  color: #f7d4a3;
+}
+
 .bounty-feedback-ico {
   flex-shrink: 0;
   opacity: 0.95;
