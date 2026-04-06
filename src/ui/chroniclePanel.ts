@@ -28,6 +28,7 @@ import {
   UI_CHRONICLE_META_UPGRADE_STAT,
   UI_CHRONICLE_DAO_ESSENCE_SPENT_STAT,
   UI_CHRONICLE_SUMMON_ESSENCE_SPENT_STAT,
+  UI_CHRONICLE_ZHULING_ESSENCE_SPENT_STAT,
   UI_CHRONICLE_OFFLINE_ADVENTURE_STAT,
   UI_CHRONICLE_OFFLINE_STONE_SETTLEMENT_STAT,
   UI_CHRONICLE_PET_FEED_STAT,
@@ -365,6 +366,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">累计消耗唤灵髓</span>
             <strong class="chronicle-stat-val">${ls.summonEssenceSpentLifetime}</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--zhuling-spend">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_ZHULING_ESSENCE_SPENT_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">累计消耗筑灵髓</span>
+            <strong class="chronicle-stat-val">${ls.zhuLingEssenceSpentLifetime}</strong>
           </div>
         </div>
         <div class="chronicle-stat-card">

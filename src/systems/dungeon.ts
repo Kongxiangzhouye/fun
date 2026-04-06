@@ -49,6 +49,7 @@ import {
   noteDungeonEssenceIntGained,
   recordDungeonBossKillLifetime,
   recordDungeonRollDodgeLifetime,
+  recordZhuLingEssenceSpentLifetime,
 } from "./pullChronicle";
 import {
   DUNGEON_MAP_H,
@@ -1664,6 +1665,7 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   const fee = dungeonEntryFeeEssence(state, w, d.rewardModeRepeat);
   if (state.zhuLingEssence < fee) return false;
   state.zhuLingEssence -= fee;
+  recordZhuLingEssenceSpentLifetime(state, fee);
   d.autoEnterConsumed = true;
   state.dungeonSanctuaryMode = false;
   state.dungeonPortalTargetWave = 0;

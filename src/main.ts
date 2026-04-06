@@ -363,6 +363,7 @@ import {
   recordCardLevelUpLifetime,
   recordRealmBreakthroughLifetime,
   recordSummonEssenceSpentLifetime,
+  recordZhuLingEssenceSpentLifetime,
 } from "./systems/pullChronicle";
 import { GEAR_BASES } from "./data/gearBases";
 import { isSlotTopPowerGear, salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
@@ -2971,6 +2972,7 @@ function buildDataOverviewExportText(st: GameState): string {
     "[终身累计]",
     `累计消耗道韵: ${lt.daoEssenceSpentLifetime}`,
     `累计消耗唤灵髓: ${lt.summonEssenceSpentLifetime}`,
+    `累计消耗筑灵髓: ${lt.zhuLingEssenceSpentLifetime}`,
     `历练副本累计获得筑灵髓（整数）: ${lt.dungeonEssenceIntGained}`,
     `天机匣兑换次数: ${lt.celestialStashBuys}`,
     `蓄灵池收取次数: ${lt.spiritReservoirClaims}`,
@@ -3069,6 +3071,7 @@ function renderDataOverviewPanel(): string {
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">累计消耗道韵</span><strong class="d-val" id="data-overview-lt-dao-spent">${lt.daoEssenceSpentLifetime}</strong></div>
         <div class="data-overview-cell"><span class="d-label">累计消耗唤灵髓</span><strong class="d-val" id="data-overview-lt-summon-spent">${lt.summonEssenceSpentLifetime}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">累计消耗筑灵髓</span><strong class="d-val" id="data-overview-lt-zhuling-spent">${lt.zhuLingEssenceSpentLifetime}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历练副本累计获得筑灵髓（整数）</span><strong class="d-val" id="data-overview-lt-dungeon-ess">${lt.dungeonEssenceIntGained}</strong></div>
         <div class="data-overview-cell"><span class="d-label">天机匣兑换次数</span><strong class="d-val" id="data-overview-lt-stash">${lt.celestialStashBuys}</strong></div>
         <div class="data-overview-cell"><span class="d-label">蓄灵池收取次数</span><strong class="d-val" id="data-overview-lt-reservoir">${lt.spiritReservoirClaims}</strong></div>
@@ -3128,6 +3131,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-dungeon-roll", String(lt.dungeonRollDodges));
   set("data-overview-lt-dao-spent", String(lt.daoEssenceSpentLifetime));
   set("data-overview-lt-summon-spent", String(lt.summonEssenceSpentLifetime));
+  set("data-overview-lt-zhuling-spent", String(lt.zhuLingEssenceSpentLifetime));
   set("data-overview-lt-dungeon-ess", String(lt.dungeonEssenceIntGained));
   set("data-overview-lt-stash", String(lt.celestialStashBuys));
   set("data-overview-lt-reservoir", String(lt.spiritReservoirClaims));
@@ -4688,6 +4692,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       toast(!r.ok && "msg" in r ? r.msg : "铸灵失败");
       return;
     }
+    recordZhuLingEssenceSpentLifetime(state, cost);
     const g = r.gear;
     tryCompleteAchievements(state);
     saveGame(state);
@@ -4724,6 +4729,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       toast("十铸未完成，已退还筑灵髓。");
       return;
     }
+    recordZhuLingEssenceSpentLifetime(state, cost);
     tryCompleteAchievements(state);
     saveGame(state);
     const toastMsg = `十铸完成：共 ${gears.length} 件`;

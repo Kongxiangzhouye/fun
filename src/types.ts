@@ -148,6 +148,8 @@ export interface LifetimeStatsState {
   daoEssenceSpentLifetime: number;
   /** 累计消耗唤灵髓（灵卡唤引、唤灵池、灵宠喂养、心法领悟、天机匣等合计，整数） */
   summonEssenceSpentLifetime: number;
+  /** 累计消耗筑灵髓（境界铸灵、幻域入場费等所有扣费合计，整数） */
+  zhuLingEssenceSpentLifetime: number;
 }
 
 /** 灵田作物 id */

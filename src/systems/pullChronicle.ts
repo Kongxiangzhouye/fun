@@ -75,6 +75,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       dungeonRollDodges: 0,
       daoEssenceSpentLifetime: 0,
       summonEssenceSpentLifetime: 0,
+      zhuLingEssenceSpentLifetime: 0,
     };
     return;
   }
@@ -213,6 +214,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   const ses = st.lifetimeStats.summonEssenceSpentLifetime;
   if (ses == null || !Number.isFinite(ses)) st.lifetimeStats.summonEssenceSpentLifetime = 0;
   else st.lifetimeStats.summonEssenceSpentLifetime = Math.max(0, Math.floor(ses));
+  const zls = st.lifetimeStats.zhuLingEssenceSpentLifetime;
+  if (zls == null || !Number.isFinite(zls)) st.lifetimeStats.zhuLingEssenceSpentLifetime = 0;
+  else st.lifetimeStats.zhuLingEssenceSpentLifetime = Math.max(0, Math.floor(zls));
 }
 
 /** 幻域击败真首领时累加 */
@@ -246,6 +250,17 @@ export function recordSummonEssenceSpentLifetime(state: GameState, amount: numbe
   const cur = state.lifetimeStats.summonEssenceSpentLifetime;
   const next = cur + a;
   state.lifetimeStats.summonEssenceSpentLifetime =
+    next > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : next;
+}
+
+/** 任意途径消耗筑灵髓时累加（整数，防溢出截断至安全整数上限） */
+export function recordZhuLingEssenceSpentLifetime(state: GameState, amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  normalizeLifetimeStats(state);
+  const a = Math.floor(amount);
+  const cur = state.lifetimeStats.zhuLingEssenceSpentLifetime;
+  const next = cur + a;
+  state.lifetimeStats.zhuLingEssenceSpentLifetime =
     next > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : next;
 }
 

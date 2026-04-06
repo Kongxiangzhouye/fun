@@ -352,6 +352,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "petPullBloom",
   },
   {
+    id: "zhu_ling_essence_spent_2500",
+    title: "铸纹千锤",
+    desc: "累计消耗筑灵髓 2500（铸灵、幻域入場等合计）",
+    rewardStones: 1800,
+    rewardEssence: 90,
+    listDeco: "forge",
+  },
+  {
+    id: "zhu_ling_essence_spent_35000",
+    title: "灵胚万锻",
+    desc: "累计消耗筑灵髓 35000",
+    rewardStones: 9600,
+    rewardEssence: 360,
+    listDeco: "forgeNova",
+  },
+  {
     id: "pet_first_feed",
     title: "灵契初结",
     desc: "在唤灵池结缘任意灵宠",
@@ -1213,6 +1229,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.summonEssenceSpentLifetime ?? 0) >= 5000;
     case "summon_essence_spent_60000":
       return (state.lifetimeStats?.summonEssenceSpentLifetime ?? 0) >= 60000;
+    case "zhu_ling_essence_spent_2500":
+      return (state.lifetimeStats?.zhuLingEssenceSpentLifetime ?? 0) >= 2500;
+    case "zhu_ling_essence_spent_35000":
+      return (state.lifetimeStats?.zhuLingEssenceSpentLifetime ?? 0) >= 35000;
     case "pet_first_feed":
       return anyPetOwned(state);
     case "pet_level_30":

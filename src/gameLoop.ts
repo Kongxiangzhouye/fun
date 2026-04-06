@@ -21,6 +21,7 @@ import {
   recordOfflineStoneSettlementLifetime,
   recordRealmBreakthroughLifetime,
   recordSummonEssenceSpentLifetime,
+  recordZhuLingEssenceSpentLifetime,
 } from "./systems/pullChronicle";
 import { ensureCelestialStashWeek } from "./systems/celestialStash";
 import { tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
@@ -90,6 +91,7 @@ function tryAutoGearForge(state: GameState, now: number): void {
     state.zhuLingEssence += ESSENCE_COST_GEAR_SINGLE;
     return;
   }
+  recordZhuLingEssenceSpentLifetime(state, ESSENCE_COST_GEAR_SINGLE);
   tryCompleteAchievements(state);
 }
 
