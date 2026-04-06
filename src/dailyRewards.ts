@@ -2,6 +2,7 @@ import type { GameState } from "./types";
 import { cycleActionRewardFactor, describeInGameUi, lingXiActiveFactor } from "./inGameClock";
 import { addStones } from "./stones";
 import { veinGongMingResonanceMult } from "./systems/veinCultivation";
+import { normalizeLifetimeStats } from "./systems/pullChronicle";
 
 export { describeInGameUi };
 
@@ -28,6 +29,8 @@ export function tickWishResonancePassive(state: GameState, dtSec: number, gainMu
   while (state.wishResonance >= 100) {
     state.wishResonance -= 100;
     state.summonEssence += 1;
+    normalizeLifetimeStats(state);
+    state.lifetimeStats.resonanceEssencePayouts += 1;
   }
 }
 

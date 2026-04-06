@@ -544,6 +544,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "forge",
   },
   {
+    id: "resonance_payouts_50",
+    title: "共鸣初鸣",
+    desc: "聚灵共鸣累计发放唤灵髓 50 次",
+    rewardStones: 150,
+    rewardEssence: 15,
+    listDeco: "gacha",
+  },
+  {
+    id: "resonance_payouts_500",
+    title: "潮涌灵台",
+    desc: "聚灵共鸣累计发放唤灵髓 500 次",
+    rewardStones: 1800,
+    rewardEssence: 60,
+    listDeco: "gacha",
+  },
+  {
     id: "dao_meridian_3",
     title: "灵窍三明",
     desc: "道韵灵窍达到 3 重",
@@ -741,6 +757,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 4;
     case "forge_celestial":
       return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 8;
+    case "resonance_payouts_50":
+      return (state.lifetimeStats?.resonanceEssencePayouts ?? 0) >= 50;
+    case "resonance_payouts_500":
+      return (state.lifetimeStats?.resonanceEssencePayouts ?? 0) >= 500;
     case "dao_meridian_3":
       return state.daoMeridian >= 3;
     case "dao_meridian_5":

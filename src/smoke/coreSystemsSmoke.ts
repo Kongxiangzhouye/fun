@@ -645,6 +645,17 @@ function runLifePlaytimeHourAchievementSmoke(): void {
   assert.ok(st.achievementsDone.has("life_playtime_3600"), "achievement should be marked done");
 }
 
+function runResonancePayoutAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("resonance_payouts_50"), "resonance 50 should start locked");
+  st.lifetimeStats.resonanceEssencePayouts = 50;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "resonance_payouts_50"), "50 resonance payouts should unlock");
+  st.lifetimeStats.resonanceEssencePayouts = 500;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "resonance_payouts_500"), "500 resonance payouts should unlock");
+}
+
 function runCumulativePlaytime24hAchievementSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("cumulative_playtime_86400"), "24h total playtime achievement should start locked");
@@ -704,6 +715,7 @@ function main(): void {
   runLifePlaytimeSecSmoke();
   runLifePlaytimeHourAchievementSmoke();
   runCumulativePlaytime24hAchievementSmoke();
+  runResonancePayoutAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

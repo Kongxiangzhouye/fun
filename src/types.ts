@@ -84,6 +84,8 @@ export interface LifetimeStatsState {
   loginCalendarFullWeeks: number;
   /** 最近一次计入满签周次的周 key（与周悬赏同源周一 key） */
   lastLoginCalendarFullWeekKey: string;
+  /** 聚灵共鸣满百发放唤灵髓的累计次数（终身） */
+  resonanceEssencePayouts: number;
 }
 
 /** 灵田作物 id */

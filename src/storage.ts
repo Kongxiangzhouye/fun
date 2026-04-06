@@ -941,6 +941,7 @@ export function deserialize(json: string): GameState {
         typeof data.lifetimeStats.lastLoginCalendarFullWeekKey === "string"
           ? data.lifetimeStats.lastLoginCalendarFullWeekKey
           : "",
+      resonanceEssencePayouts: Math.max(0, Math.floor(data.lifetimeStats.resonanceEssencePayouts ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

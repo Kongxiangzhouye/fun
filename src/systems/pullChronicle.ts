@@ -43,6 +43,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       offlineAdventureBoostPicks: 0,
       loginCalendarFullWeeks: 0,
       lastLoginCalendarFullWeekKey: "",
+      resonanceEssencePayouts: 0,
     };
     return;
   }
@@ -81,6 +82,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   else st.lifetimeStats.loginCalendarFullWeeks = Math.max(0, Math.floor(lcf));
   const lck = st.lifetimeStats.lastLoginCalendarFullWeekKey;
   st.lifetimeStats.lastLoginCalendarFullWeekKey = typeof lck === "string" ? lck : "";
+  const rep = st.lifetimeStats.resonanceEssencePayouts;
+  if (rep == null || !Number.isFinite(rep)) st.lifetimeStats.resonanceEssencePayouts = 0;
+  else st.lifetimeStats.resonanceEssencePayouts = Math.max(0, Math.floor(rep));
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */
