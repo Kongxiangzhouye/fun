@@ -10797,6 +10797,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--reinc-total {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(200, 140, 100, 0.42);
+  background: linear-gradient(145deg, rgba(42, 28, 22, 0.6), rgba(16, 10, 8, 0.72));
+}
+
+.chronicle-stat-card--reinc-total .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--reinc-total .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--dao-spend {
   display: flex;
   align-items: center;

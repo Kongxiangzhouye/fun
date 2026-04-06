@@ -1039,6 +1039,12 @@ function runReincarnationTierAchievementsSmoke(): void {
   st.reincarnations = 50;
   const b = tryCompleteAchievements(st);
   assert.ok(b.some((x) => x.id === "rein_50"), "50 reincarnations should unlock");
+  st.reincarnations = 75;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "rein_75"), "75 reincarnations should unlock");
+  st.reincarnations = 100;
+  const d = tryCompleteAchievements(st);
+  assert.ok(d.some((x) => x.id === "rein_100"), "100 reincarnations should unlock");
 }
 
 function runEstateCommissionAchievementsSmoke(): void {

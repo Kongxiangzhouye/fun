@@ -26,6 +26,7 @@ import {
   UI_CHRONICLE_GARDEN_PLANT_STAT,
   UI_CHRONICLE_GEAR_SALVAGE_STAT,
   UI_CHRONICLE_META_UPGRADE_STAT,
+  UI_CHRONICLE_REINCARNATION_TOTAL_STAT,
   UI_CHRONICLE_DAO_ESSENCE_SPENT_STAT,
   UI_CHRONICLE_SUMMON_ESSENCE_SPENT_STAT,
   UI_CHRONICLE_ZHULING_ESSENCE_SPENT_STAT,
@@ -355,6 +356,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">轮回元强化</span>
             <strong class="chronicle-stat-val">${ls.metaUpgrades} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--reinc-total">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_REINCARNATION_TOTAL_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">累计轮回</span>
+            <strong class="chronicle-stat-val">${state.reincarnations} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--dao-spend">
