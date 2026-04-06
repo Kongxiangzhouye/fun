@@ -30,7 +30,7 @@ export function renderChroniclePanel(state: GameState): string {
 
   const gearTableBody =
     state.gearPullChronicle.length === 0
-      ? `<tbody><tr><td colspan="3" class="chronicle-empty-cell"><p class="hint chronicle-empty">暂无铸灵记录。去底部「抽卡 → 铸灵池」铸灵后，会在此显示最近 ${PULL_CHRONICLE_MAX} 条。</p></td></tr></tbody>`
+      ? `<tbody><tr><td colspan="3" class="chronicle-empty-cell"><p class="hint chronicle-empty">暂无铸灵记录。去底部「抽卡 → 境界铸灵」铸灵后，会在此显示最近 ${PULL_CHRONICLE_MAX} 条。</p></td></tr></tbody>`
       : `<tbody>${state.gearPullChronicle
           .map((e) => {
             const rz = rarityZh(e.rarity);
@@ -53,7 +53,7 @@ export function renderChroniclePanel(state: GameState): string {
         <img class="panel-title-art-icon" src="${UI_HEAD_CHRONICLE}" alt="" width="28" height="28" loading="lazy" />
         <h2>唤灵通鉴</h2>
       </div>
-      <p class="hint">灵卡唤引与铸灵池产出分栏记录；下方为部分终身统计。</p>
+      <p class="hint">灵卡唤引与境界铸灵产出分栏记录；下方为部分终身统计。</p>
       <div class="chronicle-stats-grid">
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">累计在线</span>

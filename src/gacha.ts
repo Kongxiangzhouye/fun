@@ -13,6 +13,11 @@ import {
   recordMaxGearForgedRarity,
 } from "./systems/pullChronicle";
 import { daoMeridianLuckFlat } from "./systems/daoMeridian";
+import { effectiveGearSrPityMax, GEAR_SR_PITY_MAX_BASE } from "./systems/gearGachaTier";
+
+/** 铸灵珍品+保底基准长度（高阶会缩短，见 effectiveGearSrPityMax） */
+export const GEAR_SR_PITY_MAX = GEAR_SR_PITY_MAX_BASE;
+export { effectiveGearSrPityMax };
 
 /** 基础概率（单抽），会被 meta.gachaLuck 略微提升高稀有 */
 const BASE_WEIGHT: Record<Rarity, number> = {
@@ -25,8 +30,6 @@ const BASE_WEIGHT: Record<Rarity, number> = {
 
 /** 天极保底计数上限（与 UI 保底条一致） */
 export const UR_PITY_MAX = 90;
-/** 铸灵池：连续未出珍品+（SR 及以上）时触发；与灵卡天极计数独立 */
-export const GEAR_SR_PITY_MAX = 36;
 const SSR_SOFT_START = 65;
 
 function luckFactor(state: GameState): number {
@@ -116,6 +119,21 @@ export function highestRarityInPulls(results: PullResult[]): Rarity {
   return best;
 }
 
+function finalizeGearPull(state: GameState, g: GearItem): void {
+  state.gearInventory[g.instanceId] = g;
+  state.gearPityPulls += 1;
+  if (rarityRank(g.rarity) >= rarityRank("SR")) {
+    state.gearPityPulls = 0;
+  }
+  noteGearForgePull(state, 1);
+  noteWeeklyBountyGearForges(state, 1);
+  recordMaxGearForgedRarity(state, g.rarity);
+  pushGearPullChronicle(state, {
+    baseId: g.baseId,
+    rarity: g.rarity,
+    displayName: g.displayName,
+  });
+}
 
 function applyPullToState(state: GameState, card: CardDef): PullResult {
   const had = !!state.owned[card.id];
@@ -154,37 +172,40 @@ export function pullOne(state: GameState): PullResult {
   return applyPullToState(state, card);
 }
 
-/** 铸灵池单抽：仅装备，不占灵卡 UR/SSR 保底计数；另有珍品+独立保底 */
+/** 境界铸灵单抽：仅装备，不占灵卡 UR/SSR 保底计数；另有珍品+独立保底（随铸灵阶缩短） */
 export function pullGearOne(state: GameState): { ok: true; gear: GearItem } | { ok: false; msg: string } {
   if (Object.keys(state.gearInventory).length >= 80) {
     return { ok: false, msg: "背包装备已满" };
   }
-  const forceSrPlus = state.gearPityPulls >= GEAR_SR_PITY_MAX - 1;
+  const maxP = effectiveGearSrPityMax(state);
+  const forceSrPlus = state.gearPityPulls >= maxP - 1;
   const g = forceSrPlus ? generateRandomGear(state, pickPityGearRarity(state)) : generateRandomGear(state);
-  state.gearInventory[g.instanceId] = g;
-  state.gearPityPulls += 1;
-  if (rarityRank(g.rarity) >= rarityRank("SR")) {
-    state.gearPityPulls = 0;
-  }
-  noteGearForgePull(state, 1);
-  noteWeeklyBountyGearForges(state, 1);
-  recordMaxGearForgedRarity(state, g.rarity);
-  pushGearPullChronicle(state, {
-    baseId: g.baseId,
-    rarity: g.rarity,
-    displayName: g.displayName,
-  });
+  finalizeGearPull(state, g);
   return { ok: true, gear: g };
 }
 
+/** 十铸：前 9 次正常；若前 9 次无珍品+，第 10 次必为珍品+（与灵卡十连逻辑对齐） */
 export function pullGearTen(state: GameState): GearItem[] {
   const out: GearItem[] = [];
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 9; i++) {
     if (Object.keys(state.gearInventory).length >= 80) break;
     const r = pullGearOne(state);
     if (!r.ok || !r.gear) break;
     out.push(r.gear);
   }
+  if (out.length < 9) return out;
+  const hasSrPlus = out.some((g) => rarityRank(g.rarity) >= rarityRank("SR"));
+  if (hasSrPlus) {
+    if (Object.keys(state.gearInventory).length < 80) {
+      const r = pullGearOne(state);
+      if (r.ok && r.gear) out.push(r.gear);
+    }
+    return out;
+  }
+  if (Object.keys(state.gearInventory).length >= 80) return out;
+  const g = generateRandomGear(state, pickPityGearRarity(state));
+  finalizeGearPull(state, g);
+  out.push(g);
   return out;
 }
 
@@ -208,9 +229,9 @@ export function urPityRemaining(state: GameState): number {
   return Math.max(0, UR_PITY_MAX - state.pityUr);
 }
 
-/** 铸灵池距珍品+保底剩余唤数（与 gearPityPulls 同步） */
+/** 境界铸灵距珍品+保底剩余唤数（与 gearPityPulls 同步；有效上限随铸灵阶变） */
 export function gearSrPityRemaining(state: GameState): number {
-  return Math.max(0, GEAR_SR_PITY_MAX - state.gearPityPulls);
+  return Math.max(0, effectiveGearSrPityMax(state) - state.gearPityPulls);
 }
 
 /** 保底触发时在 SR/SSR/UR 间加权（与灵卡高稀有权重比例相近） */

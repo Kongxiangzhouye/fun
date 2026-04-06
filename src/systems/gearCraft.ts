@@ -1,6 +1,7 @@
 import type { GameState, GearAffixRoll, GearItem, GearStatKey, Rarity } from "../types";
 import { nextRand01 } from "../rng";
 import { GEAR_BASES, getGearBase, maxAffixCount, maxEnhanceLevel } from "../data/gearBases";
+import { gearForgeAscensionLevel, gearForgeIlvlBonus, rollGearRarityForForge } from "./gearGachaTier";
 
 interface AffixTemplate {
   groupId: string;
@@ -83,15 +84,6 @@ const SUFFIXES: AffixTemplate[] = [
   },
 ];
 
-function pickRarity(state: GameState): Rarity {
-  const r = nextRand01(state);
-  if (r < 0.38) return "N";
-  if (r < 0.68) return "R";
-  if (r < 0.88) return "SR";
-  if (r < 0.97) return "SSR";
-  return "UR";
-}
-
 function rollTier(state: GameState): number {
   return 1 + Math.min(4, Math.floor(nextRand01(state) * 5));
 }
@@ -123,10 +115,13 @@ function fillMods(
 }
 
 export function generateRandomGear(state: GameState, forceRarity?: Rarity): GearItem {
-  const rarity = forceRarity ?? pickRarity(state);
+  const tier = gearForgeAscensionLevel(state);
+  const rarity = forceRarity ?? rollGearRarityForForge(state, tier);
   const base = GEAR_BASES[Math.floor(nextRand01(state) * GEAR_BASES.length)]!;
   const b = getGearBase(base.id)!;
-  const ilvl = Math.floor(b.baseItemLevel + state.realmLevel * 0.9 + state.skills.combat.level * 0.4);
+  const ilvl = Math.floor(
+    b.baseItemLevel + state.realmLevel * 0.9 + state.skills.combat.level * 0.4 + gearForgeIlvlBonus(tier),
+  );
   const counts = maxAffixCount(rarity);
   const usedP = new Set<string>();
   const usedS = new Set<string>();

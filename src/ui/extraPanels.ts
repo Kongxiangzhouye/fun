@@ -9,7 +9,6 @@ import {
 import {
   canEnterDungeon,
   describeWaveProfile,
-  dungeonEntryFeeForSelectedWave,
   dungeonFrontierWave,
   essenceRewardTotalFloat,
   packSizeForWave,
@@ -268,7 +267,7 @@ function renderDungeonMapHtml(state: GameState): string {
     </div>`;
 }
 
-const DUNGEON_HELP_BLURB = `幻域只掉唤灵髓，按关结算。幻域生命为全局共享，进关不会回满。每次进关都会重置地图和怪物。入场费、阵亡损失和复刷规则见「养成→图鉴·札记」。`;
+const DUNGEON_HELP_BLURB = `幻域只掉唤灵髓，按关结算。幻域生命为全局共享，进关不会回满。每次进关都会重置地图和怪物；无入场费，阵亡无灵石损失。复刷规则见「养成→图鉴·札记」。`;
 
 function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
   const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
@@ -276,7 +275,7 @@ function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): stri
   const portalSection = portalReady
     ? `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
       <div class="sanctuary-portal-ring" aria-hidden="true"></div>
-      <p class="sanctuary-portal-msg">生命已回满，将<strong>自动</strong>进入段首第 <strong>${w}</strong> 关继续清小怪（需入场髓）</p>
+      <p class="sanctuary-portal-msg">生命已回满，将<strong>自动</strong>进入段首第 <strong>${w}</strong> 关继续清小怪</p>
     </div>`
     : `<p class="sanctuary-wait-txt">恢复中，回满后将自动返回段首第 <strong>${w}</strong> 关</p>`;
   return `<div class="sanctuary-visual">
@@ -303,10 +302,6 @@ export function renderDungeonPanel(state: GameState): string {
   const pmax = playerMaxHp(state);
   const chp = state.combatHpCurrent;
   const chpPctGlobal = pmax > 0 ? Math.min(100, (100 * Math.max(0, chp)) / pmax) : 0;
-  const entryFeeShow = dungeonEntryFeeForSelectedWave(
-    state,
-    Math.max(1, Math.min(d.maxWaveRecord + 1, d.entryWave)),
-  );
   const petAtkPct =
     petSystemUnlocked(state) && petDungeonAtkAdditive(state) > 0
       ? (petDungeonAtkAdditive(state) * 100).toFixed(2)
@@ -391,7 +386,7 @@ export function renderDungeonPanel(state: GameState): string {
           ${renderIdlePreviewMap()}
           <p class="dungeon-idle-stats">累计通关 <strong>${d.totalWavesCleared}</strong> 波 · 最高第 <strong>${d.maxWaveRecord}</strong> 波</p>
           <p class="hint sm">目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波：${nextWavePreview}</p>
-          <p class="hint sm">下一未通关波为第 <strong>${fw}</strong> 波（前沿）。入场约 <strong>${entryFeeShow}</strong> 髓；阵亡损失灵石 <strong>5%</strong>（至少 1）。首领关可先清小怪再点挑战首领。</p>
+          <p class="hint sm">下一未通关波为第 <strong>${fw}</strong> 波（前沿）。无入场费；阵亡无灵石损失。首领关可先清小怪再点挑战首领。</p>
           ${
             showIdleBossBtn
               ? `<div class="dungeon-boss-intent-row">
@@ -701,7 +696,7 @@ export function renderGearPanel(
         <img class="panel-title-art-icon" src="${UI_HEAD_GEAR}" alt="" width="28" height="28" loading="lazy" />
         <h2>装备</h2>
       </div>
-      <p class="hint">装备来自抽卡的铸灵池。强化消耗玄铁（分解装备获得）；天极可精炼。</p>
+      <p class="hint">装备来自抽卡的境界铸灵（随进度升阶）。强化消耗玄铁（分解装备获得）；天极可精炼。</p>
       <p class="hint">点武器/衣甲/指环查看详情，可卸下或强化。背包中的未装备件也能强化。</p>
       <p class="hint sm">锁定装备不可分解，也不会被自动分解；精炼时不可锁定消耗件。</p>
       ${refineHint}

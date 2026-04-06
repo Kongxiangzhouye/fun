@@ -24,7 +24,7 @@ export function renderGameLoreHtml(): string {
         <summary>资源与灵石分流</summary>
         <ul class="game-lore-list">
           <li><strong>灵石</strong>：破境、洞府蕴灵、灵卡升阶等主要消耗。</li>
-          <li><strong>唤灵髓</strong>：幻域产出为主，用于聚灵阵唤引与铸灵；不可用灵石直接购买。</li>
+          <li><strong>唤灵髓</strong>：幻域产出为主，用于聚灵阵唤引与境界铸灵；不可用灵石直接购买。</li>
           <li><strong>灵砂 / 玄铁</strong>：分解灵卡 / 装备获得，用于升阶与强化。</li>
           <li>身法、装备与统计汇总在右下角<strong>角色</strong>面板。</li>
         </ul>
@@ -63,7 +63,7 @@ export function renderGameLoreHtml(): string {
         <ul class="game-lore-list">
           <li>首通主要掉落<strong>唤灵髓</strong>；<strong>整关清完</strong>后统一入背包。复刷关会额外给灵砂。</li>
           <li><strong>幻域生命</strong>为全局状态，进关不会自动回满；接战恢复慢，游走较快。</li>
-          <li>进入波次需少量唤灵髓作入场费；阵亡损失部分灵石并被送出至灵息之地；回满后可<strong>勾选自动进本</strong>或手动进入该关。每次进关<strong>重整阵势与满血敌阵</strong>。</li>
+          <li>进入波次<strong>不消耗</strong>唤灵髓；阵亡<strong>不损失</strong>灵石，并被送至灵息之地；回满后可<strong>勾选自动进本</strong>或手动进入该关。每次进关<strong>重整阵势与满血敌阵</strong>。</li>
           <li>已通关波次可复刷（髓收益降低）。</li>
           <li><strong>阵线对决</strong>：敌我各按攻击间隔<strong>离散出伤 / 承击</strong>，顶条为敌阵总灵压；剑气 / 凶煞读条对齐期望 DPS 与敌方节奏，便于对照数值。</li>
           <li>五行克制会影响伤害；<strong>化劲</strong>可在无敌帧内化解敌方一击。</li>
@@ -76,7 +76,7 @@ export function renderGameLoreHtml(): string {
         <ul class="game-lore-list">
           <li><strong>幻域</strong>：完成首次唤引。</li>
           <li><strong>修炼</strong>：幻域至少通关一波、或境界≥三重、或累计唤引≥六次。</li>
-          <li><strong>背包装备 / 铸灵池</strong>：获得第一件装备，或累计唤引≥十次。</li>
+          <li><strong>背包装备 / 境界铸灵</strong>：获得第一件装备，或累计唤引≥十次。</li>
           <li><strong>洞府蕴灵</strong>：完成一次唤引，或境界≥二重。</li>
           <li><strong>万象图鉴</strong>：累计唤引≥5次，或境界≥四重。</li>
           <li><strong>轮回阁</strong>：境界≥十八重，或已完成轮回。</li>

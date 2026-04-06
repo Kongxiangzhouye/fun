@@ -45,6 +45,8 @@ export const UI_RESONANCE_CORE = asset("resonance-core.svg");
 export const UI_PITY_SIGIL = asset("pity-sigil.svg");
 /** 铸灵池珍品保底条左侧印记（与灵卡区分） */
 export const UI_GEAR_PITY_SIGIL = asset("gear-pity-sigil.svg");
+/** 境界铸灵阶位说明条左侧小徽 */
+export const UI_GEAR_FORGE_TIER_DECO = asset("gear-forge-tier-deco.svg");
 
 /** 顶栏标题旁灵息球、面板角饰、全页星点底（自绘 SVG） */
 export const UI_TITLE_SPIRIT = asset("title-spirit.svg");

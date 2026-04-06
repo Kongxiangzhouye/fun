@@ -50,6 +50,7 @@ import {
   urPityRemaining,
   UR_PITY_MAX,
   gearSrPityRemaining,
+  effectiveGearSrPityMax,
   GEAR_SR_PITY_MAX,
   highestRarityInPulls,
   type PullResult,
@@ -130,6 +131,7 @@ import {
   UI_RESONANCE_CORE,
   UI_PITY_SIGIL,
   UI_GEAR_PITY_SIGIL,
+  UI_GEAR_FORGE_TIER_DECO,
   UI_TITLE_SPIRIT,
   UI_BG_SPARKLES,
   UI_PANEL_RUNES,
@@ -206,8 +208,6 @@ import {
   canEnterDungeon,
   canEnterAtWave,
   dungeonFrontierWave,
-  dungeonEntryFeeEssence,
-  computeDungeonRepeatMode,
   drainDungeonDamageFloats,
   bossDisplayTitle,
   currentBossMob,
@@ -229,6 +229,7 @@ import { playerBattleElement } from "./systems/playerElement";
 import { pullPet } from "./systems/petGacha";
 import { secondsToNextLevel, skillXpPerSecond, xpToNextLevel } from "./systems/skillTraining";
 import { enhanceGear, equipGear, tryRefineUr, unequipGear } from "./systems/gearCraft";
+import { describeGearForgeTierLine } from "./systems/gearGachaTier";
 import { salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
 import { pullBattleSkill, battleSkillPullCost, describeBattleSkillLevels } from "./systems/battleSkills";
 const EL_ZH: Record<string, string> = {
@@ -310,7 +311,7 @@ let deckModalSlot: number | null = null;
 let refineTargetId: string | null = null;
 /** 装备页：正在查看哪一栏位的已装备详情（卸下仅在此操作） */
 let gearDetailSlot: "weapon" | "body" | "ring" | null = null;
-/** 聚灵阵：灵卡池 / 铸灵池 */
+/** 聚灵阵：灵卡池 / 境界铸灵 */
 let gachaPool: "cards" | "gear" = "cards";
 let autoEnterPromptHandled = false;
 let veinHelpDocListenerBound = false;
@@ -716,17 +717,6 @@ function maybeToastAutoEnterFailure(now: number): void {
     toast("自动进本未触发：当前条件不满足（冷却或关卡不可进）。");
     return;
   }
-  const rm = computeDungeonRepeatMode(state, w);
-  const fee = dungeonEntryFeeEssence(state, w, rm);
-  if (state.summonEssence < fee) {
-    const reason = `essence-short:${fee}`;
-    if (reason === lastAutoEnterFailReason) return;
-    if (now - lastAutoEnterFailToastAt < AUTO_ENTER_FAIL_TOAST_GAP_MS) return;
-    lastAutoEnterFailReason = reason;
-    lastAutoEnterFailToastAt = now;
-    toast(`自动进本未触发：唤灵髓不足（需 ${fee}）。`);
-    return;
-  }
   lastAutoEnterFailReason = "";
 }
 
@@ -961,7 +951,7 @@ function showGearRevealOverlay(gears: GearItem[], toastMsg: string, onDone: () =
     <div class="gacha-reveal-backdrop bd-${orbTier}"></div>
     <div class="gacha-reveal-content fx-${fx} ${hasHigh ? "is-high" : ""} ${gears.length > 1 ? "is-ten" : "is-one"}" data-hi="${hi}">
       <div class="gacha-reveal-orb orb-${orbTier}" aria-hidden="true"></div>
-      <p class="gacha-reveal-title tit-${orbTier}">${gears.length > 1 ? "铸灵十连" : "铸灵显化"}</p>
+      <p class="gacha-reveal-title tit-${orbTier}">${gears.length > 1 ? "境界铸灵 · 十连" : "境界铸灵"}</p>
       <div class="gacha-reveal-cards">${cardsHtml}</div>
       <p class="gacha-reveal-dismiss">点击任意处继续</p>
     </div>
@@ -1384,7 +1374,7 @@ function renderCharacterCardsPanel(): string {
       <h2>灵卡仓库</h2>
       <p class="hint">在此管理持有灵卡：升阶、分解。上阵需在「养成 → 卡组」点击阵位，在弹出层中布置。</p>
       <p class="inv-meta">持有灵砂：<strong>${state.lingSha}</strong></p>
-      <p class="hint sm">低品自动分解请在底部「抽卡」灵卡池/铸灵池勾选。</p>
+      <p class="hint sm">低品自动分解请在底部「抽卡」灵卡池/境界铸灵勾选。</p>
       ${detail}
       <div class="inventory">${invHtml || '<p class="hint">暂无卡牌，去祈愿池试试。</p>'}</div>
     </section>`;
@@ -1966,7 +1956,7 @@ function renderDiscoverabilityHint(): string {
         text = "常用入口：周常悬赏按本地每周一刷新；幻域、唤引、灵田、吐纳与破境均可推进条目。";
         break;
       case "chronicle":
-        text = "常用入口：唤灵通鉴记录最近灵卡唤引；铸灵池不计入列表。";
+        text = "常用入口：唤灵通鉴记录最近灵卡唤引；境界铸灵不计入列表。";
         break;
       case "daily":
         text = "常用入口：灵息日历按本地日结算连签；每日可领灵石与唤灵髓，与周常悬赏不同轨。";
@@ -1984,7 +1974,7 @@ function renderDiscoverabilityHint(): string {
     if (characterSub === "cards") {
       text = "常用入口：这里只做灵卡升阶/分解；上阵请去「养成→卡组」点阵位。";
     } else if (characterSub === "gear") {
-      text = "常用入口：装备产出在底部「抽卡→铸灵池」；强化/精炼/卸下在本页行囊。";
+      text = "常用入口：装备产出在底部「抽卡→境界铸灵」；强化/精炼/卸下在本页行囊。";
     } else if (characterSub === "guides") {
       text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在「角色→存档·管理」。";
     } else if (characterSub === "settings") {
@@ -1997,7 +1987,7 @@ function renderDiscoverabilityHint(): string {
       text = "常用入口：道韵灵窍消耗道韵获得永久加成；道韵主要来自轮回结算。";
     }
   } else if (activeHub === "gacha") {
-    text = "常用入口：灵卡池=卡牌，铸灵池=装备；自动分解开关在本页底部。";
+    text = "常用入口：灵卡池=卡牌，境界铸灵=装备；自动分解开关在本页底部。";
   } else if (activeHub === "estate") {
     text =
       "常用入口：灵脉=升级境界，洞府=长期加成，阵图=灵石全局乘区（轮回不重置），灵田=种植收获灵砂；可并行推进。";
@@ -2046,7 +2036,7 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
   }
   const gearBlock = u.tabGear
     ? renderGearPanel(state, refineTargetId, gearDetailSlot, state.gearInventorySort)
-    : `<section class="panel character-hub-gear-locked"><p class="hint">解锁条件：获得 1 件装备，或累计抽卡≥10。解锁后开放铸灵池和行囊装备管理。</p></section>`;
+    : `<section class="panel character-hub-gear-locked"><p class="hint">解锁条件：获得 1 件装备，或累计抽卡≥10。解锁后开放境界铸灵和行囊装备管理。</p></section>`;
   return `<div class="character-hub-root">${gearBlock}</div>`;
 }
 
@@ -2836,10 +2826,12 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
   const resFrac = ((state.wishResonance % 100) + 100) % 100;
   const pityProgressPct = Math.min(100, Math.max(0, ((UR_PITY_MAX - pityUr) / UR_PITY_MAX) * 100));
   const gearPityRem = gearSrPityRemaining(state);
+  const gearPityCap = effectiveGearSrPityMax(state);
   const gearPityProgressPct = Math.min(
     100,
-    Math.max(0, ((GEAR_SR_PITY_MAX - gearPityRem) / GEAR_SR_PITY_MAX) * 100),
+    Math.max(0, ((gearPityCap - gearPityRem) / gearPityCap) * 100),
   );
+  const gearForgeTierHint = describeGearForgeTierLine(state);
   const tenUnlocked = u.gachaTenUnlocked;
   const tenDisabled = !tenUnlocked || state.summonEssence < ESSENCE_COST_TEN;
   const gearTenDisabled = !tenUnlocked || state.summonEssence < ESSENCE_COST_GEAR_TEN;
@@ -2887,7 +2879,7 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
     ? `
     <div class="gacha-pool-tabs" role="tablist">
       <button type="button" class="gacha-pool-tab ${gachaPool === "cards" ? "active" : ""}" data-gacha-pool="cards">灵卡池</button>
-      <button type="button" class="gacha-pool-tab ${gachaPool === "gear" ? "active" : ""}" data-gacha-pool="gear">铸灵池</button>
+      <button type="button" class="gacha-pool-tab ${gachaPool === "gear" ? "active" : ""}" data-gacha-pool="gear">境界铸灵</button>
     </div>`
     : "";
 
@@ -2926,19 +2918,23 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
 
   const gearSection = `
     <div class="gacha-pool-panel" ${gachaPool === "gear" ? "" : 'hidden'} id="gacha-panel-gear">
-      <div class="pity-meter-block pity-meter-block--gear" aria-label="铸灵珍品保底进度">
+      <div class="gear-forge-tier-row" role="status">
+        <img class="gear-forge-tier-deco" src="${UI_GEAR_FORGE_TIER_DECO}" alt="" width="28" height="28" loading="lazy" />
+        <p class="hint gear-forge-tier-hint" id="gear-forge-tier-hint">${gearForgeTierHint}</p>
+      </div>
+      <div class="pity-meter-block pity-meter-block--gear" aria-label="境界铸灵珍品保底进度">
         <div class="pity-meter-head">
           <img class="pity-sigil-img" src="${UI_GEAR_PITY_SIGIL}" alt="" width="22" height="22" loading="lazy" />
           <div class="pity-meter-titles">
-            <span class="pity-meter-title">铸灵池 · 珍品显化</span>
+            <span class="pity-meter-title">境界铸灵 · 珍品显化</span>
             <span class="pity-meter-sub">距珍品+保底约余 <strong id="pity-remain-gear-txt">${gearPityRem}</strong> 唤</span>
           </div>
         </div>
-        <div class="pity-meter-track" role="progressbar" aria-valuenow="${Math.round(gearPityProgressPct)}" aria-valuemin="0" aria-valuemax="100" aria-label="铸灵珍品保底进度">
+        <div class="pity-meter-track" role="progressbar" aria-valuenow="${Math.round(gearPityProgressPct)}" aria-valuemin="0" aria-valuemax="100" aria-label="境界铸灵珍品保底进度">
           <div class="pity-meter-fill pity-meter-fill--gear" id="pity-fill-gear" style="width:${gearPityProgressPct}%"></div>
         </div>
       </div>
-      <p class="pity-info">铸灵池 · 仅产<strong>装备</strong>，<strong>不占灵卡天极保底</strong>；<strong>${GEAR_SR_PITY_MAX} 唤</strong>内至少一件珍品及以上；背包上限 80 件。</p>
+      <p class="pity-info">境界铸灵 · 仅产<strong>装备</strong>，<strong>不占灵卡天极保底</strong>；当前阶下<strong>最长 ${gearPityCap} 唤</strong>内至少一件珍品+（基准 ${GEAR_SR_PITY_MAX} 唤，随铸灵阶缩短）；背包上限 80 件。十铸若前 9 次无珍品+，第 10 次必为珍品+。</p>
       <p class="hint">词条与强化规则在底部「<strong>角色 → 行囊</strong>」查看；天极可精炼。</p>
       <div class="gacha-actions">
         <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.summonEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 唤灵髓）</button>
@@ -2957,8 +2953,8 @@ function renderGacha(pityUr: number, u: ReturnType<typeof getUiUnlocks>): string
     </div>`;
 
   const gachaLead = u.tabGear
-    ? `<p class="hint gacha-lead"><strong>灵卡池</strong>产出灵卡，<strong>铸灵池</strong>产出装备。</p>`
-    : `<p class="hint gacha-lead">抽卡入口。铸灵池会在获得首件装备或累计抽卡 10 次后开放。</p>`;
+    ? `<p class="hint gacha-lead"><strong>灵卡池</strong>产出灵卡；<strong>境界铸灵</strong>按进度产出更强倾向的装备（稀有度、装等随阶提升）。</p>`
+    : `<p class="hint gacha-lead">抽卡入口。境界铸灵会在获得首件装备或累计抽卡 10 次后开放。</p>`;
 
   return `
     <section class="panel gacha-panel-root">
@@ -3079,7 +3075,7 @@ function renderDeck(slots: number): string {
       <p class="hint">${syn}</p>
       <p class="hint">升阶、分解与仓库：<strong>角色 → 灵卡</strong>；点阵位在此弹层中布阵与升阶。</p>
       <p class="inv-meta">持有灵砂：<strong>${state.lingSha}</strong></p>
-      <p class="hint sm">低品自动分解请在底部「<strong>抽卡</strong>」中切换至<strong>灵卡池</strong>或<strong>铸灵池</strong>后勾选。</p>
+      <p class="hint sm">低品自动分解请在底部「<strong>抽卡</strong>」中切换至<strong>灵卡池</strong>或<strong>境界铸灵</strong>后勾选。</p>
       <p class="hint">同系≥三激活灵脉（焚天、溯流、岁木、剑虹、厚土）。</p>
       <p class="hint deck-assign-hint"><strong>上阵</strong>：点击阵位，在弹出层中选择灵卡。</p>
       <div class="deck-slots">${slotsHtml}</div>
@@ -3486,7 +3482,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       const p = (el as HTMLElement).dataset.gachaPool as "cards" | "gear" | undefined;
       if (p !== "cards" && p !== "gear") return;
       if (p === "gear" && !getUiUnlocks(state).tabGear) {
-        toast("铸灵池未解锁：获得 1 件装备，或累计抽卡达到 10 次后开放。");
+        toast("境界铸灵未解锁：获得 1 件装备，或累计抽卡达到 10 次后开放。");
         return;
       }
       gachaPool = p;
@@ -3551,7 +3547,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
 
   const runGearPull = (n: 1 | 10) => {
     if (!getUiUnlocks(state).tabGear) {
-      toast("铸灵池未解锁：获得 1 件装备，或累计抽卡达到 10 次后开放。");
+      toast("境界铸灵未解锁：获得 1 件装备，或累计抽卡达到 10 次后开放。");
       return;
     }
     if (n === 10 && !getUiUnlocks(state).gachaTenUnlocked) {
@@ -3919,15 +3915,10 @@ function bindEvents(rb: Decimal, _slots: number): void {
       toast("无法从该波进入：已超过当前可推进范围，或该波不可选。");
       return;
     }
-    const fee = dungeonEntryFeeEssence(state, w, computeDungeonRepeatMode(state, w));
-    if (state.summonEssence < fee) {
-      toast(`唤灵髓不足：进入第 ${w} 波需 ${fee} 唤灵髓（约本波预期收益的 5%）`);
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？将消耗 ${fee} 唤灵髓。`)) return;
+    if (!confirm(`确认进入第 ${w} 关？`)) return;
     if (enterDungeon(state, w)) {
       saveGame(state);
-      toast(`已进入幻域（自第 ${w} 波），已支付入场费 ${fee} 唤灵髓`);
+      toast(`已进入幻域（自第 ${w} 波）`);
       render();
     } else {
       toast("无法进入副本（冷却或其它限制）");
@@ -3953,17 +3944,11 @@ function bindEvents(rb: Decimal, _slots: number): void {
       toast("当前无法进入该关卡。");
       return;
     }
-    const rm = computeDungeonRepeatMode(state, w);
-    const fee = dungeonEntryFeeEssence(state, w, rm);
-    if (state.summonEssence < fee) {
-      toast(`唤灵髓不足：进入第 ${w} 波需 ${fee} 唤灵髓`);
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？将消耗 ${fee} 唤灵髓。`)) return;
+    if (!confirm(`确认进入第 ${w} 关？`)) return;
     if (enterDungeon(state, w)) {
       activeHub = "battle";
       saveGame(state);
-      toast(`已进入第 ${w} 关（已付入场费 ${fee} 唤灵髓）`);
+      toast(`已进入第 ${w} 关`);
       render();
     } else {
       toast("无法进入副本");
@@ -4434,7 +4419,7 @@ function loop(): void {
   } else if (typeof document !== "undefined") {
     maybeToastAutoEnterFailure(now);
   }
-  // 幻域解锁后首次且尚未通关第 1 波：自动从第 1 关进本（需付得起入场费）
+  // 幻域解锁后首次且尚未通关第 1 波：自动从第 1 关进本
   if (
     typeof document !== "undefined" &&
     state.tutorialStep === 0 &&
@@ -4445,20 +4430,17 @@ function loop(): void {
     canEnterDungeon(state, now) &&
     canEnterAtWave(state, 1)
   ) {
-    const fee = dungeonEntryFeeEssence(state, 1, computeDungeonRepeatMode(state, 1));
     if (!autoEnterPromptHandled) {
       autoEnterPromptHandled = true;
-      if (state.summonEssence >= fee) {
-        const ok = confirm(`幻域已解锁，是否立即进入第 1 关？将消耗 ${fee} 唤灵髓。`);
-        if (ok && enterDungeon(state, 1)) {
-          activeHub = "battle";
-          saveGame(state);
-          toast(`已进入第 1 关（入场费 ${fee} 唤灵髓）`);
-          render();
-        } else if (!ok) {
-          state.dungeon.autoEnterConsumed = true;
-          saveGame(state);
-        }
+      const ok = confirm(`幻域已解锁，是否立即进入第 1 关？`);
+      if (ok && enterDungeon(state, 1)) {
+        activeHub = "battle";
+        saveGame(state);
+        toast(`已进入第 1 关`);
+        render();
+      } else if (!ok) {
+        state.dungeon.autoEnterConsumed = true;
+        saveGame(state);
       }
     }
   }
@@ -4790,11 +4772,14 @@ function loop(): void {
     if (pityFill) pityFill.style.width = `${pityPct}%`;
     if (pityTxt) pityTxt.textContent = String(pityRem);
     const gearRem = gearSrPityRemaining(state);
-    const gearPct = Math.min(100, Math.max(0, ((GEAR_SR_PITY_MAX - gearRem) / GEAR_SR_PITY_MAX) * 100));
+    const gearCap = effectiveGearSrPityMax(state);
+    const gearPct = Math.min(100, Math.max(0, ((gearCap - gearRem) / gearCap) * 100));
     const pityFillGear = document.getElementById("pity-fill-gear");
     const pityTxtGear = document.getElementById("pity-remain-gear-txt");
+    const tierHint = document.getElementById("gear-forge-tier-hint");
     if (pityFillGear) pityFillGear.style.width = `${gearPct}%`;
     if (pityTxtGear) pityTxtGear.textContent = String(gearRem);
+    if (tierHint) tierHint.textContent = describeGearForgeTierLine(state);
   }
   if (getUiUnlocks(state).tabDungeon && activeHub === "battle") {
     const d = state.dungeon;
