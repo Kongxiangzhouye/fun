@@ -1,21 +1,27 @@
-<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="dungeon hit confirm ring feedback">
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="dungeon hit confirm ring feedback polished">
   <defs>
-    <linearGradient id="hitRingA" x1="18" y1="14" x2="80" y2="82" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#D7E7FF"/>
-      <stop offset="0.52" stop-color="#78A6FF"/>
-      <stop offset="1" stop-color="#76F0DF"/>
+    <linearGradient id="hitRingA" x1="14" y1="10" x2="82" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EAF3FF"/>
+      <stop offset="0.44" stop-color="#84B2FF"/>
+      <stop offset="1" stop-color="#63E7DA"/>
     </linearGradient>
-    <radialGradient id="hitRingB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(48 48) rotate(90) scale(26)">
-      <stop stop-color="#EAF4FF" stop-opacity="0.6"/>
+    <radialGradient id="hitRingB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(48 48) rotate(90) scale(30)">
+      <stop stop-color="#EEF6FF" stop-opacity="0.7"/>
       <stop offset="1" stop-color="#EAF4FF" stop-opacity="0"/>
     </radialGradient>
+    <radialGradient id="hitRingCore" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(48 48) rotate(90) scale(10)">
+      <stop stop-color="#F9FDFF"/>
+      <stop offset="1" stop-color="#DDEBFF" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <circle cx="48" cy="48" r="38" fill="#0B1426" stroke="url(#hitRingA)" stroke-width="2.4" opacity="0.96"/>
-  <circle cx="48" cy="48" r="31" fill="none" stroke="url(#hitRingA)" stroke-width="1.2" opacity="0.34" stroke-dasharray="3.2 4"/>
-  <circle cx="48" cy="48" r="24" fill="none" stroke="url(#hitRingA)" stroke-width="2.2" opacity="0.82"/>
-  <circle cx="48" cy="48" r="17" fill="url(#hitRingB)" opacity="0.68"/>
-  <circle cx="48" cy="48" r="14.5" fill="none" stroke="#ECF5FF" stroke-width="2" opacity="0.92"/>
-  <path d="M48 20 V30 M48 66 V76 M20 48 H30 M66 48 H76" stroke="#D3E7FF" stroke-width="2.3" stroke-linecap="round" opacity="0.88"/>
-  <path d="M33 33 L37 37 M59 59 L63 63 M63 33 L59 37 M37 59 L33 63" stroke="#C8DEFF" stroke-width="1.7" stroke-linecap="round" opacity="0.74"/>
-  <circle cx="48" cy="48" r="3.6" fill="#F8FCFF" opacity="0.98"/>
+  <circle cx="48" cy="48" r="38.5" fill="#0A1323" stroke="url(#hitRingA)" stroke-width="2.2" opacity="0.96"/>
+  <circle cx="48" cy="48" r="32" fill="none" stroke="url(#hitRingA)" stroke-width="1.3" opacity="0.44" stroke-dasharray="4 4.6"/>
+  <circle cx="48" cy="48" r="25.5" fill="none" stroke="#D9EAFF" stroke-width="1.8" opacity="0.84"/>
+  <circle cx="48" cy="48" r="20.5" fill="none" stroke="url(#hitRingA)" stroke-width="2.4" opacity="0.9"/>
+  <circle cx="48" cy="48" r="16.5" fill="url(#hitRingB)" opacity="0.78"/>
+  <circle cx="48" cy="48" r="12.8" fill="none" stroke="#F2F9FF" stroke-width="1.8" opacity="0.95"/>
+  <path d="M48 16 V28 M48 68 V80 M16 48 H28 M68 48 H80" stroke="#DBEBFF" stroke-width="2.2" stroke-linecap="round" opacity="0.9"/>
+  <path d="M31 31 L36 36 M60 60 L65 65 M65 31 L60 36 M36 60 L31 65" stroke="#CFE2FF" stroke-width="1.7" stroke-linecap="round" opacity="0.8"/>
+  <circle cx="48" cy="48" r="6.2" fill="url(#hitRingCore)" opacity="0.94"/>
+  <circle cx="48" cy="48" r="2.6" fill="#FFFFFF" opacity="0.98"/>
 </svg>

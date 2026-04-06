@@ -181,7 +181,7 @@ export const UI_DUNGEON_CRIT_BURST_DECO = asset(DUNGEON_DUEL_UI_FILES.critBurstD
 export const UI_DUNGEON_CRIT_ECHO_DECO = asset(DUNGEON_DUEL_UI_FILES.critEchoDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 破防/破绽反馈 */
 export const UI_DUNGEON_GUARD_BREAK_DECO = asset(DUNGEON_DUEL_UI_FILES.guardBreakDeco, UI_DUNGEON_DUEL_DECO);
-/** 阵线对决 · 命中确认环反馈（弱敌清线时更易读，2026-04-06 版） */
+/** 阵线对决 · 命中确认环反馈（弱敌清线时更易读，2026-04-06 P1 二次打磨） */
 export const UI_DUNGEON_HIT_CONFIRM_RING_DECO = asset(
   DUNGEON_DUEL_UI_FILES.hitConfirmRingDeco,
   UI_DUNGEON_DUEL_DECO,
@@ -194,7 +194,7 @@ export const UI_DUNGEON_PHASE_TRASH_BADGE_DECO = asset(DUNGEON_DUEL_UI_FILES.pha
 export const UI_DUNGEON_PHASE_BOSS_PREP_BADGE_DECO = asset(DUNGEON_DUEL_UI_FILES.phaseBossPrepBadgeDeco);
 /** 阵线对决 · 招架成功火花反馈（近战高频防反阶段） */
 export const UI_DUNGEON_PARRY_SPARK_DECO = asset(DUNGEON_DUEL_UI_FILES.parrySparkDeco, UI_DUNGEON_DUEL_DECO);
-/** 阵线对决 · 弱点命中提示反馈（高压窗口弱点确认） */
+/** 阵线对决 · 弱点命中提示反馈（高压窗口弱点确认，2026-04-06 P1 二次打磨） */
 export const UI_DUNGEON_WEAKNESS_PING_DECO = asset(
   DUNGEON_DUEL_UI_FILES.weaknessPingDeco,
   UI_DUNGEON_DUEL_DECO,

@@ -3,6 +3,15 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Dungeon hit-confirm + weakness feedback polish (P1)",
+      "highlights": [
+        "Polished hit-confirm ring SVG to improve center-lock readability during repeated high-frequency strike confirmations.",
+        "Polished weakness ping SVG to strengthen weak-point recognition under dense combat FX overlap.",
+        "Synced dungeon duel manifest/index wording and source mapping comments while keeping runtime asset keys stable."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Dungeon phase-state readability badges (P1)",
       "highlights": [
         "Added trash-phase and boss-prep-phase SVG badges for clearer stage-state recognition in dungeon high-frequency loops.",
