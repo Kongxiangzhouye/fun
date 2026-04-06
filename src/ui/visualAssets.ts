@@ -167,6 +167,14 @@ export const UI_LORE_DUNGEON = asset("deco-lore-dungeon.svg");
 export const UI_LORE_GEAR = asset("deco-lore-gear.svg");
 /** 修行札记 · 「卡组与轮回」折叠标题旁 */
 export const UI_LORE_REINCARNATION = asset("deco-lore-reincarnation.svg");
+/** 修行札记 · 「术语速查」折叠标题旁 */
+export const UI_LORE_GLOSSARY = asset("deco-lore-glossary.svg");
+/** 修行札记 · 「资源与灵石分流」折叠标题旁 */
+export const UI_LORE_RESOURCES = asset("deco-lore-resources.svg");
+/** 修行札记 · 「洞府蕴灵四线」折叠标题旁 */
+export const UI_LORE_VEIN = asset("deco-lore-vein.svg");
+/** 修行札记 · 「五行灵脉」折叠标题旁 */
+export const UI_LORE_ELEMENTS = asset("deco-lore-elements.svg");
 /** 灵息日历（每日签到）页标题 */
 export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 /** 天机匣（周轮换商店）页标题 */

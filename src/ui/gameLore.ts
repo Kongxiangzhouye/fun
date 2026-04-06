@@ -10,6 +10,10 @@ import {
   UI_LORE_DUNGEON,
   UI_LORE_GEAR,
   UI_LORE_REINCARNATION,
+  UI_LORE_GLOSSARY,
+  UI_LORE_RESOURCES,
+  UI_LORE_VEIN,
+  UI_LORE_ELEMENTS,
   UI_RESONANCE_CORE,
 } from "./visualAssets";
 
@@ -20,7 +24,7 @@ export function renderGameLoreHtml(): string {
       <p class="hint sm game-lore-lead">下列为机制细则；日常游玩只需看各页顶部的短提示即可。</p>
 
       <details class="game-lore-block" open>
-        <summary>术语速查（白话版）</summary>
+        <summary><img src="${UI_LORE_GLOSSARY}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 术语速查（白话版）</summary>
         <ul class="game-lore-list">
           <li><strong>幻域</strong> = 副本；刷怪拿资源。</li>
           <li><strong>破境</strong> = 升级境界；提升基础强度并解锁功能。</li>
@@ -31,7 +35,7 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary>资源与灵石分流</summary>
+        <summary><img src="${UI_LORE_RESOURCES}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 资源与灵石分流</summary>
         <ul class="game-lore-list">
           <li><strong>灵石</strong>：破境、洞府蕴灵、灵卡升阶等主要消耗。</li>
           <li><strong>唤灵髓</strong>：幻域产出为主，用于聚灵阵唤引与境界铸灵；不可用灵石直接购买。</li>
@@ -41,7 +45,7 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary>洞府蕴灵四线</summary>
+        <summary><img src="${UI_LORE_VEIN}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 洞府蕴灵四线</summary>
         <ul class="game-lore-list">
           <li><strong>汇灵</strong>：全局灵石效率乘区。</li>
           <li><strong>灵息</strong>：在汇灵等乘区之后，再叠一层灵石效率（约每级 +2.2%，与汇灵叠乘）。</li>
@@ -52,7 +56,7 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary>五行灵脉（同系≥3）</summary>
+        <summary><img src="${UI_LORE_ELEMENTS}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 五行灵脉（同系≥3）</summary>
         <p class="hint sm">灵脉需<strong>同系灵卡≥3</strong>张上阵激活，与洞府并行。</p>
         <ul class="game-lore-list">
           <li><strong>焚天（火）</strong>：解锁「焚天」爆发，按阵中火灵与星辉缩短间隔、提高收益。</li>
