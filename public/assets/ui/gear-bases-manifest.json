@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "naming": "Filename pattern: gear-base-<baseId>.png in this folder (same <baseId> as src/data/gearBases.ts).",
+  "bases": [
+    { "id": "blade_wrought", "slot": "weapon", "file": "gear-base-blade_wrought.png" },
+    { "id": "robe_scholar", "slot": "body", "file": "gear-base-robe_scholar.png" },
+    { "id": "ring_moon", "slot": "ring", "file": "gear-base-ring_moon.png" },
+    { "id": "spear_cloud", "slot": "weapon", "file": "gear-base-spear_cloud.png" },
+    { "id": "boots_void", "slot": "body", "file": "gear-base-boots_void.png" }
+  ]
+}
