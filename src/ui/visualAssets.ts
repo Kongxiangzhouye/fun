@@ -177,6 +177,8 @@ export const UI_ACH_STASH_DECO = asset("ach-stash-deco.svg");
 export const UI_ACH_RESERVOIR_DECO = asset("ach-reservoir-deco.svg");
 /** 成就列表 · 心斋卦象系条目左侧小徽 */
 export const UI_ACH_FORTUNE_DECO = asset("ach-fortune-deco.svg");
+/** 成就列表 · 洞府蕴灵（共鸣线）系条目左侧小徽 */
+export const UI_ACH_VEIN_DECO = asset("ach-vein-deco.svg");
 /** 修行札记 · 「挂机三艺」折叠标题旁 */
 export const UI_LORE_THREE_ARTS = asset("deco-lore-three-arts.svg");
 /** 修行札记 · 「周常悬赏」折叠标题旁 */

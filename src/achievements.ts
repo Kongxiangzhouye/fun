@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune";
+  listDeco?: "forge" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -344,6 +344,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "洞府「共鸣」达到 40 级",
     rewardStones: 520,
     rewardEssence: 35,
+    listDeco: "vein",
+  },
+  {
+    id: "vein_gongming_80",
+    title: "共鸣圆满",
+    desc: "洞府「共鸣」达到 80 级",
+    rewardStones: 2200,
+    rewardEssence: 88,
+    listDeco: "vein",
   },
   {
     id: "skills_triple_25",
@@ -545,6 +554,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.spiritArrayLevel >= 30;
     case "vein_gongming_40":
       return state.vein.gongMing >= 40;
+    case "vein_gongming_80":
+      return state.vein.gongMing >= 80;
     case "skills_triple_25":
       return (
         state.skills.combat.level >= 25 &&
