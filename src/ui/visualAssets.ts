@@ -530,6 +530,8 @@ export const UI_DAILY_LOGIN_WEEK_BONUS = asset("daily-login-week-bonus.svg");
 export const UI_HEAD_CELESTIAL_STASH = asset(FEATURE_PAGE_HEADS_UI_FILES.celestialStash);
 /** 蓄灵池（灵府灵脉）标题装饰 */
 export const UI_HEAD_SPIRIT_RESERVOIR = asset(FEATURE_PAGE_HEADS_UI_FILES.spiritReservoir);
+/** 蓄灵池蓄满 ETA 行前缀小图标 */
+export const UI_SPIRIT_RESERVOIR_ETA = asset("spirit-reservoir-eta-wave.svg");
 /** 心斋卦象（每日运势）标题装饰 */
 export const UI_HEAD_DAILY_FORTUNE = asset(FEATURE_PAGE_HEADS_UI_FILES.dailyFortune);
 /** 纳灵阵图（灵府）标题装饰 */

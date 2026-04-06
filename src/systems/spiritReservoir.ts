@@ -56,3 +56,27 @@ export function reservoirFillRatio(state: GameState): number {
 export function canClaimSpiritReservoir(state: GameState): boolean {
   return reservoirStored(state).gt(0);
 }
+
+/** 按当前灵石/秒推算距离蓄灵池蓄满还需秒数；已满返回 0；无增速返回 null */
+export function secondsToReservoirFull(state: GameState, incomePerSec: Decimal): number | null {
+  if (!spiritReservoirUnlocked(state)) return null;
+  const cap = reservoirCap(state);
+  const cur = reservoirStored(state);
+  if (cur.gte(cap)) return 0;
+  const rate = incomePerSec.mul(FILL_MULT);
+  if (rate.lte(0)) return null;
+  return Math.max(1, Math.ceil(cap.minus(cur).div(rate).toNumber()));
+}
+
+/** 蓄灵池蓄满 ETA 一行文案（供面板与实时读数共用） */
+export function formatSpiritReservoirEtaLine(state: GameState, incomePerSec: Decimal): string {
+  const ratio = reservoirFillRatio(state);
+  if (ratio >= 1) return "蓄灵已满，收取前不再累积。";
+  const sec = secondsToReservoirFull(state, incomePerSec);
+  if (sec == null) return "蓄灵增速与当前灵石收益挂钩。";
+  if (sec < 90) return `约 ${sec} 秒后蓄满`;
+  if (sec < 3600) return `约 ${Math.ceil(sec / 60)} 分钟后蓄满`;
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return m > 0 ? `约 ${h} 小时 ${m} 分钟后蓄满` : `约 ${h} 小时后蓄满`;
+}

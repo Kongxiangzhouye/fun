@@ -9916,6 +9916,30 @@ p.gear-forge-tier-hint {
   margin-top: 6px;
 }
 
+.spirit-reservoir-bar-wrap--near-full .spirit-reservoir-bar {
+  border-color: rgba(130, 220, 200, 0.55);
+  box-shadow: 0 0 14px rgba(80, 200, 180, 0.22);
+}
+
+.spirit-reservoir-bar-wrap--near-full .spirit-reservoir-bar-fill {
+  background: linear-gradient(90deg, #52b0d4, #8ef0dd);
+}
+
+.spirit-reservoir-eta-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: #9eb8d0;
+  line-height: 1.35;
+}
+
+.spirit-reservoir-eta-ico {
+  flex-shrink: 0;
+  margin-top: 2px;
+  opacity: 0.92;
+}
+
 /* —— 灵府 · 心斋卦象 —— */
 .daily-fortune-panel {
   margin-bottom: 12px;

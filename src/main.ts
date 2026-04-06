@@ -136,6 +136,7 @@ import {
   UI_HEAD_COMBAT,
   UI_HUB_SECTION_FLAIR,
   UI_HEAD_SPIRIT_RESERVOIR,
+  UI_SPIRIT_RESERVOIR_ETA,
   UI_HEAD_DAILY_FORTUNE,
   UI_ACH_FORGE_DECO,
   UI_ACH_FORGE_EMBER_DECO,
@@ -231,6 +232,7 @@ import {
   reservoirStored,
   canClaimSpiritReservoir,
   claimSpiritReservoir,
+  formatSpiritReservoirEtaLine,
 } from "./systems/spiritReservoir";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
@@ -3181,6 +3183,8 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const rc = reservoirCap(state);
   const rPct = reservoirFillRatio(state) * 100;
   const canRs = canClaimSpiritReservoir(state);
+  const rEtaLine = formatSpiritReservoirEtaLine(state, ips);
+  const reservoirNearFull = rPct >= 80 && rPct < 100;
   const reservoirBlock = u.tabSpiritReservoir
     ? `<section class="panel spirit-reservoir-panel">
       <div class="panel-title-art-row">
@@ -3188,10 +3192,14 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <h2>蓄灵池</h2>
       </div>
       <p class="hint">额外积蓄约 <strong>9%</strong> 当前每秒灵石等效的灵流（与上方主收益并行）；达上限后不再累积。</p>
-      <div class="spirit-reservoir-bar-wrap">
+      <div class="spirit-reservoir-bar-wrap${reservoirNearFull ? " spirit-reservoir-bar-wrap--near-full" : ""}" id="spirit-reservoir-bar-wrap">
         <div class="spirit-reservoir-bar"><div class="spirit-reservoir-bar-fill" id="spirit-reservoir-bar-fill" style="width:${rPct}%"></div></div>
         <p class="hint sm spirit-reservoir-readout"><span id="spirit-reservoir-stored">${fmtDecimal(rs)}</span> / <span id="spirit-reservoir-cap">${fmtDecimal(rc)}</span> 灵石</p>
       </div>
+      <p class="hint sm spirit-reservoir-eta-row">
+        <img class="spirit-reservoir-eta-ico" src="${UI_SPIRIT_RESERVOIR_ETA}" alt="" width="16" height="16" loading="lazy" />
+        <span id="spirit-reservoir-eta">${rEtaLine}</span>
+      </p>
       <button type="button" class="btn ${canRs ? "btn-primary" : ""}" id="btn-spirit-reservoir-claim" ${canRs ? "" : "disabled"}>${canRs ? "收取蓄灵" : "暂无蓄灵"}</button>
     </section>`
     : "";
@@ -3823,7 +3831,7 @@ function renderMeta(): string {
       <div class="meta-card">
         <h3>${titles[k]} <span class="inv-meta">Lv.${lv}</span></h3>
         <p class="hint">${desc[k]}</p>
-        <button class="btn btn-primary" type="button" data-meta="${k}" ${can ? "" : "disabled"}>
+        <button class="btn ${can ? "btn-primary" : ""}" type="button" data-meta="${k}" ${can ? "" : "disabled"}>
           强化（${fmt(cost)} 道韵）
         </button>
       </div>
@@ -5228,6 +5236,12 @@ function updateEstateIdleLiveReadouts(now: number): void {
     const elC = document.getElementById("spirit-reservoir-cap");
     const bar = document.getElementById("spirit-reservoir-bar-fill") as HTMLElement | null;
     const btn = document.getElementById("btn-spirit-reservoir-claim") as HTMLButtonElement | null;
+    const wrap = document.getElementById("spirit-reservoir-bar-wrap");
+    if (wrap) {
+      wrap.classList.toggle("spirit-reservoir-bar-wrap--near-full", rPct >= 80 && rPct < 100);
+    }
+    const etaEl = document.getElementById("spirit-reservoir-eta");
+    if (etaEl) etaEl.textContent = formatSpiritReservoirEtaLine(state, ips);
     if (elS) elS.textContent = fmtDecimal(rs);
     if (elC) elC.textContent = fmtDecimal(rc);
     if (bar) bar.style.width = `${rPct}%`;
