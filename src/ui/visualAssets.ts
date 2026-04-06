@@ -4,6 +4,7 @@
  */
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
 import { ELEMENT_UI_FILES } from "../data/elementUi";
+import { GEAR_SLOT_UI_FILES } from "../data/gearSlotUi";
 import { GEAR_BASES } from "../data/gearBases";
 import { PET_DEFS } from "../data/pets";
 import { GARDEN_CROPS } from "../systems/spiritGarden";
@@ -35,11 +36,13 @@ export const ELEMENT_ICON: Record<Element, string> = Object.fromEntries(
   (Object.keys(ELEMENT_UI_FILES) as Element[]).map((el) => [el, asset(ELEMENT_UI_FILES[el])]),
 ) as Record<Element, string>;
 
-export const GEAR_SLOT_ICON: Record<"weapon" | "body" | "ring", string> = {
-  weapon: asset("gear-weapon.png"),
-  body: asset("gear-body.png"),
-  ring: asset("gear-ring.png"),
-};
+/** 与 `GEAR_SLOT_UI_FILES` 同源 */
+export const GEAR_SLOT_ICON: Record<"weapon" | "body" | "ring", string> = Object.fromEntries(
+  (Object.keys(GEAR_SLOT_UI_FILES) as Array<keyof typeof GEAR_SLOT_UI_FILES>).map((slot) => [
+    slot,
+    asset(GEAR_SLOT_UI_FILES[slot]),
+  ]),
+) as Record<"weapon" | "body" | "ring", string>;
 
 /** 各装备基底立绘（`public/assets/ui/gear-base-<baseId>.png`）；与 `GEAR_BASES` 同步，否则回退槽位图标 */
 export const GEAR_BASE_PORTRAIT: Record<string, string> = Object.fromEntries(
