@@ -2,7 +2,7 @@
  * 面向玩家的说明文：收纳于「万象图鉴 → 修行札记」，避免主界面堆砌。
  */
 import { REINCARNATION_REALM_REQ } from "../types";
-import { UI_LORE_THREE_ARTS, UI_LORE_BOUNTY } from "./visualAssets";
+import { UI_LORE_THREE_ARTS, UI_LORE_BOUNTY, UI_LORE_ESTATE } from "./visualAssets";
 
 export function renderGameLoreHtml(): string {
   return `
@@ -77,6 +77,17 @@ export function renderGameLoreHtml(): string {
           <li>条目覆盖幻域、唤引、铸灵、灵田、吐纳、破境等；达成后即可领<strong>灵石</strong>与<strong>唤灵髓</strong>。</li>
           <li>底部可<strong>一键领取</strong>所有已达成的条目。</li>
           <li>与「功业录」<strong>不同</strong>：功业录多为一次性或累计终身目标；周常按<strong>自然周</strong>循环。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_ESTATE}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 灵府与灵脉</summary>
+        <ul class="game-lore-list">
+          <li><strong>灵田</strong>：地块种植灵草，到时收获灵砂、灵石等；养成进度<strong>跨轮回保留</strong>。</li>
+          <li><strong>纳灵阵图</strong>：消耗灵石与灵砂提升重数，增加全局灵石效率（与其它乘区叠乘）。</li>
+          <li><strong>蓄灵池</strong>：随当前灵石产出缓慢蓄存，可一次性收取进背包；有上限，随境界与轮回略放大。</li>
+          <li><strong>心斋卦象</strong>：按<strong>本地日历日</strong>刷新一条运势，影响灵石等乘区；跨日自动更替。</li>
+          <li><strong>天机匣</strong>：每周轮换限购兑换，周次与<strong>周常悬赏</strong>同源（每周一本地 0:00）；用灵石 / 灵砂 / 玄铁 / 唤灵髓等按条目支付。</li>
         </ul>
       </details>
 

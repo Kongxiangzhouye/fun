@@ -157,6 +157,8 @@ export const UI_ACH_DUNGEON_DECO = asset("ach-dungeon-deco.svg");
 export const UI_LORE_THREE_ARTS = asset("deco-lore-three-arts.svg");
 /** 修行札记 · 「周常悬赏」折叠标题旁 */
 export const UI_LORE_BOUNTY = asset("deco-lore-bounty.svg");
+/** 修行札记 · 「灵府与灵脉」折叠标题旁 */
+export const UI_LORE_ESTATE = asset("deco-lore-estate.svg");
 /** 灵息日历（每日签到）页标题 */
 export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 /** 天机匣（周轮换商店）页标题 */
