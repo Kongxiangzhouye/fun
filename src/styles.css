@@ -2340,6 +2340,26 @@ h1 {
   letter-spacing: 0.04em;
 }
 
+/* 顶栏：本会话灵石净增 */
+.res-chip-session {
+  border-color: rgba(120, 160, 220, 0.42);
+  background: linear-gradient(155deg, rgba(18, 26, 44, 0.94), rgba(12, 18, 32, 0.92));
+  padding-left: 7px;
+}
+
+.res-chip-session .res-ico-session {
+  opacity: 0.9;
+}
+
+.res-chip-session .res-lbl {
+  color: rgba(186, 204, 238, 0.88);
+}
+
+.res-chip-session strong {
+  color: #b8e8c8;
+  font-size: 0.88rem;
+}
+
 .vein-hint-row {
   display: flex;
   flex-wrap: wrap;
@@ -3445,6 +3465,35 @@ h1 {
 .vein-help-list-compact li {
   list-style: none;
   margin-left: 0;
+}
+
+.meta-dao-breakdown {
+  margin: 0.5rem 0 0.75rem;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+}
+
+.meta-dao-breakdown__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.meta-dao-breakdown__title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: #ebe4ff;
+}
+
+.meta-dao-breakdown__body {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.meta-dao-breakdown__ico {
+  flex-shrink: 0;
+  opacity: 0.95;
 }
 
 .meta-grid {

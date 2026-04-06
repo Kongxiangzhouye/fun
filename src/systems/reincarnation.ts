@@ -10,15 +10,34 @@ export function canReincarnate(state: GameState): boolean {
   return state.realmLevel >= REINCARNATION_REALM_REQ;
 }
 
+/** 道韵分解（与 `daoEssenceGainOnReincarnate` 同源） */
+export interface DaoEssenceGainBreakdown {
+  /** 本轮灵石峰值对数项 */
+  peakLogPart: number;
+  /** 持有卡数量加成（向下取整） */
+  cardBonus: number;
+  ownedCardCount: number;
+  /** 保底道韵 */
+  floorMin: number;
+  total: number;
+}
+
+export function daoEssenceGainBreakdown(state: GameState): DaoEssenceGainBreakdown {
+  const peak = new Decimal(state.peakSpiritStonesThisLife || "0");
+  let peakLogPart = 0;
+  if (peak.gt(1)) {
+    peakLogPart = Math.max(0, Math.floor(peak.log(10).times(3.8).toNumber()));
+  }
+  const ownedCardCount = Object.keys(state.owned).length;
+  const cardBonus = Math.floor(ownedCardCount * 0.28);
+  const floorMin = 3;
+  const total = Math.max(floorMin, peakLogPart + cardBonus);
+  return { peakLogPart, cardBonus, ownedCardCount, floorMin, total };
+}
+
 /** 道韵：按本轮峰值灵石 log10 对数结算（设计案 §2） */
 export function daoEssenceGainOnReincarnate(state: GameState): number {
-  const peak = new Decimal(state.peakSpiritStonesThisLife || "0");
-  let logPart = 0;
-  if (peak.gt(1)) {
-    logPart = Math.max(0, Math.floor(peak.log(10).times(3.8).toNumber()));
-  }
-  const cardBonus = Math.floor(Object.keys(state.owned).length * 0.28);
-  return Math.max(3, logPart + cardBonus);
+  return daoEssenceGainBreakdown(state).total;
 }
 
 export function performReincarnate(state: GameState): void {

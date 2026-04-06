@@ -51,6 +51,10 @@ export const UI_ZAO = asset(HUD_BAR_UI_FILES.zao);
 export const UI_POWER = asset(HUD_BAR_UI_FILES.power);
 export const UI_LING_SHA = asset(HUD_BAR_UI_FILES.lingSha);
 export const UI_XUAN_TIE = asset(HUD_BAR_UI_FILES.xuanTie);
+/** 顶栏：本会话灵石净增小标 */
+export const UI_SESSION_STONE_GAIN = asset("session-stone-gain.svg");
+/** 轮回面板：道韵分解说明装饰 */
+export const UI_DAO_BREAKDOWN_DECO = asset("dao-essence-breakdown-deco.svg");
 
 /** SSR / UR 灵卡角标（与五行底图分离）；与 `RARITY_BADGE_UI_FILES` 同源 */
 export const RARITY_BADGE_SSR = asset(RARITY_BADGE_UI_FILES.SSR);

@@ -22,6 +22,7 @@ import {
   importSave,
   getActiveSlotIndex,
 } from "../storage";
+import { daoEssenceGainBreakdown, daoEssenceGainOnReincarnate } from "../systems/reincarnation";
 
 type MemoryStorage = {
   getItem: (key: string) => string | null;
@@ -443,6 +444,18 @@ function runOfflineAdventurePendingNormalizeSmoke(): void {
   assert.equal(pending?.options[2].id, "essence", "normalized options should backfill essence");
 }
 
+function runDaoEssenceBreakdownSmoke(): void {
+  const st = createInitialState();
+  st.peakSpiritStonesThisLife = "1000000";
+  st.owned = {
+    demo: { defId: "n_iron_slag", stars: 0, level: 1 },
+  };
+  const b = daoEssenceGainBreakdown(st);
+  assert.equal(b.total, daoEssenceGainOnReincarnate(st), "breakdown total must match legacy gain fn");
+  assert.equal(b.floorMin, 3, "floor min should be 3");
+  assert.ok(b.peakLogPart >= 1, "large peak should contribute log part");
+}
+
 function runEstateCommissionAutoSettleLoopSmoke(): void {
   const st = createInitialState();
   const now = Date.now();
@@ -473,6 +486,7 @@ function main(): void {
   runOfflineAdventureAutoReceiptSmoke();
   runOfflineAdventureAutoRerollBudgetSmoke();
   runOfflineAdventurePendingNormalizeSmoke();
+  runDaoEssenceBreakdownSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");

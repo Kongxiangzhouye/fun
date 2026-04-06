@@ -55,7 +55,7 @@ import pkg from "../package.json";
 import { playUiBlip, resumeAudioContext } from "./audio";
 import {
   canReincarnate,
-  daoEssenceGainOnReincarnate,
+  daoEssenceGainBreakdown,
   performReincarnate,
   buyMeta,
   metaUpgradeCost,
@@ -120,6 +120,8 @@ import {
   UI_POWER,
   UI_LING_SHA,
   UI_XUAN_TIE,
+  UI_SESSION_STONE_GAIN,
+  UI_DAO_BREAKDOWN_DECO,
   RARITY_BADGE_SSR,
   RARITY_BADGE_UR,
   gearTierBadgeSrc,
@@ -440,6 +442,20 @@ function fmtSkillEta(sec: number | null): string {
 }
 
 let state: GameState = loadGame();
+/** 本会话灵石基准（载入存档 / 切换档 / 轮回后重置），用于顶栏「本次」净增展示 */
+let sessionStoneBaseline: Decimal | null = null;
+
+function resetSessionStoneBaseline(): void {
+  sessionStoneBaseline = stones(state);
+}
+
+function sessionStoneGainDelta(): Decimal {
+  if (sessionStoneBaseline == null) return new Decimal(0);
+  return Decimal.max(0, stones(state).minus(sessionStoneBaseline));
+}
+
+resetSessionStoneBaseline();
+
 let selectedInvId: string | null = null;
 /** 养成→卡组：点击阵位后弹层中编辑该位；null 表示未打开弹层 */
 let deckModalSlot: number | null = null;
@@ -2248,6 +2264,13 @@ function renderTopBar(
         <span class="res-delta" id="pill-stones-delta">+${fmtDecimal(ips)}/秒</span>
       </span>
     </span>
+    <span class="res-chip res-chip-session" title="自本次载入存档以来累计获得的灵石（切换存档、新档或轮回后重新计数）">
+      <img class="res-ico res-ico-session" src="${UI_SESSION_STONE_GAIN}" alt="" width="18" height="18" loading="lazy" />
+      <span class="res-chip-stack">
+        <span class="res-lbl">本次</span>
+        <strong id="pill-session-stones">+${fmtDecimal(sessionStoneGainDelta())}</strong>
+      </span>
+    </span>
     <span class="res-chip res-chip-key res-chip-essence" data-currency-hint-id="essence">
       <img class="res-ico" src="${UI_ESSENCE}" alt="" width="20" height="20" />
       <span class="res-chip-stack">
@@ -3882,7 +3905,8 @@ function renderCodex(): string {
 }
 
 function renderMeta(): string {
-  const gain = daoEssenceGainOnReincarnate(state);
+  const daoB = daoEssenceGainBreakdown(state);
+  const gain = daoB.total;
   const reinOk = canReincarnate(state);
   const kinds: (keyof GameState["meta"])[] = ["idleMult", "gachaLuck", "deckSlots", "ticketRegen", "stoneMult"];
   const titles: Record<keyof GameState["meta"], string> = {
@@ -3922,7 +3946,19 @@ function renderMeta(): string {
       <h2>轮回</h2>
       <p>境界≥ <strong>${REINCARNATION_REALM_REQ}</strong> 可轮回：重置境界、灵石、卡组与持有卡；保留图鉴、成就与元强化。</p>
       <p class="hint">道韵依本轮灵石峰值等规则结算。</p>
-      <p class="hint">预计本次可获得道韵：<strong>${fmt(gain)}</strong></p>
+      <p class="hint meta-dao-gain-line">预计本次可获得道韵：<strong>${fmt(gain)}</strong></p>
+      <div class="meta-dao-breakdown offline-control-surface" role="note">
+        <div class="meta-dao-breakdown__head">
+          <img class="meta-dao-breakdown__ico" src="${UI_DAO_BREAKDOWN_DECO}" alt="" width="22" height="22" loading="lazy" />
+          <span class="meta-dao-breakdown__title">道韵分解</span>
+        </div>
+        <p class="hint meta-dao-breakdown__body">
+          灵石峰值项 <strong>${daoB.peakLogPart}</strong>
+          · 持有卡 <strong>${daoB.ownedCardCount}</strong> 张 → 加成 <strong>${daoB.cardBonus}</strong>
+          · 保底 <strong>${daoB.floorMin}</strong>
+          → 合计 <strong>${fmt(daoB.total)}</strong>
+        </p>
+      </div>
       <div class="btn-row">
         <button class="btn btn-danger" type="button" id="btn-rein" ${reinOk ? "" : "disabled"}>确认轮回</button>
       </div>
@@ -4324,6 +4360,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.getElementById("btn-reset-world")?.addEventListener("click", () => {
     if (!confirm("确定重置存档？当前进度将被清空。建议先导出存档备份。")) return;
     state = clearSaveAndNewGame();
+    resetSessionStoneBaseline();
     selectedInvId = null;
     deckModalSlot = null;
     refineTargetId = null;
@@ -4604,6 +4641,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.getElementById("btn-rein")?.addEventListener("click", () => {
     if (!confirm("确定轮回？境界、灵石、卡组与持有卡将重置，图鉴进度保留。")) return;
     performReincarnate(state);
+    resetSessionStoneBaseline();
     tryCompleteAchievements(state);
     saveGame(state);
     toast("轮回完成，道韵已入体");
@@ -5050,6 +5088,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     getState: () => state,
     setState: (next) => {
       state = next;
+      resetSessionStoneBaseline();
     },
     saveGame,
     toast,
@@ -5194,6 +5233,8 @@ function updateTopResourcePillsAndVigor(pool: number): void {
   setPillStrong("pill-stones", fmtDecimal(stones(state)));
   const psd = document.getElementById("pill-stones-delta");
   if (psd) psd.textContent = `+${fmtDecimal(ipsLoop)}/秒`;
+  const pss = document.getElementById("pill-session-stones");
+  if (pss) pss.textContent = `+${fmtDecimal(sessionStoneGainDelta())}`;
   setPillStrong("pill-essence", String(state.summonEssence));
   setPillStrong("pill-zhuling", String(Math.floor(state.zhuLingEssence)));
   const eps = essenceIncomePerSecondFromResonance(state);
