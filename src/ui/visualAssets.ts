@@ -4,6 +4,7 @@
  */
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
 import { ELEMENT_UI_FILES } from "../data/elementUi";
+import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
 import { GEAR_SLOT_UI_FILES } from "../data/gearSlotUi";
 import { GEAR_BASES } from "../data/gearBases";
 import { PET_DEFS } from "../data/pets";
@@ -27,9 +28,9 @@ export const UI_POWER = asset("ui-power.svg");
 export const UI_LING_SHA = asset("ui-ling-sha.svg");
 export const UI_XUAN_TIE = asset("ui-xuan-tie.svg");
 
-/** SSR / UR 灵卡角标（与五行底图分离） */
-export const RARITY_BADGE_SSR = asset("rarity-ssr.png");
-export const RARITY_BADGE_UR = asset("rarity-ur.png");
+/** SSR / UR 灵卡角标（与五行底图分离）；与 `RARITY_BADGE_UI_FILES` 同源 */
+export const RARITY_BADGE_SSR = asset(RARITY_BADGE_UI_FILES.SSR);
+export const RARITY_BADGE_UR = asset(RARITY_BADGE_UI_FILES.UR);
 
 /** 五行灵卡小图标；与 `ELEMENT_UI_FILES` 同源 */
 export const ELEMENT_ICON: Record<Element, string> = Object.fromEntries(
