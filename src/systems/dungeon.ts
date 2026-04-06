@@ -1148,6 +1148,7 @@ export function essenceRewardTotalFloat(
   state: GameState,
   isBoss: boolean,
   repeatMode = false,
+  affixNow = Date.now(),
 ): number {
   const base = 5 + wave * 2.1;
   let v = Math.max(
@@ -1158,7 +1159,7 @@ export function essenceRewardTotalFloat(
       veinGongMingResonanceMult(state.vein.gongMing),
   );
   if (isBoss) v *= 1.45;
-  v *= dungeonAffixEssenceMult(Date.now()) * daoMeridianDungeonEssenceMult(state);
+  v *= dungeonAffixEssenceMult(affixNow) * daoMeridianDungeonEssenceMult(state);
   if (repeatMode) {
     v *= DUNGEON_REPEAT_ESSENCE_MULT;
     // 复刷若明显落后前沿波次，则再做温和衰减，避免长期低关稳定刷最优。
@@ -1359,7 +1360,7 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
 function registerDungeonKill(state: GameState, d: DungeonState, mob: DungeonMob, now: number): boolean {
   resetDamageFloatAccum();
   const bossLootWave = d.wave % 5 === 0 && !state.dungeonDeferBoss;
-  const totalFloat = essenceRewardTotalFloat(d.wave, state, bossLootWave, d.rewardModeRepeat);
+  const totalFloat = essenceRewardTotalFloat(d.wave, state, bossLootWave, d.rewardModeRepeat, now);
   const share = totalFloat / Math.max(1, d.packSize);
   d.essenceRemainder += share;
   d.essenceThisWave += share;
@@ -1403,6 +1404,7 @@ function randomEl(state: GameState): Element {
 
 function spawnMobsForWave(state: GameState): void {
   const d = state.dungeon;
+  const now = Date.now();
   const ck = d.waveCheckpoint[d.wave];
   if (ck && ck.mobs.some((m) => m.hp > 0) && ck.mapW === 0) {
     restoreWaveFromCheckpoint(state, ck);
@@ -1425,7 +1427,7 @@ function spawnMobsForWave(state: GameState): void {
   d.packKilled = 0;
   d.mobs = [];
 
-  const hpAffix = dungeonAffixMobHpMult(Date.now());
+  const hpAffix = dungeonAffixMobHpMult(now);
   const totalHp0 = Math.max(1, Math.floor(monsterMaxHpForWave(d.wave) * hpAffix));
   const bossWave = d.wave % 5 === 0;
   const deferBoss = bossWave && state.dungeonDeferBoss;
@@ -1471,7 +1473,7 @@ function spawnMobsForWave(state: GameState): void {
   d.waveEntrySpawnX = d.playerX;
   d.waveEntrySpawnY = d.playerY;
   syncBars(state, d);
-  initDuelBattleState(state, Date.now());
+  initDuelBattleState(state, now);
 }
 
 /** 当前段（每 5 波）起始波：1、6、11… */

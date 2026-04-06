@@ -7,7 +7,6 @@ import {
   currentWeekKey,
   ensureWeeklyBountyWeek,
   weeklyBountyFeedbackState,
-  countClaimableWeeklyBounties,
   type WeeklyBountyCardDeco,
 } from "../systems/weeklyBounty";
 import {
@@ -36,7 +35,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
   ensureWeeklyBountyWeek(state, now);
   const wk = currentWeekKey(now);
   const fb = weeklyBountyFeedbackState(state, now);
-  const claimableN = countClaimableWeeklyBounties(state, now);
+  const claimableN = fb.claimable;
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
     const prog = weeklyBountyProgress(state, t);
     const done = isWeeklyBountyComplete(state, t);
@@ -99,7 +98,7 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   const claimAllBtn = document.getElementById("btn-bounty-claim-all") as HTMLButtonElement | null;
   const claimAllLbl = document.getElementById("bounty-claim-all-lbl");
   const fb = weeklyBountyFeedbackState(state, now);
-  const cn = countClaimableWeeklyBounties(state, now);
+  const cn = fb.claimable;
   if (claimAllBtn) claimAllBtn.disabled = cn <= 0;
   if (claimAllLbl) claimAllLbl.textContent = `一键领取可领悬赏（${cn}）`;
   const completeLbl = document.getElementById("bounty-feedback-complete");

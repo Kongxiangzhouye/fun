@@ -217,6 +217,7 @@ export function claimWeeklyBountyTask(state: GameState, taskId: string, now: num
   if (state.weeklyBounty.claimed.includes(taskId)) return false;
   if (!isWeeklyBountyComplete(state, def)) return false;
   state.weeklyBounty.claimed.push(taskId);
+  state.weeklyBounty.claimed.sort();
   if (def.rewardStones > 0) addStones(state, def.rewardStones);
   if (def.rewardEssence > 0) state.summonEssence += def.rewardEssence;
   maybeRecordWeeklyBountyFullWeek(state);

@@ -67,12 +67,16 @@ function hashWeekKey(weekKey: string): number {
   return h >>> 0;
 }
 
-export function getDungeonAffixForNow(now: number): DungeonAffixInfo {
-  const wk = currentWeekKey(now);
-  const idx = hashWeekKey(wk) % AFFIX_ORDER.length;
+export function getDungeonAffixForWeekKey(weekKey: string): DungeonAffixInfo {
+  const idx = hashWeekKey(weekKey) % AFFIX_ORDER.length;
   const id = AFFIX_ORDER[idx]!;
   const base = AFFIX_DEF[id];
   return { id, ...base };
+}
+
+export function getDungeonAffixForNow(now: number): DungeonAffixInfo {
+  const wk = currentWeekKey(now);
+  return getDungeonAffixForWeekKey(wk);
 }
 
 export function dungeonAffixEssenceMult(now: number): number {

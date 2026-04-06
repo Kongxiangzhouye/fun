@@ -212,6 +212,7 @@ import { tryBuyDaoMeridian } from "./systems/daoMeridian";
 import {
   claimAllCompletableWeeklyBounties,
   claimWeeklyBountyTask,
+  ensureWeeklyBountyWeek,
   noteWeeklyBountyBreakthrough,
   weeklyBountyFeedbackState,
 } from "./systems/weeklyBounty";
@@ -4639,6 +4640,7 @@ function updateEstateGardenLiveReadouts(now: number): void {
 function loop(): void {
   syncDecimalFormatFromState(state);
   const now = nowMs();
+  ensureWeeklyBountyWeek(state, now);
   applyTick(state, now);
   if (!mobileLiteFx) updateModernVisualFx(now);
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
@@ -5171,6 +5173,7 @@ function loop(): void {
 
 function init(): void {
   const t = nowMs();
+  ensureWeeklyBountyWeek(state, t);
   mobileLiteFx = shouldUseMobileLiteFx();
   if (!mobileLiteFx) initPixiFxLayer();
   bindModernFxInteraction();
