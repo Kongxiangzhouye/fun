@@ -1,8 +1,32 @@
 {
-  "version": 1,
+  "version": 2,
   "assetRoot": "public/assets/ui/",
+  "staticFilenameModules": [
+    "achievementsListUi.ts",
+    "chronicleHeadersUi.ts",
+    "dungeonDuelUi.ts",
+    "elementUi.ts",
+    "emptyStateUi.ts",
+    "featurePageHeadsUi.ts",
+    "gachaPoolUi.ts",
+    "gearInventoryUi.ts",
+    "gearSlotUi.ts",
+    "hubSectionHeadersUi.ts",
+    "hubVeinFlairUi.ts",
+    "hudBarUi.ts",
+    "loreJournalUi.ts",
+    "panelChromeUi.ts",
+    "playerProfileUi.ts",
+    "rarityBadgeUi.ts",
+    "weeklyBountyUi.ts"
+  ],
+  "derivedFromData": {
+    "gearBasePortrait": "gear-base-<baseId>.png from src/data/gearBases.ts via src/ui/visualAssets.ts",
+    "petPortrait": "PET_DEFS[].artFile in src/data/pets.ts",
+    "gardenCropIcon": "GARDEN_CROPS[].artFile in src/systems/spiritGarden.ts"
+  },
+  "aggregateManifestIndex": "ui-art-manifest-index.json",
   "patterns": {
     "gearBasePortrait": "gear-base-<baseId>.png — <baseId> from src/data/gearBases.ts; URL built in src/ui/visualAssets.ts"
-  },
-  "modules": "Static filenames are listed in src/data/*Ui.ts; aggregate manifest list in ui-art-manifest-index.json"
+  }
 }
