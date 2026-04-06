@@ -457,6 +457,8 @@ export interface UiPrefs {
   autoClaimSpiritReservoir: boolean;
   /** 灵田：有成熟地块时自动「收获并续种」（需已解锁灵田） */
   autoHarvestSpiritGarden: boolean;
+  /** 灵息日历：可领时自动领取今日灵息礼（需已解锁该页） */
+  autoClaimDailyLogin: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

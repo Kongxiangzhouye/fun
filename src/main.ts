@@ -4208,6 +4208,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "soundMuted") state.uiPrefs.soundMuted = checked;
       else if (t === "autoClaimSpiritReservoir") state.uiPrefs.autoClaimSpiritReservoir = checked;
       else if (t === "autoHarvestSpiritGarden") state.uiPrefs.autoHarvestSpiritGarden = checked;
+      else if (t === "autoClaimDailyLogin") state.uiPrefs.autoClaimDailyLogin = checked;
       else return;
       saveGame(state);
       render();
@@ -5441,6 +5442,24 @@ function loop(): void {
     if (typeof document !== "undefined") {
       updateTopResourcePillsAndVigor(totalCardsInPool());
       updateEstateGardenLiveReadouts(now);
+    }
+  }
+  const uLoop = getUiUnlocks(state);
+  if (
+    state.uiPrefs.autoClaimDailyLogin &&
+    uLoop.tabDailyLogin &&
+    claimDailyLoginReward(state, now)
+  ) {
+    tryCompleteAchievements(state);
+    requestSave("灵息礼自动领取", true);
+    toast("灵息礼已自动领取");
+    if (typeof document !== "undefined") {
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pStr = document.getElementById("ps-streak");
+      if (pStr) pStr.textContent = String(state.dailyStreak);
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      updateDailyLoginPanelReadouts(state, now);
     }
   }
   const autoSettledOfflineInLoop = maybeAutoSettleOfflineAdventure(now, "loop");

@@ -25,6 +25,8 @@ import {
   getActiveSlotIndex,
 } from "../storage";
 import { daoEssenceGainBreakdown, daoEssenceGainOnReincarnate } from "../systems/reincarnation";
+import { canClaimDailyLoginReward, claimDailyLoginReward } from "../systems/dailyLoginCalendar";
+import { getUiUnlocks } from "../uiUnlocks";
 
 type MemoryStorage = {
   getItem: (key: string) => string | null;
@@ -446,6 +448,17 @@ function runOfflineAdventurePendingNormalizeSmoke(): void {
   assert.equal(pending?.options[2].id, "essence", "normalized options should backfill essence");
 }
 
+function runDailyLoginAutoClaimPrefsSmoke(): void {
+  const st = createInitialState();
+  st.totalPulls = 1;
+  st.uiPrefs.autoClaimDailyLogin = true;
+  const now = Date.now();
+  assert.ok(getUiUnlocks(st).tabDailyLogin, "daily login tab should unlock");
+  assert.ok(canClaimDailyLoginReward(st, now), "fresh save should allow claim once per day");
+  assert.ok(claimDailyLoginReward(st, now), "claim should succeed");
+  assert.equal(canClaimDailyLoginReward(st, now), false, "same-day second claim should fail");
+}
+
 function runGardenAutoHarvestSmoke(): void {
   const st = createInitialState();
   st.totalPulls = 1;
@@ -514,6 +527,7 @@ function main(): void {
   runDaoEssenceBreakdownSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
+  runDailyLoginAutoClaimPrefsSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");

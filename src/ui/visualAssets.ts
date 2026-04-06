@@ -538,6 +538,8 @@ export const UI_HEAD_DAILY_LOGIN = asset(FEATURE_PAGE_HEADS_UI_FILES.dailyLogin)
 export const UI_DAILY_LOGIN_WEEK_CHECK = asset("daily-login-week-check.svg");
 /** 灵息周满签额外奖励 */
 export const UI_DAILY_LOGIN_WEEK_BONUS = asset("daily-login-week-bonus.svg");
+/** 灵息日历 · 自动领取开关 */
+export const UI_DAILY_LOGIN_AUTO = asset("daily-login-auto-claim.svg");
 /** 天机匣（周轮换商店）页标题 */
 export const UI_HEAD_CELESTIAL_STASH = asset(FEATURE_PAGE_HEADS_UI_FILES.celestialStash);
 /** 蓄灵池（灵府灵脉）标题装饰 */

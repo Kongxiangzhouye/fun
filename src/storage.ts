@@ -815,6 +815,7 @@ export function deserialize(json: string): GameState {
     masterVolume: normalizeMasterVolume(data.uiPrefs?.masterVolume),
     autoClaimSpiritReservoir: !!data.uiPrefs?.autoClaimSpiritReservoir,
     autoHarvestSpiritGarden: !!data.uiPrefs?.autoHarvestSpiritGarden,
+    autoClaimDailyLogin: !!data.uiPrefs?.autoClaimDailyLogin,
   };
 
   if (data.pets && typeof data.pets === "object") {

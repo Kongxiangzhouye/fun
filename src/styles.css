@@ -10190,6 +10190,36 @@ p.gear-forge-tier-hint {
   letter-spacing: 0.04em;
 }
 
+.daily-login-auto-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(80, 150, 170, 0.38);
+  background: rgba(8, 22, 30, 0.55);
+  cursor: pointer;
+  user-select: none;
+}
+
+.daily-login-auto-row input {
+  margin-top: 3px;
+  accent-color: #7ec0e8;
+}
+
+.daily-login-auto-ico {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.92;
+}
+
+.daily-login-auto-text {
+  font-size: 0.84rem;
+  color: #a8d0e0;
+  line-height: 1.4;
+}
+
 /* —— 养成 · 天机匣 —— */
 .celestial-stash-panel .celestial-week-line {
   margin-top: 4px;

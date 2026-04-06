@@ -7,7 +7,12 @@ import {
   weekDatesMonToSun,
   weeklyLoginClaimCount,
 } from "../systems/dailyLoginCalendar";
-import { UI_DAILY_LOGIN_WEEK_BONUS, UI_DAILY_LOGIN_WEEK_CHECK, UI_HEAD_DAILY_LOGIN } from "./visualAssets";
+import {
+  UI_DAILY_LOGIN_AUTO,
+  UI_DAILY_LOGIN_WEEK_BONUS,
+  UI_DAILY_LOGIN_WEEK_CHECK,
+  UI_HEAD_DAILY_LOGIN,
+} from "./visualAssets";
 
 const WEEK_LABELS = ["一", "二", "三", "四", "五", "六", "日"];
 
@@ -59,6 +64,11 @@ export function renderDailyLoginPanel(state: GameState, now: number): string {
       <div class="daily-login-reward-card">
         <p class="daily-login-reward-title">今日灵息礼（随连签提升）</p>
         <p class="hint sm">灵石 <strong id="daily-login-reward-stones">${prev.stones}</strong> · 唤灵髓 <strong id="daily-login-reward-essence">${prev.essence}</strong></p>
+        <label class="daily-login-auto-row">
+          <input type="checkbox" id="chk-daily-login-auto" data-ui-pref="autoClaimDailyLogin" ${state.uiPrefs.autoClaimDailyLogin ? "checked" : ""} />
+          <img class="daily-login-auto-ico" src="${UI_DAILY_LOGIN_AUTO}" alt="" width="18" height="18" loading="lazy" />
+          <span class="daily-login-auto-text">可领时自动领取（含满签额外奖励判定）</span>
+        </label>
         <button type="button" class="btn ${canClaim ? "btn-primary" : ""}" id="btn-daily-login-claim" ${canClaim ? "" : "disabled"}>
           ${canClaim ? "领取今日灵息礼" : "今日已领取"}
         </button>
@@ -67,6 +77,8 @@ export function renderDailyLoginPanel(state: GameState, now: number): string {
 }
 
 export function updateDailyLoginPanelReadouts(state: GameState, now: number): void {
+  const autoChk = document.getElementById("chk-daily-login-auto") as HTMLInputElement | null;
+  if (autoChk) autoChk.checked = state.uiPrefs.autoClaimDailyLogin;
   const today = toLocalYMD(now);
   const canClaim = canClaimDailyLoginReward(state, now);
   const prev = previewDailyLoginReward(state.dailyStreak);
