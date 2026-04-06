@@ -107,6 +107,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
           <span id="bounty-feedback-overdue">${fb.hasOverdue ? `逾期 ${fb.overdue} / ${fb.total}` : "进度正常"}</span>
         </span>
       </div>
+      <p class="hint sm" id="bounty-feedback-observe">状态校验：${fb.consistent ? "一致" : "异常"}</p>
       <div class="bounty-claim-all-row">
         <button type="button" class="btn btn-primary bounty-claim-all-btn" id="btn-bounty-claim-all" ${claimableN > 0 ? "" : "disabled"}>
           <img class="bounty-claim-all-ico" src="${UI_BOUNTY_CLAIM_ALL_DECO}" alt="" width="20" height="20" loading="lazy" />
@@ -143,6 +144,8 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   if (overdueLbl) overdueLbl.textContent = fb.hasOverdue ? `逾期 ${fb.overdue} / ${fb.total}` : "进度正常";
   const overduePill = overdueLbl?.closest(".bounty-feedback-pill");
   if (overduePill) overduePill.classList.toggle("is-overdue", fb.hasOverdue);
+  const observeLbl = document.getElementById("bounty-feedback-observe");
+  if (observeLbl) observeLbl.textContent = `状态校验：${fb.consistent ? "一致" : "异常"}`;
   for (const t of WEEKLY_BOUNTY_TASKS) {
     const prog = weeklyBountyProgress(state, t);
     const taskState = weeklyBountyTaskState(state, t);

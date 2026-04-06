@@ -268,6 +268,7 @@ export interface WeeklyBountyFeedbackState {
   claimable: number;
   overdue: number;
   hasOverdue: boolean;
+  consistent: boolean;
 }
 
 /** UI 反馈闭环：统一“进度→可领→已领”数量口径。 */
@@ -293,5 +294,11 @@ export function weeklyBountyFeedbackState(state: GameState, now: number): Weekly
   // overdue 表示“已达成但未领”，与 claimable 同口径，便于 UI/提示统一展示计数
   const overdue = claimable;
   const hasOverdue = overdue > 0;
-  return { total, completed, pending, claimed, claimable, overdue, hasOverdue };
+  const consistent = pending + claimable + claimed === total && completed === claimable + claimed && overdue === claimable;
+  return { total, completed, pending, claimed, claimable, overdue, hasOverdue, consistent };
+}
+
+/** 统一悬赏反馈文案，供 toast/调试信息复用，避免各处拼接口径漂移。 */
+export function formatWeeklyBountyFeedbackLine(fb: WeeklyBountyFeedbackState): string {
+  return `待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}，逾期 ${fb.overdue}`;
 }

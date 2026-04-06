@@ -283,7 +283,7 @@ function renderDungeonMapHtml(state: GameState): string {
             <img class="dungeon-duel-combo-chain-deco" id="dungeon-duel-combo-chain-deco" src="${UI_DUNGEON_COMBO_CHAIN_DECO}" alt="" width="120" height="24" loading="lazy" />
             <span class="duel-mom-pill duel-mom-pill--tier" id="duel-combo-tier">蓄势</span>
             <span class="duel-mom-pill" id="duel-combo-pill">连击 0</span>
-            <span class="duel-mom-pill duel-weak-pill" id="duel-weak-pill" hidden>破绽</span>
+            <span class="duel-mom-pill duel-weak-pill" id="duel-weak-pill" hidden title="弱点窗口优先反馈">弱点窗口</span>
             <span class="duel-mom-pill">战意 <span id="duel-fervor-pct">0</span>%</span>
           </div>
           <p class="dungeon-duel-dodge-chip hint sm" id="dungeon-duel-dodge-chip">点击战场 · 化劲闪避</p>

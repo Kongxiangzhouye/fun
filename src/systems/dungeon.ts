@@ -1776,7 +1776,6 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
       d.duelFervor = Math.min(DUEL_FERVOR_MAX, d.duelFervor + DUEL_FERVOR_PER_HIT);
       if (critRoll > 1) {
         d.duelFervor = Math.min(DUEL_FERVOR_MAX, d.duelFervor + 6);
-        pushDamageFloat(0.54, 0.36, "暴击", "dmg-special");
       }
       pushDamageFloat(
         fx,

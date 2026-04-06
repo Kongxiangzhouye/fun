@@ -219,6 +219,7 @@ import {
   claimAllCompletableWeeklyBounties,
   claimWeeklyBountyTask,
   ensureWeeklyBountyWeek,
+  formatWeeklyBountyFeedbackLine,
   noteWeeklyBountyBreakthrough,
   weeklyBountyFeedbackState,
 } from "./systems/weeklyBounty";
@@ -413,6 +414,10 @@ let duelCritBurstAtMs = 0;
 let duelGuardBreakAtMs = 0;
 let duelWeaknessPingAtMs = 0;
 let duelHitFlashAtMs = 0;
+let lastDuelFloatShownAtMs = 0;
+let lastDuelSpecialShownAtMs = 0;
+const DUEL_FLOAT_NOISE_GAP_MS = 58;
+const DUEL_SPECIAL_GAP_MS = 210;
 const reducedMotionQuery =
   typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 let prefersReducedMotion = reducedMotionQuery?.matches ?? false;
@@ -4032,7 +4037,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
         tryCompleteAchievements(state);
         saveGame(state);
         const fb = weeklyBountyFeedbackState(state, t);
-        toast(`悬赏奖励已领取（待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}，逾期 ${fb.overdue}）`);
+        toast(`悬赏奖励已领取（${formatWeeklyBountyFeedbackLine(fb)}）`);
         updateTopResourcePillsAndVigor(totalCardsInPool());
         if (activeHub === "cultivate" && cultivateSub === "bounty") {
           updateBountyPanelReadouts(state, t);
@@ -4068,7 +4073,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     saveGame(state);
     const fb = weeklyBountyFeedbackState(state, t);
     toast(
-      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}，逾期 ${fb.overdue}）`,
+      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（${formatWeeklyBountyFeedbackLine(fb)}）`,
     );
     updateTopResourcePillsAndVigor(totalCardsInPool());
     if (activeHub === "cultivate" && cultivateSub === "bounty") {
@@ -4736,16 +4741,29 @@ function loop(): void {
     const layer = document.getElementById("dungeon-float-layer");
     if (layer) {
       for (const f of floatPopups) {
+        const special = f.cls === "dmg-special";
+        const isWeak = f.text === "破绽" || f.text === "弱点";
+        const isCrit = f.cls === "dmg-out-crit" || f.text === "暴击";
+        if (state.dungeon.active && !prefersReducedMotion) {
+          if (special && !isWeak && fxNow - lastDuelSpecialShownAtMs < DUEL_SPECIAL_GAP_MS) continue;
+          if (!special && fxNow - lastDuelFloatShownAtMs < DUEL_FLOAT_NOISE_GAP_MS) continue;
+        }
         if (state.dungeon.active) {
           if (f.cls === "dmg-out" || f.cls === "dmg-out-crit") duelHitFlashAtMs = fxNow;
-          if (f.cls === "dmg-out-crit" || f.text === "暴击") duelCritBurstAtMs = fxNow;
-          if (f.text === "破绽") {
+          if (isCrit) duelCritBurstAtMs = fxNow;
+          if (isWeak) {
             duelGuardBreakAtMs = fxNow;
             duelWeaknessPingAtMs = fxNow;
           }
         }
+        if (special) lastDuelSpecialShownAtMs = fxNow;
+        else lastDuelFloatShownAtMs = fxNow;
         const el = document.createElement("span");
         el.className = `dungeon-float-txt ${f.cls}`;
+        if (isWeak) el.dataset.floatKind = "weak";
+        else if (isCrit) el.dataset.floatKind = "crit";
+        else if (f.text === "灵脉") el.dataset.floatKind = "surge";
+        else if (f.text === "战意") el.dataset.floatKind = "fervor";
         el.textContent = f.text;
         el.style.left = `${100 * f.nx}%`;
         el.style.top = `${100 * f.ny}%`;
