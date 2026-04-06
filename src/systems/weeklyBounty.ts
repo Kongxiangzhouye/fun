@@ -1,5 +1,6 @@
 import type { GameState } from "../types";
 import { addStones } from "../stones";
+import { normalizeLifetimeStats } from "./pullChronicle";
 
 /** 以本地时区周一 0 点所在日历日为一周 key */
 export function currentWeekKey(now: number): string {
@@ -89,6 +90,17 @@ export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
     cardDeco: "realm",
   },
 ];
+
+/** 当周全部条目均已领取时，终身累计「清满周」次数（每周最多 +1） */
+function maybeRecordWeeklyBountyFullWeek(state: GameState): void {
+  normalizeLifetimeStats(state);
+  if (WEEKLY_BOUNTY_TASKS.some((t) => !state.weeklyBounty.claimed.includes(t.id))) return;
+  const wk = state.weeklyBounty.weekKey;
+  const ls = state.lifetimeStats;
+  if (ls.lastWeeklyBountyFullWeekKey === wk) return;
+  ls.lastWeeklyBountyFullWeekKey = wk;
+  ls.weeklyBountyFullWeeks += 1;
+}
 
 export function emptyWeeklyBounty(weekKey: string): GameState["weeklyBounty"] {
   return {
@@ -199,6 +211,7 @@ export function claimWeeklyBountyTask(state: GameState, taskId: string, now: num
   state.weeklyBounty.claimed.push(taskId);
   if (def.rewardStones > 0) addStones(state, def.rewardStones);
   if (def.rewardEssence > 0) state.summonEssence += def.rewardEssence;
+  maybeRecordWeeklyBountyFullWeek(state);
   return true;
 }
 
@@ -236,5 +249,6 @@ export function claimAllCompletableWeeklyBounties(
     }
     claimed += 1;
   }
+  if (claimed > 0) maybeRecordWeeklyBountyFullWeek(state);
   return { claimed, rewardStones, rewardEssence };
 }

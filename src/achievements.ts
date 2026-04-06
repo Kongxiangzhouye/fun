@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "login";
+  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -189,6 +189,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "login",
   },
   {
+    id: "weekly_bounty_week_full_1",
+    title: "悬赏初满",
+    desc: "任意一周完成并领取全部周常悬赏条目",
+    rewardStones: 380,
+    rewardEssence: 22,
+    listDeco: "bounty",
+  },
+  {
+    id: "weekly_bounty_week_full_12",
+    title: "周天不倦",
+    desc: "累计 12 次单周清满周常悬赏",
+    rewardStones: 2200,
+    rewardEssence: 65,
+    listDeco: "bounty",
+  },
+  {
     id: "celestial_stash_1",
     title: "天机初启",
     desc: "在天机匣完成 1 次兑换",
@@ -356,6 +372,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dailyStreak >= 30;
     case "login_streak_60":
       return state.dailyStreak >= 60;
+    case "weekly_bounty_week_full_1":
+      return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 1;
+    case "weekly_bounty_week_full_12":
+      return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 12;
     case "celestial_stash_1":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
     case "spirit_reservoir_1":

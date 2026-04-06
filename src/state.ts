@@ -161,6 +161,8 @@ export function createInitialState(): GameState {
       dailyFortuneRolls: 0,
       gearForgesTotal: 0,
       maxGearRarityRankForged: 0,
+      weeklyBountyFullWeeks: 0,
+      lastWeeklyBountyFullWeekKey: "",
     },
     combatHpCurrent: 100,
     dungeonSanctuaryMode: false,

@@ -600,6 +600,11 @@ export function deserialize(json: string): GameState {
         0,
         Math.min(4, Math.floor(data.lifetimeStats.maxGearRarityRankForged ?? 0)),
       ),
+      weeklyBountyFullWeeks: Math.max(0, Math.floor(data.lifetimeStats.weeklyBountyFullWeeks ?? 0)),
+      lastWeeklyBountyFullWeekKey:
+        typeof data.lifetimeStats.lastWeeklyBountyFullWeekKey === "string"
+          ? data.lifetimeStats.lastWeeklyBountyFullWeekKey
+          : "",
     };
   }
   normalizeLifetimeStats(st);

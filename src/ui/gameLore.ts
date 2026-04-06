@@ -106,6 +106,7 @@ export function renderGameLoreHtml(): string {
           <li>按<strong>本地时区</strong>：每周一 <strong>0:00</strong> 刷新各条目进度与「已领」状态；与真实日历周对齐。</li>
           <li>条目覆盖幻域、唤引、铸灵、灵田、吐纳、破境等；达成后即可领<strong>灵石</strong>与<strong>唤灵髓</strong>。</li>
           <li>底部可<strong>一键领取</strong>所有已达成的条目。</li>
+          <li>单周领取过<strong>全部</strong>条目会计入终身「清满周」次数（通鉴与数据总览可见）；达成一定次数可在<strong>成就</strong>领奖。</li>
           <li>与「功业录」<strong>不同</strong>：功业录多为一次性或累计终身目标；周常按<strong>自然周</strong>循环。</li>
         </ul>
       </details>

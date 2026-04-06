@@ -69,6 +69,10 @@ export interface LifetimeStatsState {
   gearForgesTotal: number;
   /** 历史铸灵达到过的最高稀有度阶位 0–4（N…UR），用于成就，不因分解降低） */
   maxGearRarityRankForged: number;
+  /** 累计有多少个自然周曾完成并领取全部周常悬赏条目（每周最多计 1 次） */
+  weeklyBountyFullWeeks: number;
+  /** 最近一次计入 `weeklyBountyFullWeeks` 的周 key（与 `weeklyBounty.weekKey` 同源），防同周重复累加 */
+  lastWeeklyBountyFullWeekKey: string;
 }
 
 /** 灵田作物 id */

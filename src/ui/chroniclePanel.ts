@@ -80,6 +80,10 @@ export function renderChroniclePanel(state: GameState): string {
           <strong class="chronicle-stat-val">${ls.spiritReservoirClaims} 次</strong>
         </div>
         <div class="chronicle-stat-card">
+          <span class="chronicle-stat-lbl">周常单周清满</span>
+          <strong class="chronicle-stat-val">${ls.weeklyBountyFullWeeks} 次</strong>
+        </div>
+        <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">当前灵石</span>
           <strong class="chronicle-stat-val">${fmtDecimal(stones(state))}</strong>
         </div>

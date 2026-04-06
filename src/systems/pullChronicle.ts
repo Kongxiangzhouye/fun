@@ -37,6 +37,8 @@ export function normalizeLifetimeStats(st: GameState): void {
       dailyFortuneRolls: 0,
       gearForgesTotal: 0,
       maxGearRarityRankForged: 0,
+      weeklyBountyFullWeeks: 0,
+      lastWeeklyBountyFullWeekKey: "",
     };
     return;
   }
@@ -58,6 +60,11 @@ export function normalizeLifetimeStats(st: GameState): void {
   const mx = st.lifetimeStats.maxGearRarityRankForged;
   if (mx == null || !Number.isFinite(mx)) st.lifetimeStats.maxGearRarityRankForged = 0;
   else st.lifetimeStats.maxGearRarityRankForged = Math.max(0, Math.min(4, Math.floor(mx)));
+  const wb = st.lifetimeStats.weeklyBountyFullWeeks;
+  if (wb == null || !Number.isFinite(wb)) st.lifetimeStats.weeklyBountyFullWeeks = 0;
+  else st.lifetimeStats.weeklyBountyFullWeeks = Math.max(0, Math.floor(wb));
+  const wbk = st.lifetimeStats.lastWeeklyBountyFullWeekKey;
+  st.lifetimeStats.lastWeeklyBountyFullWeekKey = typeof wbk === "string" ? wbk : "";
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */

@@ -144,6 +144,7 @@ import {
   UI_ACH_TRAIN_DECO,
   UI_ACH_DUNGEON_DECO,
   UI_ACH_LOGIN_DECO,
+  UI_ACH_BOUNTY_DECO,
   UI_SAVE_DOWNLOAD_DECO,
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
@@ -2320,6 +2321,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `心斋卦象刷新次数: ${lt.dailyFortuneRolls}`,
     `铸灵累计次数: ${lt.gearForgesTotal}`,
     `历史最高铸灵稀有度: ${rarityPeak}`,
+    `周常悬赏单周清满次数: ${lt.weeklyBountyFullWeeks}`,
     "",
     "[其他]",
     `行囊装备件数: ${Object.keys(st.gearInventory).length}`,
@@ -2403,6 +2405,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">心斋卦象刷新次数</span><strong class="d-val" id="data-overview-lt-fortune">${lt.dailyFortuneRolls}</strong></div>
         <div class="data-overview-cell"><span class="d-label">铸灵累计次数</span><strong class="d-val" id="data-overview-lt-forge">${lt.gearForgesTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历史最高铸灵稀有度</span><strong class="d-val" id="data-overview-lt-rarity">${rarityPeak}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">周常悬赏单周清满次数</span><strong class="d-val" id="data-overview-lt-bounty-weeks">${lt.weeklyBountyFullWeeks}</strong></div>
       </div>
     </div>
 
@@ -2451,6 +2454,7 @@ function updateDataOverviewReadouts(): void {
       ? GEAR_FORGE_RARITY_RANK_LABELS[lt.maxGearRarityRankForged]
       : "—";
   set("data-overview-lt-rarity", rarityPeak);
+  set("data-overview-lt-bounty-weeks", String(lt.weeklyBountyFullWeeks));
   set("data-overview-gear-count", String(Object.keys(st.gearInventory).length));
   set("data-overview-harvests", String(st.spiritGarden.totalHarvests));
 }
@@ -3175,7 +3179,9 @@ function renderAch(): string {
             ? `<img class="ach-deco-icon" src="${UI_ACH_DUNGEON_DECO}" alt="" width="22" height="22" loading="lazy" />`
             : a.listDeco === "login"
               ? `<img class="ach-deco-icon" src="${UI_ACH_LOGIN_DECO}" alt="" width="22" height="22" loading="lazy" />`
-              : "";
+              : a.listDeco === "bounty"
+                ? `<img class="ach-deco-icon" src="${UI_ACH_BOUNTY_DECO}" alt="" width="22" height="22" loading="lazy" />`
+                : "";
     html += `
       <div class="ach-item ${done ? "done" : ""} ${a.listDeco ? `ach-item--${a.listDeco}` : ""}">
         <div class="ach-item-main">
