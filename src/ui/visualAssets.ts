@@ -356,6 +356,8 @@ export const UI_GARDEN_AUTO_HARVEST = asset("garden-auto-harvest.svg");
 export const UI_HUB_SECTION_FLAIR = asset(HUB_VEIN_FLAIR_UI_FILES.hubSectionFlair);
 /** 洞府蕴灵 · 共鸣乘区说明行左侧小标（双环链意象） */
 export const UI_VEIN_GONGMING_LINK = asset(HUB_VEIN_FLAIR_UI_FILES.veinGongmingLink);
+/** 洞府蕴灵 · 自动强化开关旁 */
+export const UI_VEIN_AUTO_UPGRADE = asset("vein-auto-upgrade.svg");
 /** 幻域备战条左侧装饰；与 `DUNGEON_DUEL_UI_FILES` 同源 */
 export const UI_DUNGEON_READINESS_DECO = asset(DUNGEON_DUEL_UI_FILES.readinessDeco);
 /** 幻域周常词缀条左侧装饰 */

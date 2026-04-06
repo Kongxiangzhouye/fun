@@ -17,6 +17,7 @@ import { tryAutoFeedAllPetsIfPref } from "../systems/pets";
 import { tryAutoUpgradeSpiritArrayIfPref } from "../systems/spiritArray";
 import { tryAutoPullBattleSkillsIfPref } from "../systems/battleSkills";
 import { tryAutoBuyDaoMeridianIfPref } from "../systems/daoMeridian";
+import { tryAutoUpgradeVeinsIfPref } from "../systems/veinCultivation";
 import {
   chooseOfflineAdventureOption,
   commitOfflineAdventureAutoReceipt,
@@ -497,6 +498,17 @@ function runCelestialStashProgressSmoke(): void {
   assert.equal(p1.purchased, 1);
 }
 
+function runVeinAutoUpgradeSmoke(): void {
+  const st = createInitialState();
+  st.spiritStones = "999999999";
+  st.daoEssence = 99999;
+  st.uiPrefs.autoUpgradeVein = false;
+  assert.equal(tryAutoUpgradeVeinsIfPref(st), 0);
+  st.uiPrefs.autoUpgradeVein = true;
+  const n = tryAutoUpgradeVeinsIfPref(st);
+  assert.ok(n >= 1, "auto vein upgrade should succeed at least once when resourced");
+}
+
 function runDaoMeridianAutoBuySmoke(): void {
   const st = createInitialState();
   st.daoEssence = 300;
@@ -649,6 +661,7 @@ function main(): void {
   runSpiritArrayAutoUpgradeSmoke();
   runBattleSkillAutoPullSmoke();
   runDaoMeridianAutoBuySmoke();
+  runVeinAutoUpgradeSmoke();
   runWeeklyBountyAutoClaimSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console

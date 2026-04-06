@@ -63,6 +63,7 @@ import {
 import { describeInGameUi, onGachaPulls, essenceIncomePerSecondFromResonance } from "./dailyRewards";
 import {
   buyVeinUpgrade,
+  tryAutoUpgradeVeinsIfPref,
   gongMingUpgradeCost,
   guYuanUpgradeCost,
   huiLingUpgradeCost,
@@ -179,6 +180,7 @@ import {
   UI_DATA_EXPORT_DECO,
   UI_DATA_STATS_DOWNLOAD_DECO,
   UI_VEIN_GONGMING_LINK,
+  UI_VEIN_AUTO_UPGRADE,
   UI_BOUNTY_CLAIM_BURST,
   UI_BOUNTY_CLAIM_ECHO_BADGE,
   UI_OFFLINE_IDLE_BADGE,
@@ -896,6 +898,8 @@ const BATTLE_SKILL_AUTO_TOAST_GAP_MS = 5500;
 let lastBattleSkillAutoToastAtMs = 0;
 const DAO_MERIDIAN_AUTO_TOAST_GAP_MS = 5500;
 let lastDaoMeridianAutoToastAtMs = 0;
+const VEIN_AUTO_TOAST_GAP_MS = 5500;
+let lastVeinAutoToastAtMs = 0;
 let lastCombatPower = 0;
 const COMBAT_POWER_POPUP_DURATION_MS = 1000;
 const COMBAT_POWER_POPUP_HOLD_MS = 520;
@@ -3851,6 +3855,11 @@ function renderVeinPage(): string {
         · 每秒灵石 <strong id="vein-preview-ips">${fmtDecimal(ipsNow)}</strong>
       </p>
       <p class="hint sm vein-res-readout"><img src="${UI_VEIN_GONGMING_LINK}" alt="" width="14" height="14" class="vein-gm-deco" /> 共鸣乘区 ×<span id="vein-live-gongming">${gmMult.toFixed(3)}</span> · 聚灵共鸣 / 幻域唤灵髓（与法篆、词条等叠乘）</p>
+      <label class="vein-auto-upgrade-row">
+        <input type="checkbox" id="chk-vein-auto-upgrade" data-ui-pref="autoUpgradeVein" ${state.uiPrefs.autoUpgradeVein ? "checked" : ""} />
+        <img class="vein-auto-upgrade-ico" src="${UI_VEIN_AUTO_UPGRADE}" alt="" width="18" height="18" loading="lazy" />
+        <span class="vein-auto-upgrade-text">主循环自动强化（顺序：汇灵→灵息→共鸣→固元，多轮直至买不起）</span>
+      </label>
       <div class="vein-grid">${grid}</div>
     </section>${renderPrivilegePanel(u)}
   `;
@@ -4233,6 +4242,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoUpgradeSpiritArray") state.uiPrefs.autoUpgradeSpiritArray = checked;
       else if (t === "autoPullBattleSkill") state.uiPrefs.autoPullBattleSkill = checked;
       else if (t === "autoBuyDaoMeridian") state.uiPrefs.autoBuyDaoMeridian = checked;
+      else if (t === "autoUpgradeVein") state.uiPrefs.autoUpgradeVein = checked;
       else return;
       saveGame(state);
       render();
@@ -5618,6 +5628,23 @@ function loop(): void {
       }
     }
   }
+  if (typeof document !== "undefined" && state.uiPrefs.autoUpgradeVein && uLoop.tabVein) {
+    const veinUps = tryAutoUpgradeVeinsIfPref(state);
+    if (veinUps > 0) {
+      tryCompleteAchievements(state);
+      requestSave("洞府蕴灵自动强化", true);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      if (now - lastVeinAutoToastAtMs >= VEIN_AUTO_TOAST_GAP_MS) {
+        lastVeinAutoToastAtMs = now;
+        toast(`洞府蕴灵已自动强化 ${veinUps} 次（资源不足或已满级则停）`);
+      }
+      if (activeHub === "estate" && estateSub === "vein") {
+        render();
+      }
+    }
+  }
   const autoSettledOfflineInLoop = maybeAutoSettleOfflineAdventure(now, "loop");
   const autoSettledEstateInLoop = maybeAutoSettleEstateCommission(now, "loop");
   if (autoSettledOfflineInLoop || autoSettledEstateInLoop) {
@@ -5754,6 +5781,8 @@ function loop(): void {
     updateEstateIdleLiveReadouts(now);
   }
   if (activeHub === "estate" && estateSub === "vein") {
+    const veinAutoChk = document.getElementById("chk-vein-auto-upgrade") as HTMLInputElement | null;
+    if (veinAutoChk) veinAutoChk.checked = state.uiPrefs.autoUpgradeVein;
     const ipsV = incomePerSecond(state, pool);
     const v = state.vein;
     const huiM = veinHuiLingMult(v.huiLing);

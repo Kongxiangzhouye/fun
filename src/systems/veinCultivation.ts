@@ -82,6 +82,29 @@ export function buyVeinUpgrade(state: GameState, kind: VeinKind): boolean {
   return true;
 }
 
+const VEIN_AUTO_ORDER: VeinKind[] = ["huiLing", "lingXi", "gongMing", "guYuan"];
+
+/**
+ * 主循环：`uiPrefs.autoUpgradeVein` 时多轮按固定顺序尝试 `buyVeinUpgrade`，
+ * 每轮四条各试一次；任一轮全无进展则停止。返回本轮累计成功次数。
+ */
+export function tryAutoUpgradeVeinsIfPref(state: GameState): number {
+  if (!state.uiPrefs.autoUpgradeVein) return 0;
+  let total = 0;
+  let roundGuard = 0;
+  while (roundGuard++ < 400) {
+    let progressed = false;
+    for (const k of VEIN_AUTO_ORDER) {
+      if (buyVeinUpgrade(state, k)) {
+        total += 1;
+        progressed = true;
+      }
+    }
+    if (!progressed) break;
+  }
+  return total;
+}
+
 export const VEIN_TITLES: Record<VeinKind, string> = {
   huiLing: "汇灵",
   guYuan: "固元",

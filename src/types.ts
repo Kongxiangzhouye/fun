@@ -473,6 +473,8 @@ export interface UiPrefs {
   autoPullBattleSkill: boolean;
   /** 道韵灵窍：道韵足够时自动贯通下一层直至买不起或满层（需已解锁灵窍页） */
   autoBuyDaoMeridian: boolean;
+  /** 洞府蕴灵：按汇灵→灵息→共鸣→固元顺序轮询，能升则升直至本轮无进展（需已解锁灵脉页） */
+  autoUpgradeVein: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

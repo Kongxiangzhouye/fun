@@ -3502,6 +3502,36 @@ h1 {
   gap: 10px;
 }
 
+.vein-auto-upgrade-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(100, 150, 180, 0.38);
+  background: rgba(12, 22, 32, 0.52);
+  cursor: pointer;
+  user-select: none;
+}
+
+.vein-auto-upgrade-row input {
+  margin-top: 3px;
+  accent-color: #7eb8d0;
+}
+
+.vein-auto-upgrade-ico {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.92;
+}
+
+.vein-auto-upgrade-text {
+  font-size: 0.82rem;
+  color: #b8d0e8;
+  line-height: 1.45;
+}
+
 .vein-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
