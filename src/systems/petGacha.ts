@@ -1,8 +1,9 @@
 import type { GameState, PetId, Rarity } from "../types";
 import { nextRand01 } from "../rng";
-import { RARITY_ORDER_ASC, rarityRank } from "../data/rarityRank";
+import { rarityRank } from "../data/rarityRank";
 import { PET_DEFS } from "../data/pets";
 import { PET_PULL_COST, addPetXp, petSystemUnlocked } from "./pets";
+import { pickRarityByWeights01 } from "./rarityDraw";
 
 const RARITY_WEIGHT: Record<Rarity, number> = {
   N: 380,
@@ -21,14 +22,7 @@ const PET_POOL_BY_RARITY: Record<Rarity, typeof PET_DEFS> = {
 };
 
 function pickPetRarity(state: GameState): Rarity {
-  const w = RARITY_WEIGHT;
-  const total = w.N + w.R + w.SR + w.SSR + w.UR;
-  let r = nextRand01(state) * total;
-  for (const ra of RARITY_ORDER_ASC) {
-    r -= w[ra];
-    if (r < 0) return ra;
-  }
-  return "UR";
+  return pickRarityByWeights01(RARITY_WEIGHT, nextRand01(state));
 }
 
 export function pullPet(state: GameState): {

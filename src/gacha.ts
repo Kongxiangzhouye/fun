@@ -250,14 +250,14 @@ export function gearSrPityRemaining(state: GameState): number {
 
 /** 保底触发时在 SR/SSR/UR 间加权（与灵卡高稀有权重比例相近） */
 function pickPityGearRarity(state: GameState): Rarity {
-  const wSr = 120;
-  const wSsr = 68;
-  const wUr = 12;
-  const t = wSr + wSsr + wUr;
-  let r = nextRand01(state) * t;
-  r -= wUr;
-  if (r <= 0) return "UR";
-  r -= wSsr;
-  if (r <= 0) return "SSR";
-  return "SR";
+  return pickRarityByWeights01(
+    {
+      N: 0,
+      R: 0,
+      SR: 120,
+      SSR: 68,
+      UR: 12,
+    },
+    nextRand01(state),
+  );
 }
