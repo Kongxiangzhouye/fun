@@ -1,0 +1,19 @@
+/** 幻域备战、阵线对决、模式选择与进离本按钮等装饰（`public/assets/ui/`） */
+export const DUNGEON_DUEL_UI_FILES = {
+  readinessDeco: "deco-dungeon-readiness-ribbon.svg",
+  affixDeco: "deco-dungeon-affix.svg",
+  duelDeco: "deco-dungeon-duel.svg",
+  gaugeSword: "deco-duel-gauge-sword.svg",
+  gaugeThreat: "deco-duel-gauge-threat.svg",
+  idleMist: "deco-dungeon-idle-mist.svg",
+  waveBadge: "deco-duel-wave-badge.svg",
+  frameCorner: "deco-duel-corner.svg",
+  interWaveDeco: "deco-dungeon-inter-wave.svg",
+  footTimerDeco: "deco-dungeon-foot-timer.svg",
+  panelLiveStrip: "deco-dungeon-panel-live.svg",
+  enterDeco: "deco-dungeon-enter-btn.svg",
+  leaveDeco: "deco-dungeon-leave-btn.svg",
+  bossBadge: "deco-duel-boss-badge.svg",
+  realmClassic: "deco-dungeon-realm-classic.svg",
+  realmVortex: "deco-dungeon-realm-vortex.svg",
+} as const;

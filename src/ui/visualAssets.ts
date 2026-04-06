@@ -14,7 +14,9 @@ import { ELEMENT_UI_FILES } from "../data/elementUi";
 import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
 import { GEAR_SLOT_UI_FILES } from "../data/gearSlotUi";
 import { GEAR_BASES } from "../data/gearBases";
+import { DUNGEON_DUEL_UI_FILES } from "../data/dungeonDuelUi";
 import { GEAR_INVENTORY_UI_FILES } from "../data/gearInventoryUi";
+import { HUB_VEIN_FLAIR_UI_FILES } from "../data/hubVeinFlairUi";
 import { PET_DEFS } from "../data/pets";
 import { GARDEN_CROPS } from "../systems/spiritGarden";
 
@@ -131,42 +133,42 @@ export const UI_BOUNTY_TUNA_DECO = asset(WEEKLY_BOUNTY_UI_FILES.tuna);
 export const UI_BOUNTY_REALM_DECO = asset(WEEKLY_BOUNTY_UI_FILES.realm);
 /** 周常悬赏 · 一键领取按钮内图标 */
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset(WEEKLY_BOUNTY_UI_FILES.claimAll);
-/** 养成二级导航 · 分组标题前小徽记 */
-export const UI_HUB_SECTION_FLAIR = asset("hub-section-flair.svg");
+/** 养成二级导航 · 分组标题前小徽记；与 `HUB_VEIN_FLAIR_UI_FILES` 同源 */
+export const UI_HUB_SECTION_FLAIR = asset(HUB_VEIN_FLAIR_UI_FILES.hubSectionFlair);
 /** 洞府蕴灵 · 共鸣乘区说明行左侧小标（双环链意象） */
-export const UI_VEIN_GONGMING_LINK = asset("deco-vein-gongming-link.svg");
-/** 幻域备战条左侧装饰 */
-export const UI_DUNGEON_READINESS_DECO = asset("deco-dungeon-readiness-ribbon.svg");
+export const UI_VEIN_GONGMING_LINK = asset(HUB_VEIN_FLAIR_UI_FILES.veinGongmingLink);
+/** 幻域备战条左侧装饰；与 `DUNGEON_DUEL_UI_FILES` 同源 */
+export const UI_DUNGEON_READINESS_DECO = asset(DUNGEON_DUEL_UI_FILES.readinessDeco);
 /** 幻域周常词缀条左侧装饰 */
-export const UI_DUNGEON_AFFIX_DECO = asset("deco-dungeon-affix.svg");
+export const UI_DUNGEON_AFFIX_DECO = asset(DUNGEON_DUEL_UI_FILES.affixDeco);
 /** 幻域·阵线对决舞台中央装饰 */
-export const UI_DUNGEON_DUEL_DECO = asset("deco-dungeon-duel.svg");
+export const UI_DUNGEON_DUEL_DECO = asset(DUNGEON_DUEL_UI_FILES.duelDeco);
 /** 阵线对决 · 剑气读条旁小标 */
-export const UI_DUEL_GAUGE_SWORD = asset("deco-duel-gauge-sword.svg");
+export const UI_DUEL_GAUGE_SWORD = asset(DUNGEON_DUEL_UI_FILES.gaugeSword);
 /** 阵线对决 · 凶煞读条旁小标 */
-export const UI_DUEL_GAUGE_THREAT = asset("deco-duel-gauge-threat.svg");
+export const UI_DUEL_GAUGE_THREAT = asset(DUNGEON_DUEL_UI_FILES.gaugeThreat);
 /** 幻域未进本 · 预览区灵雾装饰（叠于格线之上） */
-export const UI_DUNGEON_IDLE_MIST = asset("deco-dungeon-idle-mist.svg");
+export const UI_DUNGEON_IDLE_MIST = asset(DUNGEON_DUEL_UI_FILES.idleMist);
 /** 阵线对决 · 波次徽章旁小标 */
-export const UI_DUEL_WAVE_BADGE = asset("deco-duel-wave-badge.svg");
+export const UI_DUEL_WAVE_BADGE = asset(DUNGEON_DUEL_UI_FILES.waveBadge);
 /** 阵线对决 · 地图四角装饰（同一素材旋转/镜像） */
-export const UI_DUEL_FRAME_CORNER = asset("deco-duel-corner.svg");
+export const UI_DUEL_FRAME_CORNER = asset(DUNGEON_DUEL_UI_FILES.frameCorner);
 /** 幻域 · 关间休整画面中央意象 */
-export const UI_DUNGEON_INTER_WAVE_DECO = asset("deco-dungeon-inter-wave.svg");
+export const UI_DUNGEON_INTER_WAVE_DECO = asset(DUNGEON_DUEL_UI_FILES.interWaveDeco);
 /** 幻域底部栏 · 本局用时旁小标 */
-export const UI_DUNGEON_FOOT_TIMER_DECO = asset("deco-dungeon-foot-timer.svg");
+export const UI_DUNGEON_FOOT_TIMER_DECO = asset(DUNGEON_DUEL_UI_FILES.footTimerDeco);
 /** 幻域面板 · 进本进行中顶缘装饰条（CSS 平铺） */
-export const UI_DUNGEON_PANEL_LIVE_STRIP = asset("deco-dungeon-panel-live.svg");
+export const UI_DUNGEON_PANEL_LIVE_STRIP = asset(DUNGEON_DUEL_UI_FILES.panelLiveStrip);
 /** 幻域 · 进入副本主按钮内图标 */
-export const UI_DUNGEON_ENTER_DECO = asset("deco-dungeon-enter-btn.svg");
+export const UI_DUNGEON_ENTER_DECO = asset(DUNGEON_DUEL_UI_FILES.enterDeco);
 /** 幻域 · 暂离（战斗中/休整）按钮内图标 */
-export const UI_DUNGEON_LEAVE_DECO = asset("deco-dungeon-leave-btn.svg");
+export const UI_DUNGEON_LEAVE_DECO = asset(DUNGEON_DUEL_UI_FILES.leaveDeco);
 /** 阵线对决 · 首领名条旁徽记 */
-export const UI_DUEL_BOSS_BADGE = asset("deco-duel-boss-badge.svg");
+export const UI_DUEL_BOSS_BADGE = asset(DUNGEON_DUEL_UI_FILES.bossBadge);
 /** 经典幻域模式单选项图标 */
-export const UI_DUNGEON_REALM_CLASSIC = asset("deco-dungeon-realm-classic.svg");
+export const UI_DUNGEON_REALM_CLASSIC = asset(DUNGEON_DUEL_UI_FILES.realmClassic);
 /** 星漩乱域模式单选项图标 */
-export const UI_DUNGEON_REALM_VORTEX = asset("deco-dungeon-realm-vortex.svg");
+export const UI_DUNGEON_REALM_VORTEX = asset(DUNGEON_DUEL_UI_FILES.realmVortex);
 /** 道韵灵窍页标题装饰 */
 export const UI_HEAD_DAO_MERIDIAN = asset("deco-dao-meridian.svg");
 /** 唤灵通鉴页标题 */
