@@ -178,6 +178,7 @@ import {
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
   UI_DATA_OVERVIEW_ACH_RIBBON,
+  UI_DATA_OVERVIEW_TRAINING_FLAIR,
   UI_SOUND_PREFS_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
@@ -2972,6 +2973,11 @@ function buildDataOverviewExportText(st: GameState): string {
     `首领击败累计: ${lt.dungeonBossKills}`,
     `翻滚闪避累计: ${lt.dungeonRollDodges}`,
     "",
+    "[灵脉修炼]",
+    `吐纳成功累计: ${lt.tunaCompletions}`,
+    `焚天成功累计: ${lt.fenTianBursts}`,
+    `闭关时间推进累计: ${lt.biGuanCompletions}`,
+    "",
     "[终身累计]",
     `累计消耗道韵: ${lt.daoEssenceSpentLifetime}`,
     `累计消耗唤灵髓: ${lt.summonEssenceSpentLifetime}`,
@@ -2987,7 +2993,6 @@ function buildDataOverviewExportText(st: GameState): string {
     `离线灵石回补结算累计: ${lt.offlineStoneSettlements}`,
     `灵潮时辰进入次数: ${lt.spiritTideHours}`,
     `纳灵阵图绘阵累计: ${lt.spiritArrayUpgrades}`,
-    `闭关时间推进累计: ${lt.biGuanCompletions}`,
     `铸灵累计次数: ${lt.gearForgesTotal}`,
     `历史最高铸灵稀有度: ${rarityPeak}`,
     `周常悬赏单周清满次数: ${lt.weeklyBountyFullWeeks}`,
@@ -3079,6 +3084,18 @@ function renderDataOverviewPanel(): string {
     </div>
 
     <div class="data-overview-section">
+      <h3 class="data-overview-h3--training">
+        <img class="data-overview-training-flair" src="${UI_DATA_OVERVIEW_TRAINING_FLAIR}" alt="" width="22" height="22" loading="lazy" />
+        灵脉修炼
+      </h3>
+      <div class="data-overview-grid">
+        <div class="data-overview-cell"><span class="d-label">吐纳成功累计</span><strong class="d-val" id="data-overview-lt-tuna">${lt.tunaCompletions}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">焚天成功累计</span><strong class="d-val" id="data-overview-lt-fentian">${lt.fenTianBursts}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">闭关时间推进累计</span><strong class="d-val" id="data-overview-lt-bi-guan">${lt.biGuanCompletions}</strong></div>
+      </div>
+    </div>
+
+    <div class="data-overview-section">
       <h3>终身累计</h3>
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">累计消耗道韵</span><strong class="d-val" id="data-overview-lt-dao-spent">${lt.daoEssenceSpentLifetime}</strong></div>
@@ -3095,7 +3112,6 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">离线灵石回补结算累计</span><strong class="d-val" id="data-overview-lt-offline-settle">${lt.offlineStoneSettlements}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵潮时辰进入次数</span><strong class="d-val" id="data-overview-lt-spirit-tide">${lt.spiritTideHours}</strong></div>
         <div class="data-overview-cell"><span class="d-label">纳灵阵图绘阵累计</span><strong class="d-val" id="data-overview-lt-spirit-array">${lt.spiritArrayUpgrades}</strong></div>
-        <div class="data-overview-cell"><span class="d-label">闭关时间推进累计</span><strong class="d-val" id="data-overview-lt-bi-guan">${lt.biGuanCompletions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">铸灵累计次数</span><strong class="d-val" id="data-overview-lt-forge">${lt.gearForgesTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历史最高铸灵稀有度</span><strong class="d-val" id="data-overview-lt-rarity">${rarityPeak}</strong></div>
         <div class="data-overview-cell"><span class="d-label">周常悬赏单周清满次数</span><strong class="d-val" id="data-overview-lt-bounty-weeks">${lt.weeklyBountyFullWeeks}</strong></div>
@@ -3144,6 +3160,9 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-waves-cleared", String(d.totalWavesCleared));
   set("data-overview-lt-dungeon-boss", String(lt.dungeonBossKills));
   set("data-overview-lt-dungeon-roll", String(lt.dungeonRollDodges));
+  set("data-overview-lt-tuna", String(lt.tunaCompletions));
+  set("data-overview-lt-fentian", String(lt.fenTianBursts));
+  set("data-overview-lt-bi-guan", String(lt.biGuanCompletions));
   set("data-overview-lt-dao-spent", String(lt.daoEssenceSpentLifetime));
   set("data-overview-lt-summon-spent", String(lt.summonEssenceSpentLifetime));
   set("data-overview-lt-zhuling-spent", String(lt.zhuLingEssenceSpentLifetime));
@@ -3158,7 +3177,6 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-offline-settle", String(lt.offlineStoneSettlements));
   set("data-overview-lt-spirit-tide", String(lt.spiritTideHours));
   set("data-overview-lt-spirit-array", String(lt.spiritArrayUpgrades));
-  set("data-overview-lt-bi-guan", String(lt.biGuanCompletions));
   set("data-overview-lt-forge", String(lt.gearForgesTotal));
   const rarityPeak =
     lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length

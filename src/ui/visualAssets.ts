@@ -220,6 +220,8 @@ export const UI_UI_PREFS_DECO = asset(PLAYER_PROFILE_UI_FILES.uiPrefsDeco);
 export const UI_DATA_OVERVIEW_DECO = asset(PLAYER_PROFILE_UI_FILES.dataOverviewDeco);
 /** 数据总览 · 「成就」统计格左侧绶带小标 */
 export const UI_DATA_OVERVIEW_ACH_RIBBON = asset("data-overview-achievement-ribbon.svg");
+/** 数据总览 · 「灵脉修炼」分节标题旁装饰 */
+export const UI_DATA_OVERVIEW_TRAINING_FLAIR = asset("data-overview-training-flair.svg");
 /** 偏好设置 · 音频小节图标 */
 export const UI_SOUND_PREFS_DECO = asset(PLAYER_PROFILE_UI_FILES.soundPrefsDeco);
 /** 存档管理 · 多存档位区块图标 */

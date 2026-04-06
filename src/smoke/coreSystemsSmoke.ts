@@ -679,6 +679,9 @@ function runFenTianBurstAchievementsSmoke(): void {
   st.lifetimeStats.fenTianBursts = 150;
   const b = tryCompleteAchievements(st);
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
+  st.lifetimeStats.fenTianBursts = 400;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "fen_tian_bursts_400"), "400 fen tian should unlock");
 }
 
 function runBiGuanAchievementsSmoke(): void {
@@ -690,6 +693,9 @@ function runBiGuanAchievementsSmoke(): void {
   st.lifetimeStats.biGuanCompletions = 40;
   const b = tryCompleteAchievements(st);
   assert.ok(b.some((x) => x.id === "bi_guan_completions_40"));
+  st.lifetimeStats.biGuanCompletions = 100;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "bi_guan_completions_100"));
 }
 
 function runDungeonBossKillAchievementsSmoke(): void {
@@ -1135,6 +1141,9 @@ function runTunaCompletionAchievementsSmoke(): void {
   st.lifetimeStats.tunaCompletions = 300;
   const b = tryCompleteAchievements(st);
   assert.ok(b.some((x) => x.id === "tuna_completions_300"), "300 tuna should unlock");
+  st.lifetimeStats.tunaCompletions = 900;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "tuna_completions_900"), "900 tuna should unlock");
 }
 
 function runResonancePayoutAchievementsSmoke(): void {

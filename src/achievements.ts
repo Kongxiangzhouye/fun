@@ -568,6 +568,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "train",
   },
   {
+    id: "tuna_completions_900",
+    title: "息涌九重",
+    desc: "吐纳成功累计 900 次",
+    rewardStones: 3200,
+    rewardEssence: 95,
+    listDeco: "train",
+  },
+  {
     id: "fen_tian_bursts_15",
     title: "焚天初焰",
     desc: "焚天成功累计 15 次",
@@ -584,6 +592,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "realm",
   },
   {
+    id: "fen_tian_bursts_400",
+    title: "焚天烬野",
+    desc: "焚天成功累计 400 次",
+    rewardStones: 6800,
+    rewardEssence: 115,
+    listDeco: "realm",
+  },
+  {
     id: "bi_guan_completions_8",
     title: "纪行初启",
     desc: "闭关「时间推进」成功累计 8 次",
@@ -597,6 +613,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "闭关「时间推进」成功累计 40 次",
     rewardStones: 1600,
     rewardEssence: 42,
+    listDeco: "train",
+  },
+  {
+    id: "bi_guan_completions_100",
+    title: "纪行百章",
+    desc: "闭关「时间推进」成功累计 100 次",
+    rewardStones: 5200,
+    rewardEssence: 98,
     listDeco: "train",
   },
   {
@@ -1521,14 +1545,20 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.tunaCompletions ?? 0) >= 30;
     case "tuna_completions_300":
       return (state.lifetimeStats?.tunaCompletions ?? 0) >= 300;
+    case "tuna_completions_900":
+      return (state.lifetimeStats?.tunaCompletions ?? 0) >= 900;
     case "fen_tian_bursts_15":
       return (state.lifetimeStats?.fenTianBursts ?? 0) >= 15;
     case "fen_tian_bursts_150":
       return (state.lifetimeStats?.fenTianBursts ?? 0) >= 150;
+    case "fen_tian_bursts_400":
+      return (state.lifetimeStats?.fenTianBursts ?? 0) >= 400;
     case "bi_guan_completions_8":
       return (state.lifetimeStats?.biGuanCompletions ?? 0) >= 8;
     case "bi_guan_completions_40":
       return (state.lifetimeStats?.biGuanCompletions ?? 0) >= 40;
+    case "bi_guan_completions_100":
+      return (state.lifetimeStats?.biGuanCompletions ?? 0) >= 100;
     case "estate_commissions_20":
       return (state.lifetimeStats?.estateCommissionCompletions ?? 0) >= 20;
     case "estate_commissions_120":
