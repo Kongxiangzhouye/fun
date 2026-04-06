@@ -1,4 +1,4 @@
-/** 幻域备战、阵线对决、模式选择与进离本按钮等装饰（`public/assets/ui/`，含命中/暴击/弱点/阶段反馈位；2026-04-06 P1 二次打磨 hitConfirmRing + weaknessPing） */
+/** 幻域备战、阵线对决、模式选择与进离本按钮等装饰（`public/assets/ui/`，含命中/暴击/弱点/阶段反馈位；2026-04-06 P1 三次打磨 weaknessPing） */
 export const DUNGEON_DUEL_UI_FILES = {
   readinessDeco: "deco-dungeon-readiness-ribbon.svg",
   affixDeco: "deco-dungeon-affix.svg",

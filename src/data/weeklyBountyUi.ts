@@ -1,4 +1,4 @@
-/** 周常悬赏装饰与反馈徽记（`public/assets/ui/`） */
+/** 周常悬赏装饰与反馈徽记（`public/assets/ui/`，2026-04-06 P1 识别度打磨：wavesFocusBadge） */
 export const WEEKLY_BOUNTY_UI_FILES = {
   forge: "bounty-forge-deco.svg",
   waves: "bounty-waves-deco.svg",

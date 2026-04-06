@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "naming": "Filenames from WEEKLY_BOUNTY_UI_FILES in src/data/weeklyBountyUi.ts; served as public/assets/ui/<file>.",
+  "naming": "Filenames from WEEKLY_BOUNTY_UI_FILES in src/data/weeklyBountyUi.ts; served as public/assets/ui/<file>. 2026-04-06 P1 pass-2 polish: wavesFocusBadge readability.",
   "assets": [
     { "id": "forge", "file": "bounty-forge-deco.svg" },
     { "id": "waves", "file": "bounty-waves-deco.svg" },

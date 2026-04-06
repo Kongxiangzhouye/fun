@@ -207,7 +207,7 @@ export const UI_DUNGEON_PHASE_BOSS_PREP_BADGE_DECO = asset(DUNGEON_DUEL_UI_FILES
 export const UI_DUNGEON_COUNTER_WINDOW_BADGE_DECO = asset(DUNGEON_DUEL_UI_FILES.counterWindowBadgeDeco);
 /** 阵线对决 · 招架成功火花反馈（近战高频防反阶段） */
 export const UI_DUNGEON_PARRY_SPARK_DECO = asset(DUNGEON_DUEL_UI_FILES.parrySparkDeco, UI_DUNGEON_DUEL_DECO);
-/** 阵线对决 · 弱点命中提示反馈（高压窗口弱点确认，2026-04-06 P1 二次打磨） */
+/** 阵线对决 · 弱点命中提示反馈（高压窗口弱点确认，2026-04-06 P1 三次打磨） */
 export const UI_DUNGEON_WEAKNESS_PING_DECO = asset(
   DUNGEON_DUEL_UI_FILES.weaknessPingDeco,
   UI_DUNGEON_DUEL_DECO,

@@ -8,6 +8,10 @@ const allowedAssetExt = new Set([".svg", ".png", ".jpg", ".jpeg", ".webp"]);
 const nameRegex = /^[a-z0-9]+(?:[-_][a-z0-9]+)*\.(svg|png|jpg|jpeg|webp)$/;
 const preferredAssetArrayKeys = ["assets", "items", "entries", "icons", "files", "list"];
 const REQUIRED_DUNGEON_PHASE_BADGE_IDS = new Set(["phaseTrashBadgeDeco", "phaseBossPrepBadgeDeco"]);
+const MANIFEST_ID_SOURCE_MAP = new Map([
+  ["weekly-bounty-ui-manifest.json", { file: "src/data/weeklyBountyUi.ts", constName: "WEEKLY_BOUNTY_UI_FILES" }],
+  ["dungeon-duel-ui-manifest.json", { file: "src/data/dungeonDuelUi.ts", constName: "DUNGEON_DUEL_UI_FILES" }],
+]);
 
 /** @param {string} p */
 function readJson(p) {
@@ -63,6 +67,27 @@ function selectAssetArray(manifest) {
   if (fileArray) return { key: fileArray[0], assets: /** @type {unknown[]} */ (fileArray[1]) };
   if (entries.length === 1) return { key: entries[0][0], assets: /** @type {unknown[]} */ (entries[0][1]) };
   return null;
+}
+
+/**
+ * @param {string} sourcePath
+ * @param {string} constName
+ */
+function readConstObjectKeys(sourcePath, constName) {
+  const text = fs.readFileSync(sourcePath, "utf8");
+  const constIdx = text.indexOf(`const ${constName}`);
+  if (constIdx < 0) return null;
+  const braceStart = text.indexOf("{", constIdx);
+  if (braceStart < 0) return null;
+  const asConstMarker = text.indexOf("} as const", braceStart);
+  if (asConstMarker < 0) return null;
+  const block = text.slice(braceStart + 1, asConstMarker);
+  const keys = [];
+  for (const line of block.split(/\r?\n/)) {
+    const hit = line.match(/^\s*([A-Za-z0-9_]+)\s*:/);
+    if (hit) keys.push(hit[1]);
+  }
+  return keys;
 }
 
 if (!fs.existsSync(indexFile)) {
@@ -150,6 +175,32 @@ for (const manifestName of indexManifestFiles) {
     for (const reqId of REQUIRED_DUNGEON_PHASE_BADGE_IDS) {
       if (!manifestAssetIds.has(reqId)) {
         errors.push(`Missing required dungeon phase badge id in ${rel(manifestPath)} -> ${assetsKey}: ${reqId}`);
+      }
+    }
+  }
+  const manifestIdSource = MANIFEST_ID_SOURCE_MAP.get(manifestName);
+  if (manifestIdSource) {
+    const sourcePath = path.resolve(repoRoot, manifestIdSource.file);
+    if (!fs.existsSync(sourcePath)) {
+      errors.push(`Missing id source file for ${manifestName}: ${rel(sourcePath)}`);
+    } else {
+      const sourceKeys = readConstObjectKeys(sourcePath, manifestIdSource.constName);
+      if (!sourceKeys || sourceKeys.length === 0) {
+        errors.push(
+          `Failed to read source keys from ${rel(sourcePath)} (const ${manifestIdSource.constName}) for ${manifestName}`,
+        );
+      } else {
+        const sourceSet = new Set(sourceKeys);
+        for (const sourceId of sourceSet) {
+          if (!ids.has(sourceId)) {
+            errors.push(`Manifest missing id from source map (${manifestName}): ${sourceId}`);
+          }
+        }
+        for (const manifestId of ids) {
+          if (!sourceSet.has(manifestId)) {
+            errors.push(`Source map missing id from manifest (${manifestName}): ${manifestId}`);
+          }
+        }
       }
     }
   }

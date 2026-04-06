@@ -3,6 +3,15 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "UI manifest closure + combat readability touch-up (Module 4)",
+      "highlights": [
+        "Polished weekly waves-focus badge SVG to improve high-frequency weekly target recognition in repeated bounty loops.",
+        "Polished dungeon weakness-ping SVG (ring layering + diagonal cues) to strengthen weak-point confirmation under dense FX overlap.",
+        "Added validator gate to compare weekly/dungeon manifest ids against src/data source maps for stricter asset-index consistency."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Weekly + dungeon feedback badge closure (Module 3)",
       "highlights": [
         "Added weekly last-day-alert badge SVG to improve end-of-week high-frequency claim/finish urgency recognition.",
