@@ -179,6 +179,7 @@ import {
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
   UI_META_AUTO_BUY,
+  UI_META_LIFE_PEAK,
   UI_DATA_EXPORT_DECO,
   UI_DATA_STATS_DOWNLOAD_DECO,
   UI_VEIN_GONGMING_LINK,
@@ -1529,6 +1530,21 @@ function fmtPlaytimeSec(sec: number): string {
   const d = Math.floor(h / 24);
   const rh = h % 24;
   return `${d} 天 ${rh} 小时`;
+}
+
+/** 心斋卦象：按乘区相对 1 的偏差着色 */
+function fortuneMultPillClass(mult: number): string {
+  const d = mult - 1;
+  if (d > 0.002) return "daily-fortune-pill daily-fortune-pill--up";
+  if (d < -0.002) return "daily-fortune-pill daily-fortune-pill--down";
+  return "daily-fortune-pill daily-fortune-pill--flat";
+}
+
+function formatFortuneDeltaPct(mult: number): string {
+  const pct = (mult - 1) * 100;
+  if (Math.abs(pct) < 0.05) return "持平";
+  const sign = pct > 0 ? "+" : "";
+  return `${sign}${pct.toFixed(1)}%`;
 }
 
 function renderPlayerStatsBlock(st: GameState): string {
@@ -3353,8 +3369,8 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       <h3 class="daily-fortune-name" id="daily-fortune-title">${fd.title}</h3>
       <p class="hint daily-fortune-desc" id="daily-fortune-desc">${fd.desc}</p>
       <ul class="daily-fortune-bonuses">
-        <li>灵石收益 <strong id="daily-fortune-stone">+${((fd.stoneMult - 1) * 100).toFixed(1)}%</strong></li>
-        <li>幻域伤害期望 <strong id="daily-fortune-dungeon">+${((fd.dungeonMult - 1) * 100).toFixed(1)}%</strong></li>
+        <li><span class="${fortuneMultPillClass(fd.stoneMult)}" id="daily-fortune-stone-pill"><span class="daily-fortune-pill-lbl">灵石收益</span> <strong id="daily-fortune-stone">${formatFortuneDeltaPct(fd.stoneMult)}</strong></span></li>
+        <li><span class="${fortuneMultPillClass(fd.dungeonMult)}" id="daily-fortune-dungeon-pill"><span class="daily-fortune-pill-lbl">幻域伤害期望</span> <strong id="daily-fortune-dungeon">${formatFortuneDeltaPct(fd.dungeonMult)}</strong></span></li>
       </ul>
       <p class="hint sm">每日按本地历更替；与存档灵识共同决定当日卦象。</p>
     </section>`
@@ -3947,6 +3963,10 @@ function renderMeta(): string {
   const daoB = daoEssenceGainBreakdown(state);
   const gain = daoB.total;
   const reinOk = canReincarnate(state);
+  const curStone = stones(state);
+  const peakStone = new Decimal(state.peakSpiritStonesThisLife || "0");
+  const peakOk = peakStone.gt(0);
+  const peakRecoverPct = peakOk ? Math.min(100, curStone.div(peakStone).mul(100).toNumber()) : 0;
   const kinds: (keyof GameState["meta"])[] = ["idleMult", "gachaLuck", "deckSlots", "ticketRegen", "stoneMult"];
   const titles: Record<keyof GameState["meta"], string> = {
     idleMult: "灵脉共鸣",
@@ -3985,6 +4005,21 @@ function renderMeta(): string {
       <h2>轮回</h2>
       <p>境界≥ <strong>${REINCARNATION_REALM_REQ}</strong> 可轮回：重置境界、灵石、卡组与持有卡；保留图鉴、成就与元强化。</p>
       <p class="hint">道韵依本轮灵石峰值等规则结算。</p>
+      <p class="hint sm meta-life-playtime-row">本世修行时长：<strong id="meta-life-playtime" class="meta-life-playtime-val">${fmtPlaytimeSec(state.lifePlaytimeSec)}</strong></p>
+      <div class="meta-peak-recovery${peakOk ? "" : " meta-peak-recovery--empty"}" role="region" aria-label="本轮灵石峰值恢复">
+        <div class="meta-peak-recovery__head">
+          <img class="meta-peak-recovery__ico" src="${UI_META_LIFE_PEAK}" alt="" width="22" height="22" loading="lazy" />
+          <span class="meta-peak-recovery__title">灵石峰值恢复</span>
+        </div>
+        <div class="meta-peak-recovery__bar-wrap${peakOk ? "" : " meta-peak-recovery__bar-wrap--empty"}" id="meta-peak-bar-wrap">
+          <div class="meta-peak-recovery__bar"><div class="meta-peak-recovery__fill" id="meta-peak-bar-fill" style="width:${peakRecoverPct}%"></div></div>
+        </div>
+        <p class="hint sm meta-peak-recovery__readout" id="meta-peak-readout">${
+          peakOk
+            ? `当前 ${fmtDecimal(curStone)} / 峰值 ${fmtDecimal(peakStone)} · 约 ${peakRecoverPct.toFixed(1)}%`
+            : "尚无峰值记录；获得灵石后将开始累计峰值。"
+        }</p>
+      </div>
       <p class="hint meta-dao-gain-line">预计本次可获得道韵：<strong>${fmt(gain)}</strong></p>
       <div class="meta-dao-breakdown offline-control-surface" role="note">
         <div class="meta-dao-breakdown__head">
@@ -5316,6 +5351,38 @@ function updateTopResourcePillsAndVigor(pool: number): void {
   }
 }
 
+/** 养成·轮回页：道韵预估、峰值条与本世时长（仅在该子页时 DOM 存在） */
+function updateMetaPanelLiveReadouts(): void {
+  const daoB = daoEssenceGainBreakdown(state);
+  const elGain = document.querySelector(".meta-dao-gain-line strong");
+  if (elGain) elGain.textContent = fmt(daoB.total);
+  const elBreak = document.querySelector(".meta-dao-breakdown__body") as HTMLElement | null;
+  if (elBreak) {
+    elBreak.innerHTML = `灵石峰值项 <strong>${daoB.peakLogPart}</strong>
+          · 持有卡 <strong>${daoB.ownedCardCount}</strong> 张 → 加成 <strong>${daoB.cardBonus}</strong>
+          · 保底 <strong>${daoB.floorMin}</strong>
+          → 合计 <strong>${fmt(daoB.total)}</strong>`;
+  }
+  const elLife = document.getElementById("meta-life-playtime");
+  if (elLife) elLife.textContent = fmtPlaytimeSec(state.lifePlaytimeSec);
+  const cur = stones(state);
+  const peak = new Decimal(state.peakSpiritStonesThisLife || "0");
+  const peakOk = peak.gt(0);
+  const pct = peakOk ? Math.min(100, cur.div(peak).mul(100).toNumber()) : 0;
+  const fill = document.getElementById("meta-peak-bar-fill") as HTMLElement | null;
+  const readout = document.getElementById("meta-peak-readout");
+  const wrap = document.getElementById("meta-peak-bar-wrap");
+  const root = document.querySelector(".meta-peak-recovery");
+  if (fill) fill.style.width = `${pct}%`;
+  if (readout) {
+    readout.textContent = peakOk
+      ? `当前 ${fmtDecimal(cur)} / 峰值 ${fmtDecimal(peak)} · 约 ${pct.toFixed(1)}%`
+      : "尚无峰值记录；获得灵石后将开始累计峰值。";
+  }
+  if (wrap) wrap.classList.toggle("meta-peak-recovery__bar-wrap--empty", !peakOk);
+  if (root) root.classList.toggle("meta-peak-recovery--empty", !peakOk);
+}
+
 /** 灵府·灵脉页实时数字与吐纳/闭关条（仅在该子页时 DOM 存在） */
 function updateEstateIdleLiveReadouts(now: number): void {
   const pool = totalCardsInPool();
@@ -5407,10 +5474,14 @@ function updateEstateIdleLiveReadouts(now: number): void {
       const dEl = document.getElementById("daily-fortune-desc");
       const sEl = document.getElementById("daily-fortune-stone");
       const gEl = document.getElementById("daily-fortune-dungeon");
+      const sp = document.getElementById("daily-fortune-stone-pill");
+      const dp = document.getElementById("daily-fortune-dungeon-pill");
       if (tEl) tEl.textContent = fd.title;
       if (dEl) dEl.textContent = fd.desc;
-      if (sEl) sEl.textContent = `+${((fd.stoneMult - 1) * 100).toFixed(1)}%`;
-      if (gEl) gEl.textContent = `+${((fd.dungeonMult - 1) * 100).toFixed(1)}%`;
+      if (sEl) sEl.textContent = formatFortuneDeltaPct(fd.stoneMult);
+      if (gEl) gEl.textContent = formatFortuneDeltaPct(fd.dungeonMult);
+      if (sp) sp.className = fortuneMultPillClass(fd.stoneMult);
+      if (dp) dp.className = fortuneMultPillClass(fd.dungeonMult);
     }
   }
   updateOfflineAdventurePanelReadouts(state, now, offlineBoostRenewRuleText, offlineResonanceTypeZh);
@@ -5877,6 +5948,9 @@ function loop(): void {
   }
   if (activeHub === "cultivate" && cultivateSub === "stash") {
     updateCelestialStashPanelReadouts(state, now);
+  }
+  if (activeHub === "cultivate" && cultivateSub === "meta") {
+    updateMetaPanelLiveReadouts();
   }
   if (getUiUnlocks(state).tabDungeon && state.dungeon.active) {
     const d = state.dungeon;

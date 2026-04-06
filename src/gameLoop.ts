@@ -134,6 +134,7 @@ export function applyTick(state: GameState, now: number): void {
     state.lastTick += dt * 1000;
     const tickNow = state.lastTick;
     state.playtimeSec += dt;
+    state.lifePlaytimeSec += dt;
     tickInGameClock(state, dt);
     tickWishResonancePassive(state, dt);
     tickSkillTraining(state, dt);
@@ -171,6 +172,7 @@ function applyOfflineLikeProgress(
   if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips.mul(mult));
   addStones(state, stoneGain);
   state.playtimeSec += dt;
+  state.lifePlaytimeSec += dt;
   tickInGameClock(state, dt);
   tickWishResonancePassive(state, dt, OFFLINE_RESONANCE_GAIN_MULT);
   tickSkillTraining(state, dt);

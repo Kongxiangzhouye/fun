@@ -10662,7 +10662,125 @@ p.gear-forge-tier-hint {
 }
 
 .daily-fortune-bonuses strong {
-  color: #9fe8c8;
+  color: inherit;
+}
+
+.daily-fortune-pill {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(80, 110, 160, 0.45);
+  background: rgba(12, 18, 32, 0.65);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.daily-fortune-pill-lbl {
+  color: #8aa4c4;
+  font-weight: 600;
+}
+
+.daily-fortune-pill--up {
+  border-color: rgba(80, 200, 140, 0.55);
+  background: linear-gradient(135deg, rgba(16, 52, 40, 0.75), rgba(10, 22, 28, 0.85));
+  box-shadow: inset 0 0 0 1px rgba(100, 220, 160, 0.12);
+}
+
+.daily-fortune-pill--up strong {
+  color: #7af0b8;
+}
+
+.daily-fortune-pill--flat {
+  border-color: rgba(120, 130, 160, 0.4);
+  background: rgba(14, 18, 28, 0.72);
+}
+
+.daily-fortune-pill--flat strong {
+  color: #c8d2e8;
+}
+
+.daily-fortune-pill--down {
+  border-color: rgba(200, 120, 120, 0.45);
+  background: linear-gradient(135deg, rgba(48, 22, 26, 0.75), rgba(12, 14, 22, 0.88));
+}
+
+.daily-fortune-pill--down strong {
+  color: #f0a8a0;
+}
+
+/* —— 养成 · 轮回：本世时长与峰值恢复 —— */
+.meta-life-playtime-row {
+  margin: 6px 0 10px;
+}
+
+.meta-life-playtime-val {
+  color: #c8dcff;
+  letter-spacing: 0.02em;
+}
+
+.meta-peak-recovery {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(72, 96, 150, 0.4);
+  background: linear-gradient(165deg, rgba(14, 20, 36, 0.92), rgba(8, 10, 18, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.meta-peak-recovery--empty {
+  opacity: 0.92;
+}
+
+.meta-peak-recovery__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.meta-peak-recovery__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #c8d8f8;
+  letter-spacing: 0.04em;
+}
+
+.meta-peak-recovery__ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.meta-peak-recovery__bar-wrap {
+  margin-bottom: 6px;
+}
+
+.meta-peak-recovery__bar-wrap--empty .meta-peak-recovery__fill {
+  width: 0% !important;
+  opacity: 0.35;
+}
+
+.meta-peak-recovery__bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.meta-peak-recovery__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4a7cff, #9b7dff 55%, #5fe0c8);
+  box-shadow: 0 0 12px rgba(100, 160, 255, 0.35);
+  transition: width 0.35s ease;
+}
+
+.meta-peak-recovery__readout {
+  margin: 0;
+  color: #9eb0d0 !important;
 }
 
 /* —— 灵府 · 纳灵阵图 —— */

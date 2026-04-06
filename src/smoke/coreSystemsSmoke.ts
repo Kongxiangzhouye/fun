@@ -40,7 +40,11 @@ import {
   importSave,
   getActiveSlotIndex,
 } from "../storage";
-import { daoEssenceGainBreakdown, daoEssenceGainOnReincarnate } from "../systems/reincarnation";
+import {
+  daoEssenceGainBreakdown,
+  daoEssenceGainOnReincarnate,
+  performReincarnate,
+} from "../systems/reincarnation";
 import { canClaimDailyLoginReward, claimDailyLoginReward } from "../systems/dailyLoginCalendar";
 import { getUiUnlocks } from "../uiUnlocks";
 
@@ -619,6 +623,18 @@ function runSpiritReservoirAutoClaimSmoke(): void {
   assert.equal(st.spiritReservoirStored, "0", "pool should empty after claim");
 }
 
+function runLifePlaytimeSecSmoke(): void {
+  const st = createInitialState();
+  assert.equal(st.lifePlaytimeSec, 0, "new game life playtime starts at 0");
+  const t0 = Date.now();
+  applyTick(st, t0 + 5000);
+  assert.ok(st.lifePlaytimeSec >= 4.9 && st.lifePlaytimeSec <= 5.1, "life playtime should track tick dt");
+  st.realmLevel = 25;
+  st.spiritStones = "1e30";
+  performReincarnate(st);
+  assert.equal(st.lifePlaytimeSec, 0, "reincarnate should reset life playtime");
+}
+
 function runDaoEssenceBreakdownSmoke(): void {
   const st = createInitialState();
   st.peakSpiritStonesThisLife = "1000000";
@@ -663,6 +679,7 @@ function main(): void {
   runOfflineAdventureAutoRerollBudgetSmoke();
   runOfflineAdventurePendingNormalizeSmoke();
   runDaoEssenceBreakdownSmoke();
+  runLifePlaytimeSecSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

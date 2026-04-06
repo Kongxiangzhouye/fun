@@ -44,6 +44,7 @@ export function performReincarnate(state: GameState): void {
   const gain = daoEssenceGainOnReincarnate(state);
   state.daoEssence += gain;
   state.reincarnations += 1;
+  state.lifePlaytimeSec = 0;
 
   state.lifeStartInGameDay = state.inGameDay;
   state.spiritStones = "0";

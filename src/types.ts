@@ -558,6 +558,11 @@ export interface GameState {
   lastTick: number;
   /** 累计在线秒（用于统计） */
   playtimeSec: number;
+  /**
+   * 本轮轮回内累计在线/离线追赶秒（与 `playtimeSec` 同源累加节奏；轮回时归零）。
+   * 用于界面展示「本世修行时长」，不含跨轮回总量。
+   */
+  lifePlaytimeSec: number;
 
   /** 固定随机：gachaSeed 字符串 + seedrandom 状态 JSON */
   rngSeed: string;

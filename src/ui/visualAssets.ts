@@ -57,6 +57,8 @@ export const UI_SESSION_STONE_GAIN = asset("session-stone-gain.svg");
 export const UI_DAO_BREAKDOWN_DECO = asset("dao-essence-breakdown-deco.svg");
 /** 轮回 · 元强化自动购买开关旁 */
 export const UI_META_AUTO_BUY = asset("meta-auto-buy.svg");
+/** 轮回面板 · 本轮灵石峰值恢复条标题小标 */
+export const UI_META_LIFE_PEAK = asset("meta-life-peak.svg");
 
 /** SSR / UR 灵卡角标（与五行底图分离）；与 `RARITY_BADGE_UI_FILES` 同源 */
 export const RARITY_BADGE_SSR = asset(RARITY_BADGE_UI_FILES.SSR);

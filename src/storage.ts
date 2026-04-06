@@ -118,6 +118,8 @@ export interface SerializedState {
   achievementsDone: string[];
   lastTick: number;
   playtimeSec: number;
+  /** 本轮轮回内累计时长（秒）；缺省按 0 */
+  lifePlaytimeSec?: number;
   /** 仅兼容旧存档读取，不再写入 */
   dailyClaimDate?: string | null;
   rngSeed?: string | number;
@@ -317,6 +319,7 @@ export function serialize(state: GameState): string {
     achievementsDone: [...state.achievementsDone],
     lastTick: state.lastTick,
     playtimeSec: state.playtimeSec,
+    lifePlaytimeSec: state.lifePlaytimeSec,
     rngSeed: state.rngSeed,
     rngStateJson: state.rngStateJson,
     inGameHour: state.inGameHour,
@@ -528,6 +531,11 @@ export function deserialize(json: string): GameState {
   st.achievementsDone = new Set(data.achievementsDone ?? []);
   st.lastTick = data.lastTick ?? Date.now();
   st.playtimeSec = data.playtimeSec ?? 0;
+  {
+    const lp = data.lifePlaytimeSec;
+    st.lifePlaytimeSec =
+      lp != null && Number.isFinite(lp) ? Math.max(0, Number(lp)) : 0;
+  }
   st.tutorialStep = data.tutorialStep ?? 0;
   st.firstOpenTodayMs = data.firstOpenTodayMs ?? Date.now();
   st.dailyStreak = data.dailyStreak ?? 1;
@@ -1015,6 +1023,11 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.achievementsDone = new Set(data.achievementsDone ?? []);
   st.lastTick = data.lastTick ?? now;
   st.playtimeSec = data.playtimeSec ?? 0;
+  {
+    const lp = data.lifePlaytimeSec;
+    st.lifePlaytimeSec =
+      lp != null && Number.isFinite(lp) ? Math.max(0, Number(lp)) : 0;
+  }
 
   const progressed = (data.totalPulls ?? 0) > 0 || Object.keys(st.owned).length > 0 || (data.realmLevel ?? 1) > 1;
   st.tutorialStep = progressed ? 0 : 1;

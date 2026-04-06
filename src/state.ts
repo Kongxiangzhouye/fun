@@ -7,7 +7,7 @@ import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 import { createEmptyEstateCommissionState } from "./systems/estateCommission";
 
-export const SAVE_VERSION = 65;
+export const SAVE_VERSION = 66;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -102,6 +102,7 @@ export function createInitialState(): GameState {
     achievementsDone: new Set(),
     lastTick: now,
     playtimeSec: 0,
+    lifePlaytimeSec: 0,
     rngSeed: "",
     rngStateJson: "",
     inGameHour: 3,
