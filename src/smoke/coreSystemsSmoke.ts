@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createInitialState } from "../state";
 import { applyTick, catchUpOffline, fastForward, maxOfflineSec } from "../gameLoop";
 import { ensureWeeklyBountyWeek, currentWeekKey, noteWeeklyBountyEstateCompletion } from "../systems/weeklyBounty";
-import { ensureCelestialStashWeek } from "../systems/celestialStash";
+import { celestialStashWeeklyProgress, ensureCelestialStashWeek } from "../systems/celestialStash";
 import {
   chooseOfflineAdventureOption,
   commitOfflineAdventureAutoReceipt,
@@ -448,6 +448,17 @@ function runOfflineAdventurePendingNormalizeSmoke(): void {
   assert.equal(pending?.options[2].id, "essence", "normalized options should backfill essence");
 }
 
+function runCelestialStashProgressSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  const p0 = celestialStashWeeklyProgress(st, now);
+  assert.equal(p0.total, 4, "celestial offer count should match data table");
+  assert.equal(p0.purchased, 0);
+  st.celestialStash.purchased.push("cs_stone_ess");
+  const p1 = celestialStashWeeklyProgress(st, now);
+  assert.equal(p1.purchased, 1);
+}
+
 function runDailyLoginAutoClaimPrefsSmoke(): void {
   const st = createInitialState();
   st.totalPulls = 1;
@@ -528,6 +539,7 @@ function main(): void {
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();
+  runCelestialStashProgressSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");

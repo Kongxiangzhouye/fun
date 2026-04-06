@@ -10225,6 +10225,30 @@ p.gear-forge-tier-hint {
   margin-top: 4px;
 }
 
+.celestial-progress-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(100, 130, 200, 0.32);
+  background: rgba(12, 16, 32, 0.45);
+}
+
+.celestial-progress-ico {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.92;
+}
+
+.celestial-progress-line {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  color: #b0c4e8;
+}
+
 .celestial-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

@@ -75,3 +75,13 @@ export function canAffordCelestialOffer(state: GameState, offerId: string): bool
   if (ce > 0 && state.summonEssence < ce) return false;
   return true;
 }
+
+/** 本周各档限购统计：已兑换条目数 / 总条目数 */
+export function celestialStashWeeklyProgress(state: GameState, now: number): { purchased: number; total: number } {
+  ensureCelestialStashWeek(state, now);
+  let purchased = 0;
+  for (const o of CELESTIAL_OFFERS) {
+    if (isCelestialOfferPurchasedThisWeek(state, o.id)) purchased += 1;
+  }
+  return { purchased, total: CELESTIAL_OFFERS.length };
+}

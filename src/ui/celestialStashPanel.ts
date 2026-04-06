@@ -3,9 +3,10 @@ import { CELESTIAL_OFFERS } from "../data/celestialStash";
 import { currentWeekKey } from "../systems/weeklyBounty";
 import {
   canAffordCelestialOffer,
+  celestialStashWeeklyProgress,
   isCelestialOfferPurchasedThisWeek,
 } from "../systems/celestialStash";
-import { UI_HEAD_CELESTIAL_STASH } from "./visualAssets";
+import { UI_CELESTIAL_STASH_PROGRESS, UI_HEAD_CELESTIAL_STASH } from "./visualAssets";
 
 function costLine(_state: GameState, offerId: string): string {
   const def = CELESTIAL_OFFERS.find((o) => o.id === offerId);
@@ -28,6 +29,8 @@ function rewardLine(def: (typeof CELESTIAL_OFFERS)[0]): string {
 
 export function renderCelestialStashPanel(state: GameState, now: number): string {
   const wk = currentWeekKey(now);
+  const prog = celestialStashWeeklyProgress(state, now);
+  const remain = Math.max(0, prog.total - prog.purchased);
   const cards = CELESTIAL_OFFERS.map((def) => {
     const bought = isCelestialOfferPurchasedThisWeek(state, def.id);
     const realmOk = def.minRealm == null || state.realmLevel >= def.minRealm;
@@ -57,6 +60,13 @@ export function renderCelestialStashPanel(state: GameState, now: number): string
       </div>
       <p class="hint">与周悬赏同步按<strong>本地自然周</strong>（周一）刷新；每档每周限购 1 次。</p>
       <p class="hint sm celestial-week-line">当前周次：<strong>${wk}</strong></p>
+      <div class="celestial-progress-row">
+        <img class="celestial-progress-ico" src="${UI_CELESTIAL_STASH_PROGRESS}" alt="" width="22" height="22" loading="lazy" />
+        <p class="hint sm celestial-progress-line" id="celestial-progress-line">
+          本周已兑换 <strong id="celestial-progress-purchased">${prog.purchased}</strong> / ${prog.total}
+          · 剩余 <strong id="celestial-progress-remaining">${remain}</strong> 项
+        </p>
+      </div>
       <div class="celestial-grid">${cards}</div>
     </section>`;
 }
@@ -64,6 +74,12 @@ export function renderCelestialStashPanel(state: GameState, now: number): string
 export function updateCelestialStashPanelReadouts(state: GameState, now: number): void {
   const wkEl = document.querySelector(".celestial-week-line strong");
   if (wkEl) wkEl.textContent = currentWeekKey(now);
+  const prog = celestialStashWeeklyProgress(state, now);
+  const remain = Math.max(0, prog.total - prog.purchased);
+  const pPur = document.getElementById("celestial-progress-purchased");
+  const pRem = document.getElementById("celestial-progress-remaining");
+  if (pPur) pPur.textContent = String(prog.purchased);
+  if (pRem) pRem.textContent = String(remain);
   for (const def of CELESTIAL_OFFERS) {
     const bought = isCelestialOfferPurchasedThisWeek(state, def.id);
     const realmOk = def.minRealm == null || state.realmLevel >= def.minRealm;
