@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
+  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "petPullBloom" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -238,6 +238,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 1400,
     rewardEssence: 48,
     listDeco: "petPull",
+  },
+  {
+    id: "pet_pulls_300",
+    title: "千唤灵缘",
+    desc: "灵宠唤引累计 300 次",
+    rewardStones: 3800,
+    rewardEssence: 95,
+    listDeco: "petPullBloom",
   },
   {
     id: "garden_first_harvest",
@@ -585,6 +593,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.petPullsTotal >= 25;
     case "pet_pulls_100":
       return state.petPullsTotal >= 100;
+    case "pet_pulls_300":
+      return state.petPullsTotal >= 300;
     case "garden_first_harvest":
       return (state.spiritGarden?.totalHarvests ?? 0) >= 1;
     case "garden_harvest_30":
