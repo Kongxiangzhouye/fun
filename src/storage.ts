@@ -1,11 +1,5 @@
 import type { GameState, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
 import { DECK_SIZE, DUNGEON_STAMINA_MAX, type GearInventorySortMode } from "./types";
-
-type VeinSave = GameState["vein"];
-type SkillsSave = GameState["skills"];
-type DungeonSave = GameState["dungeon"];
-type GearInvSave = GameState["gearInventory"];
-type EquippedSave = GameState["equippedGear"];
 import { SAVE_VERSION, createInitialState } from "./state";
 import { CARDS } from "./data/cards";
 import { initRng, rollNewRngSeed, syncRngFromState } from "./rng";
@@ -29,6 +23,12 @@ import {
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
 import { normalizeGearGrade } from "./systems/gearCraft";
+
+type VeinSave = GameState["vein"];
+type SkillsSave = GameState["skills"];
+type DungeonSave = GameState["dungeon"];
+type GearInvSave = GameState["gearInventory"];
+type EquippedSave = GameState["equippedGear"];
 
 /** 旧版单键存档（首次启动时迁移到槽位 0） */
 const LEGACY_KEY = "idle-gacha-realm-v1";
