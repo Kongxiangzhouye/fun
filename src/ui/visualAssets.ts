@@ -181,6 +181,8 @@ export const UI_LORE_PET = asset("deco-lore-pet.svg");
 export const UI_LORE_META = asset("deco-lore-meta.svg");
 /** 修行札记 · 「道韵灵窍」折叠标题旁 */
 export const UI_LORE_DAO_MERIDIAN = asset("deco-lore-dao-meridian.svg");
+/** 修行札记 · 「心法（修炼）」折叠标题旁 */
+export const UI_LORE_BATTLE_SKILL = asset("deco-lore-battle-skill.svg");
 /** 灵息日历（每日签到）页标题 */
 export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 /** 天机匣（周轮换商店）页标题 */

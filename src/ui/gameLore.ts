@@ -17,6 +17,7 @@ import {
   UI_LORE_PET,
   UI_LORE_META,
   UI_LORE_DAO_MERIDIAN,
+  UI_LORE_BATTLE_SKILL,
   UI_RESONANCE_CORE,
 } from "./visualAssets";
 
@@ -83,6 +84,16 @@ export function renderGameLoreHtml(): string {
           <li><strong>采灵</strong>：略增灵石向收益。</li>
           <li><strong>法篆</strong>：略加快聚灵共鸣累积（与洞府「共鸣」叠乘）。</li>
           <li>三线等级均达到较高阶段时，功业录中另有对应嘉奖。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_BATTLE_SKILL}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 心法（修炼）</summary>
+        <ul class="game-lore-list">
+          <li><strong>入口</strong>：修炼页「心法」子页（与<strong>幻域</strong>入口同条件解锁）。</li>
+          <li>每次消耗 <strong>28</strong> 唤灵髓，随机<strong>领悟新心法</strong>或<strong>升级</strong>已有心法；单门最高 <strong>20</strong> 级，全部满级后无法继续抽取。</li>
+          <li>不同心法可影响幻域攻防、灵石、唤灵髓发现、暴击等；细则见各心法文案，与装备、洞府等乘区<strong>叠乘或加算</strong>以面板为准。</li>
+          <li><strong>轮回</strong>时心法等级与境界、卡组等一并<strong>清空</strong>（与图鉴、洞府、灵窍等永久项不同）。</li>
         </ul>
       </details>
 
