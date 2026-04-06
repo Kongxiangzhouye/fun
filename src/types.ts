@@ -134,6 +134,8 @@ export interface LifetimeStatsState {
   dailyLoginDayClaims: number;
   /** 离线挂机回补灵石成功结算次数（每次 `catchUpOffline` 实际产出灵石计 1） */
   offlineStoneSettlements: number;
+  /** 入世以来游戏内日序达到过的最大值（与轮回无关，跨周目累计峰值） */
+  maxInGameDayReached: number;
 }
 
 /** 灵田作物 id */

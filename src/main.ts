@@ -2942,6 +2942,7 @@ function buildDataOverviewExportText(st: GameState): string {
     "",
     "[历程与境界]",
     `累计入世时长: ${fmtPlaytimeSec(st.playtimeSec)}`,
+    `历世日序峰值: 第 ${lt.maxInGameDayReached} 日`,
     `本轮回第几日: 第 ${lifeDay} 日`,
     `境界: ${st.realmLevel}`,
     `轮回次数: ${st.reincarnations}`,
@@ -3021,6 +3022,7 @@ function renderDataOverviewPanel(): string {
       <h3>历程与境界</h3>
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">累计入世时长</span><strong class="d-val" id="data-overview-playtime">${fmtPlaytimeSec(st.playtimeSec)}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">历世日序峰值</span><strong class="d-val" id="data-overview-lt-day-peak">第 ${lt.maxInGameDayReached} 日</strong></div>
         <div class="data-overview-cell"><span class="d-label">本轮回第几日</span><strong class="d-val" id="data-overview-life-day">第 ${lifeDay} 日</strong></div>
         <div class="data-overview-cell"><span class="d-label">境界</span><strong class="d-val" id="data-overview-realm">${st.realmLevel}</strong></div>
         <div class="data-overview-cell"><span class="d-label">轮回次数</span><strong class="d-val" id="data-overview-reinc">${st.reincarnations}</strong></div>
@@ -3090,6 +3092,7 @@ function updateDataOverviewReadouts(): void {
     if (el) el.textContent = text;
   };
   set("data-overview-playtime", fmtPlaytimeSec(st.playtimeSec));
+  set("data-overview-lt-day-peak", `第 ${lt.maxInGameDayReached} 日`);
   const lifeDay = Math.max(1, st.inGameDay - st.lifeStartInGameDay + 1);
   set("data-overview-life-day", `第 ${lifeDay} 日`);
   set("data-overview-realm", String(st.realmLevel));

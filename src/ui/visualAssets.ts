@@ -107,6 +107,8 @@ export const UI_CHRONICLE_GARDEN_PLANT_STAT = asset("chronicle-garden-plant-stat
 export const UI_CHRONICLE_SKILL_LEVEL_STAT = asset("chronicle-skill-level-stat.svg");
 /** 唤灵通鉴 · 境界突破累计小标 */
 export const UI_CHRONICLE_REALM_BREAKTHROUGH_STAT = asset("chronicle-realm-breakthrough-stat.svg");
+/** 唤灵通鉴 · 历世日序峰值小标 */
+export const UI_CHRONICLE_IN_GAME_DAY_PEAK_STAT = asset("chronicle-in-game-day-peak-stat.svg");
 /** 唤灵通鉴 · 槽位强化累计小标 */
 export const UI_CHRONICLE_GEAR_ENHANCE_STAT = asset("chronicle-gear-enhance-stat.svg");
 /** 唤灵通鉴 · 天极精炼累计小标 */

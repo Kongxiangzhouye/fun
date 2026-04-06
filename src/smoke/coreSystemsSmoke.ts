@@ -960,6 +960,26 @@ function runCumulativePlaytime24hAchievementSmoke(): void {
   assert.ok(st.achievementsDone.has("cumulative_playtime_86400"), "achievement should be marked done");
 }
 
+function runMaxInGameDayReachedAdvanceSmoke(): void {
+  const st = createInitialState();
+  assert.equal(st.lifetimeStats.maxInGameDayReached, 1);
+  st.inGameHour = 11;
+  advanceInGameHour(st, 1);
+  assert.equal(st.inGameDay, 2);
+  assert.equal(st.lifetimeStats.maxInGameDayReached, 2);
+}
+
+function runInGameDayPeakAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("in_game_day_peak_30"));
+  st.lifetimeStats.maxInGameDayReached = 30;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "in_game_day_peak_30"));
+  st.lifetimeStats.maxInGameDayReached = 120;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "in_game_day_peak_120"));
+}
+
 function runDaoEssenceBreakdownSmoke(): void {
   const st = createInitialState();
   st.peakSpiritStonesThisLife = "1000000";
@@ -1008,6 +1028,8 @@ function main(): void {
   runLifePlaytimeSecSmoke();
   runLifePlaytimeHourAchievementSmoke();
   runCumulativePlaytime24hAchievementSmoke();
+  runMaxInGameDayReachedAdvanceSmoke();
+  runInGameDayPeakAchievementsSmoke();
   runResonancePayoutAchievementsSmoke();
   runTunaCompletionAchievementsSmoke();
   runFenTianBurstAchievementsSmoke();

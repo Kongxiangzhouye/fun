@@ -3,6 +3,7 @@
  */
 import type { GameState } from "./types";
 import { GAME_HOUR_REAL_SEC } from "./types";
+import { normalizeLifetimeStats } from "./systems/pullChronicle";
 import { recordSpiritTideLifetimeIfActive } from "./systems/spiritTide";
 
 /** 主动行为（共鸣、余泽等）不再随刻度波动，恒为 1 */
@@ -36,6 +37,11 @@ export function advanceInGameHour(state: GameState, steps: number): void {
     if (state.inGameHour === 0 && prev === 11) {
       state.inGameDay += 1;
       resetInGameCycleRewards(state);
+      normalizeLifetimeStats(state);
+      state.lifetimeStats.maxInGameDayReached = Math.max(
+        state.lifetimeStats.maxInGameDayReached,
+        state.inGameDay,
+      );
     }
     recordSpiritTideLifetimeIfActive(state);
   }

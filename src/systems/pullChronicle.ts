@@ -68,6 +68,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       gearTenPullSessions: 0,
       dailyLoginDayClaims: 0,
       offlineStoneSettlements: 0,
+      maxInGameDayReached: 1,
     };
     return;
   }
@@ -181,6 +182,13 @@ export function normalizeLifetimeStats(st: GameState): void {
   const oss = st.lifetimeStats.offlineStoneSettlements;
   if (oss == null || !Number.isFinite(oss)) st.lifetimeStats.offlineStoneSettlements = 0;
   else st.lifetimeStats.offlineStoneSettlements = Math.max(0, Math.floor(oss));
+  const mid = st.lifetimeStats.maxInGameDayReached;
+  if (mid == null || !Number.isFinite(mid)) st.lifetimeStats.maxInGameDayReached = Math.max(1, Math.floor(st.inGameDay));
+  else st.lifetimeStats.maxInGameDayReached = Math.max(1, Math.floor(mid));
+  st.lifetimeStats.maxInGameDayReached = Math.max(
+    st.lifetimeStats.maxInGameDayReached,
+    Math.max(1, Math.floor(st.inGameDay)),
+  );
 }
 
 /** 离线回补结算产生灵石时累加（与闭关快进 `fastForward` 区分） */

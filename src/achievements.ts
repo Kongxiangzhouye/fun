@@ -688,6 +688,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "login",
   },
   {
+    id: "in_game_day_peak_30",
+    title: "岁序三十",
+    desc: "历世日序峰值达到 30",
+    rewardStones: 640,
+    rewardEssence: 24,
+    listDeco: "realm",
+  },
+  {
+    id: "in_game_day_peak_120",
+    title: "岁序百川",
+    desc: "历世日序峰值达到 120",
+    rewardStones: 3200,
+    rewardEssence: 72,
+    listDeco: "meridian",
+  },
+  {
     id: "login_calendar_week_full",
     title: "灵息周天",
     desc: "任意自然周内领取满 7 日灵息礼",
@@ -1105,6 +1121,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dailyStreak >= 60;
     case "cumulative_playtime_86400":
       return (state.playtimeSec ?? 0) >= 86400;
+    case "in_game_day_peak_30":
+      return (state.lifetimeStats?.maxInGameDayReached ?? 0) >= 30;
+    case "in_game_day_peak_120":
+      return (state.lifetimeStats?.maxInGameDayReached ?? 0) >= 120;
     case "login_calendar_week_full":
       return (state.lifetimeStats?.loginCalendarFullWeeks ?? 0) >= 1;
     case "daily_login_claims_25":
