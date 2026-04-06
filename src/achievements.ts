@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash";
+  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -280,6 +280,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "从蓄灵池收取 1 次灵石",
     rewardStones: 150,
     rewardEssence: 0,
+    listDeco: "reservoir",
+  },
+  {
+    id: "spirit_reservoir_50",
+    title: "蓄灵有成",
+    desc: "从蓄灵池累计收取 50 次灵石",
+    rewardStones: 900,
+    rewardEssence: 35,
+    listDeco: "reservoir",
   },
   {
     id: "daily_fortune_1",
@@ -287,6 +296,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "经历 1 次卦象日更替",
     rewardStones: 100,
     rewardEssence: 5,
+    listDeco: "fortune",
+  },
+  {
+    id: "daily_fortune_30",
+    title: "心斋常新",
+    desc: "心斋卦象累计刷新 30 次",
+    rewardStones: 950,
+    rewardEssence: 32,
+    listDeco: "fortune",
   },
   {
     id: "spirit_array_10",
@@ -503,8 +521,12 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 25;
     case "spirit_reservoir_1":
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 1;
+    case "spirit_reservoir_50":
+      return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 50;
     case "daily_fortune_1":
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
+    case "daily_fortune_30":
+      return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 30;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":
