@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
 import type { GameState } from "./types";
-import { ESSENCE_COST_SINGLE, MAX_OFFLINE_SEC_BASE } from "./types";
+import { ESSENCE_COST_SINGLE, MAX_OFFLINE_SEC_BASE, TUNA_COOLDOWN_MS } from "./types";
 import { incomePerSecond, realmBreakthroughCostForState } from "./economy";
 import { totalCardsInPool } from "./storage";
 import { tryCompleteAchievements } from "./achievements";
@@ -122,6 +122,28 @@ function applyOfflineLikeProgress(
   checkTrueEnding(state);
 }
 
+function nextWeeklyBoundaryMs(now: number): number {
+  const d = new Date(now);
+  const day = d.getDay();
+  const diffToMon = day === 0 ? 1 : 8 - day;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + diffToMon).getTime();
+}
+
+function applyOfflineAutoTuna(state: GameState, startMs: number, endMs: number): void {
+  if (!state.qoL.autoTuna) return;
+  if (endMs <= startMs) return;
+  let nextMs = state.lastTunaMs > 0 ? state.lastTunaMs + TUNA_COOLDOWN_MS : startMs;
+  if (nextMs < startMs) {
+    const skip = Math.floor((startMs - nextMs) / TUNA_COOLDOWN_MS);
+    nextMs += skip * TUNA_COOLDOWN_MS;
+    while (nextMs < startMs) nextMs += TUNA_COOLDOWN_MS;
+  }
+  while (nextMs <= endMs) {
+    tryTuna(state, nextMs);
+    nextMs += TUNA_COOLDOWN_MS;
+  }
+}
+
 export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSummary {
   const empty = (rawAway: number): OfflineCatchUpSummary => ({
     stoneGain: new Decimal(0),
@@ -139,9 +161,30 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
   if (dt < 1) return empty(raw);
   const ips = incomePerSecond(state, totalCardsInPool());
   const mult = earthOfflineIncomeMult(state);
-  const gained = ips.mul(dt).mul(mult);
-  applyOfflineLikeProgress(state, dt, gained, ips, mult);
+  let gained = new Decimal(0);
+  let remainSec = dt;
+  let cursorMs = state.lastTick;
+  ensureWeeklyBountyWeek(state, cursorMs);
+  while (remainSec > 1e-6) {
+    const boundaryMs = nextWeeklyBoundaryMs(cursorMs);
+    const segSec = Math.min(remainSec, Math.max(0, (boundaryMs - cursorMs) / 1000));
+    if (segSec <= 1e-6) {
+      ensureWeeklyBountyWeek(state, boundaryMs);
+      cursorMs = boundaryMs;
+      continue;
+    }
+    const segGain = ips.mul(segSec).mul(mult);
+    applyOfflineLikeProgress(state, segSec, segGain, ips, mult);
+    const segStart = cursorMs;
+    const segEnd = cursorMs + segSec * 1000;
+    applyOfflineAutoTuna(state, segStart, segEnd);
+    gained = gained.add(segGain);
+    cursorMs = segEnd;
+    remainSec -= segSec;
+    ensureWeeklyBountyWeek(state, cursorMs);
+  }
   state.lastTick = now;
+  ensureWeeklyBountyWeek(state, now);
   return {
     stoneGain: gained,
     settledSec: dt,

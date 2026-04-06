@@ -6355,6 +6355,12 @@ html.ui-reduce-motion *::after {
   .fx-aoe-ring::after {
     animation-duration: 72s;
   }
+
+  .dungeon-map.duel-fx-hit-deco-on .dungeon-duel-fx-hit-deco,
+  .dungeon-map.duel-fx-crit-deco-on .dungeon-duel-fx-crit-deco,
+  .dungeon-map.duel-fx-guard-deco-on .dungeon-duel-fx-guard-deco {
+    animation-duration: 0.01ms;
+  }
 }
 
 .fx-aoe-ring {
@@ -6384,6 +6390,45 @@ html.ui-reduce-motion *::after {
 
 .dungeon-map.is-aoe .fx-aoe-ring {
   opacity: 1;
+}
+
+.dungeon-duel-fx-deco {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.88);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity, transform;
+  filter: drop-shadow(0 0 8px rgba(255, 220, 190, 0.28));
+}
+
+.dungeon-duel-fx-hit-deco {
+  width: 152px;
+  height: 152px;
+}
+
+.dungeon-duel-fx-crit-deco {
+  width: 176px;
+  height: 176px;
+  mix-blend-mode: screen;
+}
+
+.dungeon-duel-fx-guard-deco {
+  width: 168px;
+  height: 168px;
+}
+
+.dungeon-map.duel-fx-hit-deco-on .dungeon-duel-fx-hit-deco {
+  animation: duel-fx-hit-deco 0.18s ease-out;
+}
+
+.dungeon-map.duel-fx-crit-deco-on .dungeon-duel-fx-crit-deco {
+  animation: duel-fx-crit-deco 0.26s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.dungeon-map.duel-fx-guard-deco-on .dungeon-duel-fx-guard-deco {
+  animation: duel-fx-guard-deco 0.32s ease-out;
 }
 
 .fx-single-slash {
@@ -6421,6 +6466,51 @@ html.ui-reduce-motion *::after {
   100% {
     transform: scale(1.35);
     opacity: 0;
+  }
+}
+
+@keyframes duel-fx-hit-deco {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.78);
+  }
+  40% {
+    opacity: 0.82;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+@keyframes duel-fx-crit-deco {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7) rotate(-8deg);
+  }
+  35% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.06) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.14) rotate(6deg);
+  }
+}
+
+@keyframes duel-fx-guard-deco {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  35% {
+    opacity: 0.86;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.12);
   }
 }
 

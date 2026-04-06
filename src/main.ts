@@ -186,6 +186,9 @@ import {
   UI_BOUNTY_CLAIM_BURST,
   UI_OFFLINE_SUMMARY_BADGE,
   UI_OFFLINE_TRANSITION_SHINE,
+  UI_DUNGEON_HIT_FLASH_DECO,
+  UI_DUNGEON_CRIT_BURST_DECO,
+  UI_DUNGEON_GUARD_BREAK_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -395,6 +398,9 @@ const deferredDungeonToasts: string[] = [];
 let lastDungeonActive = false;
 /** 幻域飘字爆发时刻（用于决斗舞台短促亮度反馈） */
 let duelFloatBurstAtMs = 0;
+let duelCritBurstAtMs = 0;
+let duelGuardBreakAtMs = 0;
+let duelHitFlashAtMs = 0;
 const reducedMotionQuery =
   typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 let prefersReducedMotion = reducedMotionQuery?.matches ?? false;
@@ -4666,10 +4672,16 @@ function loop(): void {
   }
   const floatPopups = drainDungeonDamageFloats();
   if (floatPopups.length && typeof document !== "undefined") {
-    if (state.dungeon.active) duelFloatBurstAtMs = Date.now();
+    const fxNow = Date.now();
+    if (state.dungeon.active) duelFloatBurstAtMs = fxNow;
     const layer = document.getElementById("dungeon-float-layer");
     if (layer) {
       for (const f of floatPopups) {
+        if (state.dungeon.active) {
+          if (f.cls === "dmg-out") duelHitFlashAtMs = fxNow;
+          if (f.text === "暴击") duelCritBurstAtMs = fxNow;
+          if (f.text === "破绽") duelGuardBreakAtMs = fxNow;
+        }
         const el = document.createElement("span");
         el.className = `dungeon-float-txt ${f.cls}`;
         el.textContent = f.text;
@@ -4816,6 +4828,7 @@ function loop(): void {
     }
     const mapEl = document.getElementById("dungeon-map");
     if (activeHub === "battle" && mapEl) {
+      const mapNow = Date.now();
       mapEl.classList.toggle("is-aoe", d.inMelee && d.attackVisualMode === "aoe");
       mapEl.classList.toggle("is-single", false);
       mapEl.classList.toggle("in-combat", d.inMelee);
@@ -4840,13 +4853,28 @@ function loop(): void {
       mapEl.classList.toggle("duel-combo-high", d.duelComboStacks >= 7);
       mapEl.classList.toggle(
         "duel-fx-hit",
-        !prefersReducedMotion && Date.now() - duelFloatBurstAtMs < 140,
+        !prefersReducedMotion && mapNow - duelFloatBurstAtMs < 140,
+      );
+      mapEl.classList.toggle(
+        "duel-fx-hit-deco-on",
+        !prefersReducedMotion && mapNow - duelHitFlashAtMs < 170,
+      );
+      mapEl.classList.toggle(
+        "duel-fx-crit-deco-on",
+        !prefersReducedMotion && mapNow - duelCritBurstAtMs < 260,
+      );
+      mapEl.classList.toggle(
+        "duel-fx-guard-deco-on",
+        !prefersReducedMotion && mapNow - duelGuardBreakAtMs < 320,
       );
       mapEl.classList.toggle(
         "duel-hp-low",
         d.playerMax > 0 && d.playerHp / d.playerMax < 0.28,
       );
       mapEl.classList.toggle("duel-is-boss", !!(tgt?.isBoss));
+      mapEl.style.setProperty("--duel-hit-flash-deco", `url("${UI_DUNGEON_HIT_FLASH_DECO}")`);
+      mapEl.style.setProperty("--duel-crit-burst-deco", `url("${UI_DUNGEON_CRIT_BURST_DECO}")`);
+      mapEl.style.setProperty("--duel-guard-break-deco", `url("${UI_DUNGEON_GUARD_BREAK_DECO}")`);
       const waveTxt = document.getElementById("duel-wave-pill-txt");
       if (waveTxt) waveTxt.textContent = `第 ${d.wave} 波`;
       const plHpWrap = document.getElementById("dungeon-pl-hp-wrap");

@@ -45,6 +45,9 @@ import {
   UI_EMPTY_UNLOCK,
   UI_HEAD_DUNGEON,
   UI_DUNGEON_DUEL_DECO,
+  UI_DUNGEON_HIT_FLASH_DECO,
+  UI_DUNGEON_CRIT_BURST_DECO,
+  UI_DUNGEON_GUARD_BREAK_DECO,
   UI_DUEL_GAUGE_SWORD,
   UI_DUEL_GAUGE_THREAT,
   UI_DUNGEON_IDLE_MIST,
@@ -261,6 +264,9 @@ function renderDungeonMapHtml(state: GameState): string {
               <div class="dungeon-engage-ring dungeon-duel-engage-ring"></div>
               <div class="fx-aoe-ring"></div>
             </div>
+            <img class="dungeon-duel-fx-deco dungeon-duel-fx-hit-deco" src="${UI_DUNGEON_HIT_FLASH_DECO}" alt="" width="152" height="152" loading="lazy" />
+            <img class="dungeon-duel-fx-deco dungeon-duel-fx-crit-deco" src="${UI_DUNGEON_CRIT_BURST_DECO}" alt="" width="176" height="176" loading="lazy" />
+            <img class="dungeon-duel-fx-deco dungeon-duel-fx-guard-deco" src="${UI_DUNGEON_GUARD_BREAK_DECO}" alt="" width="168" height="168" loading="lazy" />
           </div>
           ${floatOverlay}
           <div class="dungeon-duel-center">

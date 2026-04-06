@@ -26,8 +26,11 @@ import { PET_DEFS } from "../data/pets";
 import { GARDEN_CROPS } from "../systems/spiritGarden";
 
 const BASE = import.meta.env.BASE_URL;
+const UI_INLINE_FALLBACK =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Crect width='8' height='8' fill='rgba(255,255,255,0.001)'/%3E%3C/svg%3E";
 
-function asset(name: string): string {
+function asset(name: string | null | undefined, fallback = UI_INLINE_FALLBACK): string {
+  if (!name || typeof name !== "string") return fallback;
   return `${BASE}assets/ui/${name}`;
 }
 
@@ -154,6 +157,12 @@ export const UI_DUNGEON_READINESS_DECO = asset(DUNGEON_DUEL_UI_FILES.readinessDe
 export const UI_DUNGEON_AFFIX_DECO = asset(DUNGEON_DUEL_UI_FILES.affixDeco);
 /** 幻域·阵线对决舞台中央装饰 */
 export const UI_DUNGEON_DUEL_DECO = asset(DUNGEON_DUEL_UI_FILES.duelDeco);
+/** 阵线对决 · 命中闪光反馈 */
+export const UI_DUNGEON_HIT_FLASH_DECO = asset(DUNGEON_DUEL_UI_FILES.hitFlashDeco, UI_DUNGEON_DUEL_DECO);
+/** 阵线对决 · 暴击爆发反馈 */
+export const UI_DUNGEON_CRIT_BURST_DECO = asset(DUNGEON_DUEL_UI_FILES.critBurstDeco, UI_DUNGEON_DUEL_DECO);
+/** 阵线对决 · 破防/破绽反馈 */
+export const UI_DUNGEON_GUARD_BREAK_DECO = asset(DUNGEON_DUEL_UI_FILES.guardBreakDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 剑气读条旁小标 */
 export const UI_DUEL_GAUGE_SWORD = asset(DUNGEON_DUEL_UI_FILES.gaugeSword);
 /** 阵线对决 · 凶煞读条旁小标 */
