@@ -40,6 +40,18 @@ export function tryUpgradeSpiritArray(state: GameState): boolean {
   return true;
 }
 
+/** 主循环：`uiPrefs.autoUpgradeSpiritArray` 时连续绘阵，返回本轮成功重数（0 表示未操作） */
+export function tryAutoUpgradeSpiritArrayIfPref(state: GameState): number {
+  if (!state.uiPrefs.autoUpgradeSpiritArray) return 0;
+  let n = 0;
+  let guard = 0;
+  while (canUpgradeSpiritArray(state) && guard++ < 600) {
+    if (!tryUpgradeSpiritArray(state)) break;
+    n += 1;
+  }
+  return n;
+}
+
 export function normalizeSpiritArrayLevel(st: GameState): void {
   let lv = st.spiritArrayLevel;
   if (lv == null || !Number.isFinite(lv)) lv = 0;

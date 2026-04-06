@@ -820,6 +820,7 @@ export function deserialize(json: string): GameState {
     autoSettleEstateCommission: !!data.uiPrefs?.autoSettleEstateCommission,
     autoRedeemCelestialStash: !!data.uiPrefs?.autoRedeemCelestialStash,
     autoFeedPets: !!data.uiPrefs?.autoFeedPets,
+    autoUpgradeSpiritArray: !!data.uiPrefs?.autoUpgradeSpiritArray,
   };
 
   if (data.pets && typeof data.pets === "object") {

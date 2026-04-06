@@ -230,7 +230,7 @@ import { getActiveFortuneDef, tickDailyFortune } from "./systems/dailyFortune";
 import { renderCelestialStashPanel, updateCelestialStashPanelReadouts } from "./ui/celestialStashPanel";
 import { CELESTIAL_OFFERS } from "./data/celestialStash";
 import { ensureCelestialStashWeek, tryAutoRedeemCelestialStashOffers, tryBuyCelestialOffer } from "./systems/celestialStash";
-import { tryUpgradeSpiritArray } from "./systems/spiritArray";
+import { tryAutoUpgradeSpiritArrayIfPref, tryUpgradeSpiritArray } from "./systems/spiritArray";
 import {
   reservoirCap,
   reservoirFillRatio,
@@ -885,6 +885,8 @@ let lastOfflineToastSig = "";
 let lastOfflineToastAtMs = 0;
 const PET_AUTO_FEED_TOAST_GAP_MS = 6000;
 let lastPetAutoFeedToastAtMs = 0;
+const SPIRIT_ARRAY_AUTO_TOAST_GAP_MS = 5500;
+let lastSpiritArrayAutoToastAtMs = 0;
 let lastCombatPower = 0;
 const COMBAT_POWER_POPUP_DURATION_MS = 1000;
 const COMBAT_POWER_POPUP_HOLD_MS = 520;
@@ -4219,6 +4221,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoSettleEstateCommission") state.uiPrefs.autoSettleEstateCommission = checked;
       else if (t === "autoRedeemCelestialStash") state.uiPrefs.autoRedeemCelestialStash = checked;
       else if (t === "autoFeedPets") state.uiPrefs.autoFeedPets = checked;
+      else if (t === "autoUpgradeSpiritArray") state.uiPrefs.autoUpgradeSpiritArray = checked;
       else return;
       saveGame(state);
       render();
@@ -5535,6 +5538,27 @@ function loop(): void {
       }
       if (activeHub === "cultivate" && cultivateSub === "pets") {
         render();
+      }
+    }
+  }
+  if (
+    typeof document !== "undefined" &&
+    state.uiPrefs.autoUpgradeSpiritArray &&
+    uLoop.tabSpiritArray
+  ) {
+    const arrUp = tryAutoUpgradeSpiritArrayIfPref(state);
+    if (arrUp > 0) {
+      tryCompleteAchievements(state);
+      requestSave("纳灵阵图自动绘阵", true);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      if (now - lastSpiritArrayAutoToastAtMs >= SPIRIT_ARRAY_AUTO_TOAST_GAP_MS) {
+        lastSpiritArrayAutoToastAtMs = now;
+        toast(`纳灵阵图已自动绘阵 ${arrUp} 重（资源不足或已满级则停）`);
+      }
+      if (activeHub === "estate" && estateSub === "array") {
+        updateSpiritArrayPanelReadouts(state);
       }
     }
   }

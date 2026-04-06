@@ -14,6 +14,7 @@ import {
 } from "../systems/celestialStash";
 import { addStones } from "../stones";
 import { tryAutoFeedAllPetsIfPref } from "../systems/pets";
+import { tryAutoUpgradeSpiritArrayIfPref } from "../systems/spiritArray";
 import {
   chooseOfflineAdventureOption,
   commitOfflineAdventureAutoReceipt,
@@ -494,6 +495,19 @@ function runCelestialStashProgressSmoke(): void {
   assert.equal(p1.purchased, 1);
 }
 
+function runSpiritArrayAutoUpgradeSmoke(): void {
+  const st = createInitialState();
+  st.spiritStones = "999999";
+  st.lingSha = 9999;
+  st.spiritArrayLevel = 0;
+  st.uiPrefs.autoUpgradeSpiritArray = false;
+  assert.equal(tryAutoUpgradeSpiritArrayIfPref(st), 0);
+  st.uiPrefs.autoUpgradeSpiritArray = true;
+  const n = tryAutoUpgradeSpiritArrayIfPref(st);
+  assert.ok(n >= 1, "auto spirit array should upgrade at least once when affordable");
+  assert.ok(st.spiritArrayLevel >= 1);
+}
+
 function runPetAutoFeedPrefSmoke(): void {
   const st = createInitialState();
   st.dungeon.totalWavesCleared = 15;
@@ -606,6 +620,7 @@ function main(): void {
   runCelestialStashProgressSmoke();
   runCelestialStashAutoRedeemSmoke();
   runPetAutoFeedPrefSmoke();
+  runSpiritArrayAutoUpgradeSmoke();
   runWeeklyBountyAutoClaimSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console

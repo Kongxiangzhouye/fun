@@ -560,6 +560,8 @@ export const UI_SPIRIT_RESERVOIR_ETA = asset("spirit-reservoir-eta-wave.svg");
 export const UI_HEAD_DAILY_FORTUNE = asset(FEATURE_PAGE_HEADS_UI_FILES.dailyFortune);
 /** 纳灵阵图（灵府）标题装饰 */
 export const UI_HEAD_SPIRIT_ARRAY = asset(FEATURE_PAGE_HEADS_UI_FILES.spiritArray);
+/** 纳灵阵图 · 自动绘阵开关旁 */
+export const UI_SPIRIT_ARRAY_AUTO = asset("spirit-array-auto.svg");
 /** 洞府委托 · 资源类图标 */
 export const UI_ESTATE_COMMISSION_RESOURCE = asset("icon-estate-commission-resource.svg");
 /** 洞府委托 · 战斗类图标 */

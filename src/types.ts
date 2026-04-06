@@ -467,6 +467,8 @@ export interface UiPrefs {
   autoRedeemCelestialStash: boolean;
   /** 灵宠：主循环内对已结缘灵宠自动「尽髓连喂」（需已解锁灵宠页） */
   autoFeedPets: boolean;
+  /** 纳灵阵图：灵石与灵砂足够时自动连续绘阵直至买不起或满级（需已解锁阵图页） */
+  autoUpgradeSpiritArray: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */
