@@ -10457,6 +10457,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--spirit-array-upgrade {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(100, 160, 200, 0.38);
+  background: linear-gradient(145deg, rgba(20, 36, 48, 0.7), rgba(10, 20, 30, 0.78));
+}
+
+.chronicle-stat-card--spirit-array-upgrade .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--spirit-array-upgrade .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--garden-harvest {
   display: flex;
   align-items: center;

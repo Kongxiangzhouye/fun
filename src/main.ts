@@ -2746,6 +2746,17 @@ function renderUiPrefsPanel(): string {
         </label>
         <p class="hint sm ui-pref-desc">开启时浏览器标签会显示「万象唤灵 · 境界 · 灵石」便于切后台查看；关闭则固定为「万象唤灵」。</p>
       </li>
+      <li class="ui-pref-row ui-pref-row--idle-guide">
+        <div class="ui-pref-inline-head">
+          <img class="ui-pref-inline-ico" src="${UI_INCOME_SOURCE_ICON_UPGRADE}" alt="" width="22" height="22" loading="lazy" />
+          <span class="ui-pref-section-title">修炼页</span>
+        </div>
+        <label class="ui-pref-label">
+          <input type="checkbox" class="ui-pref-input" data-ui-pref="showIncomeGuidePanel" ${p.showIncomeGuidePanel !== false ? "checked" : ""} />
+          <span class="ui-pref-title">显示「收益来源拆分与升级引导」面板</span>
+        </label>
+        <p class="hint sm ui-pref-desc">关闭后隐藏灵府·修炼页中的说明型面板，仅保留灵潮、卦象、蓄灵与灵脉汇聚等核心区；不影响数值。</p>
+      </li>
       <li class="ui-pref-row ui-pref-audio-block">
         <div class="ui-pref-audio-head">
           <img class="ui-pref-inline-ico" src="${UI_SOUND_PREFS_DECO}" alt="" width="22" height="22" loading="lazy" />
@@ -2953,6 +2964,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `蓄灵池收取次数: ${lt.spiritReservoirClaims}`,
     `心斋卦象刷新次数: ${lt.dailyFortuneRolls}`,
     `灵潮时辰进入次数: ${lt.spiritTideHours}`,
+    `纳灵阵图绘阵累计: ${lt.spiritArrayUpgrades}`,
     `铸灵累计次数: ${lt.gearForgesTotal}`,
     `历史最高铸灵稀有度: ${rarityPeak}`,
     `周常悬赏单周清满次数: ${lt.weeklyBountyFullWeeks}`,
@@ -3038,6 +3050,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">蓄灵池收取次数</span><strong class="d-val" id="data-overview-lt-reservoir">${lt.spiritReservoirClaims}</strong></div>
         <div class="data-overview-cell"><span class="d-label">心斋卦象刷新次数</span><strong class="d-val" id="data-overview-lt-fortune">${lt.dailyFortuneRolls}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵潮时辰进入次数</span><strong class="d-val" id="data-overview-lt-spirit-tide">${lt.spiritTideHours}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">纳灵阵图绘阵累计</span><strong class="d-val" id="data-overview-lt-spirit-array">${lt.spiritArrayUpgrades}</strong></div>
         <div class="data-overview-cell"><span class="d-label">铸灵累计次数</span><strong class="d-val" id="data-overview-lt-forge">${lt.gearForgesTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历史最高铸灵稀有度</span><strong class="d-val" id="data-overview-lt-rarity">${rarityPeak}</strong></div>
         <div class="data-overview-cell"><span class="d-label">周常悬赏单周清满次数</span><strong class="d-val" id="data-overview-lt-bounty-weeks">${lt.weeklyBountyFullWeeks}</strong></div>
@@ -3084,6 +3097,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-reservoir", String(lt.spiritReservoirClaims));
   set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
   set("data-overview-lt-spirit-tide", String(lt.spiritTideHours));
+  set("data-overview-lt-spirit-array", String(lt.spiritArrayUpgrades));
   set("data-overview-lt-forge", String(lt.gearForgesTotal));
   const rarityPeak =
     lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length
@@ -3420,7 +3434,9 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const offlineChoicePanel = renderOfflineAdventurePanel(state, now, offlineBoostRenewRuleText, offlineResonanceTypeZh);
   const estateCommissionPanel = renderEstateCommissionPanel(state, now, fmtOfflineDurationSec);
 
-  const incomeGuidePanel = `<section class="panel income-visual-panel">
+  const incomeGuidePanel =
+    state.uiPrefs.showIncomeGuidePanel !== false
+      ? `<section class="panel income-visual-panel">
       <div class="panel-title-art-row panel-title-art-row--sub">
         <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_DECO}" alt="" width="24" height="24" loading="lazy" />
         <h2>收益来源拆分与升级引导</h2>
@@ -3459,7 +3475,8 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
           <p class="hint sm">当资源足够时，引导按钮与标签采用高对比强调，便于移动端快速识别。</p>
         </article>
       </div>
-    </section>`;
+    </section>`
+      : "";
 
   const core = `
     <section class="panel">
@@ -4332,6 +4349,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoBuyMeta") state.uiPrefs.autoBuyMeta = checked;
       else if (t === "confirmReincarnation") state.uiPrefs.confirmReincarnation = checked;
       else if (t === "dynamicDocumentTitle") state.uiPrefs.dynamicDocumentTitle = checked;
+      else if (t === "showIncomeGuidePanel") state.uiPrefs.showIncomeGuidePanel = checked;
       else return;
       saveGame(state);
       render();

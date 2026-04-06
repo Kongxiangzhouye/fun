@@ -23,6 +23,7 @@ import {
   UI_CHRONICLE_PET_PULL_STAT,
   UI_CHRONICLE_REALM_BREAKTHROUGH_STAT,
   UI_CHRONICLE_SKILL_LEVEL_STAT,
+  UI_CHRONICLE_SPIRIT_ARRAY_UPGRADE_STAT,
   UI_CHRONICLE_TUNA_STAT,
   UI_CHRONICLE_UR_REFINE_STAT,
   UI_CHRONICLE_VEIN_UPGRADE_STAT,
@@ -172,6 +173,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">三系挂机升级</span>
             <strong class="chronicle-stat-val">${ls.skillLevelUps} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--spirit-array-upgrade">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_SPIRIT_ARRAY_UPGRADE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">纳灵阵图绘阵</span>
+            <strong class="chronicle-stat-val">${ls.spiritArrayUpgrades} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card">

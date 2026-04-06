@@ -760,6 +760,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "array",
   },
   {
+    id: "spirit_array_upgrades_15",
+    title: "绘阵初勤",
+    desc: "纳灵阵图绘阵成功累计 15 次",
+    rewardStones: 480,
+    rewardEssence: 18,
+    listDeco: "array",
+  },
+  {
+    id: "spirit_array_upgrades_60",
+    title: "阵纹不息",
+    desc: "纳灵阵图绘阵成功累计 60 次",
+    rewardStones: 1800,
+    rewardEssence: 48,
+    listDeco: "array",
+  },
+  {
     id: "vein_gongming_40",
     title: "声应气求",
     desc: "洞府「共鸣」达到 40 级",
@@ -1107,6 +1123,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.spiritArrayLevel >= 25;
     case "spirit_array_30":
       return state.spiritArrayLevel >= 30;
+    case "spirit_array_upgrades_15":
+      return (state.lifetimeStats?.spiritArrayUpgrades ?? 0) >= 15;
+    case "spirit_array_upgrades_60":
+      return (state.lifetimeStats?.spiritArrayUpgrades ?? 0) >= 60;
     case "vein_gongming_40":
       return state.vein.gongMing >= 40;
     case "vein_gongming_80":

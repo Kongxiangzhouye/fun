@@ -62,6 +62,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       cardLevelUps: 0,
       cardStarUps: 0,
       spiritTideHours: 0,
+      spiritArrayUpgrades: 0,
     };
     return;
   }
@@ -157,6 +158,15 @@ export function normalizeLifetimeStats(st: GameState): void {
   const sth = st.lifetimeStats.spiritTideHours;
   if (sth == null || !Number.isFinite(sth)) st.lifetimeStats.spiritTideHours = 0;
   else st.lifetimeStats.spiritTideHours = Math.max(0, Math.floor(sth));
+  const sau = st.lifetimeStats.spiritArrayUpgrades;
+  if (sau == null || !Number.isFinite(sau)) st.lifetimeStats.spiritArrayUpgrades = 0;
+  else st.lifetimeStats.spiritArrayUpgrades = Math.max(0, Math.floor(sau));
+}
+
+/** 纳灵阵图绘阵成功（等级 +1）后累加 */
+export function recordSpiritArrayUpgradeLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.spiritArrayUpgrades += 1;
 }
 
 /** 灵卡升阶（等级 +1）成功后累加 */

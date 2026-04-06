@@ -122,6 +122,8 @@ export interface LifetimeStatsState {
   cardStarUps: number;
   /** 进入「灵潮」内部时辰累计次数（刻度推进至 0～2 时各计 1，含离线/闭关推进） */
   spiritTideHours: number;
+  /** 纳灵阵图绘阵成功次数（每次升 1 级计 1，含自动绘阵） */
+  spiritArrayUpgrades: number;
 }
 
 /** 灵田作物 id */
@@ -519,6 +521,8 @@ export interface UiPrefs {
   confirmReincarnation: boolean;
   /** 是否在浏览器标签标题中显示境界与灵石摘要；关闭后固定为「万象唤灵」 */
   dynamicDocumentTitle: boolean;
+  /** 灵府·修炼页是否显示「收益来源拆分与升级引导」说明面板 */
+  showIncomeGuidePanel: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

@@ -709,6 +709,17 @@ function runSpiritTideAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "spirit_tide_hours_120"));
 }
 
+function runSpiritArrayUpgradeAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("spirit_array_upgrades_15"));
+  st.lifetimeStats.spiritArrayUpgrades = 15;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "spirit_array_upgrades_15"));
+  st.lifetimeStats.spiritArrayUpgrades = 60;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "spirit_array_upgrades_60"));
+}
+
 function runGearEnhanceAndUrRefineAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("gear_enhances_40"), "gear enhance 40 should start locked");
@@ -928,6 +939,7 @@ function main(): void {
   runCardLevelAndStarAchievementsSmoke();
   runSpiritTideSmoke();
   runSpiritTideAchievementsSmoke();
+  runSpiritArrayUpgradeAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

@@ -835,6 +835,7 @@ export function deserialize(json: string): GameState {
     autoBuyMeta: !!data.uiPrefs?.autoBuyMeta,
     confirmReincarnation: data.uiPrefs?.confirmReincarnation !== false,
     dynamicDocumentTitle: data.uiPrefs?.dynamicDocumentTitle !== false,
+    showIncomeGuidePanel: data.uiPrefs?.showIncomeGuidePanel !== false,
   };
 
   if (data.pets && typeof data.pets === "object") {
@@ -960,6 +961,7 @@ export function deserialize(json: string): GameState {
       cardLevelUps: Math.max(0, Math.floor(data.lifetimeStats.cardLevelUps ?? 0)),
       cardStarUps: Math.max(0, Math.floor(data.lifetimeStats.cardStarUps ?? 0)),
       spiritTideHours: Math.max(0, Math.floor(data.lifetimeStats.spiritTideHours ?? 0)),
+      spiritArrayUpgrades: Math.max(0, Math.floor(data.lifetimeStats.spiritArrayUpgrades ?? 0)),
     };
   }
   normalizeLifetimeStats(st);
