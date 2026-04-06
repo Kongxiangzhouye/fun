@@ -814,6 +814,7 @@ export function deserialize(json: string): GameState {
     soundMuted: !!data.uiPrefs?.soundMuted,
     masterVolume: normalizeMasterVolume(data.uiPrefs?.masterVolume),
     autoClaimSpiritReservoir: !!data.uiPrefs?.autoClaimSpiritReservoir,
+    autoHarvestSpiritGarden: !!data.uiPrefs?.autoHarvestSpiritGarden,
   };
 
   if (data.pets && typeof data.pets === "object") {

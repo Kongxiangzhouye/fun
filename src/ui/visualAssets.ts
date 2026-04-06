@@ -344,6 +344,8 @@ export const UI_BOUNTY_MILESTONE_DECO = asset(WEEKLY_BOUNTY_UI_FILES.milestoneDe
 export const UI_GARDEN_HARVEST_ALL = asset(SPIRIT_GARDEN_BATCH_UI_FILES.harvestAll);
 /** 灵田 · 收获并续种 */
 export const UI_GARDEN_REPLANT = asset(SPIRIT_GARDEN_BATCH_UI_FILES.replant);
+/** 灵田「成熟自动收获并续种」开关旁小标 */
+export const UI_GARDEN_AUTO_HARVEST = asset("garden-auto-harvest.svg");
 /** 养成二级导航 · 分组标题前小徽记；与 `HUB_VEIN_FLAIR_UI_FILES` 同源 */
 export const UI_HUB_SECTION_FLAIR = asset(HUB_VEIN_FLAIR_UI_FILES.hubSectionFlair);
 /** 洞府蕴灵 · 共鸣乘区说明行左侧小标（双环链意象） */

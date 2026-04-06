@@ -7,7 +7,13 @@ import {
   normalizeSpiritGarden,
 } from "../systems/spiritGarden";
 import { fmtDecimal } from "../stones";
-import { UI_HEAD_GARDEN, UI_GARDEN_HARVEST_ALL, UI_GARDEN_REPLANT, GARDEN_CROP_IMG } from "./visualAssets";
+import {
+  UI_HEAD_GARDEN,
+  UI_GARDEN_HARVEST_ALL,
+  UI_GARDEN_REPLANT,
+  UI_GARDEN_AUTO_HARVEST,
+  GARDEN_CROP_IMG,
+} from "./visualAssets";
 
 export function renderSpiritGardenPage(state: GameState, now: number): string {
   normalizeSpiritGarden(state);
@@ -80,6 +86,11 @@ export function renderSpiritGardenPage(state: GameState, now: number): string {
         </button>
       </div>
       <p class="hint sm spirit-garden-batch-hint">续种优先使用该块灵田<strong>上次作物</strong>；灵石不足时跳过该块并提示。</p>
+      <label class="spirit-garden-auto-row">
+        <input type="checkbox" id="chk-garden-auto-harvest" data-ui-pref="autoHarvestSpiritGarden" ${state.uiPrefs.autoHarvestSpiritGarden ? "checked" : ""} />
+        <img class="spirit-garden-auto-ico" src="${UI_GARDEN_AUTO_HARVEST}" alt="" width="18" height="18" loading="lazy" />
+        <span class="spirit-garden-auto-text">成熟后自动收获并续种（与上方面板规则相同）</span>
+      </label>
       <div class="spirit-garden-grid">${plotsHtml.join("")}</div>
     </section>`;
 }

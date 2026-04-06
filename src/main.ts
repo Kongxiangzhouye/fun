@@ -257,6 +257,7 @@ import {
   harvestPlot,
   harvestAllReadyPlots,
   harvestAndReplantAllReady,
+  tryAutoHarvestAndReplantGarden,
   GARDEN_CROPS,
   GARDEN_PLOT_COUNT,
   plotGrowRemainingMs,
@@ -4206,6 +4207,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "compactNumbers") state.uiPrefs.compactNumbers = checked;
       else if (t === "soundMuted") state.uiPrefs.soundMuted = checked;
       else if (t === "autoClaimSpiritReservoir") state.uiPrefs.autoClaimSpiritReservoir = checked;
+      else if (t === "autoHarvestSpiritGarden") state.uiPrefs.autoHarvestSpiritGarden = checked;
       else return;
       saveGame(state);
       render();
@@ -5372,6 +5374,8 @@ function updateEstateIdleLiveReadouts(now: number): void {
 
 /** 灵府·灵田：生长条与收获按钮（仅在该子页时 DOM 存在） */
 function updateEstateGardenLiveReadouts(now: number): void {
+  const autoChk = document.getElementById("chk-garden-auto-harvest") as HTMLInputElement | null;
+  if (autoChk) autoChk.checked = state.uiPrefs.autoHarvestSpiritGarden;
   const totalEl = document.getElementById("garden-total-harvests");
   if (totalEl) totalEl.textContent = String(state.spiritGarden.totalHarvests);
   for (let i = 0; i < GARDEN_PLOT_COUNT; i++) {
@@ -5423,6 +5427,20 @@ function loop(): void {
     if (typeof document !== "undefined") {
       updateTopResourcePillsAndVigor(totalCardsInPool());
       updateEstateIdleLiveReadouts(now);
+    }
+  }
+  const autoGarden = tryAutoHarvestAndReplantGarden(state, now);
+  if (autoGarden) {
+    tryCompleteAchievements(state);
+    requestSave("灵田自动收获", true);
+    const r = autoGarden.replanted;
+    const s = autoGarden.skippedReplant;
+    toast(
+      `灵田自动：收获 ${autoGarden.harvested} 块${r > 0 ? `，续种 ${r}` : ""}${s > 0 ? `（${s} 块续种因灵石不足跳过）` : ""}`,
+    );
+    if (typeof document !== "undefined") {
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      updateEstateGardenLiveReadouts(now);
     }
   }
   const autoSettledOfflineInLoop = maybeAutoSettleOfflineAdventure(now, "loop");

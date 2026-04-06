@@ -184,3 +184,18 @@ export function harvestAndReplantAllReady(state: GameState, now: number): BatchG
   }
   return { harvested, replanted, skippedReplant, messages };
 }
+
+/** 与灵府灵田解锁一致：见 `getUiUnlocks().tabGarden` */
+export function spiritGardenUnlocked(state: GameState): boolean {
+  return state.totalPulls >= 1 && state.realmLevel >= 4;
+}
+
+/** 偏好开启且已解锁灵田时，对成熟地块执行收获并续种；无成熟则返回 null */
+export function tryAutoHarvestAndReplantGarden(state: GameState, now: number): BatchGardenResult | null {
+  if (!state.uiPrefs.autoHarvestSpiritGarden) return null;
+  if (!spiritGardenUnlocked(state)) return null;
+  normalizeSpiritGarden(state);
+  const r = harvestAndReplantAllReady(state, now);
+  if (r.harvested <= 0) return null;
+  return r;
+}

@@ -455,6 +455,8 @@ export interface UiPrefs {
   masterVolume: number;
   /** 蓄灵池蓄满时自动收取（需已解锁蓄灵池） */
   autoClaimSpiritReservoir: boolean;
+  /** 灵田：有成熟地块时自动「收获并续种」（需已解锁灵田） */
+  autoHarvestSpiritGarden: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

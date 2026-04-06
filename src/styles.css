@@ -9334,6 +9334,36 @@ p.gear-forge-tier-hint {
   margin-top: 6px;
 }
 
+.spirit-garden-auto-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 4px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(90, 150, 110, 0.38);
+  background: rgba(14, 28, 22, 0.55);
+  cursor: pointer;
+  user-select: none;
+}
+
+.spirit-garden-auto-row input {
+  margin-top: 3px;
+  accent-color: #7ec89a;
+}
+
+.spirit-garden-auto-ico {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.9;
+}
+
+.spirit-garden-auto-text {
+  font-size: 0.86rem;
+  color: #b0d8c4;
+  line-height: 1.45;
+}
+
 .spirit-garden-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

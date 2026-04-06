@@ -13,6 +13,7 @@ import {
 } from "../systems/offlineAdventure";
 import { acceptEstateCommission, settleEstateCommission, tryAutoSettleEstateCommission } from "../systems/estateCommission";
 import { reservoirCap, tryAutoClaimSpiritReservoirIfFull } from "../systems/spiritReservoir";
+import { plantCrop, tryAutoHarvestAndReplantGarden } from "../systems/spiritGarden";
 import {
   serialize,
   deserialize,
@@ -445,6 +446,18 @@ function runOfflineAdventurePendingNormalizeSmoke(): void {
   assert.equal(pending?.options[2].id, "essence", "normalized options should backfill essence");
 }
 
+function runGardenAutoHarvestSmoke(): void {
+  const st = createInitialState();
+  st.totalPulls = 1;
+  st.realmLevel = 4;
+  st.spiritStones = "99999";
+  st.uiPrefs.autoHarvestSpiritGarden = true;
+  const now = Date.now();
+  assert.equal(plantCrop(st, 0, "qing_grass", now - 120_000), true, "garden plant should succeed");
+  const r = tryAutoHarvestAndReplantGarden(st, now);
+  assert.ok(r != null && r.harvested >= 1, "auto harvest should run when mature");
+}
+
 function runSpiritReservoirAutoClaimSmoke(): void {
   const st = createInitialState();
   st.realmLevel = 3;
@@ -500,6 +513,7 @@ function main(): void {
   runOfflineAdventurePendingNormalizeSmoke();
   runDaoEssenceBreakdownSmoke();
   runSpiritReservoirAutoClaimSmoke();
+  runGardenAutoHarvestSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");
