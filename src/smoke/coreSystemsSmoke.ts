@@ -6,6 +6,7 @@ import { ensureCelestialStashWeek } from "../systems/celestialStash";
 import {
   chooseOfflineAdventureOption,
   maybeQueueOfflineAdventure,
+  normalizeOfflineAdventureState,
   OFFLINE_ADVENTURE_TRIGGER_SEC,
   tryAutoSettleOfflineAdventurePending,
 } from "../systems/offlineAdventure";
@@ -293,6 +294,8 @@ function runOfflineAdventureAutoPolicySmoke(): void {
   };
   st.offlineAdventure.autoPolicyEnabled = false;
   st.offlineAdventure.autoPolicy = "boost";
+  st.offlineAdventure.autoRerollEnabled = false;
+  st.offlineAdventure.autoRerollBudgetStones = "0";
   const off = tryAutoSettleOfflineAdventurePending(st, now);
   assert.equal(off.settled, false, "disabled policy should not auto settle pending");
   st.offlineAdventure.autoPolicyEnabled = true;
@@ -337,6 +340,70 @@ function runOfflineAdventureAutoPolicySmoke(): void {
   assert.equal(st.offlineAdventure.pending, null, "smart auto settled pending should be cleared");
 }
 
+function runOfflineAdventureAutoRerollBudgetSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.spiritStones = "1000";
+  st.offlineAdventure.autoPolicyEnabled = true;
+  st.offlineAdventure.autoPolicy = "steady";
+  st.offlineAdventure.autoRerollEnabled = true;
+  st.offlineAdventure.autoRerollBudgetStones = "300";
+  st.offlineAdventure.pending = {
+    triggeredAtMs: now,
+    settledSec: 4200,
+    options: [
+      { id: "instant", title: "I", desc: "", instantStones: "100", instantEssence: 1, boostMult: 1, boostDurationSec: 0 },
+      { id: "boost", title: "B", desc: "", instantStones: "0", instantEssence: 0, boostMult: 1.2, boostDurationSec: 3600 },
+      { id: "essence", title: "E", desc: "", instantStones: "0", instantEssence: 5, boostMult: 1, boostDurationSec: 0, zhuLingBonus: 3 },
+    ],
+    rerolled: false,
+    rerollCostStones: "180",
+  };
+  const settledWithReroll = tryAutoSettleOfflineAdventurePending(st, now);
+  assert.equal(settledWithReroll.settled, true, "auto policy should still settle after reroll");
+  assert.equal(settledWithReroll.rerolled, true, "budget-sufficient pending should auto reroll once");
+
+  st.offlineAdventure.pending = {
+    triggeredAtMs: now + 1,
+    settledSec: 4200,
+    options: [
+      { id: "instant", title: "I2", desc: "", instantStones: "100", instantEssence: 1, boostMult: 1, boostDurationSec: 0 },
+      { id: "boost", title: "B2", desc: "", instantStones: "0", instantEssence: 0, boostMult: 1.2, boostDurationSec: 3600 },
+      { id: "essence", title: "E2", desc: "", instantStones: "0", instantEssence: 5, boostMult: 1, boostDurationSec: 0, zhuLingBonus: 3 },
+    ],
+    rerolled: false,
+    rerollCostStones: "350",
+  };
+  st.offlineAdventure.autoRerollBudgetStones = "120";
+  const settledWithoutReroll = tryAutoSettleOfflineAdventurePending(st, now + 1);
+  assert.equal(settledWithoutReroll.settled, true, "over-budget pending should still auto settle");
+  assert.equal(settledWithoutReroll.rerolled, false, "over-budget pending should skip auto reroll");
+}
+
+function runOfflineAdventurePendingNormalizeSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.offlineAdventure.pending = {
+    triggeredAtMs: now,
+    settledSec: 3600,
+    options: [
+      // 非法/缺项：仅保留 instant + 一个重复 instant
+      { id: "instant", title: "I", desc: "", instantStones: "90", instantEssence: 1, boostMult: 1, boostDurationSec: 0 },
+      { id: "instant", title: "I2", desc: "", instantStones: "110", instantEssence: 1, boostMult: 1, boostDurationSec: 0 },
+      { id: "instant", title: "I3", desc: "", instantStones: "130", instantEssence: 2, boostMult: 1, boostDurationSec: 0 },
+    ],
+    rerolled: false,
+    rerollCostStones: "0",
+  };
+  normalizeOfflineAdventureState(st, now);
+  const pending = st.offlineAdventure.pending;
+  assert.ok(pending, "invalid pending should be normalized to safe options instead of crashing");
+  assert.equal(pending?.options.length, 3, "normalized pending should keep tri-option shape");
+  assert.equal(pending?.options[0].id, "instant", "normalized options should contain instant");
+  assert.equal(pending?.options[1].id, "boost", "normalized options should backfill boost");
+  assert.equal(pending?.options[2].id, "essence", "normalized options should backfill essence");
+}
+
 function runEstateCommissionAutoSettleLoopSmoke(): void {
   const st = createInitialState();
   const now = Date.now();
@@ -364,6 +431,8 @@ function main(): void {
   runEstateCommissionDueSettleSmoke();
   runOfflineAdventureQueueNoOverwriteSmoke();
   runOfflineAdventureAutoPolicySmoke();
+  runOfflineAdventureAutoRerollBudgetSmoke();
+  runOfflineAdventurePendingNormalizeSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");

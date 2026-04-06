@@ -196,6 +196,8 @@ export function createInitialState(): GameState {
       resonanceStacks: 0,
       autoPolicyEnabled: false,
       autoPolicy: "steady",
+      autoRerollEnabled: false,
+      autoRerollBudgetStones: "0",
     },
     estateCommission: createEmptyEstateCommissionState(),
     spiritArrayLevel: 0,

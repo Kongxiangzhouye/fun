@@ -598,6 +598,12 @@ export const UI_OFFLINE_AUTO_STRATEGY_SMART = asset("offline-auto-strategy-smart
 export const UI_OFFLINE_AUTO_STRATEGY_STATUS = asset("offline-auto-strategy-status.svg");
 /** 离线奇遇 · 挂机决策面板前往动作 */
 export const UI_OFFLINE_DECISION_GO = asset("offline-decision-go.svg");
+/** 离线奇遇 · 自动重掷预算开关 */
+export const UI_OFFLINE_AUTO_REROLL_TOGGLE = asset("offline-auto-reroll-toggle.svg");
+/** 离线奇遇 · 自动重掷预算图标 */
+export const UI_OFFLINE_AUTO_REROLL_BUDGET = asset("offline-auto-reroll-budget.svg");
+/** 离线奇遇 · pending 异常降级展示徽记 */
+export const UI_OFFLINE_PENDING_FALLBACK = asset("offline-pending-fallback.svg");
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);

@@ -31,6 +31,9 @@ import {
   UI_OFFLINE_RESONANCE_NEXT_BONUS,
   UI_TIME_SEMANTIC_LIVE,
   UI_TIME_SEMANTIC_LOCKED,
+  UI_OFFLINE_AUTO_REROLL_TOGGLE,
+  UI_OFFLINE_AUTO_REROLL_BUDGET,
+  UI_OFFLINE_PENDING_FALLBACK,
 } from "./visualAssets";
 
 function rerollHint(state: GameState): string {
@@ -40,8 +43,20 @@ function rerollHint(state: GameState): string {
   return `可消耗 ${fmtDecimal(new Decimal(pending.rerollCostStones || "0"))} 灵石重掷一次。`;
 }
 
+function hasValidPendingOptions(pending: GameState["offlineAdventure"]["pending"]): boolean {
+  if (!pending) return false;
+  const options = pending.options as unknown;
+  if (!Array.isArray(options) || options.length !== 3) return false;
+  const expectedIds = ["instant", "boost", "essence"];
+  return expectedIds.every((id, idx) => (options[idx] as { id?: string } | undefined)?.id === id);
+}
+
 interface OfflineAdventurePanelModel {
   pending: GameState["offlineAdventure"]["pending"];
+  pendingVisualState: "ready" | "degraded" | "standby";
+  pendingStatusLabel: string;
+  pendingStatusClass: "status-badge--ready" | "status-badge--risk" | "status-badge--pending";
+  pendingHintLine: string;
   boostLeftMs: number;
   boostMul: number;
   resLine: string;
@@ -50,6 +65,11 @@ interface OfflineAdventurePanelModel {
   canReroll: boolean;
   rerollHintLine: string;
   rerollIcon: string;
+  autoRerollEnabled: boolean;
+  autoRerollBudgetLabel: string;
+  autoRerollBudgetValue: string;
+  autoRerollStatusLine: string;
+  autoRerollHintLine: string;
   instantPreview: string;
   boostPreview: string;
   essencePreview: string;
@@ -92,12 +112,51 @@ function autoPolicyLabelZh(policy: "steady" | "boost" | "essence" | "smart"): st
   return "稳态优先";
 }
 
+function pendingVisualMeta(
+  mode: "ready" | "degraded" | "standby",
+): {
+  label: string;
+  klass: "status-badge--ready" | "status-badge--risk" | "status-badge--pending";
+  hint: string;
+} {
+  if (mode === "ready") {
+    return {
+      label: "奇遇待处理",
+      klass: "status-badge--ready",
+      hint: "已生成离线奇遇，可在本面板手动处理或交由自动策略处理。",
+    };
+  }
+  if (mode === "degraded") {
+    return {
+      label: "异常待降级",
+      klass: "status-badge--risk",
+      hint: "检测到异常 pending 快照，已切换为安全降级展示；可稍后刷新或继续其它玩法。",
+    };
+  }
+  return {
+    label: "等待触发",
+    klass: "status-badge--pending",
+    hint: "当前无待结算奇遇，达到离线阈值后将生成三选一。",
+  };
+}
+
 function buildOfflineAdventurePanelModel(
   state: GameState,
   now: number,
   offlineResonanceTypeZh: (type: "instant" | "boost" | "essence" | null) => string,
 ): OfflineAdventurePanelModel {
-  const pending = state.offlineAdventure.pending;
+  const rawPending = state.offlineAdventure.pending;
+  const pendingValid = hasValidPendingOptions(rawPending);
+  const pending = pendingValid ? rawPending : null;
+  const pendingVisualState: "ready" | "degraded" | "standby" = rawPending
+    ? pendingValid
+      ? "ready"
+      : "degraded"
+    : "standby";
+  const pendingMeta = pendingVisualMeta(pendingVisualState);
+  const pendingStatusLabel = pendingMeta.label;
+  const pendingStatusClass = pendingMeta.klass;
+  const pendingHintLine = pendingMeta.hint;
   const boostLeftMs = offlineAdventureBoostLeftMs(state, now);
   const boostMul = offlineAdventureBoostMult(state, now);
   const instantPreview = previewOfflineAdventureResonance(state, "instant");
@@ -139,6 +198,15 @@ function buildOfflineAdventurePanelModel(
       ? "检测到待结算奇遇，将按当前策略自动结算。"
       : "当前无待结算奇遇，下一次离线触发后将自动结算。"
     : "点击下方策略按钮可开启自动结算；再次点击当前策略可关闭。";
+  const autoRerollEnabled = !!state.offlineAdventure.autoRerollEnabled;
+  const autoRerollBudgetValue = state.offlineAdventure.autoRerollBudgetStones || "0";
+  const autoRerollBudgetLabel = `预算上限：${fmtDecimal(new Decimal(autoRerollBudgetValue || "0"))} 灵石`;
+  const autoRerollStatusLine = autoRerollEnabled ? "自动重掷开启" : "自动重掷关闭";
+  const autoRerollHintLine = pending
+    ? pending.rerolled
+      ? "当前 pending 已重掷过一次；本轮不再自动重掷。"
+      : `本轮重掷成本 ${fmtDecimal(new Decimal(rerollCost))}，仅在不超预算时自动重掷。`
+    : "等待离线奇遇后自动按预算判定是否重掷。";
   const choiceInstantTitle = pending ? pending.options[0].title : "稳态回收";
   const choiceBoostTitle = pending ? pending.options[1].title : "静修余韵";
   const choiceEssenceTitle = pending ? pending.options[2].title : "髓潮归元";
@@ -196,6 +264,10 @@ function buildOfflineAdventurePanelModel(
   }
   return {
     pending,
+    pendingVisualState,
+    pendingStatusLabel,
+    pendingStatusClass,
+    pendingHintLine,
     boostLeftMs,
     boostMul,
     resLine,
@@ -204,6 +276,11 @@ function buildOfflineAdventurePanelModel(
     canReroll,
     rerollHintLine: rerollHint(state),
     rerollIcon: canReroll ? UI_OFFLINE_REROLL_READY : UI_OFFLINE_REROLL_LOCKED,
+    autoRerollEnabled,
+    autoRerollBudgetLabel,
+    autoRerollBudgetValue,
+    autoRerollStatusLine,
+    autoRerollHintLine,
     instantPreview: instantPreview.summary,
     boostPreview: boostPreview.summary,
     essencePreview: essencePreview.summary,
@@ -253,6 +330,13 @@ export function renderOfflineAdventurePanel(
         <h2>离线奇遇三选一</h2>
       </div>
       <p class="hint sm offline-panel-summary" id="offline-panel-summary"><img src="${vm.timeSemanticIcon}" alt="" width="14" height="14" loading="lazy" />离线达阈值会生成三选一；灵脉/髓潮奖励立即到账，静修增益在持续时间后自动失效。${vm.boostTag}</p>
+      <div class="offline-pending-state-chip" data-offline-pending-state="${vm.pendingVisualState}">
+        <span class="status-badge ${vm.pendingStatusClass}" id="offline-pending-status-badge">
+          <img src="${UI_OFFLINE_PENDING_FALLBACK}" alt="" width="14" height="14" loading="lazy" />
+          <span>${vm.pendingStatusLabel}</span>
+        </span>
+        <p class="hint sm offline-pending-hint-line" id="offline-pending-hint-line">${vm.pendingHintLine}</p>
+      </div>
       <p class="hint sm offline-resonance-line" id="offline-resonance-line">
         <img src="${UI_OFFLINE_RESONANCE_CHAIN}" alt="" width="14" height="14" loading="lazy" />
         <span>${vm.resLine}</span>
@@ -273,7 +357,7 @@ export function renderOfflineAdventurePanel(
       </div>
       <p class="hint sm offline-boost-rule-line" id="offline-boost-rule-line"><img src="${UI_OFFLINE_READOUT_SYNC}" alt="" width="14" height="14" loading="lazy" />${offlineBoostRenewRuleText()}</p>
       <div
-        class="offline-decision-panel"
+        class="offline-control-surface offline-decision-panel"
         id="offline-decision-panel"
         data-offline-decision-state="${vm.decisionState}"
         data-offline-decision-recommend="${vm.autoPolicy}"
@@ -297,7 +381,7 @@ export function renderOfflineAdventurePanel(
           <span id="offline-decision-go-label">${vm.decisionGoLabel}</span>
         </button>
       </div>
-      <div class="offline-auto-config" data-offline-auto-state="${vm.pending ? "ready" : "standby"}">
+      <div class="offline-control-surface offline-auto-config" data-offline-auto-state="${vm.pending ? "ready" : "standby"}">
         <div class="offline-auto-config-head">
           <p class="hint sm offline-auto-config-title">
             <img src="${UI_OFFLINE_AUTO_STRATEGY_STATUS}" alt="" width="14" height="14" loading="lazy" />
@@ -325,6 +409,36 @@ export function renderOfflineAdventurePanel(
         </div>
         <p class="hint sm offline-auto-policy-line" id="offline-auto-policy-line">${vm.autoPolicyLabel}</p>
         <p class="hint sm offline-auto-tip-line" id="offline-auto-tip-line">${vm.autoTipLine}</p>
+        <div
+          class="offline-auto-reroll-block"
+          id="offline-auto-reroll-block"
+          data-offline-auto-reroll-enabled="${vm.autoRerollEnabled ? "1" : "0"}"
+          data-offline-auto-reroll-budget="${vm.autoRerollBudgetValue}"
+        >
+          <button class="btn offline-auto-reroll-toggle" id="offline-auto-reroll-toggle" type="button" data-offline-auto-reroll-toggle="1" aria-pressed="${vm.autoRerollEnabled ? "true" : "false"}">
+            <img src="${UI_OFFLINE_AUTO_REROLL_TOGGLE}" alt="" width="14" height="14" loading="lazy" />
+            自动重掷预算
+            <span class="status-badge ${vm.autoRerollEnabled ? "status-badge--ready" : "status-badge--pending"}" id="offline-auto-reroll-status">${vm.autoRerollStatusLine}</span>
+          </button>
+          <p class="hint sm offline-auto-reroll-budget" id="offline-auto-reroll-budget">
+            <img src="${UI_OFFLINE_AUTO_REROLL_BUDGET}" alt="" width="14" height="14" loading="lazy" />
+            <span>${vm.autoRerollBudgetLabel}</span>
+          </p>
+          <label class="hint sm offline-auto-reroll-budget-input-row" for="offline-auto-reroll-budget-input">
+            预算上限
+            <input
+              id="offline-auto-reroll-budget-input"
+              class="offline-auto-reroll-budget-input"
+              data-offline-auto-reroll-budget-input="1"
+              type="number"
+              min="0"
+              step="10"
+              inputmode="numeric"
+              value="${vm.autoRerollBudgetValue}"
+            />
+          </label>
+          <p class="hint sm offline-auto-reroll-hint" id="offline-auto-reroll-hint">${vm.autoRerollHintLine}</p>
+        </div>
       </div>
       <div class="offline-reroll-row">
         <span class="hint sm offline-reroll-hint" id="offline-reroll-hint">
@@ -456,6 +570,9 @@ export function updateOfflineAdventurePanelReadouts(
       vm.boostTag;
   }
   const resonanceLine = document.getElementById("offline-resonance-line");
+  const pendingStatusBadge = document.getElementById("offline-pending-status-badge");
+  const pendingHintLine = document.getElementById("offline-pending-hint-line");
+  const pendingStateChip = document.querySelector(".offline-pending-state-chip");
   if (resonanceLine) {
     const t = resonanceLine.querySelector("span");
     if (t) {
@@ -491,6 +608,12 @@ export function updateOfflineAdventurePanelReadouts(
   const decisionGoBtn = document.getElementById("offline-decision-go-btn") as HTMLButtonElement | null;
   const decisionGoLabel = document.getElementById("offline-decision-go-label");
   const autoBtns = document.querySelectorAll("[data-offline-auto-strategy]");
+  const autoRerollBlock = document.getElementById("offline-auto-reroll-block");
+  const autoRerollToggle = document.getElementById("offline-auto-reroll-toggle");
+  const autoRerollStatus = document.getElementById("offline-auto-reroll-status");
+  const autoRerollBudget = document.getElementById("offline-auto-reroll-budget");
+  const autoRerollBudgetInput = document.getElementById("offline-auto-reroll-budget-input") as HTMLInputElement | null;
+  const autoRerollHint = document.getElementById("offline-auto-reroll-hint");
   autoBtns.forEach((btn) => {
     const strategy = (btn as HTMLElement).dataset.offlineAutoStrategy;
     const shouldActive = vm.autoPolicyEnabled && strategy === vm.autoPolicy;
@@ -503,6 +626,33 @@ export function updateOfflineAdventurePanelReadouts(
   }
   if (autoPolicyLine) autoPolicyLine.textContent = vm.autoPolicyLabel;
   if (autoTipLine) autoTipLine.textContent = vm.autoTipLine;
+  if (pendingStateChip) pendingStateChip.setAttribute("data-offline-pending-state", vm.pendingVisualState);
+  if (pendingHintLine) pendingHintLine.textContent = vm.pendingHintLine;
+  if (pendingStatusBadge) {
+    pendingStatusBadge.classList.toggle("status-badge--ready", vm.pendingStatusClass === "status-badge--ready");
+    pendingStatusBadge.classList.toggle("status-badge--risk", vm.pendingStatusClass === "status-badge--risk");
+    pendingStatusBadge.classList.toggle("status-badge--pending", vm.pendingStatusClass === "status-badge--pending");
+    const pendingStatusText = pendingStatusBadge.querySelector("span");
+    if (pendingStatusText) pendingStatusText.textContent = vm.pendingStatusLabel;
+  }
+  if (autoRerollBlock) {
+    autoRerollBlock.setAttribute("data-offline-auto-reroll-enabled", vm.autoRerollEnabled ? "1" : "0");
+    autoRerollBlock.setAttribute("data-offline-auto-reroll-budget", vm.autoRerollBudgetValue);
+  }
+  if (autoRerollToggle) {
+    autoRerollToggle.setAttribute("aria-pressed", vm.autoRerollEnabled ? "true" : "false");
+  }
+  if (autoRerollStatus) {
+    autoRerollStatus.textContent = vm.autoRerollStatusLine;
+    autoRerollStatus.classList.toggle("status-badge--ready", vm.autoRerollEnabled);
+    autoRerollStatus.classList.toggle("status-badge--pending", !vm.autoRerollEnabled);
+  }
+  if (autoRerollBudget) {
+    const autoRerollBudgetText = autoRerollBudget.querySelector("span");
+    if (autoRerollBudgetText) autoRerollBudgetText.textContent = vm.autoRerollBudgetLabel;
+  }
+  if (autoRerollBudgetInput) autoRerollBudgetInput.value = vm.autoRerollBudgetValue;
+  if (autoRerollHint) autoRerollHint.textContent = vm.autoRerollHintLine;
   if (choiceTitleInstant) choiceTitleInstant.textContent = vm.choiceInstantTitle;
   if (choiceTitleBoost) choiceTitleBoost.textContent = vm.choiceBoostTitle;
   if (choiceTitleEssence) choiceTitleEssence.textContent = vm.choiceEssenceTitle;

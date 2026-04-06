@@ -363,6 +363,8 @@ export function serialize(state: GameState): string {
           resonanceStacks: state.offlineAdventure.resonanceStacks,
           autoPolicyEnabled: state.offlineAdventure.autoPolicyEnabled,
           autoPolicy: state.offlineAdventure.autoPolicy,
+          autoRerollEnabled: state.offlineAdventure.autoRerollEnabled,
+          autoRerollBudgetStones: state.offlineAdventure.autoRerollBudgetStones,
         }
       : {
           pending: null,
@@ -372,6 +374,8 @@ export function serialize(state: GameState): string {
           resonanceStacks: 0,
           autoPolicyEnabled: false,
           autoPolicy: "steady",
+          autoRerollEnabled: false,
+          autoRerollBudgetStones: "0",
         },
     estateCommission: {
       offer: state.estateCommission.offer ? { ...state.estateCommission.offer, reward: { ...state.estateCommission.offer.reward } } : null,
@@ -609,6 +613,11 @@ export function deserialize(json: string): GameState {
         (oa as { autoPolicy?: unknown }).autoPolicy === "smart"
           ? ((oa as { autoPolicy?: "boost" | "essence" | "smart" }).autoPolicy ?? "steady")
           : "steady",
+      autoRerollEnabled: !!(oa as { autoRerollEnabled?: unknown }).autoRerollEnabled,
+      autoRerollBudgetStones:
+        typeof (oa as { autoRerollBudgetStones?: unknown }).autoRerollBudgetStones === "string"
+          ? (oa as { autoRerollBudgetStones?: string }).autoRerollBudgetStones || "0"
+          : "0",
     };
   } else {
     st.offlineAdventure = {
@@ -619,6 +628,8 @@ export function deserialize(json: string): GameState {
       resonanceStacks: 0,
       autoPolicyEnabled: false,
       autoPolicy: "steady",
+      autoRerollEnabled: false,
+      autoRerollBudgetStones: "0",
     };
   }
   normalizeOfflineAdventureState(st, Date.now());

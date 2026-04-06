@@ -979,16 +979,17 @@ function maybeAutoSettleOfflineAdventure(now: number, source: "loop" | "resume" 
   const auto = tryAutoSettleOfflineAdventurePending(state, now);
   if (!auto.settled || !auto.optionId) return false;
   tryCompleteAchievements(state);
+  const rerollPrefix = auto.rerolled ? "已先自动重掷并" : "";
   if (source !== "loop") {
     if (auto.optionId === "boost") {
       const leftMin = Math.ceil(offlineAdventureBoostLeftMs(state, now) / 60000);
-      tryToast(`离线奇遇已按策略自动结算：静修余韵（约 ${leftMin} 分）。`);
+      tryToast(`离线奇遇${rerollPrefix}按策略自动结算：静修余韵（约 ${leftMin} 分）。`);
     } else if (auto.optionId === "instant") {
-      tryToast("离线奇遇已按策略自动结算：灵脉馈赠。");
+      tryToast(`离线奇遇${rerollPrefix}按策略自动结算：灵脉馈赠。`);
     } else if (auto.optionId === "essence") {
-      tryToast("离线奇遇已按策略自动结算：髓潮归元。");
+      tryToast(`离线奇遇${rerollPrefix}按策略自动结算：髓潮归元。`);
     } else {
-      tryToast("离线奇遇已按策略自动结算。");
+      tryToast(`离线奇遇${rerollPrefix}按策略自动结算。`);
     }
   }
   return true;
@@ -4703,6 +4704,26 @@ function bindEvents(rb: Decimal, _slots: number): void {
       if (autoSettled) updateTopResourcePillsAndVigor(totalCardsInPool());
       render();
     });
+  });
+  document.querySelectorAll("[data-offline-auto-reroll-toggle]").forEach((el) => {
+    el.addEventListener("click", () => {
+      state.offlineAdventure.autoRerollEnabled = !state.offlineAdventure.autoRerollEnabled;
+      saveGame(state);
+      toast(state.offlineAdventure.autoRerollEnabled ? "离线奇遇自动重掷已开启。" : "离线奇遇自动重掷已关闭。");
+      render();
+    });
+  });
+  document.querySelectorAll("[data-offline-auto-reroll-budget-input]").forEach((el) => {
+    const input = el as HTMLInputElement;
+    const apply = () => {
+      const raw = Number.isFinite(Number(input.value)) ? Number(input.value) : 0;
+      const budget = Math.max(0, Math.floor(raw));
+      state.offlineAdventure.autoRerollBudgetStones = String(budget);
+      saveGame(state);
+      render();
+    };
+    input.addEventListener("change", apply);
+    input.addEventListener("blur", apply);
   });
   document.querySelectorAll("[data-offline-go]").forEach((el) => {
     el.addEventListener("click", () => {

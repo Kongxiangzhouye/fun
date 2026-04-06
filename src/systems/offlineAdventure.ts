@@ -20,6 +20,66 @@ function optionRollJitter(seed: number): number {
   return (x - 8) / 100;
 }
 
+function safeNonNegativeIntString(v: unknown, fallback = "0"): string {
+  try {
+    const d = new Decimal(typeof v === "string" || typeof v === "number" ? v : fallback);
+    if (!d.isFinite() || d.lt(0)) return fallback;
+    return d.toDecimalPlaces(0, Decimal.ROUND_FLOOR).toFixed(0);
+  } catch {
+    return fallback;
+  }
+}
+
+function isOfflineOptionId(v: unknown): v is OfflineAdventureOptionState["id"] {
+  return v === "instant" || v === "boost" || v === "essence";
+}
+
+function normalizeOptionById(
+  state: GameState,
+  settledSec: number,
+  partial: Partial<OfflineAdventureOptionState> | undefined,
+  id: OfflineAdventureOptionState["id"],
+): OfflineAdventureOptionState {
+  const [fallbackInstant, fallbackBoost, fallbackEssence] = mkOptions(state, settledSec);
+  const fallback = id === "instant" ? fallbackInstant : id === "boost" ? fallbackBoost : fallbackEssence;
+  const normalizedId = isOfflineOptionId(partial?.id) ? partial.id : id;
+  const zhuLingRaw = partial?.zhuLingBonus;
+  return {
+    id: normalizedId,
+    title: typeof partial?.title === "string" && partial.title ? partial.title : fallback.title,
+    desc: typeof partial?.desc === "string" && partial.desc ? partial.desc : fallback.desc,
+    instantStones: safeNonNegativeIntString(partial?.instantStones, fallback.instantStones),
+    instantEssence: Number.isFinite(partial?.instantEssence) ? Math.max(0, Math.floor(partial!.instantEssence!)) : fallback.instantEssence,
+    boostMult: Number.isFinite(partial?.boostMult) ? Math.max(1, Number(partial!.boostMult!)) : fallback.boostMult,
+    boostDurationSec: Number.isFinite(partial?.boostDurationSec)
+      ? Math.max(0, Math.floor(Number(partial!.boostDurationSec!)))
+      : fallback.boostDurationSec,
+    ...(normalizedId === "essence"
+      ? {
+          zhuLingBonus: Number.isFinite(zhuLingRaw) ? Math.max(0, Math.floor(Number(zhuLingRaw))) : fallback.zhuLingBonus ?? 0,
+        }
+      : {}),
+  };
+}
+
+function normalizePendingOptions(
+  state: GameState,
+  pending: GameState["offlineAdventure"]["pending"],
+): [OfflineAdventureOptionState, OfflineAdventureOptionState, OfflineAdventureOptionState] | null {
+  if (!pending || !Array.isArray(pending.options)) return null;
+  const settledSec = Number.isFinite(pending.settledSec) ? Math.max(0, pending.settledSec) : 0;
+  const byId: Partial<Record<OfflineAdventureOptionState["id"], OfflineAdventureOptionState>> = {};
+  for (const raw of pending.options) {
+    if (!raw || typeof raw !== "object" || !isOfflineOptionId(raw.id) || byId[raw.id]) continue;
+    byId[raw.id] = normalizeOptionById(state, settledSec, raw, raw.id);
+  }
+  return [
+    byId.instant ?? normalizeOptionById(state, settledSec, undefined, "instant"),
+    byId.boost ?? normalizeOptionById(state, settledSec, undefined, "boost"),
+    byId.essence ?? normalizeOptionById(state, settledSec, undefined, "essence"),
+  ];
+}
+
 export interface OfflineAdventureResonancePreview {
   type: "instant" | "boost" | "essence";
   nextStacks: number;
@@ -273,15 +333,36 @@ function autoPolicyPreferredOption(
 export interface OfflineAdventureAutoSettleResult {
   settled: boolean;
   optionId: "instant" | "boost" | "essence" | null;
+  rerolled: boolean;
 }
 
 export function tryAutoSettleOfflineAdventurePending(
   state: GameState,
   now: number,
 ): OfflineAdventureAutoSettleResult {
-  const pending = state.offlineAdventure.pending;
+  let pending = state.offlineAdventure.pending;
   if (!state.offlineAdventure.autoPolicyEnabled || !pending) {
-    return { settled: false, optionId: null };
+    return { settled: false, optionId: null, rerolled: false };
+  }
+  let rerolled = false;
+  const normalized = normalizePendingOptions(state, pending);
+  if (!normalized) return { settled: false, optionId: null, rerolled: false };
+  pending.options = normalized;
+  const rerollCost = new Decimal(safeNonNegativeIntString(pending.rerollCostStones, calcRerollStoneCost(pending.settledSec)));
+  const rerollBudget = new Decimal(safeNonNegativeIntString(state.offlineAdventure.autoRerollBudgetStones, "0"));
+  const canAutoReroll =
+    state.offlineAdventure.autoRerollEnabled &&
+    !pending.rerolled &&
+    rerollBudget.gte(rerollCost) &&
+    new Decimal(state.spiritStones).gte(rerollCost);
+  if (canAutoReroll) {
+    const rerollResult = rerollOfflineAdventureOptions(state, now);
+    if (rerollResult.ok) rerolled = true;
+    pending = state.offlineAdventure.pending;
+    if (!pending) return { settled: false, optionId: null, rerolled };
+    const normalizedAfterReroll = normalizePendingOptions(state, pending);
+    if (!normalizedAfterReroll) return { settled: false, optionId: null, rerolled };
+    pending.options = normalizedAfterReroll;
   }
   const preferred = autoPolicyPreferredOption(state, now);
   const picked = pending.options.find((op) => op.id === preferred)
@@ -290,7 +371,7 @@ export function tryAutoSettleOfflineAdventurePending(
       ? "instant"
       : pending.options[0]?.id ?? "instant";
   const ok = chooseOfflineAdventureOption(state, picked, now);
-  return { settled: ok, optionId: ok ? picked : null };
+  return { settled: ok, optionId: ok ? picked : null, rerolled };
 }
 
 export function offlineAdventureBoostMult(state: GameState, now: number): number {
@@ -316,6 +397,8 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
       resonanceStacks: 0,
       autoPolicyEnabled: false,
       autoPolicy: "steady",
+      autoRerollEnabled: false,
+      autoRerollBudgetStones: "0",
     };
     return;
   }
@@ -329,6 +412,8 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
     oa.resonanceType = null;
   }
   oa.autoPolicyEnabled = !!oa.autoPolicyEnabled;
+  oa.autoRerollEnabled = !!oa.autoRerollEnabled;
+  oa.autoRerollBudgetStones = safeNonNegativeIntString(oa.autoRerollBudgetStones, "0");
   if (oa.autoPolicy !== "steady" && oa.autoPolicy !== "boost" && oa.autoPolicy !== "essence" && oa.autoPolicy !== "smart") {
     oa.autoPolicy = "steady";
   }
@@ -336,12 +421,21 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
   oa.resonanceStacks = Math.max(0, Math.min(RESONANCE_STACK_CAP, Math.floor(oa.resonanceStacks)));
   if (!oa.pending) return;
   const p = oa.pending;
-  if (!Number.isFinite(p.triggeredAtMs) || !Number.isFinite(p.settledSec) || !Array.isArray(p.options) || p.options.length !== 3) {
+  if (!Number.isFinite(p.triggeredAtMs) || !Number.isFinite(p.settledSec)) {
     oa.pending = null;
     return;
   }
+  p.triggeredAtMs = Math.max(0, Math.floor(p.triggeredAtMs));
+  p.settledSec = Math.max(0, p.settledSec);
+  const normalizedOptions = normalizePendingOptions(state, p);
+  if (!normalizedOptions) {
+    oa.pending = null;
+    return;
+  }
+  p.options = normalizedOptions;
   p.rerolled = !!p.rerolled;
   if (typeof p.rerollCostStones !== "string" || !p.rerollCostStones) {
     p.rerollCostStones = calcRerollStoneCost(p.settledSec);
   }
+  p.rerollCostStones = safeNonNegativeIntString(p.rerollCostStones, calcRerollStoneCost(p.settledSec));
 }

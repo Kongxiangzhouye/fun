@@ -164,6 +164,10 @@ export interface OfflineAdventureState {
   autoPolicyEnabled: boolean;
   /** 自动策略偏好：稳态优先 / 增益优先 / 髓潮优先 / 智能 */
   autoPolicy: "steady" | "boost" | "essence" | "smart";
+  /** 自动重掷开关：仅对本轮 pending 生效且最多一次 */
+  autoRerollEnabled: boolean;
+  /** 自动重掷预算上限（灵石）；超出则不自动重掷 */
+  autoRerollBudgetStones: string;
 }
 
 export type EstateCommissionType = "resource" | "combat" | "cultivation";

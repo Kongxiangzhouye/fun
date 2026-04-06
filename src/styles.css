@@ -3730,24 +3730,39 @@ h1 {
 .offline-auto-config {
   display: grid;
   gap: 6px;
-  padding: 8px 9px;
-  border-radius: 10px;
-  border: 1px solid rgba(114, 158, 232, 0.26);
-  background: linear-gradient(165deg, rgba(22, 35, 62, 0.46), rgba(15, 23, 41, 0.7));
 }
 
 .offline-decision-panel {
   display: grid;
   gap: 6px;
+}
+
+.offline-control-surface {
   padding: 8px 9px;
   border-radius: 10px;
-  border: 1px solid rgba(125, 170, 243, 0.24);
+  border: 1px solid rgba(120, 166, 238, 0.26);
   background: linear-gradient(165deg, rgba(23, 36, 60, 0.4), rgba(14, 22, 39, 0.65));
 }
 
 .offline-decision-panel[data-offline-decision-state="ready"] {
   border-color: rgba(147, 191, 255, 0.42);
   box-shadow: 0 0 0 1px rgba(132, 186, 255, 0.12) inset;
+}
+
+.offline-pending-state-chip {
+  display: grid;
+  gap: 6px;
+}
+
+.offline-pending-state-chip[data-offline-pending-state="degraded"] {
+  border-radius: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(220, 165, 101, 0.34);
+  background: rgba(88, 54, 23, 0.22);
+}
+
+.offline-pending-hint-line {
+  margin: 0;
 }
 
 .offline-decision-title,
@@ -3801,6 +3816,40 @@ h1 {
 .offline-auto-policy-line,
 .offline-auto-tip-line {
   margin: 0;
+}
+
+.offline-auto-reroll-block {
+  display: grid;
+  gap: 6px;
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(128, 166, 230, 0.26);
+}
+
+.offline-auto-reroll-toggle {
+  justify-content: flex-start;
+}
+
+.offline-auto-reroll-budget {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.offline-auto-reroll-budget-input-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.offline-auto-reroll-budget-input {
+  width: 110px;
+}
+
+.offline-auto-reroll-hint {
+  margin: 0;
+  color: #b8c8e7;
 }
 
 .offline-reroll-hint {
