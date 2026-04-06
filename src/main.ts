@@ -158,6 +158,7 @@ import {
   UI_ACH_PET_PULL_DECO,
   UI_ACH_REINCARNATION_DECO,
   UI_ACH_GARDEN_DECO,
+  UI_ACH_GARDEN_BLOOM_DECO,
   UI_ACH_STASH_DECO,
   UI_ACH_RESERVOIR_DECO,
   UI_ACH_FORTUNE_DECO,
@@ -3225,6 +3226,8 @@ function renderAch(): string {
                           ? `<img class="ach-deco-icon" src="${UI_ACH_REINCARNATION_DECO}" alt="" width="22" height="22" loading="lazy" />`
                             : a.listDeco === "garden"
                             ? `<img class="ach-deco-icon" src="${UI_ACH_GARDEN_DECO}" alt="" width="22" height="22" loading="lazy" />`
+                            : a.listDeco === "gardenBloom"
+                              ? `<img class="ach-deco-icon" src="${UI_ACH_GARDEN_BLOOM_DECO}" alt="" width="22" height="22" loading="lazy" />`
                             : a.listDeco === "stash"
                               ? `<img class="ach-deco-icon" src="${UI_ACH_STASH_DECO}" alt="" width="22" height="22" loading="lazy" />`
                               : a.listDeco === "reservoir"

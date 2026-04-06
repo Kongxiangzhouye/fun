@@ -182,6 +182,8 @@ export const UI_ACH_PET_PULL_DECO = asset("ach-pet-pull-deco.svg");
 export const UI_ACH_REINCARNATION_DECO = asset("ach-reincarnation-deco.svg");
 /** 成就列表 · 灵田系条目左侧小徽 */
 export const UI_ACH_GARDEN_DECO = asset("ach-garden-deco.svg");
+/** 成就列表 · 灵田超高累计收获里程碑（穗花） */
+export const UI_ACH_GARDEN_BLOOM_DECO = asset("ach-garden-bloom-deco.svg");
 /** 成就列表 · 天机匣系条目左侧小徽 */
 export const UI_ACH_STASH_DECO = asset("ach-stash-deco.svg");
 /** 成就列表 · 蓄灵池系条目左侧小徽 */

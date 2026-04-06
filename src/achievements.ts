@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
+  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -262,6 +262,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 1100,
     rewardEssence: 42,
     listDeco: "garden",
+  },
+  {
+    id: "garden_harvest_300",
+    title: "畦间千穗",
+    desc: "灵田累计收获 300 次",
+    rewardStones: 2800,
+    rewardEssence: 72,
+    listDeco: "gardenBloom",
   },
   {
     id: "login_streak_7",
@@ -583,6 +591,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.spiritGarden?.totalHarvests ?? 0) >= 30;
     case "garden_harvest_100":
       return (state.spiritGarden?.totalHarvests ?? 0) >= 100;
+    case "garden_harvest_300":
+      return (state.spiritGarden?.totalHarvests ?? 0) >= 300;
     case "login_streak_7":
       return state.dailyStreak >= 7;
     case "login_streak_30":

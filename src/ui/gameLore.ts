@@ -138,7 +138,7 @@ export function renderGameLoreHtml(): string {
       <details class="game-lore-block">
         <summary><img src="${UI_LORE_ESTATE}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 灵府与灵脉</summary>
         <ul class="game-lore-list">
-          <li><strong>灵田</strong>：地块种植灵草，到时收获灵砂、灵石等；养成进度<strong>跨轮回保留</strong>。累计收获 <strong>1 / 30 / 100</strong> 次可在<strong>成就</strong>领奖。</li>
+          <li><strong>灵田</strong>：地块种植灵草，到时收获灵砂、灵石等；养成进度<strong>跨轮回保留</strong>。累计收获 <strong>1 / 30 / 100 / 300</strong> 次可在<strong>成就</strong>领奖。</li>
           <li><strong>纳灵阵图</strong>：消耗灵石与灵砂提升重数，增加全局灵石效率（与其它乘区叠乘）；最高 <strong>30</strong> 重，<strong>10 / 25 / 30</strong> 重可在<strong>成就</strong>领奖。</li>
           <li><strong>蓄灵池</strong>：随当前灵石产出缓慢蓄存，可一次性收取进背包；有上限，随境界与轮回略放大。累计收取 <strong>1 / 50</strong> 次可在<strong>成就</strong>领奖。</li>
           <li><strong>心斋卦象</strong>：按<strong>本地日历日</strong>刷新一条运势，影响灵石等乘区；跨日自动更替。卦象累计刷新 <strong>1 / 30</strong> 次可在<strong>成就</strong>领奖。</li>
