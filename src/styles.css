@@ -1917,6 +1917,17 @@ h1 {
   color: #b8c8ff;
 }
 
+/* 筑灵髓：历练副本货币（与唤灵髓区分） */
+.res-chip-zhuling {
+  border-color: rgba(80, 200, 190, 0.35);
+  background: linear-gradient(145deg, rgba(18, 42, 48, 0.92), rgba(12, 28, 40, 0.88));
+}
+
+.res-chip-zhuling .res-delta-zhuling {
+  color: #7ee0d4;
+  letter-spacing: 0.04em;
+}
+
 .vein-hint-row {
   display: flex;
   flex-wrap: wrap;
