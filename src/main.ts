@@ -1509,6 +1509,7 @@ function openBattleGearModal(): void {
 function handleGearPanelClick(e: MouseEvent): void {
   const t = e.target as HTMLElement;
   if (!t.closest("#gear-panel-root")) return;
+  if (refineTargetId && !state.gearInventory[refineTargetId]) refineTargetId = null;
 
   const sortEl = t.closest("[data-gear-inv-sort]");
   if (sortEl) {
@@ -1580,6 +1581,7 @@ function handleGearPanelClick(e: MouseEvent): void {
     }
     const r = tryRefineUr(state, refineTargetId, id);
     toast(r.msg);
+    if (r.msg === "装备不存在") refineTargetId = null;
     if (r.ok) {
       refineTargetId = null;
       saveGame(state);

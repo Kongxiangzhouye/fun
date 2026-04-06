@@ -191,6 +191,8 @@ export function tryRefineUr(
   targetId: string,
   consumeId: string,
 ): { ok: boolean; msg: string } {
+  const isEquipped = (id: string): boolean =>
+    state.equippedGear.weapon === id || state.equippedGear.body === id || state.equippedGear.ring === id;
   if (targetId === consumeId) return { ok: false, msg: "不能消耗自身" };
   const a = state.gearInventory[targetId];
   const b = state.gearInventory[consumeId];
@@ -198,10 +200,8 @@ export function tryRefineUr(
   if (a.rarity !== "UR" || b.rarity !== "UR") return { ok: false, msg: "仅天极可精炼" };
   if (a.baseId !== b.baseId) return { ok: false, msg: "需同基底资质" };
   if (b.locked) return { ok: false, msg: "消耗件已锁定，请先解锁" };
+  if (isEquipped(consumeId)) return { ok: false, msg: "请先卸下消耗件" };
   delete state.gearInventory[consumeId];
-  if (state.equippedGear.weapon === consumeId) state.equippedGear.weapon = null;
-  if (state.equippedGear.body === consumeId) state.equippedGear.body = null;
-  if (state.equippedGear.ring === consumeId) state.equippedGear.ring = null;
   a.refineLevel += 1;
   return { ok: true, msg: "精炼成功" };
 }

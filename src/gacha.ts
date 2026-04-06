@@ -132,7 +132,9 @@ function finalizeGearPull(state: GameState, g: GearItem): void {
     } else {
       const np = gearItemPower(g);
       const cp = gearItemPower(cur);
-      if (np > cp) {
+      if (cur.locked) {
+        state.xuanTie += Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
+      } else if (np > cp) {
         state.xuanTie += xuanTieFromGearPiece(cur);
         delete state.gearInventory[curId];
         state.gearInventory[g.instanceId] = g;
