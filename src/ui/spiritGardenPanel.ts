@@ -7,7 +7,7 @@ import {
   normalizeSpiritGarden,
 } from "../systems/spiritGarden";
 import { fmtDecimal } from "../stones";
-import { UI_HEAD_GARDEN, GARDEN_CROP_IMG } from "./visualAssets";
+import { UI_HEAD_GARDEN, UI_GARDEN_HARVEST_ALL, UI_GARDEN_REPLANT, GARDEN_CROP_IMG } from "./visualAssets";
 
 export function renderSpiritGardenPage(state: GameState, now: number): string {
   normalizeSpiritGarden(state);
@@ -69,6 +69,17 @@ export function renderSpiritGardenPage(state: GameState, now: number): string {
       </div>
       <p class="hint">消耗灵石播种，经现实时间成熟后收获<strong>灵砂</strong>与<strong>灵石</strong>；高阶灵草额外掉落唤灵髓。灵田进度<strong>轮回不重置</strong>。</p>
       <p class="hint sm">累计收获：<strong id="garden-total-harvests">${state.spiritGarden.totalHarvests}</strong> 次</p>
+      <div class="spirit-garden-batch-row">
+        <button type="button" class="btn btn-primary spirit-garden-batch-btn" data-garden-harvest-all="1">
+          <img class="spirit-garden-batch-ico" src="${UI_GARDEN_HARVEST_ALL}" alt="" width="20" height="20" loading="lazy" />
+          一键收获
+        </button>
+        <button type="button" class="btn spirit-garden-batch-btn" data-garden-harvest-replant="1">
+          <img class="spirit-garden-batch-ico" src="${UI_GARDEN_REPLANT}" alt="" width="20" height="20" loading="lazy" />
+          收获并续种
+        </button>
+      </div>
+      <p class="hint sm spirit-garden-batch-hint">续种优先使用该块灵田<strong>上次作物</strong>；灵石不足时跳过该块并提示。</p>
       <div class="spirit-garden-grid">${plotsHtml.join("")}</div>
     </section>`;
 }

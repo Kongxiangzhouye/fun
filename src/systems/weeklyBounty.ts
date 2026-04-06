@@ -28,6 +28,48 @@ export interface WeeklyBountyTaskDef {
   cardDeco: WeeklyBountyCardDeco;
 }
 
+/** 本周累计「已达成」悬赏条目数的里程奖励（2/4/6 条；灵石 + 唤灵髓 + 筑灵髓） */
+export interface WeeklyBountyMilestoneDef {
+  id: string;
+  title: string;
+  desc: string;
+  /** 需要本周已有多少条悬赏达到目标进度 */
+  threshold: number;
+  rewardStones: number;
+  rewardSummonEssence: number;
+  rewardZhuLingEssence: number;
+}
+
+export const WEEKLY_BOUNTY_MILESTONES: WeeklyBountyMilestoneDef[] = [
+  {
+    id: "wb_ms_2",
+    title: "里程 · 贰",
+    desc: "本周累计达成 2 条悬赏进度",
+    threshold: 2,
+    rewardStones: 220,
+    rewardSummonEssence: 10,
+    rewardZhuLingEssence: 8,
+  },
+  {
+    id: "wb_ms_4",
+    title: "里程 · 肆",
+    desc: "本周累计达成 4 条悬赏进度",
+    threshold: 4,
+    rewardStones: 380,
+    rewardSummonEssence: 18,
+    rewardZhuLingEssence: 14,
+  },
+  {
+    id: "wb_ms_6",
+    title: "里程 · 陆",
+    desc: "本周累计达成 6 条悬赏进度",
+    threshold: 6,
+    rewardStones: 560,
+    rewardSummonEssence: 26,
+    rewardZhuLingEssence: 22,
+  },
+];
+
 export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
   {
     id: "wb_waves",
@@ -112,6 +154,7 @@ export function emptyWeeklyBounty(weekKey: string): GameState["weeklyBounty"] {
     tuna: 0,
     breakthroughs: 0,
     claimed: [],
+    milestoneClaimed: [],
   };
 }
 
@@ -127,6 +170,7 @@ export function normalizeWeeklyBounty(st: GameState, now = Date.now()): void {
     else st.weeklyBounty[k] = Math.floor(v);
   }
   if (!Array.isArray(st.weeklyBounty.claimed)) st.weeklyBounty.claimed = [];
+  if (!Array.isArray(st.weeklyBounty.milestoneClaimed)) st.weeklyBounty.milestoneClaimed = [];
   const taskIds = new Set(WEEKLY_BOUNTY_TASKS.map((t) => t.id));
   const seen = new Set<string>();
   st.weeklyBounty.claimed = st.weeklyBounty.claimed
@@ -134,6 +178,16 @@ export function normalizeWeeklyBounty(st: GameState, now = Date.now()): void {
     .filter((id) => {
       if (seen.has(id)) return false;
       seen.add(id);
+      return true;
+    })
+    .sort();
+  const msIds = new Set(WEEKLY_BOUNTY_MILESTONES.map((m) => m.id));
+  const seenMs = new Set<string>();
+  st.weeklyBounty.milestoneClaimed = st.weeklyBounty.milestoneClaimed
+    .filter((x) => typeof x === "string" && msIds.has(x))
+    .filter((id) => {
+      if (seenMs.has(id)) return false;
+      seenMs.add(id);
       return true;
     })
     .sort();
@@ -180,6 +234,27 @@ export function isWeeklyBountyComplete(state: GameState, def: WeeklyBountyTaskDe
 
 export function isWeeklyBountyClaimed(state: GameState, taskId: string): boolean {
   return state.weeklyBounty.claimed.includes(taskId);
+}
+
+/** 本周已有多少条悬赏达到目标进度（未领也可计入） */
+export function countWeeklyBountyTasksCompleted(state: GameState): number {
+  return WEEKLY_BOUNTY_TASKS.filter((t) => isWeeklyBountyComplete(state, t)).length;
+}
+
+export type WeeklyBountyMilestoneUiState = "pending" | "claimable" | "claimed";
+
+export function weeklyBountyMilestoneUiState(
+  state: GameState,
+  def: WeeklyBountyMilestoneDef,
+  now: number,
+): WeeklyBountyMilestoneUiState {
+  ensureWeeklyBountyWeek(state, now);
+  if (state.weeklyBounty.milestoneClaimed.includes(def.id)) return "claimed";
+  return countWeeklyBountyTasksCompleted(state) >= def.threshold ? "claimable" : "pending";
+}
+
+export function isWeeklyBountyMilestoneClaimed(state: GameState, id: string): boolean {
+  return state.weeklyBounty.milestoneClaimed.includes(id);
 }
 
 export type WeeklyBountyTaskState = "pending" | "claimable" | "claimed";
@@ -282,27 +357,72 @@ export function claimWeeklyBountyTask(state: GameState, taskId: string, now: num
   return true;
 }
 
-/** 当前周可一键领取的条目数（已达成且未领） */
+/** 领取单个里程奖励 */
+export function claimWeeklyBountyMilestone(state: GameState, milestoneId: string, now: number): boolean {
+  ensureWeeklyBountyWeek(state, now);
+  const def = WEEKLY_BOUNTY_MILESTONES.find((m) => m.id === milestoneId);
+  if (!def) return false;
+  if (state.weeklyBounty.milestoneClaimed.includes(milestoneId)) return false;
+  if (countWeeklyBountyTasksCompleted(state) < def.threshold) return false;
+  state.weeklyBounty.milestoneClaimed.push(milestoneId);
+  state.weeklyBounty.milestoneClaimed.sort();
+  if (def.rewardStones > 0) addStones(state, def.rewardStones);
+  if (def.rewardSummonEssence > 0) state.summonEssence += def.rewardSummonEssence;
+  if (def.rewardZhuLingEssence > 0) state.zhuLingEssence += def.rewardZhuLingEssence;
+  return true;
+}
+
+/** 当前周可一键领取的悬赏条目数（仅任务条，不含里程） */
 export function countClaimableWeeklyBounties(state: GameState, now: number): number {
   return weeklyBountyFeedbackState(state, now).claimReady;
 }
 
-/** 一键领取全部可领悬赏；返回领取条数与奖励合计（用于 UI 提示） */
+/** 可领取的里程档位数 */
+export function countClaimableWeeklyMilestones(state: GameState, now: number): number {
+  ensureWeeklyBountyWeek(state, now);
+  let n = 0;
+  for (const def of WEEKLY_BOUNTY_MILESTONES) {
+    if (weeklyBountyMilestoneUiState(state, def, now) === "claimable") n += 1;
+  }
+  return n;
+}
+
+/** 任务悬赏 + 里程：一键可领总条数 */
+export function countClaimableWeeklyAll(state: GameState, now: number): number {
+  return countClaimableWeeklyBounties(state, now) + countClaimableWeeklyMilestones(state, now);
+}
+
+/** 一键领取全部可领悬赏与里程；返回领取条数与奖励合计（用于 UI 提示） */
 export function claimAllCompletableWeeklyBounties(
   state: GameState,
   now: number,
-): { claimed: number; rewardStones: number; rewardEssence: number } {
+): {
+  claimedTasks: number;
+  claimedMilestones: number;
+  rewardStones: number;
+  rewardSummonEssence: number;
+  rewardZhuLingEssence: number;
+} {
   ensureWeeklyBountyWeek(state, now);
-  let claimed = 0;
+  let claimedTasks = 0;
+  let claimedMilestones = 0;
   let rewardStones = 0;
-  let rewardEssence = 0;
+  let rewardSummonEssence = 0;
+  let rewardZhuLingEssence = 0;
   for (const def of WEEKLY_BOUNTY_TASKS) {
     if (!claimWeeklyBountyTask(state, def.id, now)) continue;
     if (def.rewardStones > 0) rewardStones += def.rewardStones;
-    if (def.rewardEssence > 0) rewardEssence += def.rewardEssence;
-    claimed += 1;
+    if (def.rewardEssence > 0) rewardSummonEssence += def.rewardEssence;
+    claimedTasks += 1;
   }
-  return { claimed, rewardStones, rewardEssence };
+  for (const def of WEEKLY_BOUNTY_MILESTONES) {
+    if (!claimWeeklyBountyMilestone(state, def.id, now)) continue;
+    if (def.rewardStones > 0) rewardStones += def.rewardStones;
+    rewardSummonEssence += def.rewardSummonEssence;
+    rewardZhuLingEssence += def.rewardZhuLingEssence;
+    claimedMilestones += 1;
+  }
+  return { claimedTasks, claimedMilestones, rewardStones, rewardSummonEssence, rewardZhuLingEssence };
 }
 
 export interface WeeklyBountyFeedbackState {

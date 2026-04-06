@@ -8850,6 +8850,29 @@ p.gear-forge-tier-hint {
   border: 0;
 }
 
+.spirit-garden-batch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.spirit-garden-batch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spirit-garden-batch-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.spirit-garden-batch-hint {
+  margin-top: 6px;
+}
+
 .spirit-garden-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -9036,6 +9059,45 @@ p.gear-forge-tier-hint {
 .bounty-claim-all-echo-ico {
   opacity: 0.86;
   margin-left: -2px;
+}
+
+.bounty-milestone-block {
+  margin-top: 14px;
+  padding: 12px 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 180, 200, 0.28);
+  background: linear-gradient(165deg, rgba(16, 28, 36, 0.88), rgba(8, 14, 20, 0.96));
+}
+
+.bounty-milestone-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  margin: 0 0 6px;
+  font-weight: 650;
+}
+
+.bounty-milestone-heading-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.bounty-milestone-hint {
+  margin-bottom: 10px;
+}
+
+.bounty-milestone-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.bounty-milestone-card {
+  padding: 10px 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 160, 190, 0.3);
+  background: rgba(6, 12, 18, 0.55);
 }
 
 .bounty-grid {

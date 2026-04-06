@@ -1,11 +1,15 @@
 import type { GameState } from "../types";
 import {
   WEEKLY_BOUNTY_TASKS,
+  WEEKLY_BOUNTY_MILESTONES,
   ensureWeeklyBountyWeek,
   weeklyBountyNextAction,
   weeklyBountyFeedbackState,
   weeklyBountyTaskSnapshots,
   formatWeeklyBountyObserveLine,
+  countWeeklyBountyTasksCompleted,
+  weeklyBountyMilestoneUiState,
+  countClaimableWeeklyAll,
   type WeeklyBountyCardDeco,
   type WeeklyBountyTaskDisplayState,
 } from "../systems/weeklyBounty";
@@ -27,6 +31,7 @@ import {
   UI_BOUNTY_SURGE_BADGE,
   UI_BOUNTY_CLAIM_ECHO_BADGE,
   UI_BOUNTY_LAST_DAY_ALERT_BADGE,
+  UI_BOUNTY_MILESTONE_DECO,
   UI_HEAD_BOUNTY,
 } from "./visualAssets";
 
@@ -57,12 +62,25 @@ function bountyTaskView(taskState: WeeklyBountyTaskDisplayState): {
   return { statusClass: "pending", statusText: "待完成", canClaim: false, buttonText: "未达成" };
 }
 
+function milestoneView(
+  ui: ReturnType<typeof weeklyBountyMilestoneUiState>,
+): { statusClass: string; statusText: string; canClaim: boolean; buttonText: string } {
+  if (ui === "claimed") {
+    return { statusClass: "claimed", statusText: "已领", canClaim: false, buttonText: "本周已领" };
+  }
+  if (ui === "claimable") {
+    return { statusClass: "claimable", statusText: "可领", canClaim: true, buttonText: "领取" };
+  }
+  return { statusClass: "pending", statusText: "未达成", canClaim: false, buttonText: "未达成" };
+}
+
 export function renderBountyPanel(state: GameState, now: number): string {
   ensureWeeklyBountyWeek(state, now);
   const wk = state.weeklyBounty.weekKey;
   const isLastDayOfWeek = new Date(now).getDay() === 0;
   const fb = weeklyBountyFeedbackState(state, now);
-  const claimableN = fb.claimReady;
+  const doneCount = countWeeklyBountyTasksCompleted(state);
+  const claimableN = countClaimableWeeklyAll(state, now);
   const nextAction = weeklyBountyNextAction(state, now);
   const taskSnapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
@@ -90,6 +108,29 @@ export function renderBountyPanel(state: GameState, now: number): string {
           ${view.buttonText}
         </button>
         <button type="button" class="btn bounty-go-btn ${isFocus ? "btn-primary" : ""}" data-bounty-go="${isFocus && nextAction ? nextAction.action : ""}" ${isFocus && nextAction ? "" : "disabled"}>去执行</button>
+      </div>`;
+  }).join("");
+
+  const milestoneRows = WEEKLY_BOUNTY_MILESTONES.map((m) => {
+    const ui = weeklyBountyMilestoneUiState(state, m, now);
+    const mv = milestoneView(ui);
+    const pct = Math.min(100, (100 * doneCount) / m.threshold);
+    return `
+      <div class="bounty-milestone-card" data-bounty-milestone="${m.id}">
+        <div class="bounty-card-head">
+          <div class="bounty-card-head-left">
+            <img class="bounty-task-deco" src="${UI_BOUNTY_MILESTONE_DECO}" alt="" width="22" height="22" loading="lazy" />
+            <h3>${m.title}</h3>
+          </div>
+          <span class="bounty-status ${mv.statusClass}">${mv.statusText}</span>
+        </div>
+        <p class="hint sm">${m.desc}</p>
+        <div class="bounty-bar-wrap"><div class="bounty-bar"><div class="bounty-bar-fill" style="width:${pct}%"></div></div>
+        <span class="bounty-bar-lbl">${Math.min(doneCount, m.threshold)} / ${m.threshold}</span></div>
+        <p class="hint sm bounty-reward">奖励：灵石 <strong>${m.rewardStones}</strong> · 唤灵髓 <strong>${m.rewardSummonEssence}</strong> · 筑灵髓 <strong>${m.rewardZhuLingEssence}</strong></p>
+        <button type="button" class="btn ${mv.canClaim ? "btn-primary" : ""}" data-bounty-milestone-claim="${m.id}" ${mv.canClaim ? "" : "disabled"}>
+          ${mv.buttonText}
+        </button>
       </div>`;
   }).join("");
 
@@ -128,11 +169,19 @@ export function renderBountyPanel(state: GameState, now: number): string {
         </span>
       </div>
       <p class="hint sm" id="bounty-feedback-observe">状态校验：${formatWeeklyBountyObserveLine(fb)}</p>
+      <div class="bounty-milestone-block">
+        <h3 class="bounty-milestone-heading">
+          <img class="bounty-milestone-heading-ico" src="${UI_BOUNTY_MILESTONE_DECO}" alt="" width="22" height="22" loading="lazy" />
+          本周里程（已达成 <strong id="bounty-milestone-done-count">${doneCount}</strong> / 6 条）
+        </h3>
+        <p class="hint sm bounty-milestone-hint">按本周已达成进度的悬赏条目数解锁；与单条悬赏领取顺序无关。</p>
+        <div class="bounty-milestone-grid">${milestoneRows}</div>
+      </div>
       <div class="bounty-claim-all-row">
         <button type="button" class="btn btn-primary bounty-claim-all-btn" id="btn-bounty-claim-all" ${claimableN > 0 ? "" : "disabled"}>
           <img class="bounty-claim-all-ico" src="${UI_BOUNTY_CLAIM_ALL_DECO}" alt="" width="20" height="20" loading="lazy" />
           <img class="bounty-claim-all-ico bounty-claim-all-echo-ico" src="${UI_BOUNTY_CLAIM_ECHO_BADGE}" alt="" width="16" height="16" loading="lazy" />
-          <span id="bounty-claim-all-lbl">一键领取可领悬赏（${claimableN}）</span>
+          <span id="bounty-claim-all-lbl">一键领取可领奖励（悬赏+里程 ${claimableN}）</span>
         </button>
       </div>
       <div class="bounty-grid">${rows}</div>
@@ -163,10 +212,13 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   const claimAllLbl = document.getElementById("bounty-claim-all-lbl");
   const fb = weeklyBountyFeedbackState(state, now);
   const nextAction = weeklyBountyNextAction(state, now);
-  const cn = fb.claimReady;
+  const cn = countClaimableWeeklyAll(state, now);
+  const doneCount = countWeeklyBountyTasksCompleted(state);
+  const doneEl = document.getElementById("bounty-milestone-done-count");
+  if (doneEl) doneEl.textContent = String(doneCount);
   const taskSnapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
   if (claimAllBtn) claimAllBtn.disabled = cn <= 0;
-  if (claimAllLbl) claimAllLbl.textContent = `一键领取可领悬赏（${cn}）`;
+  if (claimAllLbl) claimAllLbl.textContent = `一键领取可领奖励（悬赏+里程 ${cn}）`;
   const pendingLbl = document.getElementById("bounty-feedback-pending");
   if (pendingLbl) pendingLbl.textContent = `待完成 ${fb.pending} / ${fb.total}`;
   const claimableLbl = document.getElementById("bounty-feedback-claimable");
@@ -228,6 +280,28 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
       goBtn.disabled = !focus || !nextAction;
       goBtn.className = `btn bounty-go-btn ${focus ? "btn-primary" : ""}`;
       goBtn.dataset.bountyGo = focus && nextAction ? nextAction.action : "";
+    }
+  }
+  for (const m of WEEKLY_BOUNTY_MILESTONES) {
+    const ui = weeklyBountyMilestoneUiState(state, m, now);
+    const mv = milestoneView(ui);
+    const pct = Math.min(100, (100 * doneCount) / m.threshold);
+    const card = document.querySelector(`[data-bounty-milestone="${m.id}"]`);
+    if (!card) continue;
+    const fill = card.querySelector(".bounty-bar-fill") as HTMLElement | null;
+    if (fill) fill.style.width = `${pct}%`;
+    const lbl = card.querySelector(".bounty-bar-lbl");
+    if (lbl) lbl.textContent = `${Math.min(doneCount, m.threshold)} / ${m.threshold}`;
+    const status = card.querySelector(".bounty-status");
+    if (status) {
+      status.className = `bounty-status ${mv.statusClass}`;
+      status.textContent = mv.statusText;
+    }
+    const btn = card.querySelector("[data-bounty-milestone-claim]") as HTMLButtonElement | null;
+    if (btn) {
+      btn.disabled = !mv.canClaim;
+      btn.className = `btn ${mv.canClaim ? "btn-primary" : ""}`;
+      btn.textContent = mv.buttonText;
     }
   }
 }

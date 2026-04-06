@@ -22,6 +22,7 @@ import { OFFLINE_SETTLEMENT_UI_FILES } from "../data/offlineSettlementUi";
 import { PANEL_CHROME_UI_FILES } from "../data/panelChromeUi";
 import { PLAYER_PROFILE_UI_FILES } from "../data/playerProfileUi";
 import { GEAR_TIER_BADGE_UI_FILES, RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
+import { SPIRIT_GARDEN_BATCH_UI_FILES } from "../data/spiritGardenBatchUi";
 import { WEEKLY_BOUNTY_UI_FILES } from "../data/weeklyBountyUi";
 import { PET_DEFS } from "../data/pets";
 import { GARDEN_CROPS } from "../systems/spiritGarden";
@@ -305,6 +306,12 @@ export const UI_BOUNTY_WEEKLY_FOCUS_RIBBON = asset(WEEKLY_BOUNTY_UI_FILES.weekly
 export const UI_BOUNTY_WEEKLY_NEXT_STEP_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.nextStepBadge);
 /** 周常悬赏 · 周节奏冲刺反馈徽记（周循环末段强化提示） */
 export const UI_BOUNTY_SURGE_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.surgeBadge);
+/** 周常悬赏 · 里程奖励条目标题图标 */
+export const UI_BOUNTY_MILESTONE_DECO = asset(WEEKLY_BOUNTY_UI_FILES.milestoneDeco);
+/** 灵田 · 一键收获 */
+export const UI_GARDEN_HARVEST_ALL = asset(SPIRIT_GARDEN_BATCH_UI_FILES.harvestAll);
+/** 灵田 · 收获并续种 */
+export const UI_GARDEN_REPLANT = asset(SPIRIT_GARDEN_BATCH_UI_FILES.replant);
 /** 养成二级导航 · 分组标题前小徽记；与 `HUB_VEIN_FLAIR_UI_FILES` 同源 */
 export const UI_HUB_SECTION_FLAIR = asset(HUB_VEIN_FLAIR_UI_FILES.hubSectionFlair);
 /** 洞府蕴灵 · 共鸣乘区说明行左侧小标（双环链意象） */

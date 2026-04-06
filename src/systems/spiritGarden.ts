@@ -52,7 +52,7 @@ export const GARDEN_CROPS: Record<
 };
 
 export function emptyGardenPlots(): GameState["spiritGarden"]["plots"] {
-  return Array.from({ length: GARDEN_PLOT_COUNT }, () => ({ crop: null, plantedAtMs: 0 }));
+  return Array.from({ length: GARDEN_PLOT_COUNT }, () => ({ crop: null, plantedAtMs: 0, lastCrop: null }));
 }
 
 export function normalizeSpiritGarden(st: GameState): void {
@@ -61,11 +61,13 @@ export function normalizeSpiritGarden(st: GameState): void {
     return;
   }
   while (st.spiritGarden.plots.length < GARDEN_PLOT_COUNT) {
-    st.spiritGarden.plots.push({ crop: null, plantedAtMs: 0 });
+    st.spiritGarden.plots.push({ crop: null, plantedAtMs: 0, lastCrop: null });
   }
   st.spiritGarden.plots.length = GARDEN_PLOT_COUNT;
   for (const p of st.spiritGarden.plots) {
     if (p.plantedAtMs == null || !Number.isFinite(p.plantedAtMs)) p.plantedAtMs = 0;
+    if (p.lastCrop === undefined) p.lastCrop = null;
+    if (p.lastCrop != null && !GARDEN_CROPS[p.lastCrop]) p.lastCrop = null;
   }
   if (st.spiritGarden.totalHarvests == null || !Number.isFinite(st.spiritGarden.totalHarvests)) {
     st.spiritGarden.totalHarvests = 0;
@@ -98,6 +100,7 @@ export function plantCrop(state: GameState, plotIndex: number, crop: GardenCropI
   if (!subStones(state, def.plantCost)) return false;
   plot.crop = crop;
   plot.plantedAtMs = now;
+  plot.lastCrop = crop;
   return true;
 }
 
@@ -114,6 +117,7 @@ export function harvestPlot(state: GameState, plotIndex: number, now: number): H
   const plot = state.spiritGarden.plots[plotIndex];
   const c = plot.crop!;
   const def = GARDEN_CROPS[c];
+  plot.lastCrop = c;
   plot.crop = null;
   plot.plantedAtMs = 0;
   state.spiritGarden.totalHarvests += 1;
@@ -128,4 +132,55 @@ export function harvestPlot(state: GameState, plotIndex: number, now: number): H
   const parts = [`灵砂 +${def.harvestLingSha}`, `灵石 +${def.harvestStones}`];
   if (essence > 0) parts.push(`唤灵髓 +${essence}`);
   return { message: `收获 ${def.name}：${parts.join("，")}`, lingSha: def.harvestLingSha, essence };
+}
+
+export interface BatchGardenResult {
+  harvested: number;
+  replanted: number;
+  skippedReplant: number;
+  messages: string[];
+}
+
+/** 一键收获所有成熟地块（与单块收获相同，逐次调用 `noteWeeklyBountyGardenHarvest`） */
+export function harvestAllReadyPlots(state: GameState, now: number): BatchGardenResult {
+  const messages: string[] = [];
+  let harvested = 0;
+  for (let i = 0; i < GARDEN_PLOT_COUNT; i++) {
+    if (!isPlotReady(state, i, now)) continue;
+    const res = harvestPlot(state, i, now);
+    if (res) {
+      harvested++;
+      messages.push(res.message);
+    }
+  }
+  return { harvested, replanted: 0, skippedReplant: 0, messages };
+}
+
+/**
+ * 成熟地块先收获再续种；续种优先 `lastCrop`（本块上次作物），灵石不足则跳过并记入反馈。
+ */
+export function harvestAndReplantAllReady(state: GameState, now: number): BatchGardenResult {
+  const messages: string[] = [];
+  let harvested = 0;
+  let replanted = 0;
+  let skippedReplant = 0;
+  for (let i = 0; i < GARDEN_PLOT_COUNT; i++) {
+    if (!isPlotReady(state, i, now)) continue;
+    const res = harvestPlot(state, i, now);
+    if (!res) continue;
+    harvested++;
+    messages.push(res.message);
+    const plot = state.spiritGarden.plots[i];
+    const want = plot.lastCrop;
+    if (!want || !GARDEN_CROPS[want]) continue;
+    if (plot.crop != null) continue;
+    if (plantCrop(state, i, want, now)) {
+      replanted++;
+      messages.push(`${GARDEN_CROPS[want].name} 已续种`);
+    } else {
+      skippedReplant++;
+      messages.push(`${GARDEN_CROPS[want].name} 续种跳过（灵石不足）`);
+    }
+  }
+  return { harvested, replanted, skippedReplant, messages };
 }

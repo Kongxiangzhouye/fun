@@ -132,6 +132,7 @@ export interface SerializedState {
   lastAutoGachaMs?: number;
   lastAutoGearForgeMs?: number;
   lastAutoBossChallengeMs?: number;
+  autoSalvageAccumSec?: number;
   trueEndingSeen?: boolean;
   tutorialStep?: number;
   firstOpenTodayMs?: number;
@@ -323,6 +324,7 @@ export function serialize(state: GameState): string {
     lastAutoGachaMs: state.lastAutoGachaMs,
     lastAutoGearForgeMs: state.lastAutoGearForgeMs,
     lastAutoBossChallengeMs: state.lastAutoBossChallengeMs,
+    autoSalvageAccumSec: state.autoSalvageAccumSec,
     trueEndingSeen: state.trueEndingSeen,
     tutorialStep: state.tutorialStep,
     firstOpenTodayMs: state.firstOpenTodayMs,
@@ -384,6 +386,7 @@ export function serialize(state: GameState): string {
       tuna: state.weeklyBounty.tuna,
       breakthroughs: state.weeklyBounty.breakthroughs,
       claimed: [...state.weeklyBounty.claimed],
+      milestoneClaimed: [...state.weeklyBounty.milestoneClaimed],
     },
     celestialStash: {
       weekKey: state.celestialStash.weekKey,
@@ -562,6 +565,10 @@ export function deserialize(json: string): GameState {
   st.lastAutoGachaMs = data.lastAutoGachaMs ?? 0;
   st.lastAutoGearForgeMs = data.lastAutoGearForgeMs ?? 0;
   st.lastAutoBossChallengeMs = data.lastAutoBossChallengeMs ?? 0;
+  st.autoSalvageAccumSec =
+    data.autoSalvageAccumSec != null && Number.isFinite(data.autoSalvageAccumSec)
+      ? Math.max(0, data.autoSalvageAccumSec)
+      : 0;
   st.trueEndingSeen = data.trueEndingSeen ?? false;
 
   if (data.skills) {
@@ -632,7 +639,8 @@ export function deserialize(json: string): GameState {
       plots: data.spiritGarden.plots.map((p) => ({
         crop: p.crop ?? null,
         plantedAtMs: p.plantedAtMs ?? 0,
-      })),
+        lastCrop: (p as { lastCrop?: unknown }).lastCrop ?? null,
+      })) as GameState["spiritGarden"]["plots"],
       totalHarvests: Math.max(0, Math.floor(data.spiritGarden.totalHarvests ?? 0)),
     };
   }
@@ -647,6 +655,9 @@ export function deserialize(json: string): GameState {
       tuna: data.weeklyBounty.tuna ?? 0,
       breakthroughs: data.weeklyBounty.breakthroughs ?? 0,
       claimed: Array.isArray(data.weeklyBounty.claimed) ? [...data.weeklyBounty.claimed] : [],
+      milestoneClaimed: Array.isArray(data.weeklyBounty.milestoneClaimed)
+        ? [...data.weeklyBounty.milestoneClaimed]
+        : [],
     };
   } else {
     st.weeklyBounty = emptyWeeklyBounty(currentWeekKey(st.lastTick));
@@ -815,6 +826,7 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.lastAutoGachaMs = 0;
   st.lastAutoGearForgeMs = 0;
   st.lastAutoBossChallengeMs = 0;
+  st.autoSalvageAccumSec = 0;
   st.autoGearForge = false;
   st.autoBossChallenge = false;
   st.trueEndingSeen = false;

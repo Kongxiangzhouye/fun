@@ -87,7 +87,7 @@ export type GardenCropId = "qing_grass" | "cloud_shroom" | "jade_mist";
 
 /** 洞府灵田：时间制种植，轮回不重置 */
 export interface SpiritGardenState {
-  plots: Array<{ crop: GardenCropId | null; plantedAtMs: number }>;
+  plots: Array<{ crop: GardenCropId | null; plantedAtMs: number; lastCrop: GardenCropId | null }>;
   /** 累计收获次数（成就） */
   totalHarvests: number;
 }
@@ -103,6 +103,8 @@ export interface WeeklyBountyState {
   tuna: number;
   breakthroughs: number;
   claimed: string[];
+  /** 本周已领取的里程奖励 id（如 wb_ms_2） */
+  milestoneClaimed: string[];
 }
 
 /** 天机匣：每周轮换限购兑换（与周悬赏同周 key） */
@@ -481,6 +483,11 @@ export interface GameState {
   lastAutoGearForgeMs: number;
   /** 自动挑战首领节流（上次触发 ms） */
   lastAutoBossChallengeMs: number;
+
+  /**
+   * 自动分解累计秒（每满约 2.5s 触发一次）；必须随存档绑定，避免切档/导入串扰。
+   */
+  autoSalvageAccumSec: number;
 
   /** 飞升已触发（金色 UI + 沙盒） */
   trueEndingSeen: boolean;

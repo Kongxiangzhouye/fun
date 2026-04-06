@@ -18,4 +18,6 @@ export const WEEKLY_BOUNTY_UI_FILES = {
   weeklyFocusRibbon: "bounty-weekly-focus-ribbon.svg",
   nextStepBadge: "bounty-weekly-next-step-badge.svg",
   surgeBadge: "bounty-weekly-surge-badge.svg",
+  /** 周常里程奖励条目前缀图标 */
+  milestoneDeco: "bounty-milestone-deco.svg",
 } as const;

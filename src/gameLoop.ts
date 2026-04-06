@@ -22,7 +22,6 @@ import { tickDailyFortune } from "./systems/dailyFortune";
 import { spiritReservoirUnlocked, tickSpiritReservoir } from "./systems/spiritReservoir";
 
 const TICK_MAX_DT = 120;
-let autoSalvageAccumSec = 0;
 const OFFLINE_RESONANCE_GAIN_MULT = 0.28;
 
 /** 当前存档离线收益秒上限（土系等可抬高） */
@@ -124,9 +123,10 @@ export function applyTick(state: GameState, now: number): void {
   tryAutoGacha(state, tickNow);
   tryAutoGearForge(state, tickNow);
   tryAutoBossChallenge(state, tickNow);
-  autoSalvageAccumSec += dt;
-  if (autoSalvageAccumSec >= 2.5) {
-    autoSalvageAccumSec = 0;
+  if (state.autoSalvageAccumSec == null || !Number.isFinite(state.autoSalvageAccumSec)) state.autoSalvageAccumSec = 0;
+  state.autoSalvageAccumSec += dt;
+  if (state.autoSalvageAccumSec >= 2.5) {
+    state.autoSalvageAccumSec = 0;
     tryAutoSalvageInventory(state);
   }
   tryCompleteAchievements(state);

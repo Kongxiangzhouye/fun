@@ -224,6 +224,7 @@ import { showHtmlFeedbackToast, showPlainFeedbackToast } from "./ui/feedbackToas
 import { tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
 import {
   claimAllCompletableWeeklyBounties,
+  claimWeeklyBountyMilestone,
   claimWeeklyBountyTask,
   ensureWeeklyBountyWeek,
   formatWeeklyBountyFeedbackLine,
@@ -234,6 +235,8 @@ import {
 import {
   plantCrop,
   harvestPlot,
+  harvestAllReadyPlots,
+  harvestAndReplantAllReady,
   GARDEN_CROPS,
   GARDEN_PLOT_COUNT,
   plotGrowRemainingMs,
@@ -4590,6 +4593,42 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   });
 
+  document.querySelectorAll("[data-garden-harvest-all]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const t = nowMs();
+      const r = harvestAllReadyPlots(state, t);
+      if (r.harvested <= 0) {
+        toast("没有可收获的成熟灵草。");
+        return;
+      }
+      const newly = tryCompleteAchievements(state);
+      saveGame(state);
+      toast(`一键收获 ${r.harvested} 块灵田`);
+      if (r.messages.length) toast(r.messages.join("；"));
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      for (const a of newly) toastAchievement(a);
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-garden-harvest-replant]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const t = nowMs();
+      const r = harvestAndReplantAllReady(state, t);
+      if (r.harvested <= 0) {
+        toast("没有可收获的成熟灵草。");
+        return;
+      }
+      const newly = tryCompleteAchievements(state);
+      saveGame(state);
+      toast(`收获 ${r.harvested} 块，续种 ${r.replanted} 块${r.skippedReplant > 0 ? `（${r.skippedReplant} 块因灵石不足跳过续种）` : ""}`);
+      if (r.messages.length) toast(r.messages.join("；"));
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      for (const a of newly) toastAchievement(a);
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-bounty-claim]").forEach((el) => {
     el.addEventListener("click", () => {
       const id = (el as HTMLElement).dataset.bountyClaim;
@@ -4614,12 +4653,36 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   });
 
+  document.querySelectorAll("[data-bounty-milestone-claim]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = (el as HTMLElement).dataset.bountyMilestoneClaim;
+      if (!id) return;
+      const t = nowMs();
+      if (claimWeeklyBountyMilestone(state, id, t)) {
+        playBountyClaimBurstFx(el as HTMLElement);
+        tryCompleteAchievements(state);
+        saveGame(state);
+        const fb = weeklyBountyFeedbackState(state, t);
+        toast(`里程奖励已领取（${formatWeeklyBountyFeedbackLine(fb)}）`);
+        updateTopResourcePillsAndVigor(totalCardsInPool());
+        if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
+          render();
+        }
+      } else {
+        toast("无法领取：进度不足或本周已领过。");
+        if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
+          render();
+        }
+      }
+    });
+  });
+
   document.getElementById("btn-bounty-claim-all")?.addEventListener("click", () => {
     const t = nowMs();
     const trigger = document.getElementById("btn-bounty-claim-all");
     const r = claimAllCompletableWeeklyBounties(state, t);
-    if (r.claimed <= 0) {
-      toast("当前没有可领取的悬赏。");
+    if (r.claimedTasks + r.claimedMilestones <= 0) {
+      toast("当前没有可领取的悬赏或里程奖励。");
       if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
         render();
       }
@@ -4631,7 +4694,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     const fb = weeklyBountyFeedbackState(state, t);
     const next = weeklyBountyNextAction(state, t);
     toast(
-      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（${formatWeeklyBountyFeedbackLine(fb)}）`,
+      `已领取 ${r.claimedTasks} 条悬赏、${r.claimedMilestones} 档里程：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardSummonEssence} · 筑灵髓 +${r.rewardZhuLingEssence}（${formatWeeklyBountyFeedbackLine(fb)}）`,
     );
     if (next) {
       toast(`下一步建议：${next.title}（${next.progress}/${next.target}）`);

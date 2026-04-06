@@ -6,7 +6,7 @@ import { emptyGardenPlots } from "./systems/spiritGarden";
 import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 
-export const SAVE_VERSION = 45;
+export const SAVE_VERSION = 46;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -119,6 +119,7 @@ export function createInitialState(): GameState {
     lastAutoGachaMs: 0,
     lastAutoGearForgeMs: 0,
     lastAutoBossChallengeMs: 0,
+    autoSalvageAccumSec: 0,
     trueEndingSeen: false,
     tutorialStep: 1,
     featureGuideDismissed: [],
