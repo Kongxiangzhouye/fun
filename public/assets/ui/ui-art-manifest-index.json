@@ -4,6 +4,7 @@
   "conventions": "ui-art-conventions.json",
   "categories": "ui-art-manifest-categories.json",
   "handoffManifest": "ui-art-handoff-manifest.json",
+  "handoffTemplate": "ui-art-handoff-template.json",
   "importProfiles": "ui-art-import-profiles.json",
   "qualityChecklist": "ui-art-qc-checklist.json",
   "versionHistory": "ui-art-version-history.json",
