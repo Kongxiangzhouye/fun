@@ -47,7 +47,8 @@
       "date": "2026-04-06",
       "title": "Empty state illustration polish",
       "highlights": [
-        "Repaired empty gear/pet/unlock SVG captions and aligned typography with HUD palette."
+        "Repaired empty gear/pet/unlock SVG captions and aligned typography with HUD palette.",
+        "Consolidated empty-state mapping to gear/pet/unlock and removed stale weekly placeholder linkage."
       ]
     }
   ]
