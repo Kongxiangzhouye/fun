@@ -4,7 +4,9 @@
  */
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
 import { EMPTY_STATE_UI_FILES } from "../data/emptyStateUi";
+import { GACHA_POOL_UI_FILES } from "../data/gachaPoolUi";
 import { HUD_BAR_UI_FILES } from "../data/hudBarUi";
+import { PANEL_CHROME_UI_FILES } from "../data/panelChromeUi";
 import { ELEMENT_UI_FILES } from "../data/elementUi";
 import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
 import { GEAR_SLOT_UI_FILES } from "../data/gearSlotUi";
@@ -59,17 +61,17 @@ export function gearPortraitSrc(
   return GEAR_BASE_PORTRAIT[baseId] ?? GEAR_SLOT_ICON[slot];
 }
 
-/** 抽卡页装饰、共鸣图标、保底星印（自绘 SVG） */
-export const UI_GACHA_DECOR = asset("gacha-decor.svg");
-export const UI_RESONANCE_CORE = asset("resonance-core.svg");
-export const UI_PITY_SIGIL = asset("pity-sigil.svg");
+/** 抽卡页装饰、共鸣图标、保底星印（自绘 SVG）；与 `GACHA_POOL_UI_FILES` 同源 */
+export const UI_GACHA_DECOR = asset(GACHA_POOL_UI_FILES.gachaDecor);
+export const UI_RESONANCE_CORE = asset(GACHA_POOL_UI_FILES.resonanceCore);
+export const UI_PITY_SIGIL = asset(GACHA_POOL_UI_FILES.pitySigil);
 /** 铸灵池珍品保底条左侧印记（与灵卡区分） */
-export const UI_GEAR_PITY_SIGIL = asset("gear-pity-sigil.svg");
+export const UI_GEAR_PITY_SIGIL = asset(GACHA_POOL_UI_FILES.gearPitySigil);
 /** 境界铸灵阶位说明条左侧小徽 */
-export const UI_GEAR_FORGE_TIER_DECO = asset("gear-forge-tier-deco.svg");
+export const UI_GEAR_FORGE_TIER_DECO = asset(GACHA_POOL_UI_FILES.gearForgeTierDeco);
 
-/** 顶栏标题旁灵息球、面板角饰、全页星点底（自绘 SVG） */
-export const UI_TITLE_SPIRIT = asset("title-spirit.svg");
+/** 顶栏标题旁灵息球、面板角饰、全页星点底（自绘 SVG）；与 `PANEL_CHROME_UI_FILES` 同源 */
+export const UI_TITLE_SPIRIT = asset(PANEL_CHROME_UI_FILES.titleSpirit);
 /** 存档页 · 下载备份文件按钮 */
 export const UI_SAVE_DOWNLOAD_DECO = asset("save-download-deco.svg");
 /** 角色 · 偏好设置面板标题装饰 */
@@ -90,11 +92,11 @@ export const UI_ABOUT_GAME_DECO = asset("about-game-deco.svg");
 export const UI_DATA_EXPORT_DECO = asset("data-export-deco.svg");
 /** 数据总览 · 下载统计摘要为 .txt 按钮图标 */
 export const UI_DATA_STATS_DOWNLOAD_DECO = asset("data-stats-download-deco.svg");
-export const UI_PANEL_CORNER = asset("panel-corner.svg");
-export const UI_BG_SPARKLES = asset("bg-sparkles.svg");
+export const UI_PANEL_CORNER = asset(PANEL_CHROME_UI_FILES.panelCorner);
+export const UI_BG_SPARKLES = asset(PANEL_CHROME_UI_FILES.bgSparkles);
 /** 离线收益摘要条左侧装饰 */
-export const UI_OFFLINE_SUMMARY_DECO = asset("offline-summary-deco.svg");
-export const UI_PANEL_RUNES = asset("bg-panel-runes.svg");
+export const UI_OFFLINE_SUMMARY_DECO = asset(PANEL_CHROME_UI_FILES.offlineSummaryDeco);
+export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
 
 /** 分区标题与空状态插画（自绘 SVG） */
 export const UI_HEAD_DUNGEON = asset("deco-dungeon-header.svg");
