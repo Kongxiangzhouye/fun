@@ -1,0 +1,15 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="dungeon combo chain feedback">
+  <defs>
+    <linearGradient id="comboChainA" x1="14" y1="16" x2="82" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D4E5FF"/>
+      <stop offset="0.58" stop-color="#7FA4FF"/>
+      <stop offset="1" stop-color="#83F0D5"/>
+    </linearGradient>
+  </defs>
+  <circle cx="48" cy="48" r="38" fill="#0C1426" stroke="url(#comboChainA)" stroke-width="2.6" opacity="0.96"/>
+  <circle cx="48" cy="48" r="29" fill="none" stroke="url(#comboChainA)" stroke-width="1.6" stroke-dasharray="4 5" opacity="0.66"/>
+  <path d="M30 48c0-4.4 3.6-8 8-8h4v4h-4a4 4 0 000 8h4v4h-4c-4.4 0-8-3.6-8-8z" fill="#EAF3FF" opacity="0.95"/>
+  <path d="M66 48c0 4.4-3.6 8-8 8h-4v-4h4a4 4 0 000-8h-4v-4h4c4.4 0 8 3.6 8 8z" fill="#D7E7FF" opacity="0.9"/>
+  <rect x="40" y="44" width="16" height="8" rx="4" fill="url(#comboChainA)" opacity="0.92"/>
+  <path d="M48 25 V33 M48 63 V71 M25 48 H33 M63 48 H71" stroke="#DCE9FF" stroke-width="2.2" stroke-linecap="round" opacity="0.84"/>
+</svg>

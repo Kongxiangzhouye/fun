@@ -10,6 +10,7 @@
     { "id": "critEchoDeco", "file": "deco-dungeon-crit-echo.svg" },
     { "id": "guardBreakDeco", "file": "deco-dungeon-guard-break.svg" },
     { "id": "hitConfirmRingDeco", "file": "deco-dungeon-hit-confirm-ring.svg" },
+    { "id": "comboChainDeco", "file": "deco-dungeon-combo-chain.svg" },
     { "id": "staggerPulseDeco", "file": "deco-dungeon-stagger-pulse.svg" },
     { "id": "finisherSealDeco", "file": "deco-dungeon-finisher-seal.svg" },
     { "id": "gaugeSword", "file": "deco-duel-gauge-sword.svg" },

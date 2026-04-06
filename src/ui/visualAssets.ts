@@ -153,6 +153,8 @@ export const UI_BOUNTY_STREAK_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.streakBadge);
 export const UI_BOUNTY_COMPLETE_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.completeBadge);
 /** 周常悬赏 · 周目标进行中状态徽记 */
 export const UI_BOUNTY_PENDING_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.pendingBadge);
+/** 周常悬赏 · 幻域任务高频反馈聚焦徽记 */
+export const UI_BOUNTY_WAVES_FOCUS_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.wavesFocusBadge);
 /** 养成二级导航 · 分组标题前小徽记；与 `HUB_VEIN_FLAIR_UI_FILES` 同源 */
 export const UI_HUB_SECTION_FLAIR = asset(HUB_VEIN_FLAIR_UI_FILES.hubSectionFlair);
 /** 洞府蕴灵 · 共鸣乘区说明行左侧小标（双环链意象） */
@@ -180,6 +182,8 @@ export const UI_DUNGEON_HIT_CONFIRM_RING_DECO = asset(
   DUNGEON_DUEL_UI_FILES.hitConfirmRingDeco,
   UI_DUNGEON_DUEL_DECO,
 );
+/** 阵线对决 · 连击链路确认反馈（高频命中阶段） */
+export const UI_DUNGEON_COMBO_CHAIN_DECO = asset(DUNGEON_DUEL_UI_FILES.comboChainDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 失衡震荡反馈 */
 export const UI_DUNGEON_STAGGER_PULSE_DECO = asset(DUNGEON_DUEL_UI_FILES.staggerPulseDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 斩杀收束印记反馈 */

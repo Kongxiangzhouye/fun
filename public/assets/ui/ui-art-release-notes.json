@@ -3,6 +3,14 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Weekly and dungeon high-frequency feedback touch-up (P1)",
+      "highlights": [
+        "Added weekly waves-focus badge SVG to support faster status recognition in recurring bounty loops.",
+        "Added dungeon combo-chain SVG overlay and synced source mapping, manifest entries, and visual asset export keys."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Dungeon and weekly high-frequency feedback fill (P1)",
       "highlights": [
         "Added dungeon crit echo and hit confirm ring SVG overlays for clearer repeated hit/combo feedback.",

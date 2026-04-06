@@ -11,4 +11,5 @@ export const WEEKLY_BOUNTY_UI_FILES = {
   streakBadge: "bounty-weekly-streak-badge.svg",
   completeBadge: "bounty-weekly-complete-badge.svg",
   pendingBadge: "bounty-weekly-pending-badge.svg",
+  wavesFocusBadge: "bounty-weekly-waves-focus-badge.svg",
 } as const;
