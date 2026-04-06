@@ -1,5 +1,6 @@
 import type { GameState, Rarity } from "../types";
 import { getCard } from "../data/cards";
+import { gearItemPower, slotEnhanceLevel } from "./gearCraft";
 
 function lingShaFromRarity(r: Rarity, stars: number): number {
   const base = { N: 2, R: 5, SR: 14, SSR: 35, UR: 90 }[r] ?? 2;
@@ -56,6 +57,20 @@ export function salvageGear(state: GameState, instanceId: string): { ok: boolean
 
 function isGearEquipped(state: GameState, instanceId: string): boolean {
   return Object.values(state.equippedGear).some((id) => id === instanceId);
+}
+
+/** 是否为该槽位当前最高战力装备（并列第一也算）。 */
+export function isSlotTopPowerGear(state: GameState, instanceId: string): boolean {
+  const g = state.gearInventory[instanceId];
+  if (!g) return false;
+  const slotLv = slotEnhanceLevel(state, g.slot);
+  const curPower = gearItemPower(g, slotLv);
+  let top = Number.NEGATIVE_INFINITY;
+  for (const it of Object.values(state.gearInventory)) {
+    if (it.slot !== g.slot) continue;
+    top = Math.max(top, gearItemPower(it, slotLv));
+  }
+  return curPower >= top;
 }
 
 /** 按设置自动分解仓库中未上阵的低品灵卡 / 装备（节流由调用方控制） */

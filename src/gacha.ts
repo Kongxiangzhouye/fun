@@ -101,6 +101,8 @@ export interface PullResult {
   duplicateStars: boolean;
 }
 
+export type GearReplaceExpectation = "upgrade" | "even" | "downgrade";
+
 /** 用于抽卡演出：取本批最高稀有度 */
 export function highestRarityInPulls(results: PullResult[]): Rarity {
   let best: Rarity = "N";
@@ -119,38 +121,56 @@ export function highestRarityInPulls(results: PullResult[]): Rarity {
  * 境界铸灵：无背包，新装仅能与当前部位比对战力——战力更高则替换并分解旧装；更低或相等则销毁新装并返少量玄铁。
  * 返回本次新装是否成功装备（用于前端决定是否播放演出）。
  */
-function finalizeGearPull(state: GameState, g: GearItem): { equipped: boolean; salvagedXuanTie: number } {
+function finalizeGearPull(state: GameState, g: GearItem): {
+  equipped: boolean;
+  salvagedXuanTie: number;
+  replaceExpectation: GearReplaceExpectation;
+  powerDelta: number;
+} {
   const slot = g.slot;
   const curId = state.equippedGear[slot];
   if (!curId) {
     state.gearInventory[g.instanceId] = g;
     state.equippedGear[slot] = g.instanceId;
-    return commitGearPullMeta(state, g, { equipped: true, salvagedXuanTie: 0 });
+    return commitGearPullMeta(state, g, {
+      equipped: true,
+      salvagedXuanTie: 0,
+      replaceExpectation: "upgrade",
+      powerDelta: 0,
+    });
   } else {
     const cur = state.gearInventory[curId];
     if (!cur) {
       state.gearInventory[g.instanceId] = g;
       state.equippedGear[slot] = g.instanceId;
-      return commitGearPullMeta(state, g, { equipped: true, salvagedXuanTie: 0 });
+      return commitGearPullMeta(state, g, {
+        equipped: true,
+        salvagedXuanTie: 0,
+        replaceExpectation: "upgrade",
+        powerDelta: 0,
+      });
     } else {
       const slotLv = slotEnhanceLevel(state, slot);
       const np = gearItemPower(g, slotLv);
       const cp = gearItemPower(cur, slotLv);
+      const powerDelta = np - cp;
+      const replaceExpectation: GearReplaceExpectation =
+        powerDelta > 0 ? "upgrade" : powerDelta < 0 ? "downgrade" : "even";
       if (cur.locked) {
         const gain = Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
         state.xuanTie += gain;
-        return commitGearPullMeta(state, g, { equipped: false, salvagedXuanTie: gain });
+        return commitGearPullMeta(state, g, { equipped: false, salvagedXuanTie: gain, replaceExpectation, powerDelta });
       } else if (np > cp) {
         const gain = xuanTieFromGearPiece(cur);
         state.xuanTie += gain;
         delete state.gearInventory[curId];
         state.gearInventory[g.instanceId] = g;
         state.equippedGear[slot] = g.instanceId;
-        return commitGearPullMeta(state, g, { equipped: true, salvagedXuanTie: gain });
+        return commitGearPullMeta(state, g, { equipped: true, salvagedXuanTie: gain, replaceExpectation, powerDelta });
       } else {
         const gain = Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
         state.xuanTie += gain;
-        return commitGearPullMeta(state, g, { equipped: false, salvagedXuanTie: gain });
+        return commitGearPullMeta(state, g, { equipped: false, salvagedXuanTie: gain, replaceExpectation, powerDelta });
       }
     }
   }
@@ -159,8 +179,13 @@ function finalizeGearPull(state: GameState, g: GearItem): { equipped: boolean; s
 function commitGearPullMeta(
   state: GameState,
   g: GearItem,
-  result: { equipped: boolean; salvagedXuanTie: number },
-): { equipped: boolean; salvagedXuanTie: number } {
+  result: {
+    equipped: boolean;
+    salvagedXuanTie: number;
+    replaceExpectation: GearReplaceExpectation;
+    powerDelta: number;
+  },
+): { equipped: boolean; salvagedXuanTie: number; replaceExpectation: GearReplaceExpectation; powerDelta: number } {
   state.gearPityPulls += 1;
   if (rarityRank(g.rarity) >= rarityRank("SR")) {
     state.gearPityPulls = 0;
@@ -216,12 +241,26 @@ export function pullOne(state: GameState): PullResult {
 /** 境界铸灵单抽：仅装备，不占灵卡 UR/SSR 保底计数；另有珍品+独立保底（随铸灵阶缩短） */
 export function pullGearOne(
   state: GameState,
-): { ok: true; gear: GearItem; equipped: boolean; salvagedXuanTie: number } | { ok: false; msg: string } {
+): {
+  ok: true;
+  gear: GearItem;
+  equipped: boolean;
+  salvagedXuanTie: number;
+  replaceExpectation: GearReplaceExpectation;
+  powerDelta: number;
+} | { ok: false; msg: string } {
   const maxP = effectiveGearSrPityMax(state);
   const forceSrPlus = state.gearPityPulls >= maxP - 1;
   const g = forceSrPlus ? generateRandomGear(state, pickPityGearRarity(state)) : generateRandomGear(state);
   const result = finalizeGearPull(state, g);
-  return { ok: true, gear: g, equipped: result.equipped, salvagedXuanTie: result.salvagedXuanTie };
+  return {
+    ok: true,
+    gear: g,
+    equipped: result.equipped,
+    salvagedXuanTie: result.salvagedXuanTie,
+    replaceExpectation: result.replaceExpectation,
+    powerDelta: result.powerDelta,
+  };
 }
 
 /** 十铸：前 9 次正常；若前 9 次无珍品+，第 10 次必为珍品+（与灵卡十连逻辑对齐） */

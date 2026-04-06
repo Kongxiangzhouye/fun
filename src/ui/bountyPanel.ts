@@ -2,6 +2,7 @@ import type { GameState } from "../types";
 import {
   WEEKLY_BOUNTY_TASKS,
   ensureWeeklyBountyWeek,
+  weeklyBountyNextAction,
   weeklyBountyFeedbackState,
   weeklyBountyTaskSnapshots,
   formatWeeklyBountyObserveLine,
@@ -21,6 +22,8 @@ import {
   UI_BOUNTY_PENDING_BADGE,
   UI_BOUNTY_OVERDUE_BADGE,
   UI_BOUNTY_WAVES_FOCUS_BADGE,
+  UI_BOUNTY_WEEKLY_FOCUS_RIBBON,
+  UI_BOUNTY_WEEKLY_NEXT_STEP_BADGE,
   UI_BOUNTY_SURGE_BADGE,
   UI_BOUNTY_CLAIM_ECHO_BADGE,
   UI_BOUNTY_LAST_DAY_ALERT_BADGE,
@@ -60,6 +63,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
   const isLastDayOfWeek = new Date(now).getDay() === 0;
   const fb = weeklyBountyFeedbackState(state, now);
   const claimableN = fb.claimReady;
+  const nextAction = weeklyBountyNextAction(state, now);
   const taskSnapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
     const snap = taskSnapshots.get(t.id);
@@ -67,9 +71,10 @@ export function renderBountyPanel(state: GameState, now: number): string {
     const taskState = snap?.state ?? "pending";
     const view = bountyTaskView(taskState);
     const pct = Math.min(100, (100 * prog) / t.target);
+    const isFocus = nextAction?.taskId === t.id;
     const deco = `<img class="bounty-task-deco" src="${BOUNTY_CARD_DECO_SRC[t.cardDeco]}" alt="" width="22" height="22" loading="lazy" />`;
     return `
-      <div class="bounty-card" data-bounty-task="${t.id}">
+      <div class="bounty-card ${isFocus ? "is-focus" : ""}" data-bounty-task="${t.id}">
         <div class="bounty-card-head">
           <div class="bounty-card-head-left">
             ${deco}
@@ -84,6 +89,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
         <button type="button" class="btn ${view.canClaim ? "btn-primary" : ""}" data-bounty-claim="${t.id}" ${view.canClaim ? "" : "disabled"}>
           ${view.buttonText}
         </button>
+        <button type="button" class="btn bounty-go-btn ${isFocus ? "btn-primary" : ""}" data-bounty-go="${isFocus && nextAction ? nextAction.action : ""}" ${isFocus && nextAction ? "" : "disabled"}>去执行</button>
       </div>`;
   }).join("");
 
@@ -94,9 +100,16 @@ export function renderBountyPanel(state: GameState, now: number): string {
         <h2>周常悬赏</h2>
       </div>
       <p class="hint">每周一（本地时间）刷新进度与领取状态。完成条目可领取灵石与唤灵髓。</p>
-      <p class="hint sm bounty-week-line"><img class="bounty-week-focus-ico" src="${UI_BOUNTY_WAVES_FOCUS_BADGE}" alt="" width="16" height="16" loading="lazy" />当前周次：<strong>${wk}</strong>${isLastDayOfWeek ? `<img class="bounty-last-day-alert-badge" src="${UI_BOUNTY_LAST_DAY_ALERT_BADGE}" alt="本周最后一天提示" width="18" height="18" loading="lazy" />` : ""}</p>
+      <p class="hint sm bounty-week-line"><img class="bounty-week-focus-ribbon-ico" src="${UI_BOUNTY_WEEKLY_FOCUS_RIBBON}" alt="" width="72" height="18" loading="lazy" /><img class="bounty-week-focus-ico" src="${UI_BOUNTY_WAVES_FOCUS_BADGE}" alt="" width="16" height="16" loading="lazy" />当前周次：<strong>${wk}</strong>${isLastDayOfWeek ? `<img class="bounty-last-day-alert-badge" src="${UI_BOUNTY_LAST_DAY_ALERT_BADGE}" alt="本周最后一天提示" width="18" height="18" loading="lazy" />` : ""}</p>
+      <div class="bounty-next-target" id="bounty-next-target">
+        <span class="bounty-next-target-kicker">本周建议目标</span>
+        <strong id="bounty-next-target-title">${nextAction ? `${nextAction.title}（${nextAction.progress}/${nextAction.target}）` : "本周任务已全部完成"}</strong>
+        <span class="hint sm" id="bounty-next-target-reason">${nextAction ? nextAction.reason : "可等待下周刷新，或清理其他模块目标。"}</span>
+        <button type="button" class="btn btn-primary" id="btn-bounty-go-next" data-bounty-go="${nextAction?.action ?? ""}" ${nextAction ? "" : "disabled"}>去执行</button>
+      </div>
       <div class="bounty-feedback-row">
         <span class="bounty-feedback-pill">
+          <img class="bounty-feedback-ico bounty-feedback-next-step-ico" src="${UI_BOUNTY_WEEKLY_NEXT_STEP_BADGE}" alt="" width="18" height="18" loading="lazy" />
           <img class="bounty-feedback-ico" src="${UI_BOUNTY_PENDING_BADGE}" alt="" width="18" height="18" loading="lazy" />
           <span id="bounty-feedback-pending">待完成 ${fb.pending} / ${fb.total}</span>
         </span>
@@ -149,6 +162,7 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   const claimAllBtn = document.getElementById("btn-bounty-claim-all") as HTMLButtonElement | null;
   const claimAllLbl = document.getElementById("bounty-claim-all-lbl");
   const fb = weeklyBountyFeedbackState(state, now);
+  const nextAction = weeklyBountyNextAction(state, now);
   const cn = fb.claimReady;
   const taskSnapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
   if (claimAllBtn) claimAllBtn.disabled = cn <= 0;
@@ -169,6 +183,21 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   if (overduePill) overduePill.classList.toggle("is-overdue", fb.hasOverdue);
   const observeLbl = document.getElementById("bounty-feedback-observe");
   if (observeLbl) observeLbl.textContent = `状态校验：${formatWeeklyBountyObserveLine(fb)}`;
+  const nextTitle = document.getElementById("bounty-next-target-title");
+  const nextReason = document.getElementById("bounty-next-target-reason");
+  const nextBtn = document.getElementById("btn-bounty-go-next") as HTMLButtonElement | null;
+  if (nextTitle) {
+    nextTitle.textContent = nextAction
+      ? `${nextAction.title}（${nextAction.progress}/${nextAction.target}）`
+      : "本周任务已全部完成";
+  }
+  if (nextReason) {
+    nextReason.textContent = nextAction ? nextAction.reason : "可等待下周刷新，或清理其他模块目标。";
+  }
+  if (nextBtn) {
+    nextBtn.disabled = !nextAction;
+    nextBtn.dataset.bountyGo = nextAction?.action ?? "";
+  }
   for (const t of WEEKLY_BOUNTY_TASKS) {
     const snap = taskSnapshots.get(t.id);
     const prog = snap?.progress ?? 0;
@@ -177,6 +206,8 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
     const pct = Math.min(100, (100 * prog) / t.target);
     const card = document.querySelector(`[data-bounty-task="${t.id}"]`);
     if (!card) continue;
+    const focus = nextAction?.taskId === t.id;
+    card.classList.toggle("is-focus", focus);
     const fill = card.querySelector(".bounty-bar-fill") as HTMLElement | null;
     if (fill) fill.style.width = `${pct}%`;
     const lbl = card.querySelector(".bounty-bar-lbl");
@@ -191,6 +222,12 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
       btn.disabled = !view.canClaim;
       btn.className = `btn ${view.canClaim ? "btn-primary" : ""}`;
       btn.textContent = view.buttonText;
+    }
+    const goBtn = card.querySelector(".bounty-go-btn") as HTMLButtonElement | null;
+    if (goBtn) {
+      goBtn.disabled = !focus || !nextAction;
+      goBtn.className = `btn bounty-go-btn ${focus ? "btn-primary" : ""}`;
+      goBtn.dataset.bountyGo = focus && nextAction ? nextAction.action : "";
     }
   }
 }

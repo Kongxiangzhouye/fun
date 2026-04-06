@@ -75,6 +75,21 @@ const DUEL_TICK_SLICE_SEC = 0.18;
 /** 首领前哨小兵收益折扣：允许无限刷，但单只收益降低避免失衡。 */
 const BOSS_PREP_TRASH_ESSENCE_MULT = 0.45;
 
+export type DungeonChallengeBlockReason =
+  | "not_active"
+  | "not_boss_wave"
+  | "already_boss"
+  | "threshold_not_met";
+
+export interface DungeonBossPrepSnapshot {
+  phase: DungeonCombatPhase;
+  req: number;
+  kills: number;
+  canChallenge: boolean;
+  prepEssenceMult: number;
+  challengeHint: string;
+}
+
 /** 刷怪与玩家出生点的最小格距（曼哈顿）；降低贴脸刷怪感 */
 const SPAWN_MIN_CELL_DIST = 3;
 /** 过渡波（每段第 4 波）稍降压，缓冲到下一波节点 */
@@ -1293,6 +1308,40 @@ export function bossPrepKillRequirement(wave: number): number {
   return 10 + stage * 2;
 }
 
+export function dungeonChallengeBlockReason(state: GameState): DungeonChallengeBlockReason | null {
+  const d = state.dungeon;
+  if (!d.active) return "not_active";
+  if (d.wave % 5 !== 0) return "not_boss_wave";
+  if (!state.dungeonDeferBoss) return "already_boss";
+  const req = bossPrepKillRequirement(d.wave);
+  if (!d.bossPrepChallengeReady || d.bossPrepKills < req) return "threshold_not_met";
+  return null;
+}
+
+export function dungeonBossPrepSnapshot(state: GameState): DungeonBossPrepSnapshot {
+  const d = state.dungeon;
+  const req = bossPrepKillRequirement(Math.max(1, d.wave));
+  const kills = Math.max(0, Math.floor(d.bossPrepKills));
+  const phase = dungeonCombatPhase(state);
+  const reason = dungeonChallengeBlockReason(state);
+  const canChallenge = reason === null;
+  let challengeHint = "";
+  if (canChallenge) challengeHint = "已达门槛，可随时挑战首领。";
+  else if (reason === "threshold_not_met") challengeHint = `挑战门槛：击败小兵 ${req}（当前 ${kills}/${req}）`;
+  else if (reason === "not_active") challengeHint = "需先进入副本并到达首领前哨。";
+  else if (reason === "not_boss_wave") challengeHint = "当前不是首领波，无法挑战首领。";
+  else if (reason === "already_boss") challengeHint = "当前已是首领战。";
+  else challengeHint = "当前不可挑战首领。";
+  return {
+    phase,
+    req,
+    kills,
+    canChallenge,
+    prepEssenceMult: BOSS_PREP_TRASH_ESSENCE_MULT,
+    challengeHint,
+  };
+}
+
 function syncBars(state: GameState, d: DungeonState): void {
   const t = pickCombatTargetMob(d, playerEngageRadiusNorm(state));
   if (t) {
@@ -1538,10 +1587,13 @@ export function dungeonSegmentStartWave(wave: number): number {
 /** 在首领位且当前为小怪群时，切换为真正首领并重生本波 */
 export function requestBossChallenge(state: GameState): { ok: boolean; msg: string } {
   const d = state.dungeon;
-  if (!d.active || d.wave % 5 !== 0 || !state.dungeonDeferBoss) return { ok: false, msg: "当前不可挑战首领。" };
-  const req = bossPrepKillRequirement(d.wave);
-  if (!d.bossPrepChallengeReady || d.bossPrepKills < req) {
-    return { ok: false, msg: `需先击败前哨小兵 ${req} 只（当前 ${d.bossPrepKills}/${req}）。` };
+  const reason = dungeonChallengeBlockReason(state);
+  if (reason === "not_active") return { ok: false, msg: "未进入副本：请先进入首领前哨后再挑战。" };
+  if (reason === "not_boss_wave") return { ok: false, msg: "当前波次不是首领关，无法挑战首领。" };
+  if (reason === "already_boss") return { ok: false, msg: "当前已处于首领战，无需重复挑战。" };
+  if (reason === "threshold_not_met") {
+    const req = bossPrepKillRequirement(d.wave);
+    return { ok: false, msg: `挑战门槛未达成：需击败前哨小兵 ${req}（当前 ${d.bossPrepKills}/${req}）。` };
   }
   state.dungeonDeferBoss = false;
   delete d.waveCheckpoint[d.wave];

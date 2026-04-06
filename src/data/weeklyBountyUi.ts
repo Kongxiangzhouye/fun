@@ -15,5 +15,7 @@ export const WEEKLY_BOUNTY_UI_FILES = {
   overdueBadge: "bounty-weekly-overdue-badge.svg",
   lastDayAlertBadge: "bounty-weekly-last-day-alert-badge.svg",
   wavesFocusBadge: "bounty-weekly-waves-focus-badge.svg",
+  weeklyFocusRibbon: "bounty-weekly-focus-ribbon.svg",
+  nextStepBadge: "bounty-weekly-next-step-badge.svg",
   surgeBadge: "bounty-weekly-surge-badge.svg",
 } as const;

@@ -4,6 +4,8 @@
   "assets": [
     { "id": "sortDeco", "file": "gear-sort-deco.svg" },
     { "id": "sortPinnedDeco", "file": "gear-sort-pinned-deco.svg" },
-    { "id": "lockDeco", "file": "gear-lock-deco.svg" }
+    { "id": "lockDeco", "file": "gear-lock-deco.svg" },
+    { "id": "upgradeUp", "file": "gear-upgrade-up.svg" },
+    { "id": "upgradeDown", "file": "gear-upgrade-down.svg" }
   ]
 }

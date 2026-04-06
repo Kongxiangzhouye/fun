@@ -219,6 +219,7 @@ import {
   ensureWeeklyBountyWeek,
   formatWeeklyBountyFeedbackLine,
   noteWeeklyBountyBreakthrough,
+  weeklyBountyNextAction,
   weeklyBountyFeedbackState,
 } from "./systems/weeklyBounty";
 import {
@@ -249,13 +250,13 @@ import {
   enterDungeon,
   tryAutoEnterFromSanctuaryPortal,
   requestBossChallenge,
+  dungeonBossPrepSnapshot,
   dungeonCombatPhase,
   canEnterDungeon,
   canEnterAtWave,
   dungeonFrontierWave,
   drainDungeonDamageFloats,
   bossDisplayTitle,
-  bossPrepKillRequirement,
   currentBossMob,
   DUNGEON_DUEL_FEEDBACK,
   playerEngageRadiusNorm,
@@ -277,7 +278,7 @@ import { pullPet } from "./systems/petGacha";
 import { secondsToNextLevel, skillXpPerSecond, xpToNextLevel } from "./systems/skillTraining";
 import { enhanceGear, equipGear, tryRefineUr, unequipGear } from "./systems/gearCraft";
 import { describeGearForgeTierLine } from "./systems/gearGachaTier";
-import { salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
+import { isSlotTopPowerGear, salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
 import { pullBattleSkill, battleSkillPullCost, describeBattleSkillLevels } from "./systems/battleSkills";
 const EL_ZH: Record<string, string> = {
   metal: "金",
@@ -1038,7 +1039,13 @@ function highestGearRarityInList(gears: GearItem[]): Rarity {
   return best;
 }
 
-function showGearRevealOverlay(gears: GearItem[], toastMsg: string, onDone: () => void): void {
+function showGearRevealOverlay(
+  gears: GearItem[],
+  toastMsg: string,
+  onDone: () => void,
+  replaceExpectation?: "upgrade" | "even" | "downgrade",
+  powerDelta = 0,
+): void {
   const overlay = document.createElement("div");
   const liteFx = shouldUseLiteRevealFx();
   const hi = highestGearRarityInList(gears);
@@ -1072,11 +1079,24 @@ function showGearRevealOverlay(gears: GearItem[], toastMsg: string, onDone: () =
       const pre = g.prefixes.length + g.suffixes.length;
       const cardFx = pickCardFxVariant(i, cardSalt);
       const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0));
+      const replaceTag =
+        i === 0 && replaceExpectation
+          ? `<span class="gacha-reveal-card-replace-tag ${
+              replaceExpectation === "upgrade"
+                ? "is-upgrade"
+                : replaceExpectation === "downgrade"
+                  ? "is-downgrade"
+                  : "is-even"
+            }">替换预期：${
+              replaceExpectation === "upgrade" ? "提升" : replaceExpectation === "downgrade" ? "降级" : "持平"
+            }（${powerDelta > 0 ? `+${powerDelta}` : powerDelta}）</span>`
+          : "";
       return `<div class="gacha-reveal-card ${liteFx ? "card-fx-lite" : `card-fx-${cardFx}`} gear-reveal rarity-${g.rarity} tier-${g.rarity}" style="--stagger:${liteFx ? 0 : i}">
         ${gearRarityCorner(g.rarity)}
         <span class="gacha-reveal-card-name">${g.displayName}</span>
         <span class="gacha-reveal-card-r">${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade ?? "?"} · ilvl ${g.itemLevel}</span>
         <span class="gacha-reveal-card-tag">战力 ${fmtNumZh(gearItemPower(g, slotLv))} · ${pre} 条词缀 · 槽位强化 ${slotLv}</span>
+        ${replaceTag}
       </div>`;
     })
     .join("");
@@ -1667,6 +1687,9 @@ function handleGearPanelClick(e: MouseEvent): void {
     if (!id) return;
     const g = state.gearInventory[id];
     if (!g) return;
+    if (!g.locked && isSlotTopPowerGear(state, id)) {
+      if (!confirm(`「${g.displayName}」是该槽位当前最高战力，仍要分解吗？`)) return;
+    }
     if (!confirm(`确定分解「${g.displayName}」？`)) return;
     const r = salvageGear(state, id);
     toast(r.msg);
@@ -1974,6 +1997,43 @@ function renderTopBar(
 /** 与 renderHubContent 强相关的导航状态；变化时主列表应回到顶部而非保留滚动 */
 function mainContentViewKey(): string {
   return `${activeHub}|${estateSub}|${battleSub}|${cultivateSub}|${characterSub}|${gachaPool}`;
+}
+
+function goByBountyAction(action: string | null | undefined): boolean {
+  if (!action) return false;
+  if (action === "dungeon") {
+    activeHub = "battle";
+    battleSub = "dungeon";
+    return true;
+  }
+  if (action === "card_pull") {
+    activeHub = "battle";
+    battleSub = "forge";
+    gachaPool = "cards";
+    return true;
+  }
+  if (action === "gear_forge") {
+    activeHub = "battle";
+    battleSub = "forge";
+    gachaPool = "gear";
+    return true;
+  }
+  if (action === "garden") {
+    activeHub = "estate";
+    estateSub = "garden";
+    return true;
+  }
+  if (action === "tuna") {
+    activeHub = "estate";
+    estateSub = "idle";
+    return true;
+  }
+  if (action === "breakthrough") {
+    activeHub = "estate";
+    estateSub = "vein";
+    return true;
+  }
+  return false;
 }
 
 function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
@@ -3868,7 +3928,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
         out.classList.add("pull-burst");
         setTimeout(() => out.classList.remove("pull-burst"), 450);
       });
-    });
+    }, r.replaceExpectation, r.powerDelta);
   };
 
   document.getElementById("btn-pull-1")?.addEventListener("click", () => runCardPull(1));
@@ -4110,13 +4170,25 @@ function bindEvents(rb: Decimal, _slots: number): void {
     tryCompleteAchievements(state);
     saveGame(state);
     const fb = weeklyBountyFeedbackState(state, t);
+    const next = weeklyBountyNextAction(state, t);
     toast(
       `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（${formatWeeklyBountyFeedbackLine(fb)}）`,
     );
+    if (next) {
+      toast(`下一步建议：${next.title}（${next.progress}/${next.target}）`);
+    }
     updateTopResourcePillsAndVigor(totalCardsInPool());
     if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
       render();
     }
+  });
+
+  document.querySelectorAll("[data-bounty-go]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const action = (el as HTMLElement).dataset.bountyGo;
+      if (!goByBountyAction(action)) return;
+      render();
+    });
   });
 
   if (!delegatedPanelClickListenersBound) {
@@ -4301,13 +4373,18 @@ function bindEvents(rb: Decimal, _slots: number): void {
   };
   document.getElementById("dungeon-live-root")?.addEventListener("pointerup", onDungeonLivePointerUp);
   document.getElementById("btn-dungeon-challenge-boss")?.addEventListener("click", () => {
+    const snap = dungeonBossPrepSnapshot(state);
+    if (!snap.canChallenge) {
+      tryToastDungeonVictory(snap.challengeHint);
+      return;
+    }
     const r = requestBossChallenge(state);
     if (!r.ok) {
-      toast(r.msg);
+      tryToastDungeonVictory(r.msg);
       return;
     }
     saveGame(state);
-    toast(r.msg);
+    tryToastDungeonVictory(r.msg);
     render();
   });
   document.getElementById("btn-dungeon-boss-next-entry")?.addEventListener("click", () => {
@@ -4839,6 +4916,7 @@ function loop(): void {
     const m = state.dungeon.pendingToast;
     state.dungeon.pendingToast = null;
     if (m.startsWith("破阵胜利")) tryToastDungeonVictory(m);
+    else if (m.includes("首领")) tryToastDungeonVictory(m);
     else tryToast(m);
     saveGame(state);
   }
@@ -5158,12 +5236,12 @@ function loop(): void {
     if (phaseWaveHint) phaseWaveHint.textContent = `第 ${d.wave} 波`;
     const phaseGuide = document.getElementById("dungeon-phase-guide");
     if (phaseGuide) {
-      const req = bossPrepKillRequirement(d.wave);
+      const snap = dungeonBossPrepSnapshot(state);
       phaseGuide.textContent =
         phase === "boss_fight"
           ? "首领可对你造成真实伤害。击败首领后本关胜利，并自动进入下一波。"
           : phase === "boss_prep"
-            ? `首领前哨可无限清剿；累计击败小兵达到门槛后可随时挑战首领（当前 ${d.bossPrepKills}/${req}）。`
+            ? `首领前哨可无限清剿；累计击败小兵达到门槛后可随时挑战首领（当前 ${snap.kills}/${snap.req}）。`
             : "普通清剿：敌人自动接战；每击杀一只小兵，唤灵髓整数立即入袋。清完本关后进入下一波。";
     }
     const phaseCta = document.getElementById("dungeon-phase-cta") as HTMLElement | null;
@@ -5175,12 +5253,11 @@ function loop(): void {
         (d.mobs.some((m) => m.hp > 0) || d.mobs.length === 0);
       phaseCta.hidden = !showPhaseCta;
       if (showPhaseCta) {
-        const req = bossPrepKillRequirement(d.wave);
-        const ready = d.bossPrepChallengeReady && d.bossPrepKills >= req;
+        const snap = dungeonBossPrepSnapshot(state);
         const btn = document.getElementById("btn-dungeon-challenge-boss") as HTMLButtonElement | null;
         const note = document.getElementById("dungeon-phase-cta-note");
-        if (btn) btn.disabled = !ready;
-        if (note) note.textContent = ready ? "已达门槛，可随时挑战。" : `挑战门槛：击败小兵 ${req}（当前 ${d.bossPrepKills}/${req}）`;
+        if (btn) btn.disabled = !snap.canChallenge;
+        if (note) note.textContent = `${snap.challengeHint} · 前哨收益系数 ×${snap.prepEssenceMult.toFixed(2)}`;
       }
     }
     const affix = getDungeonAffixForWeekKey(state.weeklyBounty.weekKey);
@@ -5208,7 +5285,14 @@ function loop(): void {
     const btnEnterLbl = document.getElementById("btn-dungeon-enter-label");
     if (btnEnter) {
       btnEnter.disabled = !canEnter;
-      const t = canEnter ? "进入副本" : cd > 0 ? "冷却中" : "无法进入";
+      const t =
+        canEnter
+          ? "进入副本"
+          : cd > 0
+            ? "冷却中"
+            : d.active
+              ? "副本进行中"
+              : "未达进入条件";
       if (btnEnterLbl) btnEnterLbl.textContent = t;
       else btnEnter.textContent = t;
     }

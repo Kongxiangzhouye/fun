@@ -841,6 +841,27 @@ body {
   color: #c8d6f8;
 }
 
+.dungeon-phase-badge-wrap {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dungeon-phase-progress-ring {
+  position: absolute;
+  inset: 0;
+  opacity: 0.95;
+}
+
+.dungeon-phase-badge-ico {
+  position: relative;
+  z-index: 1;
+}
+
 .dungeon-phase-banner--boss_prep .dungeon-phase-badge {
   color: #f0d4a0;
 }
@@ -874,6 +895,17 @@ body {
   align-items: center;
   gap: 10px;
   margin-top: 10px;
+}
+
+.dungeon-phase-cta-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dungeon-boss-progress-badge {
+  flex-shrink: 0;
+  opacity: 0.95;
 }
 
 .dungeon-phase-cta-note {
@@ -4733,6 +4765,13 @@ html.ui-reduce-motion *::after {
   background: rgba(80, 100, 160, 0.22);
 }
 
+.gear-inv-sort-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
 .gear-inv {
   display: flex;
   flex-direction: column;
@@ -4788,6 +4827,22 @@ html.ui-reduce-motion *::after {
   flex-direction: column;
   gap: 8px;
   align-items: stretch;
+}
+
+.gear-upgrade-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.gear-upgrade-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.gear-upgrade-btn-down .gear-upgrade-ico {
+  opacity: 0.86;
 }
 
 .gear-actions .btn.small {
@@ -5300,6 +5355,24 @@ html.ui-reduce-motion *::after {
 .gacha-reveal-card-tag {
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+.gacha-reveal-card-replace-tag {
+  margin-top: 4px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.gacha-reveal-card-replace-tag.is-upgrade {
+  color: #9be7b1;
+}
+
+.gacha-reveal-card-replace-tag.is-even {
+  color: #d1d7e8;
+}
+
+.gacha-reveal-card-replace-tag.is-downgrade {
+  color: #f2b2a2;
 }
 
 .gacha-reveal-bonus {
@@ -8102,6 +8175,11 @@ p.gear-forge-tier-hint {
   opacity: 0.94;
 }
 
+.bounty-week-focus-ribbon-ico {
+  flex-shrink: 0;
+  opacity: 0.93;
+}
+
 .bounty-last-day-alert-badge {
   flex-shrink: 0;
   opacity: 0.95;
@@ -8149,6 +8227,10 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.bounty-feedback-next-step-ico {
+  opacity: 0.9;
+}
+
 .bounty-feedback-surge-ico {
   opacity: 0.45;
   transform: scale(0.9);
@@ -8190,12 +8272,38 @@ p.gear-forge-tier-hint {
   margin-top: 12px;
 }
 
+.bounty-next-target {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(200, 160, 90, 0.35);
+  background: rgba(24, 18, 12, 0.75);
+  display: grid;
+  gap: 6px;
+}
+
+.bounty-next-target-kicker {
+  font-size: 0.74rem;
+  color: #b8c8ea;
+}
+
+.bounty-next-target .btn {
+  justify-self: start;
+}
+
 .bounty-card {
   padding: 12px 12px 14px;
   border-radius: 14px;
   border: 1px solid rgba(200, 160, 90, 0.35);
   background: linear-gradient(165deg, rgba(28, 22, 16, 0.94), rgba(12, 10, 8, 0.98));
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.bounty-card.is-focus {
+  border-color: rgba(124, 156, 255, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(124, 156, 255, 0.25),
+    0 6px 22px rgba(0, 0, 0, 0.32);
 }
 
 .bounty-card-head {
@@ -8246,6 +8354,10 @@ p.gear-forge-tier-hint {
 .bounty-status.claimed {
   color: #c0c0c0;
   background: rgba(60, 60, 60, 0.35);
+}
+
+.bounty-go-btn {
+  margin-top: 6px;
 }
 
 .bounty-bar-wrap {

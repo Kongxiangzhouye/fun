@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="weekly next step badge">
+  <defs>
+    <linearGradient id="nextStepA" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff2c8"/>
+      <stop offset="0.52" stop-color="#ffd27f"/>
+      <stop offset="1" stop-color="#f69f5f"/>
+    </linearGradient>
+  </defs>
+  <path d="M32 5l8 6 10-1 3 9 8 5-3 9 3 9-8 5-3 9-10-1-8 6-8-6-10 1-3-9-8-5 3-9-3-9 8-5 3-9 10 1z" fill="#332317"/>
+  <path d="M32 9l7 5 9-1 2 8 7 4-2 8 2 8-7 4-2 8-9-1-7 5-7-5-9 1-2-8-7-4 2-8-2-8 7-4 2-8 9 1z" fill="url(#nextStepA)"/>
+  <circle cx="30" cy="32" r="9" fill="#fff7e6" opacity="0.94"/>
+  <path d="M29 26l8 6-8 6" fill="none" stroke="#b96a34" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 36" role="img" aria-label="weekly focus ribbon">
+  <defs>
+    <linearGradient id="wkRibbonA" x1="8" y1="4" x2="136" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9ed8ff"/>
+      <stop offset="0.55" stop-color="#76a9ff"/>
+      <stop offset="1" stop-color="#6d7df0"/>
+    </linearGradient>
+  </defs>
+  <path d="M6 8h124l8 10-8 10H6l8-10z" fill="#172347"/>
+  <path d="M10 10h118l6 8-6 8H10l6-8z" fill="url(#wkRibbonA)"/>
+  <path d="M20 18h104" stroke="#e9f5ff" stroke-opacity="0.72" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="18" cy="18" r="3" fill="#dff2ff"/>
+  <circle cx="126" cy="18" r="3" fill="#dff2ff"/>
+</svg>

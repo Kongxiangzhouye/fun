@@ -185,6 +185,24 @@ export function isWeeklyBountyClaimed(state: GameState, taskId: string): boolean
 export type WeeklyBountyTaskState = "pending" | "claimable" | "claimed";
 export type WeeklyBountyTaskDisplayState = WeeklyBountyTaskState | "overdue";
 
+export type WeeklyBountyGoAction =
+  | "dungeon"
+  | "card_pull"
+  | "gear_forge"
+  | "garden"
+  | "tuna"
+  | "breakthrough";
+
+export interface WeeklyBountyNextAction {
+  taskId: string;
+  action: WeeklyBountyGoAction;
+  title: string;
+  reason: string;
+  progress: number;
+  target: number;
+  priority: number;
+}
+
 export function weeklyBountyTaskState(state: GameState, def: WeeklyBountyTaskDef): WeeklyBountyTaskState {
   if (isWeeklyBountyClaimed(state, def.id)) return "claimed";
   return isWeeklyBountyComplete(state, def) ? "claimable" : "pending";
@@ -348,4 +366,87 @@ export function formatWeeklyBountyObserveLine(fb: WeeklyBountyFeedbackState): st
   const align = fb.weekAligned ? "周键对齐" : `周键漂移(${fb.weekKey}!=${fb.expectedWeekKey})`;
   const consistency = fb.consistent ? "口径一致" : "口径异常";
   return `${consistency} · ${align}`;
+}
+
+function weeklyBountyTaskPriority(state: GameState, def: WeeklyBountyTaskDef, now: number): number {
+  const snap = weeklyBountyTaskSnapshots(state, now).find((x) => x.id === def.id);
+  const prog = snap?.progress ?? 0;
+  const done = prog >= def.target;
+  if (isWeeklyBountyClaimed(state, def.id)) return -1000;
+  let p = 0;
+  if (done) p += 1200;
+  if (snap?.state === "overdue") p += 350;
+  const missing = Math.max(0, def.target - prog);
+  p += Math.max(0, 200 - missing * 18);
+  switch (def.kind) {
+    case "waves":
+      p += 120;
+      break;
+    case "breakthroughs":
+      p += 80;
+      break;
+    case "gearForges":
+      p += 55;
+      break;
+    case "cardPulls":
+      p += 45;
+      break;
+    case "gardenHarvests":
+      p += 35;
+      break;
+    case "tuna":
+      p += 25;
+      break;
+    default:
+      break;
+  }
+  return p;
+}
+
+function actionForTaskKind(kind: WeeklyBountyKind): WeeklyBountyGoAction {
+  switch (kind) {
+    case "waves":
+      return "dungeon";
+    case "cardPulls":
+      return "card_pull";
+    case "gearForges":
+      return "gear_forge";
+    case "gardenHarvests":
+      return "garden";
+    case "tuna":
+      return "tuna";
+    case "breakthroughs":
+      return "breakthrough";
+    default:
+      return "dungeon";
+  }
+}
+
+function reasonForTask(def: WeeklyBountyTaskDef, progress: number): string {
+  const left = Math.max(0, def.target - progress);
+  if (left <= 0) return "已达成，建议立即领取奖励。";
+  return `距离完成还差 ${left} 次。`;
+}
+
+export function weeklyBountyNextAction(state: GameState, now: number): WeeklyBountyNextAction | null {
+  ensureWeeklyBountyWeek(state, now);
+  const snapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
+  let best: WeeklyBountyNextAction | null = null;
+  for (const def of WEEKLY_BOUNTY_TASKS) {
+    if (isWeeklyBountyClaimed(state, def.id)) continue;
+    const snap = snapshots.get(def.id);
+    const progress = snap?.progress ?? 0;
+    const priority = weeklyBountyTaskPriority(state, def, now);
+    const next: WeeklyBountyNextAction = {
+      taskId: def.id,
+      action: actionForTaskKind(def.kind),
+      title: def.title,
+      reason: reasonForTask(def, progress),
+      progress,
+      target: def.target,
+      priority,
+    };
+    if (!best || next.priority > best.priority) best = next;
+  }
+  return best;
 }

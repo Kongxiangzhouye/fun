@@ -7,9 +7,9 @@ import {
   PLAYER_DUNGEON_HIT_INTERVAL_SEC,
 } from "../types";
 import {
-  bossPrepKillRequirement,
   canEnterDungeon,
   describeWaveProfile,
+  dungeonBossPrepSnapshot,
   dungeonCombatPhase,
   dungeonFrontierWave,
   essenceRewardTotalFloat,
@@ -37,6 +37,7 @@ import { ALL_GEAR_SLOTS, getGearBase, GEAR_SLOT_LABEL } from "../data/gearBases"
 import { gearItemPower, xuanTieEnhanceCost } from "../systems/gearCraft";
 import { BATTLE_SKILLS } from "../data/battleSkills";
 import { battleSkillPullCost, describeBattleSkillLevels } from "../systems/battleSkills";
+import { isSlotTopPowerGear } from "../systems/salvage";
 import { rarityZh } from "./rarityZh";
 import {
   gearPortraitSrc,
@@ -67,10 +68,15 @@ import {
   UI_DUNGEON_AFFIX_CLASSIC_DECO,
   UI_DUNGEON_AFFIX_VORTEX_DECO,
   UI_DUNGEON_COUNTER_WINDOW_BADGE_DECO,
+  UI_DUNGEON_BOSS_READY_BADGE,
+  UI_DUNGEON_BOSS_LOCKED_BADGE,
+  UI_DUNGEON_BOSS_PROGRESS_RING,
   UI_DUNGEON_REALM_CLASSIC_FRAME_DECO,
   UI_DUNGEON_REALM_VORTEX_FRAME_DECO,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
+  UI_GEAR_UPGRADE_UP,
+  UI_GEAR_UPGRADE_DOWN,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
   UI_HEAD_TRAIN,
@@ -428,9 +434,8 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
   const showIdleBossBtn =
     !d.active && !sanctuaryIdle && state.dungeonDeferBoss && fw % 5 === 0 && canEnter;
   const combatPhase = d.active ? dungeonCombatPhase(state) : "trash";
-  const bossPrepReq = bossPrepKillRequirement(d.wave);
-  const bossPrepProgress = `${d.bossPrepKills}/${bossPrepReq}`;
-  const bossChallengeUnlocked = d.bossPrepChallengeReady && d.bossPrepKills >= bossPrepReq;
+  const bossPrep = dungeonBossPrepSnapshot(state);
+  const bossPrepProgress = `${bossPrep.kills}/${bossPrep.req}`;
   const phaseBadgeSrc =
     combatPhase === "boss_fight"
       ? UI_DUEL_BOSS_BADGE
@@ -486,7 +491,10 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
           ? `<div class="dungeon-active-stack dungeon-active-stack--live">
           <div class="dungeon-phase-banner dungeon-phase-banner--${combatPhase}" role="region" aria-label="阶段说明" id="dungeon-phase-banner">
             <div class="dungeon-phase-banner-head">
-              <img class="dungeon-phase-badge-ico" src="${phaseBadgeSrc}" alt="" width="18" height="18" loading="lazy" />
+              <span class="dungeon-phase-badge-wrap">
+                <img class="dungeon-phase-progress-ring" src="${UI_DUNGEON_BOSS_PROGRESS_RING}" alt="" width="22" height="22" loading="lazy" ${combatPhase === "boss_prep" ? "" : "hidden"} />
+                <img class="dungeon-phase-badge-ico" src="${phaseBadgeSrc}" alt="" width="18" height="18" loading="lazy" />
+              </span>
               <span class="dungeon-phase-badge" id="dungeon-phase-badge">${
                 combatPhase === "boss_fight" ? "首领对决" : combatPhase === "boss_prep" ? "首领前哨" : "阵线清剿"
               }</span>
@@ -502,10 +510,8 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
             ${
               showCombatBossBtn
                 ? `<div class="dungeon-phase-banner-cta" id="dungeon-phase-cta">
-              <button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss" ${bossChallengeUnlocked ? "" : "disabled"}>挑战首领</button>
-              <span class="hint sm dungeon-phase-cta-note" id="dungeon-phase-cta-note">${
-                bossChallengeUnlocked ? "已达门槛，可随时挑战。" : `挑战门槛：击败小兵 ${bossPrepReq}（当前 ${bossPrepProgress}）`
-              }</span>
+              <button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss" ${bossPrep.canChallenge ? "" : "disabled"}>挑战首领</button>
+              <span class="hint sm dungeon-phase-cta-note" id="dungeon-phase-cta-note"><img class="dungeon-boss-progress-badge" src="${bossPrep.canChallenge ? UI_DUNGEON_BOSS_READY_BADGE : UI_DUNGEON_BOSS_LOCKED_BADGE}" alt="" width="16" height="16" loading="lazy" />${bossPrep.challengeHint}</span>
             </div>`
                 : ""
             }
@@ -721,6 +727,12 @@ function sortGearInventoryItems(items: GearItem[], mode: GearInventorySortMode):
   });
 }
 
+function slotPowerDeltaText(delta: number): string {
+  if (delta > 0) return `+${delta}`;
+  if (delta < 0) return `${delta}`;
+  return "±0";
+}
+
 const GEAR_SORT_LABELS: Record<GearInventorySortMode, string> = {
   rarity: "稀有度",
   ilvl: "装等",
@@ -735,8 +747,21 @@ export function renderGearPanel(
   gearInvSort: GearInventorySortMode = "rarity",
 ): string {
   void refineTargetId;
-  void gearInvSort;
-  const items = sortGearInventoryItems(Object.values(state.gearInventory), "slot");
+  const items = sortGearInventoryItems(Object.values(state.gearInventory), gearInvSort);
+  const slotTopPower = new Map<string, number>();
+  const slotSecondPower = new Map<string, number>();
+  for (const it of Object.values(state.gearInventory)) {
+    const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[it.slot] ?? 0));
+    const pw = gearItemPower(it, slotLv);
+    const top = slotTopPower.get(it.slot) ?? Number.NEGATIVE_INFINITY;
+    const second = slotSecondPower.get(it.slot) ?? Number.NEGATIVE_INFINITY;
+    if (pw > top) {
+      slotSecondPower.set(it.slot, top);
+      slotTopPower.set(it.slot, pw);
+    } else if (pw > second) {
+      slotSecondPower.set(it.slot, pw);
+    }
+  }
   let inv = "";
   for (const g of items) {
     const eq =
@@ -748,6 +773,11 @@ export function renderGearPanel(
     const xt = xuanTieEnhanceCost(slotLv);
     const locked = !!g.locked;
     const pw = gearItemPower(g, slotLv);
+    const top = slotTopPower.get(g.slot) ?? pw;
+    const second = slotSecondPower.get(g.slot) ?? Number.NEGATIVE_INFINITY;
+    const compareTarget = top > pw ? top : Number.isFinite(second) ? second : top;
+    const delta = pw - compareTarget;
+    const topTag = isSlotTopPowerGear(state, g.instanceId) ? " · 槽位Top1" : "";
     inv += `
       <div class="gear-row equipped ${locked ? "is-locked" : ""}">
         <div class="gear-row-visual">
@@ -756,12 +786,14 @@ export function renderGearPanel(
           </div>
           <div>
           <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade} · ilvl ${g.itemLevel}
-          <p class="inv-meta">战力 ${pw} · 槽位强化 ${slotLv}${locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
+          <p class="inv-meta">战力 ${pw} · 同槽对比 ${slotPowerDeltaText(delta)}${topTag} · 槽位强化 ${slotLv}${locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
           <div class="affix-block">${pre}${suf}</div>
           </div>
         </div>
         <div class="gear-actions">
-          <button class="btn" type="button" data-gear-enhance="${g.instanceId}">强化（${xt} 玄铁）</button>
+          <button class="btn gear-upgrade-btn" type="button" data-gear-enhance="${g.instanceId}">
+            <img src="${UI_GEAR_UPGRADE_UP}" alt="" width="14" height="14" class="gear-upgrade-ico" loading="lazy" />强化（${xt} 玄铁）
+          </button>
           <button class="btn gear-lock-toggle-btn ${locked ? "is-locked" : ""}" type="button" data-gear-toggle-lock="${g.instanceId}">
             <img src="${UI_GEAR_LOCK_DECO}" alt="" width="16" height="16" class="gear-lock-ico" loading="lazy" />${locked ? "解锁" : "锁定"}
           </button>
@@ -776,10 +808,14 @@ export function renderGearPanel(
     const id = state.equippedGear[s];
     const g = id ? state.gearInventory[id] : null;
     const open = gearDetailSlot === s;
+    const slotLv = g ? Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0)) : 0;
+    const pw = g ? gearItemPower(g, slotLv) : 0;
+    const top = g ? (slotTopPower.get(s) ?? pw) : 0;
+    const delta = g ? pw - top : 0;
     slotHtml += `<div class="gear-slot-line">
       <button type="button" class="gear-slot-summary ${open ? "is-open" : ""}" data-gear-open-slot="${s}">
         <span class="gear-slot-summary-label">${slotLabel[s]}</span>
-        <span class="gear-slot-summary-name">${g ? `${g.displayName} · 战力 ${gearItemPower(g, Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0)))}` : "（空）"}</span>
+        <span class="gear-slot-summary-name">${g ? `${g.displayName} · 战力 ${pw} · 同槽 ${slotPowerDeltaText(delta)}` : "（空）"}</span>
         <span class="inv-meta gear-slot-summary-hint">${open ? "收起" : "详情 · 卸下 / 强化"}</span>
       </button>
     </div>`;
@@ -811,8 +847,12 @@ export function renderGearPanel(
         </div>
         <div class="affix-block">${pre}${suf}</div>
         <div class="gear-equipped-detail-actions">
-          <button class="btn btn-danger" type="button" data-gear-unequip-detail="${s}" ${g.locked ? "disabled" : ""}>卸下并拆解</button>
-          <button class="btn btn-primary" type="button" data-gear-enhance="${g.instanceId}">强化（${xt} 玄铁）</button>
+          <button class="btn btn-danger gear-upgrade-btn gear-upgrade-btn-down" type="button" data-gear-unequip-detail="${s}" ${g.locked ? "disabled" : ""}>
+            <img src="${UI_GEAR_UPGRADE_DOWN}" alt="" width="14" height="14" class="gear-upgrade-ico" loading="lazy" />卸下并拆解
+          </button>
+          <button class="btn btn-primary gear-upgrade-btn" type="button" data-gear-enhance="${g.instanceId}">
+            <img src="${UI_GEAR_UPGRADE_UP}" alt="" width="14" height="14" class="gear-upgrade-ico" loading="lazy" />强化（${xt} 玄铁）
+          </button>
           <button class="btn gear-lock-toggle-btn ${g.locked ? "is-locked" : ""}" type="button" data-gear-toggle-lock="${g.instanceId}">
             <img src="${UI_GEAR_LOCK_DECO}" alt="" width="16" height="16" class="gear-lock-ico" loading="lazy" />${g.locked ? "解锁" : "锁定"}
           </button>
@@ -821,6 +861,15 @@ export function renderGearPanel(
       </div>`;
     }
   }
+  const sortBar = `
+      <div class="gear-inv-sort-row" role="group" aria-label="装备排序">
+        ${(["rarity", "ilvl", "slot", "name"] as GearInventorySortMode[])
+          .map(
+            (m) =>
+              `<button type="button" class="btn gear-inv-sort-btn ${gearInvSort === m ? "is-active" : ""}" data-gear-inv-sort="${m}">${GEAR_SORT_LABELS[m]}</button>`,
+          )
+          .join("")}
+      </div>`;
   return `
     <section class="panel" id="gear-panel-root">
       <div class="panel-title-art-row">
@@ -833,6 +882,7 @@ export function renderGearPanel(
       ${slotHtml}
       ${detailBlock}
       <h3 class="sub-h">部位详情</h3>
+      ${sortBar}
       <div class="gear-inv">${inv || `<div class="empty-art-wrap"><img src="${UI_EMPTY_GEAR}" alt="暂无装备" class="empty-art-img" width="320" height="160" loading="lazy" /></div>`}</div>
     </section>`;
 }

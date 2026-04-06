@@ -126,6 +126,10 @@ export const UI_GEAR_SORT_DECO = asset(GEAR_INVENTORY_UI_FILES.sortDeco);
 export const UI_GEAR_SORT_PINNED_DECO = asset(GEAR_INVENTORY_UI_FILES.sortPinnedDeco);
 /** 装备锁定 / 解锁按钮内小锁 */
 export const UI_GEAR_LOCK_DECO = asset(GEAR_INVENTORY_UI_FILES.lockDeco);
+/** 装备强化增益指示图标 */
+export const UI_GEAR_UPGRADE_UP = asset(GEAR_INVENTORY_UI_FILES.upgradeUp);
+/** 装备下行动作指示图标（卸下/拆解） */
+export const UI_GEAR_UPGRADE_DOWN = asset(GEAR_INVENTORY_UI_FILES.upgradeDown);
 export const UI_HEAD_PET = asset(HUB_SECTION_HEADER_UI_FILES.pet);
 export const UI_HEAD_STATS = asset(HUB_SECTION_HEADER_UI_FILES.stats);
 export const UI_HEAD_COMBAT = asset(HUB_SECTION_HEADER_UI_FILES.combat);
@@ -161,6 +165,10 @@ export const UI_BOUNTY_OVERDUE_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.overdueBadge
 export const UI_BOUNTY_LAST_DAY_ALERT_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.lastDayAlertBadge);
 /** 周常悬赏 · 幻域任务高频反馈聚焦徽记 */
 export const UI_BOUNTY_WAVES_FOCUS_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.wavesFocusBadge);
+/** 周常悬赏 · 周次聚焦条带 */
+export const UI_BOUNTY_WEEKLY_FOCUS_RIBBON = asset(WEEKLY_BOUNTY_UI_FILES.weeklyFocusRibbon);
+/** 周常悬赏 · 下一步行动徽记（待完成条目提示） */
+export const UI_BOUNTY_WEEKLY_NEXT_STEP_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.nextStepBadge);
 /** 周常悬赏 · 周节奏冲刺反馈徽记（周循环末段强化提示） */
 export const UI_BOUNTY_SURGE_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.surgeBadge);
 /** 养成二级导航 · 分组标题前小徽记；与 `HUB_VEIN_FLAIR_UI_FILES` 同源 */
@@ -236,6 +244,12 @@ export const UI_DUNGEON_ENTER_DECO = asset(DUNGEON_DUEL_UI_FILES.enterDeco);
 export const UI_DUNGEON_LEAVE_DECO = asset(DUNGEON_DUEL_UI_FILES.leaveDeco);
 /** 阵线对决 · 首领名条旁徽记 */
 export const UI_DUEL_BOSS_BADGE = asset(DUNGEON_DUEL_UI_FILES.bossBadge);
+/** 阵线对决 · 首领挑战已解锁反馈徽记 */
+export const UI_DUNGEON_BOSS_READY_BADGE = asset(DUNGEON_DUEL_UI_FILES.bossReadyBadge);
+/** 阵线对决 · 首领挑战未解锁反馈徽记 */
+export const UI_DUNGEON_BOSS_LOCKED_BADGE = asset(DUNGEON_DUEL_UI_FILES.bossLockedBadge);
+/** 阵线对决 · 首领前哨进度环反馈 */
+export const UI_DUNGEON_BOSS_PROGRESS_RING = asset(DUNGEON_DUEL_UI_FILES.bossProgressRing);
 /** 经典幻域模式单选项图标 */
 export const UI_DUNGEON_REALM_CLASSIC = asset(DUNGEON_DUEL_UI_FILES.realmClassic);
 /** 星漩乱域模式单选项图标 */
