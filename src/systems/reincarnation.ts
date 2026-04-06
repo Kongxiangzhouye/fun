@@ -104,6 +104,7 @@ export function performReincarnate(state: GameState): void {
   state.combatHpCurrent = playerMaxHp(state);
   state.dungeonSanctuaryMode = false;
   state.dungeonPortalTargetWave = 0;
+  state.dungeonDeferBoss = true;
   reseedRng(state);
 }
 

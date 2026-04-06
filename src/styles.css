@@ -548,6 +548,28 @@ body {
   flex-direction: column;
 }
 
+.dungeon-combat-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.dungeon-combat-toolbar .btn-dungeon-challenge-boss {
+  min-height: 44px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+.dungeon-boss-intent-row {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 160, 90, 0.35);
+  background: rgba(40, 28, 14, 0.35);
+}
+
 .dungeon-map-leave-btn {
   position: absolute;
   left: 8px;
@@ -577,6 +599,13 @@ body {
   filter: drop-shadow(0 0 4px rgba(160, 190, 255, 0.35));
 }
 
+.dungeon-map-leave-btn--outside {
+  position: relative;
+  left: auto;
+  top: auto;
+  flex-shrink: 0;
+}
+
 /* 幻域·阵线对决：左右对阵条（我方 | VS | 敌方），与中央意象、底部读条分层 */
 .dungeon-duel-vs-bar {
   position: absolute;
@@ -589,7 +618,7 @@ body {
   align-items: flex-start;
   justify-content: space-between;
   gap: 6px;
-  padding: 8px 8px 4px max(72px, 8px);
+  padding: 8px 8px 4px 8px;
   pointer-events: none;
   box-sizing: border-box;
 }

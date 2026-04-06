@@ -166,6 +166,7 @@ export function createInitialState(): GameState {
     dungeonSanctuaryMode: false,
     dungeonPortalTargetWave: 0,
     dungeonSanctuaryAutoEnter: false,
+    dungeonDeferBoss: true,
   };
   initRng(st, seed);
   st.combatHpCurrent = playerMaxHp(st);

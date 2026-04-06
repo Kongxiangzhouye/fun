@@ -161,6 +161,7 @@ export interface SerializedState {
   dungeonSanctuaryMode?: boolean;
   dungeonPortalTargetWave?: number;
   dungeonSanctuaryAutoEnter?: boolean;
+  dungeonDeferBoss?: boolean;
 }
 
 function normalizeDungeonState(st: GameState): void {
@@ -376,6 +377,7 @@ export function serialize(state: GameState): string {
     dungeonSanctuaryMode: state.dungeonSanctuaryMode,
     dungeonPortalTargetWave: state.dungeonPortalTargetWave,
     dungeonSanctuaryAutoEnter: state.dungeonSanctuaryAutoEnter,
+    dungeonDeferBoss: state.dungeonDeferBoss,
   };
   return JSON.stringify(s);
 }
@@ -616,6 +618,7 @@ export function deserialize(json: string): GameState {
     data.dungeonSanctuaryAutoEnter !== undefined && data.dungeonSanctuaryAutoEnter !== null
       ? !!data.dungeonSanctuaryAutoEnter
       : true;
+  st.dungeonDeferBoss = data.dungeonDeferBoss !== undefined && data.dungeonDeferBoss !== null ? !!data.dungeonDeferBoss : true;
   clampCombatHpToMax(st);
 
   normalizePetsState(st);

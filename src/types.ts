@@ -342,6 +342,11 @@ export interface GameState {
   dungeonPortalTargetWave: number;
   /** 圣所回满后是否自动进本（付入场髓）；未勾选则需手动点击 */
   dungeonSanctuaryAutoEnter: boolean;
+  /**
+   * 首领关（每 5 波）是否先刷小怪群；为 false 时该波为真正首领。
+   * 击败首领后会自动设回 true，进入「先清小怪再点挑战首领」节奏。
+   */
+  dungeonDeferBoss: boolean;
   /** 已抽总次数（用于统计与成就） */
   totalPulls: number;
   /** 距离 UR 保底的计数（大保底） */

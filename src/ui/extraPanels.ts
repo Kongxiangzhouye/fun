@@ -3,7 +3,6 @@ import {
   DUNGEON_DEATH_CD_MS,
   DUNGEON_DODGE_IFRAMES_MS,
   DUNGEON_DODGE_STAMINA_COST,
-  DUNGEON_INTER_WAVE_CD_MS,
   DUNGEON_STAMINA_MAX,
   PLAYER_DUNGEON_HIT_INTERVAL_SEC,
 } from "../types";
@@ -11,6 +10,7 @@ import {
   canEnterDungeon,
   describeWaveProfile,
   dungeonEntryFeeForSelectedWave,
+  dungeonFrontierWave,
   essenceRewardTotalFloat,
   packSizeForWave,
   currentBossMob,
@@ -50,7 +50,6 @@ import {
   UI_DUNGEON_IDLE_MIST,
   UI_DUEL_WAVE_BADGE,
   UI_DUEL_FRAME_CORNER,
-  UI_DUNGEON_INTER_WAVE_DECO,
   UI_DUNGEON_FOOT_TIMER_DECO,
   UI_DUNGEON_PANEL_LIVE_STRIP,
   UI_DUNGEON_ENTER_DECO,
@@ -185,10 +184,6 @@ function renderDungeonMapHtml(state: GameState): string {
     </div>`;
   return `
     <div class="dungeon-map-frame">
-      <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">
-        <img class="dungeon-map-leave-ico" src="${UI_DUNGEON_LEAVE_DECO}" alt="" width="16" height="16" loading="lazy" />
-        <span>暂离</span>
-      </button>
       <div class="dungeon-map-wrap">
         <div class="dungeon-map dungeon-duel-stage is-aoe in-combat" id="dungeon-map" aria-label="幻域阵线对决" style="--dungeon-player-hit-interval:${hitIntSec}s">
           <div class="dungeon-duel-frame-corners" aria-hidden="true">
@@ -278,33 +273,17 @@ const DUNGEON_HELP_BLURB = `幻域只掉唤灵髓，按关结算。幻域生命�
 function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
   const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
   const w = state.dungeonPortalTargetWave;
-  const auto = state.dungeonSanctuaryAutoEnter;
-  const autoAttr = auto ? "checked" : "";
   const portalSection = portalReady
-    ? auto
-      ? `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
+    ? `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
       <div class="sanctuary-portal-ring" aria-hidden="true"></div>
-      <p class="sanctuary-portal-msg">生命已回满，将自动进入第 <strong>${w}</strong> 关</p>
+      <p class="sanctuary-portal-msg">生命已回满，将<strong>自动</strong>进入段首第 <strong>${w}</strong> 关继续清小怪（需入场髓）</p>
     </div>`
-      : `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
-      <div class="sanctuary-portal-ring" aria-hidden="true"></div>
-      <p class="sanctuary-portal-msg">生命已回满，可进入第 <strong>${w}</strong> 关（需入场髓）</p>
-      <button type="button" class="btn btn-primary btn-sanctuary-portal" id="btn-sanctuary-portal">进入副本</button>
-    </div>`
-    : auto
-      ? `<p class="sanctuary-wait-txt">恢复中，回满后将自动进入</p>`
-      : `<p class="sanctuary-wait-txt">恢复中，回满后可手动进入第 <strong>${w}</strong> 关</p>`;
+    : `<p class="sanctuary-wait-txt">恢复中，回满后将自动返回段首第 <strong>${w}</strong> 关</p>`;
   return `<div class="sanctuary-visual">
     <div class="sanctuary-visual-bg" aria-hidden="true"></div>
     <div class="sanctuary-heal-particles" aria-hidden="true"></div>
     <div class="sanctuary-player-dot" aria-hidden="true"></div>
-    <div class="sanctuary-auto-row">
-      <label class="sanctuary-auto-label">
-        <input type="checkbox" id="sanctuary-auto-enter" ${autoAttr} />
-        <span>回满后自动进本</span>
-      </label>
-      <span class="hint sm sanctuary-auto-hint">未勾选时，进本前会先确认</span>
-    </div>
+    <p class="hint sm sanctuary-auto-hint">阵亡后从本段起始波继续；首领需点「挑战首领」再进关。</p>
     ${portalSection}
   </div>`;
 }
@@ -332,25 +311,20 @@ export function renderDungeonPanel(state: GameState): string {
     petSystemUnlocked(state) && petDungeonAtkAdditive(state) > 0
       ? (petDungeonAtkAdditive(state) * 100).toFixed(2)
       : null;
+  const fw = dungeonFrontierWave(state);
   const nextWavePreview = describeWaveProfile(Math.max(1, d.entryWave));
   const cdPct = cd > 0 ? Math.min(100, 100 - (100 * cd) / DUNGEON_DEATH_CD_MS) : 100;
-  const interWaveWait = d.active && d.mobs.length === 0 && d.interWaveCooldownUntil > now;
-  const interSec = interWaveWait ? Math.max(0, Math.ceil((d.interWaveCooldownUntil - now) / 1000)) : 0;
-  const interPct =
-    interWaveWait && DUNGEON_INTER_WAVE_CD_MS > 0
-      ? Math.min(100, (100 * (DUNGEON_INTER_WAVE_CD_MS - (d.interWaveCooldownUntil - now))) / DUNGEON_INTER_WAVE_CD_MS)
-      : 0;
   const sanctuaryIdle = state.dungeonSanctuaryMode && !d.active;
+  const showCombatBossBtn =
+    d.active && state.dungeonDeferBoss && d.wave % 5 === 0 && d.mobs.some((m) => m.hp > 0);
+  const showIdleBossBtn =
+    !d.active && !sanctuaryIdle && state.dungeonDeferBoss && fw % 5 === 0 && canEnter;
 
   const helpPop = `<div id="dungeon-help-popover" class="dungeon-help-popover" role="region" aria-label="幻域说明" hidden>
     <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
   </div>`;
 
-  const panelRunClass = d.active
-    ? interWaveWait
-      ? " dungeon-panel--run dungeon-panel--inter-wave"
-      : " dungeon-panel--run dungeon-panel--live-fight"
-    : "";
+  const panelRunClass = d.active ? " dungeon-panel--run dungeon-panel--live-fight" : "";
   const panelRunStyle = d.active ? ` style="--dungeon-live-strip:url('${UI_DUNGEON_PANEL_LIVE_STRIP}')"` : "";
 
   return `
@@ -389,27 +363,18 @@ export function renderDungeonPanel(state: GameState): string {
         ${helpPop}
       ${
         d.active
-          ? interWaveWait
-            ? `<div class="dungeon-active-stack">
-            <div class="dungeon-viewport dungeon-inter-wave">
-            <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">
+          ? `<div class="dungeon-active-stack dungeon-active-stack--live">
+          <div class="dungeon-combat-toolbar">
+            <button type="button" class="dungeon-map-leave-btn dungeon-map-leave-btn--outside" id="btn-dungeon-leave">
               <img class="dungeon-map-leave-ico" src="${UI_DUNGEON_LEAVE_DECO}" alt="" width="16" height="16" loading="lazy" />
               <span>暂离</span>
             </button>
-            <div class="dungeon-inter-wave-inner">
-              <div class="dungeon-inter-wave-art" aria-hidden="true">
-                <img class="dungeon-inter-wave-deco" src="${UI_DUNGEON_INTER_WAVE_DECO}" alt="" width="80" height="80" loading="lazy" />
-              </div>
-              <div class="dungeon-inter-wave-copy">
-              <p class="dungeon-inter-title">休整中 · 即将进入第 <strong>${d.wave}</strong> 关</p>
-              <div class="bar-label"><span>下一关就绪</span><span id="dungeon-inter-sec">${interSec} 秒</span></div>
-              <div class="progress-track cd"><div class="progress-fill cd" id="dungeon-inter-bar-fill" style="width:${interPct}%"></div></div>
-              </div>
-            </div>
+            ${
+              showCombatBossBtn
+                ? `<button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss">挑战首领</button>`
+                : ""
+            }
           </div>
-          <p class="dungeon-active-meta hint sm dungeon-active-meta--inter" id="dungeon-active-meta">${formatDungeonInterMeta()}</p>
-        </div>`
-            : `<div class="dungeon-active-stack dungeon-active-stack--live">
           <div class="dungeon-viewport dungeon-live-combat" id="dungeon-live-root">
           ${renderDungeonMapHtml(state)}
           </div>
@@ -426,7 +391,15 @@ export function renderDungeonPanel(state: GameState): string {
           ${renderIdlePreviewMap()}
           <p class="dungeon-idle-stats">累计通关 <strong>${d.totalWavesCleared}</strong> 波 · 最高第 <strong>${d.maxWaveRecord}</strong> 波</p>
           <p class="hint sm">目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波：${nextWavePreview}</p>
-          <p class="hint sm">可选下一关或已通关关卡复刷。入场约 <strong>${entryFeeShow}</strong> 髓；阵亡损失灵石 <strong>5%</strong>（至少 1）。阵线对决无走位，敌我按攻击间隔离散结算。</p>
+          <p class="hint sm">下一未通关波为第 <strong>${fw}</strong> 波（前沿）。入场约 <strong>${entryFeeShow}</strong> 髓；阵亡损失灵石 <strong>5%</strong>（至少 1）。首领关可先清小怪再点挑战首领。</p>
+          ${
+            showIdleBossBtn
+              ? `<div class="dungeon-boss-intent-row">
+            <button type="button" class="btn btn-primary" id="btn-dungeon-boss-next-entry">下一关为首领 · 挑战首领</button>
+            <p class="hint sm">默认进关为首领位小怪群；点此后再进关将面对真正首领。</p>
+          </div>`
+              : ""
+          }
           <div class="dungeon-entry-tools">
             <label class="dungeon-entry-label">起始波次（1～${Math.max(1, d.maxWaveRecord + 1)}）
               <input type="number" id="dungeon-entry-wave" min="1" max="${Math.max(1, d.maxWaveRecord + 1)}" step="1" value="${d.entryWave}" />

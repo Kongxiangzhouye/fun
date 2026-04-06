@@ -103,6 +103,7 @@ import { explorationHints } from "./explorationHints";
 import { sessionFunFlavorLine, onTitleSpiritPet, bindKonamiEasterEgg } from "./funBits";
 import {
   formatDungeonActiveMeta,
+  formatDungeonActiveMetaBrief,
   renderDungeonPanel,
   renderTrainPanel,
   renderBattleSkillPanel,
@@ -201,6 +202,7 @@ import {
   enterDungeon,
   leaveDungeon,
   tryAutoEnterFromSanctuaryPortal,
+  requestBossChallenge,
   canEnterDungeon,
   canEnterAtWave,
   dungeonFrontierWave,
@@ -691,7 +693,7 @@ function tryQueueDungeonDodgeWithFeedback(): void {
 }
 
 function maybeToastAutoEnterFailure(now: number): void {
-  if (!state.dungeonSanctuaryAutoEnter || !state.dungeonSanctuaryMode || state.dungeon.active) {
+  if (!state.dungeonSanctuaryMode || state.dungeon.active) {
     lastAutoEnterFailReason = "";
     return;
   }
@@ -3993,6 +3995,18 @@ function bindEvents(rb: Decimal, _slots: number): void {
     toast("已暂离副本；再次进入将重置本波地图与魔物。");
     render();
   });
+  document.getElementById("btn-dungeon-challenge-boss")?.addEventListener("click", () => {
+    requestBossChallenge(state);
+    saveGame(state);
+    toast("已切换为首领战：本波将重整为首领。");
+    render();
+  });
+  document.getElementById("btn-dungeon-boss-next-entry")?.addEventListener("click", () => {
+    state.dungeonDeferBoss = false;
+    saveGame(state);
+    toast("已切换为首领战：下次进入该波将面对首领。");
+    render();
+  });
 
   document.querySelectorAll("[data-skill-train]").forEach((el) => {
     el.addEventListener("click", () => {
@@ -4700,8 +4714,12 @@ function loop(): void {
     const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
     const interWaveWait = d.mobs.length === 0 && d.interWaveCooldownUntil > now;
     const metaEl = document.getElementById("dungeon-active-meta");
+    const metaBriefEl = document.getElementById("dungeon-active-meta-brief");
     if (metaEl && !interWaveWait) {
       metaEl.textContent = formatDungeonActiveMeta(state, now);
+    }
+    if (metaBriefEl && !interWaveWait) {
+      metaBriefEl.textContent = formatDungeonActiveMetaBrief(state, now);
     }
     const plTxt = document.getElementById("dungeon-pl-txt");
     if (plTxt) plTxt.textContent = `${fmtN(Math.max(0, d.playerHp))} / ${fmtN(d.playerMax)}`;

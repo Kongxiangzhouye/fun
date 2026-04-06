@@ -1314,7 +1314,7 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
   d.packSize = 0;
   d.monsterHp = 0;
   d.monsterMax = 0;
-  d.interWaveCooldownUntil = now + DUNGEON_INTER_WAVE_CD_MS;
+  d.interWaveCooldownUntil = 0;
   let extra = "";
   if (wasRepeat) {
     const ls = repeatLingShaBonus(clearedWave);
@@ -1323,12 +1323,17 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
   }
   d.pendingToast = `破阵胜利 · 第 ${clearedWave} 关\n本关唤灵髓 +${waveEss.toFixed(2)} 已入背包${extra ? `\n${extra.replace(/^ · /, "")}` : ""}`;
   refreshRewardModeRepeat(state);
+  if (clearedWave % 5 === 0) {
+    state.dungeonDeferBoss = true;
+  }
+  spawnMobsForWave(state);
 }
 
 /** 单只魔物阵亡结算；若本波清空则推进关卡并返回 true（调用方应结束本 tick） */
 function registerDungeonKill(state: GameState, d: DungeonState, mob: DungeonMob, now: number): boolean {
   resetDamageFloatAccum();
-  const totalFloat = essenceRewardTotalFloat(d.wave, state, mob.isBoss, d.rewardModeRepeat);
+  const bossLootWave = d.wave % 5 === 0 && !state.dungeonDeferBoss;
+  const totalFloat = essenceRewardTotalFloat(d.wave, state, bossLootWave, d.rewardModeRepeat);
   const share = totalFloat / Math.max(1, d.packSize);
   d.essenceRemainder += share;
   d.essenceThisWave += share;
@@ -1376,32 +1381,74 @@ function spawnMobsForWave(state: GameState): void {
   d.mapH = 0;
   d.playerX = 0.5;
   d.playerY = 0.5;
-  d.packSize = 1;
   d.packKilled = 0;
   d.mobs = [];
 
   const hpAffix = dungeonAffixMobHpMult(Date.now());
   const totalHp0 = Math.max(1, Math.floor(monsterMaxHpForWave(d.wave) * hpAffix));
   const bossWave = d.wave % 5 === 0;
-  const hp = bossWave ? Math.max(1, Math.floor(totalHp0 * 4.2)) : totalHp0;
-  const bel = randomEl(state);
-  const combat = rollMobCombatStats(state, d.wave, bossWave, "melee");
-  d.mobs.push({
-    id: d.nextMobId++,
-    x: 0.55,
-    y: 0.5,
-    hp,
-    maxHp: hp,
-    element: bel,
-    isBoss: bossWave,
-    mobKind: Math.floor(nextRand01(state) * 8),
-    bossEpithet: bossWave ? randomBossEpithet(() => nextRand01(state)) : undefined,
-    ...combat,
-  });
+  const deferBoss = bossWave && state.dungeonDeferBoss;
+  const isRealBoss = bossWave && !deferBoss;
+  const rawPack = packSizeForWave(d.wave);
+  let packN: number;
+  let totalHp: number;
+  if (isRealBoss) {
+    packN = 1;
+    totalHp = Math.max(1, Math.floor(totalHp0 * 4.2));
+  } else if (deferBoss) {
+    packN = Math.min(8, Math.max(4, 3 + Math.floor(d.wave / 12)));
+    totalHp = Math.max(1, Math.floor(totalHp0 * 4.2));
+  } else {
+    packN = Math.min(10, Math.max(3, Math.floor(rawPack / 4) + 1));
+    totalHp = totalHp0;
+  }
+  d.packSize = packN;
+
+  for (let i = 0; i < packN; i++) {
+    const hp = hpSlice(totalHp, packN, i);
+    const bel = randomEl(state);
+    const isBossMob = isRealBoss && packN === 1;
+    const role: "melee" | "ranged" = i % 3 === 0 ? "ranged" : "melee";
+    const combat = rollMobCombatStats(state, d.wave, isBossMob, role);
+    const xo = 0.38 + (i % 5) * 0.055;
+    const yo = 0.42 + Math.floor(i / 5) * 0.07;
+    d.mobs.push({
+      id: d.nextMobId++,
+      x: Math.min(0.72, Math.max(0.28, xo)),
+      y: Math.min(0.68, Math.max(0.32, yo)),
+      hp,
+      maxHp: hp,
+      element: bel,
+      isBoss: isBossMob,
+      mobKind: Math.floor(nextRand01(state) * 8),
+      bossEpithet: isBossMob ? randomBossEpithet(() => nextRand01(state)) : undefined,
+      mobRole: role,
+      ...combat,
+    });
+  }
+  d.packSize = d.mobs.length;
   d.waveEntrySpawnX = d.playerX;
   d.waveEntrySpawnY = d.playerY;
   syncBars(state, d);
   initDuelBattleState(state, Date.now());
+}
+
+/** 当前段（每 5 波）起始波：1、6、11… */
+export function dungeonSegmentStartWave(wave: number): number {
+  const w = Math.max(1, Math.floor(wave));
+  return Math.floor((w - 1) / 5) * 5 + 1;
+}
+
+/** 在首领位且当前为小怪群时，切换为真正首领并重生本波 */
+export function requestBossChallenge(state: GameState): void {
+  const d = state.dungeon;
+  if (!d.active || d.wave % 5 !== 0 || !state.dungeonDeferBoss) return;
+  state.dungeonDeferBoss = false;
+  delete d.waveCheckpoint[d.wave];
+  d.packKilled = 0;
+  d.essenceThisWave = 0;
+  d.essenceRemainder = 0;
+  spawnMobsForWave(state);
 }
 
 export function canEnterDungeon(state: GameState, now: number): boolean {
@@ -1487,7 +1534,7 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
  * 需在 `tickCombatHpRegen` 之后调用，以便 `combatHpCurrent` 已更新。
  */
 export function tryAutoEnterFromSanctuaryPortal(state: GameState, now: number): boolean {
-  if (!state.dungeonSanctuaryAutoEnter || !state.dungeonSanctuaryMode || state.dungeon.active) return false;
+  if (!state.dungeonSanctuaryMode || state.dungeon.active) return false;
   const w = state.dungeonPortalTargetWave;
   if (w < 1) return false;
   const pmax = playerMaxHp(state);
@@ -1683,7 +1730,8 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
         saveWaveCheckpoint(state);
         d.entryWave = d.wave;
         state.dungeonSanctuaryMode = true;
-        state.dungeonPortalTargetWave = d.wave;
+        state.dungeonPortalTargetWave = dungeonSegmentStartWave(d.wave);
+        state.dungeonDeferBoss = true;
         const s = stones(state);
         let pen = Decimal.max(1, s.mul(0.05).ceil());
         if (pen.gt(s)) pen = s;
