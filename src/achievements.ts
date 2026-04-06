@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet" | "array";
+  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -166,6 +166,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardStones: 2800,
     rewardEssence: 95,
     listDeco: "pet",
+  },
+  {
+    id: "pet_pulls_25",
+    title: "唤灵不倦",
+    desc: "灵宠唤引累计 25 次",
+    rewardStones: 320,
+    rewardEssence: 18,
+    listDeco: "petPull",
+  },
+  {
+    id: "pet_pulls_100",
+    title: "百唤灵缘",
+    desc: "灵宠唤引累计 100 次",
+    rewardStones: 1400,
+    rewardEssence: 48,
+    listDeco: "petPull",
   },
   {
     id: "garden_first_harvest",
@@ -429,6 +445,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return maxPetLevel(state) >= 30;
     case "pet_all_owned":
       return allPetsOwned(state);
+    case "pet_pulls_25":
+      return state.petPullsTotal >= 25;
+    case "pet_pulls_100":
+      return state.petPullsTotal >= 100;
     case "garden_first_harvest":
       return (state.spiritGarden?.totalHarvests ?? 0) >= 1;
     case "garden_harvest_30":

@@ -171,7 +171,7 @@ export function renderGameLoreHtml(): string {
         <summary><img src="${UI_LORE_PET}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 唤灵池与灵宠</summary>
         <ul class="game-lore-list">
           <li>养成页<strong>灵宠</strong>：幻域累计击溃 <strong>15</strong> 波后开放唤灵池。</li>
-          <li><strong>唤灵</strong>：每次消耗 <strong>42</strong> 唤灵髓邂逅一只灵宠；稀有度按池内权重随机。</li>
+          <li><strong>唤灵</strong>：每次消耗 <strong>42</strong> 唤灵髓邂逅一只灵宠；稀有度按池内权重随机。累计唤引达 <strong>25 / 100</strong> 次可在<strong>成就</strong>领奖。</li>
           <li><strong>重复邂逅</strong>：已获得同名灵宠时，转化为灵契经验并可能直接升级。</li>
           <li><strong>喂养</strong>：对已邂逅灵宠消耗唤灵髓获得经验，提升等级以放大加成（上限见面板）。</li>
           <li>灵宠效果多为灵石、幻域攻防或唤灵髓发现等；邂逅与等级<strong>跨轮回保留</strong>。</li>
