@@ -3,6 +3,15 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Dungeon and weekly high-frequency feedback fill (P1)",
+      "highlights": [
+        "Added dungeon crit echo and hit confirm ring SVG overlays for clearer repeated hit/combo feedback.",
+        "Added weekly pending status badge SVG and synced dungeon/weekly source mapping plus manifest entries.",
+        "Updated visual asset exports and manifest index wording to keep key-level handoff and inventory consistent."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Dungeon affix banner mode unification (P1)",
       "highlights": [
         "Added classic/vortex affix banner helper SVG decos to visually align with existing realm frame language.",

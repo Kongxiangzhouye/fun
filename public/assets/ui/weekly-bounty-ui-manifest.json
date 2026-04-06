@@ -11,6 +11,7 @@
     { "id": "claimAll", "file": "bounty-claim-all-deco.svg" },
     { "id": "claimBurst", "file": "bounty-claim-burst.svg" },
     { "id": "streakBadge", "file": "bounty-weekly-streak-badge.svg" },
-    { "id": "completeBadge", "file": "bounty-weekly-complete-badge.svg" }
+    { "id": "completeBadge", "file": "bounty-weekly-complete-badge.svg" },
+    { "id": "pendingBadge", "file": "bounty-weekly-pending-badge.svg" }
   ]
 }
