@@ -9,10 +9,12 @@ import { HUB_SECTION_HEADER_UI_FILES } from "../data/hubSectionHeadersUi";
 import { HUD_BAR_UI_FILES } from "../data/hudBarUi";
 import { PLAYER_PROFILE_UI_FILES } from "../data/playerProfileUi";
 import { PANEL_CHROME_UI_FILES } from "../data/panelChromeUi";
+import { WEEKLY_BOUNTY_UI_FILES } from "../data/weeklyBountyUi";
 import { ELEMENT_UI_FILES } from "../data/elementUi";
 import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
 import { GEAR_SLOT_UI_FILES } from "../data/gearSlotUi";
 import { GEAR_BASES } from "../data/gearBases";
+import { GEAR_INVENTORY_UI_FILES } from "../data/gearInventoryUi";
 import { PET_DEFS } from "../data/pets";
 import { GARDEN_CROPS } from "../systems/spiritGarden";
 
@@ -104,31 +106,31 @@ export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
 export const UI_HEAD_DUNGEON = asset(HUB_SECTION_HEADER_UI_FILES.dungeon);
 export const UI_HEAD_TRAIN = asset(HUB_SECTION_HEADER_UI_FILES.train);
 export const UI_HEAD_GEAR = asset(HUB_SECTION_HEADER_UI_FILES.gear);
-/** 行囊背包排序条左侧小标 */
-export const UI_GEAR_SORT_DECO = asset("gear-sort-deco.svg");
+/** 行囊背包排序条左侧小标；与 `GEAR_INVENTORY_UI_FILES` 同源 */
+export const UI_GEAR_SORT_DECO = asset(GEAR_INVENTORY_UI_FILES.sortDeco);
 /** 行囊排序偏好已持久化提示（图钉） */
-export const UI_GEAR_SORT_PINNED_DECO = asset("gear-sort-pinned-deco.svg");
+export const UI_GEAR_SORT_PINNED_DECO = asset(GEAR_INVENTORY_UI_FILES.sortPinnedDeco);
 /** 装备锁定 / 解锁按钮内小锁 */
-export const UI_GEAR_LOCK_DECO = asset("gear-lock-deco.svg");
+export const UI_GEAR_LOCK_DECO = asset(GEAR_INVENTORY_UI_FILES.lockDeco);
 export const UI_HEAD_PET = asset(HUB_SECTION_HEADER_UI_FILES.pet);
 export const UI_HEAD_STATS = asset(HUB_SECTION_HEADER_UI_FILES.stats);
 export const UI_HEAD_COMBAT = asset(HUB_SECTION_HEADER_UI_FILES.combat);
 export const UI_HEAD_GARDEN = asset(HUB_SECTION_HEADER_UI_FILES.garden);
 export const UI_HEAD_BOUNTY = asset(HUB_SECTION_HEADER_UI_FILES.bounty);
-/** 周常悬赏 · 铸灵功课卡片标题旁 */
-export const UI_BOUNTY_FORGE_DECO = asset("bounty-forge-deco.svg");
+/** 周常悬赏 · 铸灵功课卡片标题旁；与 `WEEKLY_BOUNTY_UI_FILES` 同源 */
+export const UI_BOUNTY_FORGE_DECO = asset(WEEKLY_BOUNTY_UI_FILES.forge);
 /** 周常悬赏 · 幻域清剿 */
-export const UI_BOUNTY_WAVES_DECO = asset("bounty-waves-deco.svg");
+export const UI_BOUNTY_WAVES_DECO = asset(WEEKLY_BOUNTY_UI_FILES.waves);
 /** 周常悬赏 · 唤引修行 */
-export const UI_BOUNTY_PULLS_DECO = asset("bounty-pulls-deco.svg");
+export const UI_BOUNTY_PULLS_DECO = asset(WEEKLY_BOUNTY_UI_FILES.pulls);
 /** 周常悬赏 · 灵田收成 */
-export const UI_BOUNTY_GARDEN_DECO = asset("bounty-garden-deco.svg");
+export const UI_BOUNTY_GARDEN_DECO = asset(WEEKLY_BOUNTY_UI_FILES.garden);
 /** 周常悬赏 · 吐纳功课 */
-export const UI_BOUNTY_TUNA_DECO = asset("bounty-tuna-deco.svg");
+export const UI_BOUNTY_TUNA_DECO = asset(WEEKLY_BOUNTY_UI_FILES.tuna);
 /** 周常悬赏 · 破境精进 */
-export const UI_BOUNTY_REALM_DECO = asset("bounty-realm-deco.svg");
+export const UI_BOUNTY_REALM_DECO = asset(WEEKLY_BOUNTY_UI_FILES.realm);
 /** 周常悬赏 · 一键领取按钮内图标 */
-export const UI_BOUNTY_CLAIM_ALL_DECO = asset("bounty-claim-all-deco.svg");
+export const UI_BOUNTY_CLAIM_ALL_DECO = asset(WEEKLY_BOUNTY_UI_FILES.claimAll);
 /** 养成二级导航 · 分组标题前小徽记 */
 export const UI_HUB_SECTION_FLAIR = asset("hub-section-flair.svg");
 /** 洞府蕴灵 · 共鸣乘区说明行左侧小标（双环链意象） */
