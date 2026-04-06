@@ -5037,6 +5037,18 @@ h1 {
   margin-bottom: 8px;
 }
 
+.ui-prefs-panel .ui-pref-inline-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ui-prefs-panel .ui-pref-row--reincarnation {
+  border-color: rgba(200, 120, 140, 0.38);
+  background: linear-gradient(165deg, rgba(48, 22, 32, 0.42), rgba(12, 14, 22, 0.55));
+}
+
 .ui-prefs-panel .ui-pref-inline-ico {
   flex-shrink: 0;
   opacity: 0.95;

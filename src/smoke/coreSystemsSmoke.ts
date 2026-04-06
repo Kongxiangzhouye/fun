@@ -47,6 +47,7 @@ import {
 } from "../systems/reincarnation";
 import { canClaimDailyLoginReward, claimDailyLoginReward } from "../systems/dailyLoginCalendar";
 import { getUiUnlocks } from "../uiUnlocks";
+import { tryCompleteAchievements } from "../achievements";
 
 type MemoryStorage = {
   getItem: (key: string) => string | null;
@@ -635,6 +636,15 @@ function runLifePlaytimeSecSmoke(): void {
   assert.equal(st.lifePlaytimeSec, 0, "reincarnate should reset life playtime");
 }
 
+function runLifePlaytimeHourAchievementSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("life_playtime_3600"), "achievement should start locked");
+  st.lifePlaytimeSec = 3600;
+  const newly = tryCompleteAchievements(st);
+  assert.ok(newly.some((a) => a.id === "life_playtime_3600"), "1h life playtime should unlock achievement");
+  assert.ok(st.achievementsDone.has("life_playtime_3600"), "achievement should be marked done");
+}
+
 function runDaoEssenceBreakdownSmoke(): void {
   const st = createInitialState();
   st.peakSpiritStonesThisLife = "1000000";
@@ -680,6 +690,7 @@ function main(): void {
   runOfflineAdventurePendingNormalizeSmoke();
   runDaoEssenceBreakdownSmoke();
   runLifePlaytimeSecSmoke();
+  runLifePlaytimeHourAchievementSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

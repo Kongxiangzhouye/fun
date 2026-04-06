@@ -477,6 +477,8 @@ export interface UiPrefs {
   autoUpgradeVein: boolean;
   /** 元强化：按固定顺序轮询五条元强化，道韵足够则买直至本轮无进展（需已解锁轮回·永久强化页） */
   autoBuyMeta: boolean;
+  /** 点击「确认轮回」时是否弹出浏览器确认框；关闭后一键直接轮回（仍受境界条件限制） */
+  confirmReincarnation: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

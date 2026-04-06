@@ -178,6 +178,7 @@ import {
   UI_SOUND_PREFS_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
+  UI_PREF_CONFIRM_REINCARNATION,
   UI_META_AUTO_BUY,
   UI_META_LIFE_PEAK,
   UI_DATA_EXPORT_DECO,
@@ -2715,6 +2716,17 @@ function renderUiPrefsPanel(): string {
         </label>
         <p class="hint sm ui-pref-desc">开启：K / M / B 等缩写；关闭：尽量显示完整整数（极大值仍用科学计数）。</p>
       </li>
+      <li class="ui-pref-row ui-pref-row--reincarnation">
+        <div class="ui-pref-inline-head">
+          <img class="ui-pref-inline-ico" src="${UI_PREF_CONFIRM_REINCARNATION}" alt="" width="22" height="22" loading="lazy" />
+          <span class="ui-pref-section-title">轮回</span>
+        </div>
+        <label class="ui-pref-label">
+          <input type="checkbox" class="ui-pref-input" data-ui-pref="confirmReincarnation" ${p.confirmReincarnation ? "checked" : ""} />
+          <span class="ui-pref-title">轮回前弹出确认</span>
+        </label>
+        <p class="hint sm ui-pref-desc">关闭后点击「确认轮回」将不再出现浏览器确认框，适合已熟悉后果的周回玩家；仍须满足境界条件。</p>
+      </li>
       <li class="ui-pref-row ui-pref-audio-block">
         <div class="ui-pref-audio-head">
           <img class="ui-pref-inline-ico" src="${UI_SOUND_PREFS_DECO}" alt="" width="22" height="22" loading="lazy" />
@@ -4288,6 +4300,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoBuyDaoMeridian") state.uiPrefs.autoBuyDaoMeridian = checked;
       else if (t === "autoUpgradeVein") state.uiPrefs.autoUpgradeVein = checked;
       else if (t === "autoBuyMeta") state.uiPrefs.autoBuyMeta = checked;
+      else if (t === "confirmReincarnation") state.uiPrefs.confirmReincarnation = checked;
       else return;
       saveGame(state);
       render();
@@ -4730,7 +4743,11 @@ function bindEvents(rb: Decimal, _slots: number): void {
   });
 
   document.getElementById("btn-rein")?.addEventListener("click", () => {
-    if (!confirm("确定轮回？境界、灵石、卡组与持有卡将重置，图鉴进度保留。")) return;
+    if (
+      state.uiPrefs.confirmReincarnation &&
+      !confirm("确定轮回？境界、灵石、卡组与持有卡将重置，图鉴进度保留。")
+    )
+      return;
     performReincarnate(state);
     resetSessionStoneBaseline();
     tryCompleteAchievements(state);

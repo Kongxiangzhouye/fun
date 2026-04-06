@@ -833,6 +833,7 @@ export function deserialize(json: string): GameState {
     autoBuyDaoMeridian: !!data.uiPrefs?.autoBuyDaoMeridian,
     autoUpgradeVein: !!data.uiPrefs?.autoUpgradeVein,
     autoBuyMeta: !!data.uiPrefs?.autoBuyMeta,
+    confirmReincarnation: data.uiPrefs?.confirmReincarnation !== false,
   };
 
   if (data.pets && typeof data.pets === "object") {

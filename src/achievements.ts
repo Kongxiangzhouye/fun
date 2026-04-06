@@ -80,6 +80,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "reincarnation",
   },
   {
+    id: "life_playtime_3600",
+    title: "一炷香凝",
+    desc: "本世累计修行满 1 小时",
+    rewardStones: 200,
+    rewardEssence: 12,
+    listDeco: "train",
+  },
+  {
     id: "pulls_100",
     title: "百抽之约",
     desc: "累计祈愿 100 次",
@@ -601,6 +609,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return hasUr(state);
     case "rein_1":
       return state.reincarnations >= 1;
+    case "life_playtime_3600":
+      return (state.lifePlaytimeSec ?? 0) >= 3600;
     case "pulls_100":
       return state.totalPulls >= 100;
     case "pulls_500":
