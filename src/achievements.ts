@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha";
+  listDeco?: "forge" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -61,6 +61,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "解锁半数以上灵卡",
     rewardStones: 500,
     rewardEssence: 35,
+    listDeco: "codex",
   },
   {
     id: "first_ur",
@@ -68,6 +69,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "获得任意 UR 灵卡",
     rewardStones: 1000,
     rewardEssence: 35,
+    listDeco: "rarity",
   },
   {
     id: "rein_1",
@@ -131,6 +133,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "获得任意 SSR 灵卡",
     rewardStones: 600,
     rewardEssence: 18,
+    listDeco: "rarity",
   },
   {
     id: "codex_full",
@@ -138,6 +141,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "图鉴邂逅全部灵卡",
     rewardStones: 8000,
     rewardEssence: 150,
+    listDeco: "codex",
   },
   {
     id: "rein_3",

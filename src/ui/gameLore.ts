@@ -38,6 +38,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>轮回</strong> = 重开本轮；会重置部分进度，但保留永久向强化。</li>
           <li><strong>洞府</strong> = 永久成长线；投入后跨轮回保留。</li>
           <li><strong>灵卡</strong> = 卡牌；上阵后提供产出与战斗效果。</li>
+          <li><strong>图鉴</strong>：邂逅进度（过半、全齐）与首次获得 <strong>SSR / UR</strong> 等，可在<strong>成就</strong>领奖。</li>
         </ul>
       </details>
 

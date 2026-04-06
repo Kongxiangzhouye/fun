@@ -142,6 +142,8 @@ import {
   UI_HEAD_DAILY_FORTUNE,
   UI_ACH_FORGE_DECO,
   UI_ACH_GACHA_DECO,
+  UI_ACH_CODEX_DECO,
+  UI_ACH_RARITY_DECO,
   UI_ACH_TRAIN_DECO,
   UI_ACH_DUNGEON_DECO,
   UI_ACH_DUNGEON_WAVES_DECO,
@@ -3188,6 +3190,10 @@ function renderAch(): string {
         ? `<img class="ach-deco-icon" src="${UI_ACH_FORGE_DECO}" alt="" width="22" height="22" loading="lazy" />`
         : a.listDeco === "gacha"
           ? `<img class="ach-deco-icon" src="${UI_ACH_GACHA_DECO}" alt="" width="22" height="22" loading="lazy" />`
+          : a.listDeco === "codex"
+            ? `<img class="ach-deco-icon" src="${UI_ACH_CODEX_DECO}" alt="" width="22" height="22" loading="lazy" />`
+            : a.listDeco === "rarity"
+              ? `<img class="ach-deco-icon" src="${UI_ACH_RARITY_DECO}" alt="" width="22" height="22" loading="lazy" />`
         : a.listDeco === "train"
           ? `<img class="ach-deco-icon" src="${UI_ACH_TRAIN_DECO}" alt="" width="22" height="22" loading="lazy" />`
           : a.listDeco === "dungeon"
