@@ -266,6 +266,7 @@ export interface WeeklyBountyFeedbackState {
   pending: number;
   claimed: number;
   claimable: number;
+  hasOverdue: boolean;
 }
 
 /** UI 反馈闭环：统一“进度→可领→已领”数量口径。 */
@@ -288,5 +289,6 @@ export function weeklyBountyFeedbackState(state: GameState, now: number): Weekly
     }
   }
   const total = WEEKLY_BOUNTY_TASKS.length;
-  return { total, completed, pending, claimed, claimable };
+  const hasOverdue = pending > 0 && claimable <= 0;
+  return { total, completed, pending, claimed, claimable, hasOverdue };
 }

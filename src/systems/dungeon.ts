@@ -286,7 +286,9 @@ function restoreWaveFromCheckpoint(state: GameState, ck: WaveCheckpoint): void {
   d.duelWeakNextAtMs = ck.duelWeakNextAtMs ?? 0;
   d.duelFervor = ck.duelFervor ?? 0;
   d.duelElemSurgeCounter = ck.duelElemSurgeCounter ?? 0;
-  if (d.duelWeakNextAtMs <= 0) d.duelWeakNextAtMs = Date.now() + 1500;
+  if (d.duelWeakNextAtMs <= 0) {
+    d.duelWeakNextAtMs = Date.now() + DUNGEON_DUEL_FEEDBACK.weakTriggerWindowBaseMs;
+  }
   syncBars(state, d);
 }
 
@@ -308,10 +310,18 @@ export const DUNGEON_DUEL_FEEDBACK = {
   hitDecoComboThreshold: 3,
   critDecoComboThreshold: 7,
   comboChainDecoThreshold: 5,
+  weakTriggerInitBaseMs: 900,
+  weakTriggerInitRandMs: 3200,
+  weakTriggerWindowBaseMs: 800,
+  weakTriggerWindowRandMs: 2800,
+  weakTriggerCooldownBaseMs: 7200,
+  weakTriggerCooldownRandMs: 5200,
+  weakTriggerChance: 0.42,
   duelFxHitMs: 140,
   duelFxHitDecoMs: 170,
   duelFxCritDecoMs: 260,
   duelFxGuardDecoMs: 320,
+  duelFxWeaknessPingMs: 360,
   parryHitDecoIframesRemainMs: 180,
 } as const;
 
@@ -321,7 +331,10 @@ function initDuelBattleState(state: GameState, now: number): void {
   d.duelWeakUntilMs = 0;
   d.duelFervor = 0;
   d.duelElemSurgeCounter = 0;
-  d.duelWeakNextAtMs = now + 900 + nextRand01(state) * 3200;
+  d.duelWeakNextAtMs =
+    now +
+    DUNGEON_DUEL_FEEDBACK.weakTriggerInitBaseMs +
+    nextRand01(state) * DUNGEON_DUEL_FEEDBACK.weakTriggerInitRandMs;
 }
 
 function playerMoveSpeed(state: GameState): number {
@@ -1686,10 +1699,18 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
   }
 
   if (d.duelWeakUntilMs <= now) {
-    if (d.duelWeakNextAtMs <= 0) d.duelWeakNextAtMs = now + 800 + nextRand01(state) * 2800;
+    if (d.duelWeakNextAtMs <= 0) {
+      d.duelWeakNextAtMs =
+        now +
+        DUNGEON_DUEL_FEEDBACK.weakTriggerWindowBaseMs +
+        nextRand01(state) * DUNGEON_DUEL_FEEDBACK.weakTriggerWindowRandMs;
+    }
     if (now >= d.duelWeakNextAtMs) {
-      d.duelWeakNextAtMs = now + 7200 + nextRand01(state) * 5200;
-      if (nextRand01(state) < 0.42) {
+      d.duelWeakNextAtMs =
+        now +
+        DUNGEON_DUEL_FEEDBACK.weakTriggerCooldownBaseMs +
+        nextRand01(state) * DUNGEON_DUEL_FEEDBACK.weakTriggerCooldownRandMs;
+      if (nextRand01(state) < DUNGEON_DUEL_FEEDBACK.weakTriggerChance) {
         d.duelWeakUntilMs = now + DUEL_WEAK_MS;
         pushDamageFloat(0.52, 0.35, "破绽", "dmg-special");
       }

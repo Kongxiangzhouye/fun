@@ -48,7 +48,7 @@ import {
   UI_DUNGEON_HIT_FLASH_DECO,
   UI_DUNGEON_CRIT_ECHO_DECO,
   UI_DUNGEON_COMBO_CHAIN_DECO,
-  UI_DUNGEON_GUARD_BREAK_DECO,
+  UI_DUNGEON_WEAKNESS_PING_DECO,
   UI_DUEL_GAUGE_SWORD,
   UI_DUEL_GAUGE_THREAT,
   UI_DUNGEON_IDLE_MIST,
@@ -271,7 +271,7 @@ function renderDungeonMapHtml(state: GameState): string {
             </div>
             <img class="dungeon-duel-fx-deco dungeon-duel-fx-hit-deco" id="dungeon-duel-fx-hit-deco" src="${UI_DUNGEON_HIT_FLASH_DECO}" alt="" width="160" height="160" loading="lazy" />
             <img class="dungeon-duel-fx-deco dungeon-duel-fx-crit-deco" id="dungeon-duel-fx-crit-deco" src="${UI_DUNGEON_CRIT_ECHO_DECO}" alt="" width="184" height="184" loading="lazy" />
-            <img class="dungeon-duel-fx-deco dungeon-duel-fx-guard-deco" src="${UI_DUNGEON_GUARD_BREAK_DECO}" alt="" width="168" height="168" loading="lazy" />
+            <img class="dungeon-duel-fx-deco dungeon-duel-fx-guard-deco" src="${UI_DUNGEON_WEAKNESS_PING_DECO}" alt="" width="168" height="168" loading="lazy" />
           </div>
           ${floatOverlay}
           <div class="dungeon-duel-center">

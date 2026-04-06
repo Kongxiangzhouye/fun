@@ -6374,7 +6374,8 @@ html.ui-reduce-motion *::after {
 
   .dungeon-map.duel-fx-hit-deco-on .dungeon-duel-fx-hit-deco,
   .dungeon-map.duel-fx-crit-deco-on .dungeon-duel-fx-crit-deco,
-  .dungeon-map.duel-fx-guard-deco-on .dungeon-duel-fx-guard-deco {
+  .dungeon-map.duel-fx-guard-deco-on .dungeon-duel-fx-guard-deco,
+  .dungeon-map.duel-fx-weakness-ping-on .dungeon-duel-fx-guard-deco {
     animation-duration: 0.01ms;
   }
 }
@@ -6445,6 +6446,11 @@ html.ui-reduce-motion *::after {
 
 .dungeon-map.duel-fx-guard-deco-on .dungeon-duel-fx-guard-deco {
   animation: duel-fx-guard-deco 0.32s ease-out;
+}
+
+.dungeon-map.duel-fx-weakness-ping-on .dungeon-duel-fx-guard-deco {
+  animation: duel-fx-guard-deco 0.36s ease-out;
+  filter: drop-shadow(0 0 10px rgba(142, 220, 255, 0.5));
 }
 
 .fx-single-slash {
@@ -8069,6 +8075,17 @@ p.gear-forge-tier-hint {
 .bounty-feedback-ico {
   flex-shrink: 0;
   opacity: 0.95;
+}
+
+.bounty-feedback-surge-ico {
+  opacity: 0.45;
+  transform: scale(0.9);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.bounty-feedback-surge-ico.is-on {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .bounty-claim-all-row {

@@ -191,6 +191,7 @@ import {
   UI_DUNGEON_CRIT_BURST_DECO,
   UI_DUNGEON_CRIT_ECHO_DECO,
   UI_DUNGEON_PARRY_SPARK_DECO,
+  UI_DUNGEON_WEAKNESS_PING_DECO,
   UI_DUNGEON_STAGGER_PULSE_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
@@ -406,6 +407,7 @@ let lastDungeonActive = false;
 let duelFloatBurstAtMs = 0;
 let duelCritBurstAtMs = 0;
 let duelGuardBreakAtMs = 0;
+let duelWeaknessPingAtMs = 0;
 let duelHitFlashAtMs = 0;
 const reducedMotionQuery =
   typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
@@ -4709,7 +4711,10 @@ function loop(): void {
         if (state.dungeon.active) {
           if (f.cls === "dmg-out" || f.cls === "dmg-out-crit") duelHitFlashAtMs = fxNow;
           if (f.cls === "dmg-out-crit" || f.text === "暴击") duelCritBurstAtMs = fxNow;
-          if (f.text === "破绽") duelGuardBreakAtMs = fxNow;
+          if (f.text === "破绽") {
+            duelGuardBreakAtMs = fxNow;
+            duelWeaknessPingAtMs = fxNow;
+          }
         }
         const el = document.createElement("span");
         el.className = `dungeon-float-txt ${f.cls}`;
@@ -4897,6 +4902,10 @@ function loop(): void {
         !prefersReducedMotion && mapNow - duelGuardBreakAtMs < DUNGEON_DUEL_FEEDBACK.duelFxGuardDecoMs,
       );
       mapEl.classList.toggle(
+        "duel-fx-weakness-ping-on",
+        !prefersReducedMotion && mapNow - duelWeaknessPingAtMs < DUNGEON_DUEL_FEEDBACK.duelFxWeaknessPingMs,
+      );
+      mapEl.classList.toggle(
         "duel-hp-low",
         d.playerMax > 0 && d.playerHp / d.playerMax < 0.28,
       );
@@ -4914,7 +4923,11 @@ function loop(): void {
           : UI_DUNGEON_CRIT_BURST_DECO;
       mapEl.style.setProperty("--duel-hit-flash-deco", `url("${hitDecoSrc}")`);
       mapEl.style.setProperty("--duel-crit-burst-deco", `url("${critDecoSrc}")`);
-      mapEl.style.setProperty("--duel-guard-break-deco", `url("${UI_DUNGEON_STAGGER_PULSE_DECO}")`);
+      const guardDecoSrc =
+        mapNow - duelWeaknessPingAtMs < DUNGEON_DUEL_FEEDBACK.duelFxWeaknessPingMs
+          ? UI_DUNGEON_WEAKNESS_PING_DECO
+          : UI_DUNGEON_STAGGER_PULSE_DECO;
+      mapEl.style.setProperty("--duel-guard-break-deco", `url("${guardDecoSrc}")`);
       const hitDecoEl = document.getElementById("dungeon-duel-fx-hit-deco") as HTMLImageElement | null;
       const critDecoEl = document.getElementById("dungeon-duel-fx-crit-deco") as HTMLImageElement | null;
       if (hitDecoEl && hitDecoEl.getAttribute("src") !== hitDecoSrc) hitDecoEl.setAttribute("src", hitDecoSrc);
