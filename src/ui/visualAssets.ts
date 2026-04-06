@@ -73,6 +73,10 @@ export const UI_CHRONICLE_GARDEN_HARVEST_STAT = asset("chronicle-garden-harvest-
 export const UI_CHRONICLE_BATTLE_SKILL_STAT = asset("chronicle-battle-skill-stat.svg");
 /** 唤灵通鉴 · 装备分解累计小标 */
 export const UI_CHRONICLE_GEAR_SALVAGE_STAT = asset("chronicle-gear-salvage-stat.svg");
+/** 唤灵通鉴 · 灵卡分解累计小标 */
+export const UI_CHRONICLE_CARD_SALVAGE_STAT = asset("chronicle-card-salvage-stat.svg");
+/** 唤灵通鉴 · 灵脉升级累计小标 */
+export const UI_CHRONICLE_VEIN_UPGRADE_STAT = asset("chronicle-vein-upgrade-stat.svg");
 /** 偏好设置 · 轮回确认框开关旁 */
 export const UI_PREF_CONFIRM_REINCARNATION = asset("ui-pref-confirm-reincarnation.svg");
 /** 偏好设置 · 动态标签标题开关旁 */

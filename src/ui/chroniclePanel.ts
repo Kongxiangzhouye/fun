@@ -6,6 +6,7 @@ import { rarityZh } from "./rarityZh";
 import { gearTierClass, gearTierLabel } from "./gearVisualTier";
 import {
   UI_CHRONICLE_BATTLE_SKILL_STAT,
+  UI_CHRONICLE_CARD_SALVAGE_STAT,
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
   UI_CHRONICLE_FORTUNE_STAT,
@@ -13,6 +14,7 @@ import {
   UI_CHRONICLE_GEAR_SALVAGE_STAT,
   UI_CHRONICLE_PET_PULL_STAT,
   UI_CHRONICLE_TUNA_STAT,
+  UI_CHRONICLE_VEIN_UPGRADE_STAT,
   UI_GEAR_CHRONICLE_DECO,
   UI_HEAD_CHRONICLE,
   UI_RESONANCE_PAYOUT_STAT,
@@ -94,6 +96,13 @@ export function renderChroniclePanel(state: GameState): string {
             <strong class="chronicle-stat-val">${ls.gearSalvages} 次</strong>
           </div>
         </div>
+        <div class="chronicle-stat-card chronicle-stat-card--card-salvage">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_CARD_SALVAGE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵卡分解</span>
+            <strong class="chronicle-stat-val">${ls.cardSalvages} 次</strong>
+          </div>
+        </div>
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">幻域累计入包髓</span>
           <strong class="chronicle-stat-val">${ls.dungeonEssenceIntGained}</strong>
@@ -139,6 +148,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">共鸣发放唤灵髓</span>
             <strong class="chronicle-stat-val">${ls.resonanceEssencePayouts} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--vein-upgrade">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_VEIN_UPGRADE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵脉升级</span>
+            <strong class="chronicle-stat-val">${ls.veinUpgrades} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--tuna">

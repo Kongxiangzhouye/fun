@@ -947,6 +947,8 @@ export function deserialize(json: string): GameState {
       estateCommissionCompletions: Math.max(0, Math.floor(data.lifetimeStats.estateCommissionCompletions ?? 0)),
       battleSkillPulls: Math.max(0, Math.floor(data.lifetimeStats.battleSkillPulls ?? 0)),
       gearSalvages: Math.max(0, Math.floor(data.lifetimeStats.gearSalvages ?? 0)),
+      cardSalvages: Math.max(0, Math.floor(data.lifetimeStats.cardSalvages ?? 0)),
+      veinUpgrades: Math.max(0, Math.floor(data.lifetimeStats.veinUpgrades ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

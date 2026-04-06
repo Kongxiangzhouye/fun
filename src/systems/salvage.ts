@@ -31,6 +31,8 @@ export function salvageCard(state: GameState, defId: string): { ok: boolean; msg
   const gain = lingShaFromRarity(def.rarity, o.stars);
   delete state.owned[defId];
   state.lingSha += gain;
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.cardSalvages += 1;
   return { ok: true, msg: `分解获得灵砂 +${gain}`, gain };
 }
 

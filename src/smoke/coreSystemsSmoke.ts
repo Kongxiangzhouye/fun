@@ -656,6 +656,23 @@ function runFenTianBurstAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
 }
 
+function runCardSalvageAndVeinAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("card_salvages_35"), "card salvage 35 should start locked");
+  st.lifetimeStats.cardSalvages = 35;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "card_salvages_35"), "35 card salvages should unlock");
+  st.lifetimeStats.cardSalvages = 160;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "card_salvages_160"), "160 card salvages should unlock");
+  st.lifetimeStats.veinUpgrades = 80;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "vein_upgrades_80"), "80 vein upgrades should unlock");
+  st.lifetimeStats.veinUpgrades = 320;
+  const d = tryCompleteAchievements(st);
+  assert.ok(d.some((x) => x.id === "vein_upgrades_320"), "320 vein upgrades should unlock");
+}
+
 function runBattleSkillAndGearSalvageAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("battle_skill_pulls_50"), "battle skill 50 should start locked");
@@ -782,6 +799,7 @@ function main(): void {
   runEstateCommissionAchievementsSmoke();
   runReincarnationTierAchievementsSmoke();
   runBattleSkillAndGearSalvageAchievementsSmoke();
+  runCardSalvageAndVeinAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

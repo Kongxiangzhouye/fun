@@ -384,6 +384,38 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "forgeNova",
   },
   {
+    id: "card_salvages_35",
+    title: "散灵归砂",
+    desc: "灵卡分解累计 35 次",
+    rewardStones: 420,
+    rewardEssence: 22,
+    listDeco: "gacha",
+  },
+  {
+    id: "card_salvages_160",
+    title: "千卡化尘",
+    desc: "灵卡分解累计 160 次",
+    rewardStones: 2800,
+    rewardEssence: 72,
+    listDeco: "codex",
+  },
+  {
+    id: "vein_upgrades_80",
+    title: "灵脉渐通",
+    desc: "洞府灵脉累计升级 80 次",
+    rewardStones: 1600,
+    rewardEssence: 48,
+    listDeco: "vein",
+  },
+  {
+    id: "vein_upgrades_320",
+    title: "四脉周天",
+    desc: "洞府灵脉累计升级 320 次",
+    rewardStones: 6200,
+    rewardEssence: 120,
+    listDeco: "vein",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -841,6 +873,14 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.gearSalvages ?? 0) >= 40;
     case "gear_salvages_200":
       return (state.lifetimeStats?.gearSalvages ?? 0) >= 200;
+    case "card_salvages_35":
+      return (state.lifetimeStats?.cardSalvages ?? 0) >= 35;
+    case "card_salvages_160":
+      return (state.lifetimeStats?.cardSalvages ?? 0) >= 160;
+    case "vein_upgrades_80":
+      return (state.lifetimeStats?.veinUpgrades ?? 0) >= 80;
+    case "vein_upgrades_320":
+      return (state.lifetimeStats?.veinUpgrades ?? 0) >= 320;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

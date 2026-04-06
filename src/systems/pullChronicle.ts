@@ -49,6 +49,8 @@ export function normalizeLifetimeStats(st: GameState): void {
       estateCommissionCompletions: 0,
       battleSkillPulls: 0,
       gearSalvages: 0,
+      cardSalvages: 0,
+      veinUpgrades: 0,
     };
     return;
   }
@@ -105,6 +107,12 @@ export function normalizeLifetimeStats(st: GameState): void {
   const gs = st.lifetimeStats.gearSalvages;
   if (gs == null || !Number.isFinite(gs)) st.lifetimeStats.gearSalvages = 0;
   else st.lifetimeStats.gearSalvages = Math.max(0, Math.floor(gs));
+  const cs = st.lifetimeStats.cardSalvages;
+  if (cs == null || !Number.isFinite(cs)) st.lifetimeStats.cardSalvages = 0;
+  else st.lifetimeStats.cardSalvages = Math.max(0, Math.floor(cs));
+  const vu = st.lifetimeStats.veinUpgrades;
+  if (vu == null || !Number.isFinite(vu)) st.lifetimeStats.veinUpgrades = 0;
+  else st.lifetimeStats.veinUpgrades = Math.max(0, Math.floor(vu));
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */

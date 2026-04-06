@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import type { GameState } from "../types";
 import { canAfford, subStones } from "../stones";
+import { normalizeLifetimeStats } from "./pullChronicle";
 
 export type VeinKind = "huiLing" | "guYuan" | "lingXi" | "gongMing";
 
@@ -79,6 +80,8 @@ export function buyVeinUpgrade(state: GameState, kind: VeinKind): boolean {
     if (!subStones(state, c)) return false;
   }
   state.vein[kind] = cur + 1;
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.veinUpgrades += 1;
   return true;
 }
 

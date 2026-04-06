@@ -96,6 +96,10 @@ export interface LifetimeStatsState {
   battleSkillPulls: number;
   /** 行囊装备分解成功次数（终身，含自动分解） */
   gearSalvages: number;
+  /** 灵卡分解成功次数（终身，含自动分解） */
+  cardSalvages: number;
+  /** 洞府灵脉任意一条目成功升级次数（终身，含自动） */
+  veinUpgrades: number;
 }
 
 /** 灵田作物 id */

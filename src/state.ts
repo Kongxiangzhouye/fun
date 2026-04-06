@@ -7,7 +7,7 @@ import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 import { createEmptyEstateCommissionState } from "./systems/estateCommission";
 
-export const SAVE_VERSION = 73;
+export const SAVE_VERSION = 74;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -238,6 +238,8 @@ export function createInitialState(): GameState {
       estateCommissionCompletions: 0,
       battleSkillPulls: 0,
       gearSalvages: 0,
+      cardSalvages: 0,
+      veinUpgrades: 0,
     },
     combatHpCurrent: 100,
     dungeonSanctuaryMode: false,
