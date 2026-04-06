@@ -209,6 +209,21 @@ export function feedPetUntilBroke(state: GameState, id: PetId): number {
   return n;
 }
 
+/**
+ * 主循环用：`uiPrefs.autoFeedPets` 开启时，对已结缘灵宠 id 排序后依次 `feedPetUntilBroke`。
+ * 返回本轮累计喂养成功次数；无操作或关闭偏好时返回 null。
+ */
+export function tryAutoFeedAllPetsIfPref(state: GameState): number | null {
+  if (!state.uiPrefs.autoFeedPets) return null;
+  if (!petSystemUnlocked(state)) return null;
+  const ids = [...ownedPetIds(state)].sort();
+  let total = 0;
+  for (const id of ids) {
+    total += feedPetUntilBroke(state, id);
+  }
+  return total > 0 ? total : null;
+}
+
 /** 重复邂逅或系统奖励：直接加灵契经验并可能升级 */
 export function addPetXp(state: GameState, id: PetId, addXp: number): void {
   const p = state.pets[id];

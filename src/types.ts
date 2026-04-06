@@ -465,6 +465,8 @@ export interface UiPrefs {
   autoSettleEstateCommission: boolean;
   /** 天机匣：本周尚有可换条目且资源与境界满足时，按列表顺序自动兑换（需已解锁天机匣页） */
   autoRedeemCelestialStash: boolean;
+  /** 灵宠：主循环内对已结缘灵宠自动「尽髓连喂」（需已解锁灵宠页） */
+  autoFeedPets: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

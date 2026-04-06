@@ -7,7 +7,7 @@ import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 import { createEmptyEstateCommissionState } from "./systems/estateCommission";
 
-export const SAVE_VERSION = 59;
+export const SAVE_VERSION = 60;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -136,6 +136,7 @@ export function createInitialState(): GameState {
       autoClaimWeeklyBounty: false,
       autoSettleEstateCommission: false,
       autoRedeemCelestialStash: false,
+      autoFeedPets: false,
     },
     vein: { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 },
     pullsThisLife: 0,

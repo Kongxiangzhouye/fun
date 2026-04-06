@@ -13,6 +13,7 @@ import {
   tryAutoRedeemCelestialStashOffers,
 } from "../systems/celestialStash";
 import { addStones } from "../stones";
+import { tryAutoFeedAllPetsIfPref } from "../systems/pets";
 import {
   chooseOfflineAdventureOption,
   commitOfflineAdventureAutoReceipt,
@@ -493,6 +494,20 @@ function runCelestialStashProgressSmoke(): void {
   assert.equal(p1.purchased, 1);
 }
 
+function runPetAutoFeedPrefSmoke(): void {
+  const st = createInitialState();
+  st.dungeon.totalWavesCleared = 15;
+  st.pets.yuling = { level: 1, xp: 0 };
+  st.summonEssence = 500;
+  st.uiPrefs.autoFeedPets = false;
+  assert.equal(tryAutoFeedAllPetsIfPref(st), null);
+  st.uiPrefs.autoFeedPets = true;
+  const before = st.summonEssence;
+  const n = tryAutoFeedAllPetsIfPref(st);
+  assert.ok(n != null && n >= 1, "auto feed should run at least one feed when pref on");
+  assert.ok(st.summonEssence < before, "summon essence should drop after auto feed");
+}
+
 function runCelestialStashAutoRedeemSmoke(): void {
   const st = createInitialState();
   const now = Date.now();
@@ -590,6 +605,7 @@ function main(): void {
   runDailyLoginAutoClaimPrefsSmoke();
   runCelestialStashProgressSmoke();
   runCelestialStashAutoRedeemSmoke();
+  runPetAutoFeedPrefSmoke();
   runWeeklyBountyAutoClaimSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console

@@ -292,6 +292,8 @@ export const UI_GEAR_UPGRADE_DOWN = asset(GEAR_INVENTORY_UI_FILES.upgradeDown);
 export const UI_HEAD_PET = asset(HUB_SECTION_HEADER_UI_FILES.pet);
 /** 灵宠面板 · 喂养操作小标（`public/assets/ui/pet-feed-action.svg`） */
 export const UI_PET_FEED_ACTION = asset("pet-feed-action.svg");
+/** 灵宠 · 主循环自动喂养开关旁 */
+export const UI_PET_AUTO_FEED = asset("pet-auto-feed.svg");
 export const UI_HEAD_STATS = asset(HUB_SECTION_HEADER_UI_FILES.stats);
 export const UI_HEAD_COMBAT = asset(HUB_SECTION_HEADER_UI_FILES.combat);
 export const UI_HEAD_GARDEN = asset(HUB_SECTION_HEADER_UI_FILES.garden);

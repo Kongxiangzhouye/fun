@@ -89,6 +89,7 @@ import {
   gearTierBadgeSrc,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
+  UI_PET_AUTO_FEED,
   UI_PET_FEED_ACTION,
   UI_HEAD_TRAIN,
   UI_HEAD_COMBAT,
@@ -1076,6 +1077,11 @@ export function renderPetPanel(state: GameState): string {
         </button>
         <span class="inv-meta pet-pull-meta">累计唤灵 <strong>${state.petPullsTotal}</strong> 次 · 持有唤灵髓 <strong>${Math.floor(state.summonEssence)}</strong></span>
       </div>
+      <label class="pet-auto-feed-row">
+        <input type="checkbox" id="chk-pet-auto-feed" data-ui-pref="autoFeedPets" ${state.uiPrefs.autoFeedPets ? "checked" : ""} />
+        <img class="pet-auto-feed-ico" src="${UI_PET_AUTO_FEED}" alt="" width="18" height="18" loading="lazy" />
+        <span class="pet-auto-feed-text">主循环自动尽髓喂养（已结缘灵宠依次连喂，唤灵髓不足或已满级则停）</span>
+      </label>
       <p class="hint sm">大致概率：凡 38% · 灵 26% · 珍 20% · 绝 12% · 天 4%。重复会增加灵契经验。</p>
       <p class="pet-active-summary">当前全局加成：<strong>${bonusLine}</strong></p>
       ${cards ? `<div class="pet-grid">${cards}</div>` : `<div class="empty-art-wrap"><img src="${UI_EMPTY_PET}" alt="暂无灵宠" class="empty-art-img" width="320" height="160" loading="lazy" /></div>`}

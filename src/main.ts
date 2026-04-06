@@ -308,6 +308,7 @@ import {
   petEssenceFindMult,
   feedPet,
   feedPetUntilBroke,
+  tryAutoFeedAllPetsIfPref,
 } from "./systems/pets";
 import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
 import {
@@ -882,6 +883,8 @@ let saveRequestPending = false;
 let saveFeedbackTimer = 0;
 let lastOfflineToastSig = "";
 let lastOfflineToastAtMs = 0;
+const PET_AUTO_FEED_TOAST_GAP_MS = 6000;
+let lastPetAutoFeedToastAtMs = 0;
 let lastCombatPower = 0;
 const COMBAT_POWER_POPUP_DURATION_MS = 1000;
 const COMBAT_POWER_POPUP_HOLD_MS = 520;
@@ -4215,6 +4218,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoClaimWeeklyBounty") state.uiPrefs.autoClaimWeeklyBounty = checked;
       else if (t === "autoSettleEstateCommission") state.uiPrefs.autoSettleEstateCommission = checked;
       else if (t === "autoRedeemCelestialStash") state.uiPrefs.autoRedeemCelestialStash = checked;
+      else if (t === "autoFeedPets") state.uiPrefs.autoFeedPets = checked;
       else return;
       saveGame(state);
       render();
@@ -5509,6 +5513,28 @@ function loop(): void {
       if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
       if (activeHub === "cultivate" && cultivateSub === "stash") {
         updateCelestialStashPanelReadouts(state, now);
+      }
+    }
+  }
+  if (
+    typeof document !== "undefined" &&
+    state.uiPrefs.autoFeedPets &&
+    uLoop.tabPets &&
+    petSystemUnlocked(state)
+  ) {
+    const petFeeds = tryAutoFeedAllPetsIfPref(state);
+    if (petFeeds != null && petFeeds > 0) {
+      tryCompleteAchievements(state);
+      requestSave("灵宠自动喂养", true);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      if (now - lastPetAutoFeedToastAtMs >= PET_AUTO_FEED_TOAST_GAP_MS) {
+        lastPetAutoFeedToastAtMs = now;
+        toast(`灵宠已自动喂养 ${petFeeds} 次（唤灵髓不足或已满级则停止）`);
+      }
+      if (activeHub === "cultivate" && cultivateSub === "pets") {
+        render();
       }
     }
   }
