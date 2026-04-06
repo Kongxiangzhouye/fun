@@ -981,6 +981,7 @@ export function deserialize(json: string): GameState {
       zhuLingEssenceSpentLifetime: Math.max(0, Math.floor(data.lifetimeStats.zhuLingEssenceSpentLifetime ?? 0)),
       lingShaSpentLifetime: Math.max(0, Math.floor(data.lifetimeStats.lingShaSpentLifetime ?? 0)),
       xuanTieSpentLifetime: Math.max(0, Math.floor(data.lifetimeStats.xuanTieSpentLifetime ?? 0)),
+      zaoHuaYuSpentLifetime: Math.max(0, Math.floor(data.lifetimeStats.zaoHuaYuSpentLifetime ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

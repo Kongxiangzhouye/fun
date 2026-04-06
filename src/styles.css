@@ -10882,6 +10882,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--zao-spend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(200, 160, 220, 0.4);
+  background: linear-gradient(145deg, rgba(32, 22, 38, 0.62), rgba(12, 8, 18, 0.74));
+}
+
+.chronicle-stat-card--zao-spend .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--zao-spend .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--in-game-day-peak {
   display: flex;
   align-items: center;

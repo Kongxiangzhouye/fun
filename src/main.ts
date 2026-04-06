@@ -2977,6 +2977,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `累计消耗筑灵髓: ${lt.zhuLingEssenceSpentLifetime}`,
     `累计消耗灵砂: ${lt.lingShaSpentLifetime}`,
     `累计消耗玄铁: ${lt.xuanTieSpentLifetime}`,
+    `累计消耗造化玉: ${lt.zaoHuaYuSpentLifetime}`,
     `历练副本累计获得筑灵髓（整数）: ${lt.dungeonEssenceIntGained}`,
     `天机匣兑换次数: ${lt.celestialStashBuys}`,
     `蓄灵池收取次数: ${lt.spiritReservoirClaims}`,
@@ -3078,6 +3079,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">累计消耗筑灵髓</span><strong class="d-val" id="data-overview-lt-zhuling-spent">${lt.zhuLingEssenceSpentLifetime}</strong></div>
         <div class="data-overview-cell"><span class="d-label">累计消耗灵砂</span><strong class="d-val" id="data-overview-lt-ling-spent">${lt.lingShaSpentLifetime}</strong></div>
         <div class="data-overview-cell"><span class="d-label">累计消耗玄铁</span><strong class="d-val" id="data-overview-lt-xuan-spent">${lt.xuanTieSpentLifetime}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">累计消耗造化玉</span><strong class="d-val" id="data-overview-lt-zao-spent">${lt.zaoHuaYuSpentLifetime}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历练副本累计获得筑灵髓（整数）</span><strong class="d-val" id="data-overview-lt-dungeon-ess">${lt.dungeonEssenceIntGained}</strong></div>
         <div class="data-overview-cell"><span class="d-label">天机匣兑换次数</span><strong class="d-val" id="data-overview-lt-stash">${lt.celestialStashBuys}</strong></div>
         <div class="data-overview-cell"><span class="d-label">蓄灵池收取次数</span><strong class="d-val" id="data-overview-lt-reservoir">${lt.spiritReservoirClaims}</strong></div>
@@ -3140,6 +3142,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-zhuling-spent", String(lt.zhuLingEssenceSpentLifetime));
   set("data-overview-lt-ling-spent", String(lt.lingShaSpentLifetime));
   set("data-overview-lt-xuan-spent", String(lt.xuanTieSpentLifetime));
+  set("data-overview-lt-zao-spent", String(lt.zaoHuaYuSpentLifetime));
   set("data-overview-lt-dungeon-ess", String(lt.dungeonEssenceIntGained));
   set("data-overview-lt-stash", String(lt.celestialStashBuys));
   set("data-overview-lt-reservoir", String(lt.spiritReservoirClaims));

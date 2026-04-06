@@ -78,6 +78,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       zhuLingEssenceSpentLifetime: 0,
       lingShaSpentLifetime: 0,
       xuanTieSpentLifetime: 0,
+      zaoHuaYuSpentLifetime: 0,
     };
     return;
   }
@@ -225,6 +226,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   const xts = st.lifetimeStats.xuanTieSpentLifetime;
   if (xts == null || !Number.isFinite(xts)) st.lifetimeStats.xuanTieSpentLifetime = 0;
   else st.lifetimeStats.xuanTieSpentLifetime = Math.max(0, Math.floor(xts));
+  const zhy = st.lifetimeStats.zaoHuaYuSpentLifetime;
+  if (zhy == null || !Number.isFinite(zhy)) st.lifetimeStats.zaoHuaYuSpentLifetime = 0;
+  else st.lifetimeStats.zaoHuaYuSpentLifetime = Math.max(0, Math.floor(zhy));
 }
 
 /** 幻域击败真首领时累加 */
@@ -291,6 +295,17 @@ export function recordXuanTieSpentLifetime(state: GameState, amount: number): vo
   const cur = state.lifetimeStats.xuanTieSpentLifetime;
   const next = cur + a;
   state.lifetimeStats.xuanTieSpentLifetime =
+    next > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : next;
+}
+
+/** 任意途径消耗造化玉时累加（整数，防溢出截断至安全整数上限） */
+export function recordZaoHuaYuSpentLifetime(state: GameState, amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  normalizeLifetimeStats(state);
+  const a = Math.floor(amount);
+  const cur = state.lifetimeStats.zaoHuaYuSpentLifetime;
+  const next = cur + a;
+  state.lifetimeStats.zaoHuaYuSpentLifetime =
     next > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : next;
 }
 

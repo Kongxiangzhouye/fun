@@ -154,6 +154,8 @@ export interface LifetimeStatsState {
   lingShaSpentLifetime: number;
   /** 累计消耗玄铁（槽位强化、天机匣等合计，整数） */
   xuanTieSpentLifetime: number;
+  /** 累计消耗造化玉（特权·QoL 解锁等，整数） */
+  zaoHuaYuSpentLifetime: number;
 }
 
 /** 灵田作物 id */

@@ -2,7 +2,11 @@ import type { GameState, QoLFlags } from "./types";
 import { MAX_CARD_LEVEL } from "./types";
 import { upgradeCardLevelCost, upgradeCardLingShaCost } from "./economy";
 import { canAfford, subStones } from "./stones";
-import { recordCardLevelUpLifetime, recordLingShaSpentLifetime } from "./systems/pullChronicle";
+import {
+  recordCardLevelUpLifetime,
+  recordLingShaSpentLifetime,
+  recordZaoHuaYuSpentLifetime,
+} from "./systems/pullChronicle";
 
 const COSTS: Record<keyof QoLFlags, number> = {
   tenPull: 1,
@@ -21,6 +25,7 @@ export function buyQoL(state: GameState, kind: keyof QoLFlags): boolean {
   const c = COSTS[kind];
   if (state.zaoHuaYu < c) return false;
   state.zaoHuaYu -= c;
+  recordZaoHuaYuSpentLifetime(state, c);
   state.qoL[kind] = true;
   return true;
 }

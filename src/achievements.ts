@@ -400,6 +400,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "forgeEmber",
   },
   {
+    id: "zao_hua_yu_spent_5",
+    title: "造化初启",
+    desc: "累计消耗造化玉 5（特权·QoL 解锁合计）",
+    rewardStones: 400,
+    rewardEssence: 28,
+    listDeco: "realm",
+  },
+  {
+    id: "zao_hua_yu_spent_23",
+    title: "天工开物",
+    desc: "累计消耗造化玉 23（五项特权全部解锁）",
+    rewardStones: 2200,
+    rewardEssence: 88,
+    listDeco: "reincarnation",
+  },
+  {
     id: "pet_first_feed",
     title: "灵契初结",
     desc: "在唤灵池结缘任意灵宠",
@@ -1273,6 +1289,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.xuanTieSpentLifetime ?? 0) >= 400;
     case "xuan_tie_spent_12000":
       return (state.lifetimeStats?.xuanTieSpentLifetime ?? 0) >= 12000;
+    case "zao_hua_yu_spent_5":
+      return (state.lifetimeStats?.zaoHuaYuSpentLifetime ?? 0) >= 5;
+    case "zao_hua_yu_spent_23":
+      return (state.lifetimeStats?.zaoHuaYuSpentLifetime ?? 0) >= 23;
     case "pet_first_feed":
       return anyPetOwned(state);
     case "pet_level_30":
