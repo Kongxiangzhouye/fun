@@ -86,6 +86,8 @@ export interface LifetimeStatsState {
   lastLoginCalendarFullWeekKey: string;
   /** 聚灵共鸣满百发放唤灵髓的累计次数（终身） */
   resonanceEssencePayouts: number;
+  /** 吐纳成功累计次数（手动与自动吐纳均计入，终身） */
+  tunaCompletions: number;
 }
 
 /** 灵田作物 id */

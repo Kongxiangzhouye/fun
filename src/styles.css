@@ -10277,6 +10277,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--tuna {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(100, 190, 180, 0.38);
+  background: linear-gradient(145deg, rgba(12, 36, 40, 0.72), rgba(10, 14, 22, 0.7));
+}
+
+.chronicle-stat-card--tuna .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--tuna .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-sub-h {
   margin-top: 4px;
 }

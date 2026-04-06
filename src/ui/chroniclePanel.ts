@@ -4,7 +4,12 @@ import { fmtDecimal, stones } from "../stones";
 import { PULL_CHRONICLE_MAX } from "../systems/pullChronicle";
 import { rarityZh } from "./rarityZh";
 import { gearTierClass, gearTierLabel } from "./gearVisualTier";
-import { UI_GEAR_CHRONICLE_DECO, UI_HEAD_CHRONICLE, UI_RESONANCE_PAYOUT_STAT } from "./visualAssets";
+import {
+  UI_CHRONICLE_TUNA_STAT,
+  UI_GEAR_CHRONICLE_DECO,
+  UI_HEAD_CHRONICLE,
+  UI_RESONANCE_PAYOUT_STAT,
+} from "./visualAssets";
 
 function fmtTime(atMs: number): string {
   const d = new Date(atMs);
@@ -85,6 +90,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">共鸣发放唤灵髓</span>
             <strong class="chronicle-stat-val">${ls.resonanceEssencePayouts} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--tuna">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_TUNA_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">吐纳成功</span>
+            <strong class="chronicle-stat-val">${ls.tunaCompletions} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card">

@@ -645,6 +645,17 @@ function runLifePlaytimeHourAchievementSmoke(): void {
   assert.ok(st.achievementsDone.has("life_playtime_3600"), "achievement should be marked done");
 }
 
+function runTunaCompletionAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("tuna_completions_30"), "tuna 30 should start locked");
+  st.lifetimeStats.tunaCompletions = 30;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "tuna_completions_30"), "30 tuna should unlock");
+  st.lifetimeStats.tunaCompletions = 300;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "tuna_completions_300"), "300 tuna should unlock");
+}
+
 function runResonancePayoutAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("resonance_payouts_50"), "resonance 50 should start locked");
@@ -716,6 +727,7 @@ function main(): void {
   runLifePlaytimeHourAchievementSmoke();
   runCumulativePlaytime24hAchievementSmoke();
   runResonancePayoutAchievementsSmoke();
+  runTunaCompletionAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

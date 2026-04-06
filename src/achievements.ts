@@ -288,6 +288,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "gardenBloom",
   },
   {
+    id: "tuna_completions_30",
+    title: "吐纳有成",
+    desc: "吐纳成功累计 30 次",
+    rewardStones: 120,
+    rewardEssence: 10,
+    listDeco: "train",
+  },
+  {
+    id: "tuna_completions_300",
+    title: "息贯长虹",
+    desc: "吐纳成功累计 300 次",
+    rewardStones: 1400,
+    rewardEssence: 48,
+    listDeco: "train",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -721,6 +737,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 100;
     case "offline_boost_5":
       return (state.lifetimeStats?.offlineAdventureBoostPicks ?? 0) >= 5;
+    case "tuna_completions_30":
+      return (state.lifetimeStats?.tunaCompletions ?? 0) >= 30;
+    case "tuna_completions_300":
+      return (state.lifetimeStats?.tunaCompletions ?? 0) >= 300;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

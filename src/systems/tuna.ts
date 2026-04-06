@@ -1,6 +1,7 @@
 import type { GameState } from "../types";
 import { TUNA_COOLDOWN_MS } from "../types";
 import { addStones } from "../stones";
+import { normalizeLifetimeStats } from "./pullChronicle";
 import { noteWeeklyBountyTuna } from "./weeklyBounty";
 
 export function tunaStoneReward(realmLevel: number): number {
@@ -25,6 +26,8 @@ export function tryTuna(state: GameState, nowMs: number): number {
   addStones(state, gain);
   state.lastTunaMs = nowMs;
   noteWeeklyBountyTuna(state, nowMs);
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.tunaCompletions += 1;
   return gain;
 }
 
