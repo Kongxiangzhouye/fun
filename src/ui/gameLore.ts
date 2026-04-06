@@ -18,6 +18,8 @@ import {
   UI_LORE_META,
   UI_LORE_DAO_MERIDIAN,
   UI_LORE_BATTLE_SKILL,
+  UI_LORE_LOGIN_CALENDAR,
+  UI_LORE_CHRONICLE,
   UI_RESONANCE_CORE,
 } from "./visualAssets";
 
@@ -104,6 +106,27 @@ export function renderGameLoreHtml(): string {
           <li>条目覆盖幻域、唤引、铸灵、灵田、吐纳、破境等；达成后即可领<strong>灵石</strong>与<strong>唤灵髓</strong>。</li>
           <li>底部可<strong>一键领取</strong>所有已达成的条目。</li>
           <li>与「功业录」<strong>不同</strong>：功业录多为一次性或累计终身目标；周常按<strong>自然周</strong>循环。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_LOGIN_CALENDAR}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 灵息日历</summary>
+        <ul class="game-lore-list">
+          <li><strong>入口</strong>：养成→灵息日历（解锁条件见「功能解锁一览」）。</li>
+          <li>按<strong>本地日历日</strong>：每日可<strong>领取一次</strong>奖励；跨日刷新领取资格与连签逻辑。</li>
+          <li>若昨日已登录且今日继续登录，<strong>连签 +1</strong>；若中断则连签从 <strong>1</strong> 重新计数。</li>
+          <li>奖励含灵石与唤灵髓，随连签数提高（具体数值见面板预览）。</li>
+          <li>连签与领取记录<strong>不随轮回清空</strong>。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_CHRONICLE}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 唤灵通鉴</summary>
+        <ul class="game-lore-list">
+          <li><strong>入口</strong>：养成→唤灵通鉴。</li>
+          <li>分「灵卡唤引」「铸灵」两张表，仅作记录展示，<strong>不消耗</strong>资源。</li>
+          <li>各表最多保留最近 <strong>48</strong> 条；新记录挤掉最旧条目。</li>
+          <li>灵卡表标注时间与稀有度，首次邂逅可标「首遇」。</li>
         </ul>
       </details>
 

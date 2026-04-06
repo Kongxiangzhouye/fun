@@ -183,6 +183,10 @@ export const UI_LORE_META = asset("deco-lore-meta.svg");
 export const UI_LORE_DAO_MERIDIAN = asset("deco-lore-dao-meridian.svg");
 /** 修行札记 · 「心法（修炼）」折叠标题旁 */
 export const UI_LORE_BATTLE_SKILL = asset("deco-lore-battle-skill.svg");
+/** 修行札记 · 「灵息日历」折叠标题旁 */
+export const UI_LORE_LOGIN_CALENDAR = asset("deco-lore-login-calendar.svg");
+/** 修行札记 · 「唤灵通鉴」折叠标题旁 */
+export const UI_LORE_CHRONICLE = asset("deco-lore-chronicle.svg");
 /** 灵息日历（每日签到）页标题 */
 export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 /** 天机匣（周轮换商店）页标题 */
