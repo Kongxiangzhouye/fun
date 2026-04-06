@@ -187,6 +187,8 @@ export const UI_LORE_BATTLE_SKILL = asset("deco-lore-battle-skill.svg");
 export const UI_LORE_LOGIN_CALENDAR = asset("deco-lore-login-calendar.svg");
 /** 修行札记 · 「唤灵通鉴」折叠标题旁 */
 export const UI_LORE_CHRONICLE = asset("deco-lore-chronicle.svg");
+/** 修行札记 · 「吐纳与闭关」折叠标题旁 */
+export const UI_LORE_TUNA_MEDITATION = asset("deco-lore-tuna-meditation.svg");
 /** 灵息日历（每日签到）页标题 */
 export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 /** 天机匣（周轮换商店）页标题 */

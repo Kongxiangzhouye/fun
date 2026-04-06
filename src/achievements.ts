@@ -172,6 +172,13 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardEssence: 20,
   },
   {
+    id: "login_streak_30",
+    title: "灵息长明",
+    desc: "登录连签达到 30 日",
+    rewardStones: 1200,
+    rewardEssence: 45,
+  },
+  {
     id: "celestial_stash_1",
     title: "天机初启",
     desc: "在天机匣完成 1 次兑换",
@@ -335,6 +342,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.spiritGarden?.totalHarvests ?? 0) >= 30;
     case "login_streak_7":
       return state.dailyStreak >= 7;
+    case "login_streak_30":
+      return state.dailyStreak >= 30;
     case "celestial_stash_1":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
     case "spirit_reservoir_1":

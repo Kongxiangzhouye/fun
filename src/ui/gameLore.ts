@@ -20,6 +20,7 @@ import {
   UI_LORE_BATTLE_SKILL,
   UI_LORE_LOGIN_CALENDAR,
   UI_LORE_CHRONICLE,
+  UI_LORE_TUNA_MEDITATION,
   UI_RESONANCE_CORE,
 } from "./visualAssets";
 
@@ -138,6 +139,16 @@ export function renderGameLoreHtml(): string {
           <li><strong>蓄灵池</strong>：随当前灵石产出缓慢蓄存，可一次性收取进背包；有上限，随境界与轮回略放大。</li>
           <li><strong>心斋卦象</strong>：按<strong>本地日历日</strong>刷新一条运势，影响灵石等乘区；跨日自动更替。</li>
           <li><strong>天机匣</strong>：每周轮换限购兑换，周次与<strong>周常悬赏</strong>同源（每周一本地 0:00）；用灵石 / 灵砂 / 玄铁 / 唤灵髓等按条目支付。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_TUNA_MEDITATION}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 吐纳与闭关</summary>
+        <ul class="game-lore-list">
+          <li><strong>入口</strong>：养成→灵府→<strong>灵脉</strong>子页（吐纳与闭关按钮位于此）。</li>
+          <li><strong>吐纳</strong>：冷却约 <strong>24</strong> 秒，就绪后点击获得灵石（数额随境界成长）；可造化玉解锁<strong>自动吐纳</strong>。计入周常「吐纳」条目。</li>
+          <li><strong>闭关</strong>：境界≥<strong>六重</strong>后可见；瞬间按约 <strong>1 小时</strong>的挂机收益规则预演结算灵石（与离线同乘区，仍受离线时长上限等约束）。</li>
+          <li>闭关有独立冷却（约 <strong>70</strong> 秒），预演同样会推进聚灵共鸣等随时间累积的系统。</li>
         </ul>
       </details>
 
