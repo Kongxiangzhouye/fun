@@ -396,9 +396,8 @@ export function renderBattleEquippedStrip(state: GameState, expanded: boolean): 
       </div>`;
 }
 
-export function renderDungeonPanel(state: GameState, battleGearStripExpanded = false): string {
+export function renderDungeonPanel(state: GameState, battleGearStripExpanded = false, now = Date.now()): string {
   const d = state.dungeon;
-  const now = Date.now();
   const cd = Math.max(0, d.deathCooldownUntil - now);
   const canEnter = canEnterDungeon(state, now);
   const edps = playerExpectedDpsDungeonAffix(state, now);
@@ -455,10 +454,10 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
       </div>
       <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner" style="background-image:url('${affixFrameSrc}')">
         <img class="dungeon-affix-icon" src="${UI_DUNGEON_AFFIX_DECO}" alt="" width="40" height="40" loading="lazy" />
-        <img class="dungeon-affix-mode-deco" src="${affixModeDecoSrc}" alt="" width="124" height="24" loading="lazy" />
+        <img class="dungeon-affix-mode-deco" id="dungeon-affix-mode-deco" src="${affixModeDecoSrc}" alt="" width="124" height="24" loading="lazy" />
         <div class="dungeon-affix-text">
           <strong class="dungeon-affix-title" id="dungeon-affix-title">本周词缀 · ${affix.title}</strong>
-          <p class="hint sm dungeon-affix-desc" id="dungeon-affix-desc">${affix.desc}<span class="dungeon-affix-wk">（周次 ${weekLine}）</span></p>
+          <p class="hint sm dungeon-affix-desc" id="dungeon-affix-desc">${affix.desc}<span class="dungeon-affix-wk" id="dungeon-affix-week">（周次 ${weekLine}）</span></p>
         </div>
       </div>
       ${
@@ -470,7 +469,7 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
           <p class="dungeon-readiness-line hint sm">
             期望秒伤 <strong id="dungeon-idle-readiness-edps">${fmtNum(edps)}</strong>/s
             · 幻域生命 <strong id="dungeon-idle-readiness-chp">${fmtNum(Math.max(0, chp))}</strong>/<strong id="dungeon-idle-readiness-pmax">${fmtNum(pmax)}</strong>
-            · 目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波
+            · 目标第 <strong id="dungeon-idle-readiness-wave">${Math.max(1, d.entryWave)}</strong> 波
           </p>
         </div>
       </div>`
@@ -482,15 +481,15 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
       ${
         d.active
           ? `<div class="dungeon-active-stack dungeon-active-stack--live">
-          <div class="dungeon-phase-banner dungeon-phase-banner--${combatPhase}" role="region" aria-label="阶段说明">
+          <div class="dungeon-phase-banner dungeon-phase-banner--${combatPhase}" role="region" aria-label="阶段说明" id="dungeon-phase-banner">
             <div class="dungeon-phase-banner-head">
               <img class="dungeon-phase-badge-ico" src="${phaseBadgeSrc}" alt="" width="18" height="18" loading="lazy" />
-              <span class="dungeon-phase-badge">${
+              <span class="dungeon-phase-badge" id="dungeon-phase-badge">${
                 combatPhase === "boss_fight" ? "首领对决" : combatPhase === "boss_prep" ? "首领前哨" : "阵线清剿"
               }</span>
-              <span class="dungeon-phase-wave-hint hint sm">第 ${d.wave} 波</span>
+              <span class="dungeon-phase-wave-hint hint sm" id="dungeon-phase-wave-hint">第 ${d.wave} 波</span>
             </div>
-            <p class="dungeon-phase-banner-guide">${
+            <p class="dungeon-phase-banner-guide" id="dungeon-phase-guide">${
               combatPhase === "boss_fight"
                 ? "首领可对你造成真实伤害。击败首领后本关胜利，并自动进入下一波。"
                 : combatPhase === "boss_prep"
@@ -499,9 +498,9 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
             }</p>
             ${
               showCombatBossBtn
-                ? `<div class="dungeon-phase-banner-cta">
+                ? `<div class="dungeon-phase-banner-cta" id="dungeon-phase-cta">
               <button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss">挑战首领</button>
-              <span class="hint sm dungeon-phase-cta-note">清完小怪后可用</span>
+              <span class="hint sm dungeon-phase-cta-note" id="dungeon-phase-cta-note">清完小怪后可用</span>
             </div>`
                 : ""
             }

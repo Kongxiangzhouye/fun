@@ -8106,6 +8106,11 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.bounty-claim-all-echo-ico {
+  opacity: 0.86;
+  margin-left: -2px;
+}
+
 .bounty-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -8212,6 +8217,11 @@ p.gear-forge-tier-hint {
   transform: translate(-50%, -50%);
   animation: bounty-claim-burst-fade 0.52s ease-out forwards;
   filter: drop-shadow(0 0 10px rgba(255, 205, 112, 0.5));
+}
+
+.bounty-claim-burst-fx-echo {
+  animation-duration: 0.56s;
+  filter: drop-shadow(0 0 8px rgba(130, 180, 255, 0.5));
 }
 
 @keyframes bounty-claim-burst-fade {

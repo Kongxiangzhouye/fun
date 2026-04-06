@@ -22,6 +22,7 @@ import {
   UI_BOUNTY_OVERDUE_BADGE,
   UI_BOUNTY_WAVES_FOCUS_BADGE,
   UI_BOUNTY_SURGE_BADGE,
+  UI_BOUNTY_CLAIM_ECHO_BADGE,
   UI_HEAD_BOUNTY,
 } from "./visualAssets";
 
@@ -109,6 +110,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
       <div class="bounty-claim-all-row">
         <button type="button" class="btn btn-primary bounty-claim-all-btn" id="btn-bounty-claim-all" ${claimableN > 0 ? "" : "disabled"}>
           <img class="bounty-claim-all-ico" src="${UI_BOUNTY_CLAIM_ALL_DECO}" alt="" width="20" height="20" loading="lazy" />
+          <img class="bounty-claim-all-ico bounty-claim-all-echo-ico" src="${UI_BOUNTY_CLAIM_ECHO_BADGE}" alt="" width="16" height="16" loading="lazy" />
           <span id="bounty-claim-all-lbl">一键领取可领悬赏（${claimableN}）</span>
         </button>
       </div>

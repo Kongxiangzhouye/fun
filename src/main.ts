@@ -184,10 +184,11 @@ import {
   UI_DATA_STATS_DOWNLOAD_DECO,
   UI_VEIN_GONGMING_LINK,
   UI_BOUNTY_CLAIM_BURST,
+  UI_BOUNTY_CLAIM_ECHO_BADGE,
   UI_OFFLINE_SUMMARY_BADGE,
   UI_OFFLINE_TRANSITION_SHINE,
   UI_DUNGEON_HIT_FLASH_DECO,
-  UI_DUNGEON_HIT_CONFIRM_RING_DECO,
+  UI_DUNGEON_HIT_TRACE_RING_DECO,
   UI_DUNGEON_CRIT_BURST_DECO,
   UI_DUNGEON_CRIT_ECHO_DECO,
   UI_DUNGEON_PARRY_SPARK_DECO,
@@ -248,6 +249,7 @@ import {
   enterDungeon,
   tryAutoEnterFromSanctuaryPortal,
   requestBossChallenge,
+  dungeonCombatPhase,
   canEnterDungeon,
   canEnterAtWave,
   dungeonFrontierWave,
@@ -267,7 +269,7 @@ import {
   petDungeonDefenseFlat,
   petEssenceFindMult,
 } from "./systems/pets";
-import { playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
+import { getDungeonAffixForNow, playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
 import { elementDamageMultiplier } from "./systems/elementCombat";
 import { playerBattleElement } from "./systems/playerElement";
 import { pullPet } from "./systems/petGacha";
@@ -403,6 +405,7 @@ let toastTimer = 0;
 let flyCreditsDismissed = false;
 const deferredDungeonToasts: string[] = [];
 let lastDungeonActive = false;
+let lastUiWeekKey = state.weeklyBounty?.weekKey ?? "";
 /** 幻域飘字爆发时刻（用于决斗舞台短促亮度反馈） */
 let duelFloatBurstAtMs = 0;
 let duelCritBurstAtMs = 0;
@@ -729,7 +732,19 @@ function playBountyClaimBurstFx(anchor: HTMLElement | null): void {
   fx.style.left = `${rect.left + rect.width * 0.5}px`;
   fx.style.top = `${rect.top + rect.height * 0.5}px`;
   document.body.appendChild(fx);
+  const fxEcho = document.createElement("img");
+  fxEcho.className = "bounty-claim-burst-fx bounty-claim-burst-fx-echo";
+  fxEcho.src = UI_BOUNTY_CLAIM_ECHO_BADGE;
+  fxEcho.alt = "";
+  fxEcho.width = 52;
+  fxEcho.height = 52;
+  fxEcho.loading = "eager";
+  fxEcho.decoding = "async";
+  fxEcho.style.left = fx.style.left;
+  fxEcho.style.top = fx.style.top;
+  document.body.appendChild(fxEcho);
   window.setTimeout(() => fx.remove(), 520);
+  window.setTimeout(() => fxEcho.remove(), 520);
 }
 
 function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
@@ -2674,7 +2689,7 @@ function renderHubContent(
   switch (activeHub) {
     case "battle":
       return u.tabDungeon
-        ? `${renderDungeonPanel(state, battleEquippedStripExpanded)}${renderGacha(pityUr, u, true)}`
+        ? `${renderDungeonPanel(state, battleEquippedStripExpanded, nowMs())}${renderGacha(pityUr, u, true)}`
         : `<section class="panel"><p class="hint">完成 1 次灵卡单抽后开放「<strong>历练·筑灵</strong>」。</p></section>`;
     case "estate":
       if (estateSub === "idle") return renderIdle(ips, rb, canBreak, u);
@@ -4667,6 +4682,13 @@ function loop(): void {
   syncDecimalFormatFromState(state);
   const now = nowMs();
   ensureWeeklyBountyWeek(state, now);
+  if (lastUiWeekKey !== state.weeklyBounty.weekKey) {
+    lastUiWeekKey = state.weeklyBounty.weekKey;
+    if (typeof document !== "undefined") {
+      render();
+      return;
+    }
+  }
   applyTick(state, now);
   if (!mobileLiteFx) updateModernVisualFx(now);
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
@@ -4917,7 +4939,7 @@ function loop(): void {
         iframesRemainMs >= DUNGEON_DUEL_FEEDBACK.parryHitDecoIframesRemainMs
           ? UI_DUNGEON_PARRY_SPARK_DECO
           : d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.hitDecoComboThreshold
-            ? UI_DUNGEON_HIT_CONFIRM_RING_DECO
+            ? UI_DUNGEON_HIT_TRACE_RING_DECO
             : UI_DUNGEON_HIT_FLASH_DECO;
       const critDecoSrc =
         d.duelComboStacks >= DUNGEON_DUEL_FEEDBACK.critDecoComboThreshold
@@ -5040,10 +5062,48 @@ function loop(): void {
     const bname = document.getElementById("dungeon-boss-name");
     const bm = currentBossMob(d) ?? d.mobs.find((m) => m.hp > 0) ?? d.mobs[0];
     if (bname && bm) bname.textContent = bossDisplayTitle(bm);
+    const phase = dungeonCombatPhase(state);
+    const phaseBanner = document.getElementById("dungeon-phase-banner");
+    if (phaseBanner) {
+      phaseBanner.classList.remove(
+        "dungeon-phase-banner--trash",
+        "dungeon-phase-banner--boss_prep",
+        "dungeon-phase-banner--boss_fight",
+      );
+      phaseBanner.classList.add(`dungeon-phase-banner--${phase}`);
+    }
+    const phaseBadge = document.getElementById("dungeon-phase-badge");
+    if (phaseBadge) phaseBadge.textContent = phase === "boss_fight" ? "首领对决" : phase === "boss_prep" ? "首领前哨" : "阵线清剿";
+    const phaseWaveHint = document.getElementById("dungeon-phase-wave-hint");
+    if (phaseWaveHint) phaseWaveHint.textContent = `第 ${d.wave} 波`;
+    const phaseGuide = document.getElementById("dungeon-phase-guide");
+    if (phaseGuide) {
+      phaseGuide.textContent =
+        phase === "boss_fight"
+          ? "首领可对你造成真实伤害。击败首领后本关胜利，并自动进入下一波。"
+          : phase === "boss_prep"
+            ? "场上为首领前小怪群：请先全部清完，再点下方「挑战首领」进入真正的首领战（不会自动开）。"
+            : "普通清剿：敌人自动接战；每击杀一只小兵，唤灵髓整数立即入袋。清完本关后进入下一波。";
+    }
+    const phaseCta = document.getElementById("dungeon-phase-cta") as HTMLElement | null;
+    if (phaseCta) {
+      const showPhaseCta =
+        phase === "boss_prep" &&
+        state.dungeonDeferBoss &&
+        d.wave % 5 === 0 &&
+        (d.mobs.some((m) => m.hp > 0) || d.mobs.length === 0);
+      phaseCta.hidden = !showPhaseCta;
+    }
+    const affix = getDungeonAffixForNow(now);
+    const affixTitle = document.getElementById("dungeon-affix-title");
+    const affixDesc = document.getElementById("dungeon-affix-desc");
+    const affixWeek = document.getElementById("dungeon-affix-week");
+    if (affixTitle) affixTitle.textContent = `本周词缀 · ${affix.title}`;
+    if (affixDesc) affixDesc.firstChild ? (affixDesc.firstChild.textContent = affix.desc) : (affixDesc.textContent = affix.desc);
+    if (affixWeek) affixWeek.textContent = `（周次 ${state.weeklyBounty.weekKey}）`;
   }
   if (getUiUnlocks(state).tabDungeon && !state.dungeon.active) {
     const d = state.dungeon;
-    const now = nowMs();
     const cd = Math.max(0, d.deathCooldownUntil - now);
     const cdPct = cd > 0 ? Math.min(100, 100 - (100 * cd) / DUNGEON_DEATH_CD_MS) : 100;
     const canEnter = canEnterDungeon(state, now);
@@ -5063,6 +5123,15 @@ function loop(): void {
       if (btnEnterLbl) btnEnterLbl.textContent = t;
       else btnEnter.textContent = t;
     }
+    const idleWave = document.getElementById("dungeon-idle-readiness-wave");
+    if (idleWave) idleWave.textContent = String(Math.max(1, d.entryWave));
+    const affix = getDungeonAffixForNow(now);
+    const affixTitle = document.getElementById("dungeon-affix-title");
+    const affixDesc = document.getElementById("dungeon-affix-desc");
+    const affixWeek = document.getElementById("dungeon-affix-week");
+    if (affixTitle) affixTitle.textContent = `本周词缀 · ${affix.title}`;
+    if (affixDesc) affixDesc.firstChild ? (affixDesc.firstChild.textContent = affix.desc) : (affixDesc.textContent = affix.desc);
+    if (affixWeek) affixWeek.textContent = `（周次 ${state.weeklyBounty.weekKey}）`;
   }
   if (getUiUnlocks(state).tabDungeon && state.dungeonSanctuaryMode && !state.dungeon.active) {
     const pmax = playerMaxHp(state);
