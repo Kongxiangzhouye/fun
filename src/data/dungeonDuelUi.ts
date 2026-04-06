@@ -21,4 +21,6 @@ export const DUNGEON_DUEL_UI_FILES = {
   bossBadge: "deco-duel-boss-badge.svg",
   realmClassic: "deco-dungeon-realm-classic.svg",
   realmVortex: "deco-dungeon-realm-vortex.svg",
+  realmClassicFrameDeco: "deco-dungeon-realm-classic-frame.svg",
+  realmVortexFrameDeco: "deco-dungeon-realm-vortex-frame.svg",
 } as const;

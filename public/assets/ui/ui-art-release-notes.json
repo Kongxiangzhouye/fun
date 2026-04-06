@@ -3,6 +3,14 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Dungeon duel realm frame accents (P1)",
+      "highlights": [
+        "Added classic/vortex realm frame SVG accents for existing dungeon mode display slots.",
+        "Synced dungeon duel source mapping, visual asset export keys, manifest entries, and manifest index wording."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Dungeon duel feedback closure (P1)",
       "highlights": [
         "Added stagger pulse and finisher seal SVG feedback decals for dungeon duel combat readability.",

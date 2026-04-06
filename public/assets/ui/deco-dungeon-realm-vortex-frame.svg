@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="vortex realm frame">
+  <defs>
+    <linearGradient id="vortex-ring" x1="10%" y1="0%" x2="90%" y2="100%">
+      <stop offset="0%" stop-color="#ab8cff" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#50d8ff" stop-opacity="0.9" />
+    </linearGradient>
+    <radialGradient id="vortex-core" cx="50%" cy="50%" r="58%">
+      <stop offset="0%" stop-color="#f5f0ff" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#90c8ff" stop-opacity="0.05" />
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="49" fill="url(#vortex-core)" />
+  <circle cx="64" cy="64" r="52" fill="none" stroke="url(#vortex-ring)" stroke-width="4" />
+  <path d="M20 64c7-18 24-30 44-30 20 0 37 12 44 30-7 18-24 30-44 30-20 0-37-12-44-30z" fill="none" stroke="#cbb9ff" stroke-opacity="0.6" stroke-width="2.5" />
+  <path d="M64 22c-10 10-16 24-16 42s6 32 16 42c10-10 16-24 16-42s-6-32-16-42z" fill="none" stroke="#7ddcff" stroke-opacity="0.7" stroke-width="2.5" />
+  <circle cx="64" cy="64" r="11" fill="#f3f7ff" fill-opacity="0.28" />
+</svg>

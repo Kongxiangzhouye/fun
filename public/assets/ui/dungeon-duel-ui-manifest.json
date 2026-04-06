@@ -22,6 +22,8 @@
     { "id": "leaveDeco", "file": "deco-dungeon-leave-btn.svg" },
     { "id": "bossBadge", "file": "deco-duel-boss-badge.svg" },
     { "id": "realmClassic", "file": "deco-dungeon-realm-classic.svg" },
-    { "id": "realmVortex", "file": "deco-dungeon-realm-vortex.svg" }
+    { "id": "realmVortex", "file": "deco-dungeon-realm-vortex.svg" },
+    { "id": "realmClassicFrameDeco", "file": "deco-dungeon-realm-classic-frame.svg" },
+    { "id": "realmVortexFrameDeco", "file": "deco-dungeon-realm-vortex-frame.svg" }
   ]
 }

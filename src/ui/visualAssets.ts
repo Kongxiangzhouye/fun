@@ -197,6 +197,10 @@ export const UI_DUEL_BOSS_BADGE = asset(DUNGEON_DUEL_UI_FILES.bossBadge);
 export const UI_DUNGEON_REALM_CLASSIC = asset(DUNGEON_DUEL_UI_FILES.realmClassic);
 /** 星漩乱域模式单选项图标 */
 export const UI_DUNGEON_REALM_VORTEX = asset(DUNGEON_DUEL_UI_FILES.realmVortex);
+/** 经典幻域模式展示位框体装饰 */
+export const UI_DUNGEON_REALM_CLASSIC_FRAME_DECO = asset(DUNGEON_DUEL_UI_FILES.realmClassicFrameDeco);
+/** 星漩乱域模式展示位框体装饰 */
+export const UI_DUNGEON_REALM_VORTEX_FRAME_DECO = asset(DUNGEON_DUEL_UI_FILES.realmVortexFrameDeco);
 /** 道韵灵窍页标题装饰；与 `CHRONICLE_HEADERS_UI_FILES` 同源 */
 export const UI_HEAD_DAO_MERIDIAN = asset(CHRONICLE_HEADERS_UI_FILES.daoMeridianHead);
 /** 唤灵通鉴页标题 */
