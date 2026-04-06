@@ -2,7 +2,12 @@
  * 面向玩家的说明文：收纳于「万象图鉴 → 修行札记」，避免主界面堆砌。
  */
 import { REINCARNATION_REALM_REQ } from "../types";
-import { UI_LORE_THREE_ARTS, UI_LORE_BOUNTY, UI_LORE_ESTATE } from "./visualAssets";
+import {
+  UI_LORE_THREE_ARTS,
+  UI_LORE_BOUNTY,
+  UI_LORE_ESTATE,
+  UI_LORE_UNLOCKS,
+} from "./visualAssets";
 
 export function renderGameLoreHtml(): string {
   return `
@@ -105,18 +110,31 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary>功能解锁一览</summary>
+        <summary><img src="${UI_LORE_UNLOCKS}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 功能解锁一览</summary>
+        <p class="hint sm">下列条件与界面逻辑一致；满足<strong>任一</strong>即可（文中「或」为并列条件）。</p>
         <ul class="game-lore-list">
-          <li><strong>幻域</strong>：完成首次唤引。</li>
+          <li><strong>幻域</strong>：累计唤引≥1、或境界≥二重、或幻域累计击溃≥1 波（欢迎引导未完成时可能暂不可见）。</li>
           <li><strong>修炼</strong>：幻域至少通关一波、或境界≥三重、或累计唤引≥六次。</li>
+          <li><strong>心法</strong>（修炼页）：与<strong>幻域</strong>入口同条件。</li>
           <li><strong>背包装备 / 境界铸灵</strong>：获得第一件装备，或累计唤引≥十次。</li>
           <li><strong>洞府蕴灵</strong>：完成一次唤引，或境界≥二重。</li>
           <li><strong>万象图鉴</strong>：累计唤引≥5次，或境界≥四重。</li>
+          <li><strong>唤灵通鉴</strong>：累计唤引≥1次。</li>
+          <li><strong>灵息日历</strong>：累计唤引≥1次，或境界≥二重。</li>
           <li><strong>轮回阁</strong>：境界≥十八重，或已完成轮回。</li>
           <li><strong>灵宠</strong>：幻域累计击溃 15 波。</li>
           <li><strong>封存/拓印</strong>（养成→轮回页底）：境界≥十二重或曾入轮回。</li>
           <li><strong>功业录</strong>：境界≥六重，或累计唤引≥15次。</li>
+          <li><strong>周常悬赏</strong>：境界≥五重，或累计唤引≥5次。</li>
+          <li><strong>灵府·灵田</strong>：累计唤引≥1次且境界≥四重。</li>
+          <li><strong>纳灵阵图</strong>：境界≥五重且累计唤引≥2次。</li>
+          <li><strong>蓄灵池</strong>：境界≥三重，或累计唤引≥3次。</li>
+          <li><strong>心斋卦象</strong>：境界≥四重，或累计唤引≥5次。</li>
+          <li><strong>天机匣</strong>：境界≥五重，或累计唤引≥6次。</li>
+          <li><strong>道韵灵窍</strong>：已完成轮回、或道韵≥15、或已领悟过道窍（等级&gt;0）。</li>
           <li><strong>十连</strong>：完成一次单抽，或境界≥三重。</li>
+          <li><strong>聚灵共鸣进度条</strong>：累计唤引≥2次。</li>
+          <li><strong>概率公示</strong>：累计唤引≥4次。</li>
         </ul>
       </details>
 
