@@ -175,6 +175,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>重复邂逅</strong>：已获得同名灵宠时，转化为灵契经验并可能直接升级。</li>
           <li><strong>喂养</strong>：对已邂逅灵宠消耗唤灵髓获得经验，提升等级以放大加成（上限见面板）。</li>
           <li>灵宠效果多为灵石、幻域攻防或唤灵髓发现等；邂逅与等级<strong>跨轮回保留</strong>。</li>
+          <li>任意灵宠达 <strong>30</strong> 级、或集齐<strong>全部</strong>灵宠，可在<strong>成就</strong>领取额外奖励（与「灵契初结」独立）。</li>
         </ul>
       </details>
 

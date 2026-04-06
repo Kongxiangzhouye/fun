@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian";
+  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian" | "pet";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -149,6 +149,23 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "在唤灵池结缘任意灵宠",
     rewardStones: 120,
     rewardEssence: 25,
+    listDeco: "pet",
+  },
+  {
+    id: "pet_level_30",
+    title: "灵契深耕",
+    desc: "任意灵宠达到 30 级",
+    rewardStones: 550,
+    rewardEssence: 32,
+    listDeco: "pet",
+  },
+  {
+    id: "pet_all_owned",
+    title: "七灵同契",
+    desc: "结缘全部灵宠",
+    rewardStones: 2800,
+    rewardEssence: 95,
+    listDeco: "pet",
   },
   {
     id: "garden_first_harvest",
@@ -328,6 +345,19 @@ function anyPetOwned(state: GameState): boolean {
   return false;
 }
 
+function maxPetLevel(state: GameState): number {
+  let m = 0;
+  for (const id of ALL_PET_IDS) {
+    const p = state.pets[id];
+    if (p && p.level > m) m = p.level;
+  }
+  return m;
+}
+
+function allPetsOwned(state: GameState): boolean {
+  return ALL_PET_IDS.every((id) => state.pets[id] != null);
+}
+
 function hasSsr(state: GameState): boolean {
   for (const id of Object.keys(state.owned)) {
     const c = getCard(id);
@@ -378,6 +408,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dungeon.totalWavesCleared >= 100;
     case "pet_first_feed":
       return anyPetOwned(state);
+    case "pet_level_30":
+      return maxPetLevel(state) >= 30;
+    case "pet_all_owned":
+      return allPetsOwned(state);
     case "garden_first_harvest":
       return (state.spiritGarden?.totalHarvests ?? 0) >= 1;
     case "garden_harvest_30":

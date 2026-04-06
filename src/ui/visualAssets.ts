@@ -159,6 +159,8 @@ export const UI_ACH_LOGIN_DECO = asset("ach-login-deco.svg");
 export const UI_ACH_BOUNTY_DECO = asset("ach-bounty-deco.svg");
 /** 成就列表 · 道韵灵窍系条目左侧小徽 */
 export const UI_ACH_MERIDIAN_DECO = asset("ach-meridian-deco.svg");
+/** 成就列表 · 灵宠系条目左侧小徽 */
+export const UI_ACH_PET_DECO = asset("ach-pet-deco.svg");
 /** 修行札记 · 「挂机三艺」折叠标题旁 */
 export const UI_LORE_THREE_ARTS = asset("deco-lore-three-arts.svg");
 /** 修行札记 · 「周常悬赏」折叠标题旁 */
