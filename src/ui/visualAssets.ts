@@ -3,6 +3,7 @@
  * 图标来源：Twemoji（CC-BY 4.0）https://github.com/twitter/twemoji
  */
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
+import { ELEMENT_UI_FILES } from "../data/elementUi";
 import { GEAR_BASES } from "../data/gearBases";
 import { PET_DEFS } from "../data/pets";
 import { GARDEN_CROPS } from "../systems/spiritGarden";
@@ -29,14 +30,10 @@ export const UI_XUAN_TIE = asset("ui-xuan-tie.svg");
 export const RARITY_BADGE_SSR = asset("rarity-ssr.png");
 export const RARITY_BADGE_UR = asset("rarity-ur.png");
 
-/** 五行灵卡小图标 */
-export const ELEMENT_ICON: Record<Element, string> = {
-  metal: asset("metal.png"),
-  wood: asset("wood.png"),
-  water: asset("water.png"),
-  fire: asset("fire.png"),
-  earth: asset("earth.png"),
-};
+/** 五行灵卡小图标；与 `ELEMENT_UI_FILES` 同源 */
+export const ELEMENT_ICON: Record<Element, string> = Object.fromEntries(
+  (Object.keys(ELEMENT_UI_FILES) as Element[]).map((el) => [el, asset(ELEMENT_UI_FILES[el])]),
+) as Record<Element, string>;
 
 export const GEAR_SLOT_ICON: Record<"weapon" | "body" | "ring", string> = {
   weapon: asset("gear-weapon.png"),
