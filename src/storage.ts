@@ -876,6 +876,13 @@ function decodeUtf8Base64(input: string): string {
   return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
 }
 
+function normalizeBase64Input(input: string): string {
+  let out = input.replace(/-/g, "+").replace(/_/g, "/").replace(/\s+/g, "");
+  const rem = out.length % 4;
+  if (rem !== 0) out += "=".repeat(4 - rem);
+  return out;
+}
+
 export function exportSave(state: GameState): string {
   return encodeUtf8Base64(serialize(state));
 }
@@ -883,13 +890,14 @@ export function exportSave(state: GameState): string {
 export function importSave(b64: string): GameState | null {
   const raw = b64.trim();
   if (!raw) return null;
+  const normalized = normalizeBase64Input(raw);
   try {
-    const json = decodeUtf8Base64(raw);
+    const json = decodeUtf8Base64(normalized);
     return deserialize(json);
   } catch {
     // Fallback for older exports using escape/unescape based encoding.
     try {
-      const legacy = decodeURIComponent(escape(atob(raw)));
+      const legacy = decodeURIComponent(escape(atob(normalized)));
       return deserialize(legacy);
     } catch {
       return null;

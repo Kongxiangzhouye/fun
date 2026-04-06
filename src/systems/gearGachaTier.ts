@@ -1,7 +1,7 @@
 import type { GameState, Rarity } from "../types";
-import { RARITY_ORDER_DESC } from "../data/rarityRank";
 import { nextRand01 } from "../rng";
 import { daoMeridianLuckFlat } from "./daoMeridian";
+import { pickRarityByWeights01 } from "./rarityDraw";
 
 /** 与历史 UI/注释对齐的珍品+保底基准（实际有效值随铸灵阶缩短） */
 export const GEAR_SR_PITY_MAX_BASE = 36;
@@ -56,14 +56,8 @@ export function rollGearRarityForForge(state: GameState, tier: number): Rarity {
   wSsr *= Math.pow(luck, 0.62);
   wUr *= Math.pow(luck, 0.78);
 
-  const total = wN + wR + wSr + wSsr + wUr;
-  let r = nextRand01(state) * total;
   const wMap: Record<Rarity, number> = { N: wN, R: wR, SR: wSr, SSR: wSsr, UR: wUr };
-  for (const ra of RARITY_ORDER_DESC) {
-    r -= wMap[ra];
-    if (r <= 0) return ra;
-  }
-  return "N";
+  return pickRarityByWeights01(wMap, nextRand01(state));
 }
 
 /** 随阶提高装等加成（增量成长感） */

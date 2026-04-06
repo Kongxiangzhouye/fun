@@ -1,5 +1,5 @@
 import type { CardDef, GameState, GearItem, Rarity } from "./types";
-import { RARITY_ORDER_DESC, rarityRank } from "./data/rarityRank";
+import { rarityRank } from "./data/rarityRank";
 import { CARDS } from "./data/cards";
 import { ensureOwned } from "./state";
 import { nextRand01 } from "./rng";
@@ -16,6 +16,7 @@ import {
 } from "./systems/pullChronicle";
 import { daoMeridianLuckFlat } from "./systems/daoMeridian";
 import { effectiveGearSrPityMax, GEAR_SR_PITY_MAX_BASE } from "./systems/gearGachaTier";
+import { pickRarityByWeights01 } from "./systems/rarityDraw";
 
 /** 铸灵珍品+保底基准长度（高阶会缩短，见 effectiveGearSrPityMax） */
 export const GEAR_SR_PITY_MAX = GEAR_SR_PITY_MAX_BASE;
@@ -67,13 +68,7 @@ function pickRarity(state: GameState): Rarity {
     return "UR";
   }
 
-  const total = w.N + w.R + w.SR + w.SSR + w.UR;
-  let r = nextRand01(state) * total;
-  for (const ra of RARITY_ORDER_DESC) {
-    r -= w[ra];
-    if (r <= 0) return ra;
-  }
-  return "N";
+  return pickRarityByWeights01(w, nextRand01(state));
 }
 
 function randomCardOfRarity(state: GameState, rarity: Rarity): CardDef {
