@@ -30,6 +30,14 @@ const BASE_WEIGHT: Record<Rarity, number> = {
   UR: 12,
 };
 
+const CARD_POOL_BY_RARITY: Record<Rarity, CardDef[]> = {
+  N: CARDS.filter((c) => c.rarity === "N"),
+  R: CARDS.filter((c) => c.rarity === "R"),
+  SR: CARDS.filter((c) => c.rarity === "SR"),
+  SSR: CARDS.filter((c) => c.rarity === "SSR"),
+  UR: CARDS.filter((c) => c.rarity === "UR"),
+};
+
 /** 天极保底计数上限（与 UI 保底条一致） */
 export const UR_PITY_MAX = 90;
 const SSR_SOFT_START = 65;
@@ -69,7 +77,7 @@ function pickRarity(state: GameState): Rarity {
 }
 
 function randomCardOfRarity(state: GameState, rarity: Rarity): CardDef {
-  const pool = CARDS.filter((c) => c.rarity === rarity);
+  const pool = CARD_POOL_BY_RARITY[rarity];
   const idx = Math.floor(nextRand01(state) * pool.length);
   return pool[Math.min(idx, pool.length - 1)]!;
 }
