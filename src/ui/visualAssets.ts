@@ -147,6 +147,8 @@ export const UI_BOUNTY_REALM_DECO = asset(WEEKLY_BOUNTY_UI_FILES.realm);
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset(WEEKLY_BOUNTY_UI_FILES.claimAll);
 /** 周常悬赏 · 领取反馈爆闪徽记 */
 export const UI_BOUNTY_CLAIM_BURST = asset(WEEKLY_BOUNTY_UI_FILES.claimBurst);
+/** 周常悬赏 · 领取确认回响徽记（高频连领场景） */
+export const UI_BOUNTY_CLAIM_ECHO_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.claimEchoBadge);
 /** 周常悬赏 · 周进度连胜状态徽记 */
 export const UI_BOUNTY_STREAK_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.streakBadge);
 /** 周常悬赏 · 周目标完成状态徽记 */
@@ -184,6 +186,11 @@ export const UI_DUNGEON_GUARD_BREAK_DECO = asset(DUNGEON_DUEL_UI_FILES.guardBrea
 /** 阵线对决 · 命中确认环反馈（弱敌清线时更易读，2026-04-06 P1 二次打磨） */
 export const UI_DUNGEON_HIT_CONFIRM_RING_DECO = asset(
   DUNGEON_DUEL_UI_FILES.hitConfirmRingDeco,
+  UI_DUNGEON_DUEL_DECO,
+);
+/** 阵线对决 · 命中轨迹环反馈（高频多段命中读感补强） */
+export const UI_DUNGEON_HIT_TRACE_RING_DECO = asset(
+  DUNGEON_DUEL_UI_FILES.hitTraceRingDeco,
   UI_DUNGEON_DUEL_DECO,
 );
 /** 阵线对决 · 连击链路确认反馈（高频命中阶段） */

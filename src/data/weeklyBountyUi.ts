@@ -8,6 +8,7 @@ export const WEEKLY_BOUNTY_UI_FILES = {
   realm: "bounty-realm-deco.svg",
   claimAll: "bounty-claim-all-deco.svg",
   claimBurst: "bounty-claim-burst.svg",
+  claimEchoBadge: "bounty-weekly-claim-echo-badge.svg",
   streakBadge: "bounty-weekly-streak-badge.svg",
   completeBadge: "bounty-weekly-complete-badge.svg",
   pendingBadge: "bounty-weekly-pending-badge.svg",

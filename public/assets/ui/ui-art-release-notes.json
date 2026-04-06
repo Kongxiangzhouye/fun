@@ -3,6 +3,15 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Weekly claim-echo + dungeon hit-trace ring closure (P1)",
+      "highlights": [
+        "Added weekly claim-echo badge SVG for clearer chained-claim confirmation in recurring weekly reward collection loops.",
+        "Added dungeon hit-trace ring SVG decal to reinforce hit-flow readability during dense multi-hit duel windows.",
+        "Synced weekly/dungeon source maps, visual asset export keys, and manifest/index metadata with no business-logic changes."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Dungeon hit-confirm + weakness feedback polish (P1)",
       "highlights": [
         "Polished hit-confirm ring SVG to improve center-lock readability during repeated high-frequency strike confirmations.",
