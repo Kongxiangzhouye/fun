@@ -69,6 +69,10 @@ export const UI_CHRONICLE_PET_PULL_STAT = asset("chronicle-pet-pull-stat.svg");
 export const UI_CHRONICLE_FORTUNE_STAT = asset("chronicle-fortune-stat.svg");
 /** 唤灵通鉴 · 灵田收获累计小标 */
 export const UI_CHRONICLE_GARDEN_HARVEST_STAT = asset("chronicle-garden-harvest-stat.svg");
+/** 唤灵通鉴 · 幻域心法领悟累计小标 */
+export const UI_CHRONICLE_BATTLE_SKILL_STAT = asset("chronicle-battle-skill-stat.svg");
+/** 唤灵通鉴 · 装备分解累计小标 */
+export const UI_CHRONICLE_GEAR_SALVAGE_STAT = asset("chronicle-gear-salvage-stat.svg");
 /** 偏好设置 · 轮回确认框开关旁 */
 export const UI_PREF_CONFIRM_REINCARNATION = asset("ui-pref-confirm-reincarnation.svg");
 /** 偏好设置 · 动态标签标题开关旁 */

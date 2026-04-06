@@ -656,6 +656,23 @@ function runFenTianBurstAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
 }
 
+function runBattleSkillAndGearSalvageAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("battle_skill_pulls_50"), "battle skill 50 should start locked");
+  st.lifetimeStats.battleSkillPulls = 50;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "battle_skill_pulls_50"), "50 battle skill pulls should unlock");
+  st.lifetimeStats.battleSkillPulls = 250;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "battle_skill_pulls_250"), "250 battle skill pulls should unlock");
+  st.lifetimeStats.gearSalvages = 40;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "gear_salvages_40"), "40 gear salvages should unlock");
+  st.lifetimeStats.gearSalvages = 200;
+  const d = tryCompleteAchievements(st);
+  assert.ok(d.some((x) => x.id === "gear_salvages_200"), "200 gear salvages should unlock");
+}
+
 function runReincarnationTierAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("rein_25"), "rein 25 should start locked");
@@ -764,6 +781,7 @@ function main(): void {
   runFenTianBurstAchievementsSmoke();
   runEstateCommissionAchievementsSmoke();
   runReincarnationTierAchievementsSmoke();
+  runBattleSkillAndGearSalvageAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

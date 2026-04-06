@@ -47,6 +47,8 @@ export function normalizeLifetimeStats(st: GameState): void {
       tunaCompletions: 0,
       fenTianBursts: 0,
       estateCommissionCompletions: 0,
+      battleSkillPulls: 0,
+      gearSalvages: 0,
     };
     return;
   }
@@ -97,6 +99,12 @@ export function normalizeLifetimeStats(st: GameState): void {
   const ec = st.lifetimeStats.estateCommissionCompletions;
   if (ec == null || !Number.isFinite(ec)) st.lifetimeStats.estateCommissionCompletions = 0;
   else st.lifetimeStats.estateCommissionCompletions = Math.max(0, Math.floor(ec));
+  const bsp = st.lifetimeStats.battleSkillPulls;
+  if (bsp == null || !Number.isFinite(bsp)) st.lifetimeStats.battleSkillPulls = 0;
+  else st.lifetimeStats.battleSkillPulls = Math.max(0, Math.floor(bsp));
+  const gs = st.lifetimeStats.gearSalvages;
+  if (gs == null || !Number.isFinite(gs)) st.lifetimeStats.gearSalvages = 0;
+  else st.lifetimeStats.gearSalvages = Math.max(0, Math.floor(gs));
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */

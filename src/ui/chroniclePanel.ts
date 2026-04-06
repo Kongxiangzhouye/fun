@@ -5,10 +5,12 @@ import { PULL_CHRONICLE_MAX } from "../systems/pullChronicle";
 import { rarityZh } from "./rarityZh";
 import { gearTierClass, gearTierLabel } from "./gearVisualTier";
 import {
+  UI_CHRONICLE_BATTLE_SKILL_STAT,
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
   UI_CHRONICLE_FORTUNE_STAT,
   UI_CHRONICLE_GARDEN_HARVEST_STAT,
+  UI_CHRONICLE_GEAR_SALVAGE_STAT,
   UI_CHRONICLE_PET_PULL_STAT,
   UI_CHRONICLE_TUNA_STAT,
   UI_GEAR_CHRONICLE_DECO,
@@ -85,9 +87,23 @@ export function renderChroniclePanel(state: GameState): string {
           <span class="chronicle-stat-lbl">累计铸灵</span>
           <strong class="chronicle-stat-val">${ls.gearForgesTotal} 次</strong>
         </div>
+        <div class="chronicle-stat-card chronicle-stat-card--gear-salvage">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_GEAR_SALVAGE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">装备分解</span>
+            <strong class="chronicle-stat-val">${ls.gearSalvages} 次</strong>
+          </div>
+        </div>
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">幻域累计入包髓</span>
           <strong class="chronicle-stat-val">${ls.dungeonEssenceIntGained}</strong>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--battle-skill">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_BATTLE_SKILL_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">心法领悟</span>
+            <strong class="chronicle-stat-val">${ls.battleSkillPulls} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">天机匣兑换</span>

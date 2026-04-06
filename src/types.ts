@@ -92,6 +92,10 @@ export interface LifetimeStatsState {
   fenTianBursts: number;
   /** 洞府委托成功结算累计次数（终身） */
   estateCommissionCompletions: number;
+  /** 幻域心法领悟/精进成功次数（终身，含自动） */
+  battleSkillPulls: number;
+  /** 行囊装备分解成功次数（终身，含自动分解） */
+  gearSalvages: number;
 }
 
 /** 灵田作物 id */

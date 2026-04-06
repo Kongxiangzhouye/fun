@@ -10379,6 +10379,40 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--battle-skill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(120, 150, 210, 0.42);
+  background: linear-gradient(145deg, rgba(22, 28, 48, 0.68), rgba(10, 12, 22, 0.76));
+}
+
+.chronicle-stat-card--battle-skill .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--battle-skill .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.chronicle-stat-card--gear-salvage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(200, 150, 100, 0.38);
+  background: linear-gradient(145deg, rgba(40, 28, 18, 0.58), rgba(14, 12, 10, 0.72));
+}
+
+.chronicle-stat-card--gear-salvage .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--gear-salvage .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-sub-h {
   margin-top: 4px;
 }

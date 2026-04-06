@@ -1,6 +1,7 @@
 import type { GameState, Rarity } from "../types";
 import { getCard } from "../data/cards";
 import { gearItemPower, slotEnhanceLevel } from "./gearCraft";
+import { normalizeLifetimeStats } from "./pullChronicle";
 
 function lingShaFromRarity(r: Rarity, stars: number): number {
   const base = { N: 2, R: 5, SR: 14, SSR: 35, UR: 90 }[r] ?? 2;
@@ -52,6 +53,8 @@ export function salvageGear(state: GameState, instanceId: string): { ok: boolean
   const gain = xuanTieFromRarity(g.rarity, 0);
   delete state.gearInventory[instanceId];
   state.xuanTie += gain;
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.gearSalvages += 1;
   return { ok: true, msg: `分解获得玄铁 +${gain}`, gain };
 }
 

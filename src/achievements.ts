@@ -352,6 +352,38 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "gardenBloom",
   },
   {
+    id: "battle_skill_pulls_50",
+    title: "心法渐成",
+    desc: "幻域心法领悟/精进累计 50 次",
+    rewardStones: 900,
+    rewardEssence: 42,
+    listDeco: "dungeonWaves",
+  },
+  {
+    id: "battle_skill_pulls_250",
+    title: "万法归一",
+    desc: "幻域心法领悟/精进累计 250 次",
+    rewardStones: 5200,
+    rewardEssence: 95,
+    listDeco: "dungeonWavesSurge",
+  },
+  {
+    id: "gear_salvages_40",
+    title: "淬炉初鸣",
+    desc: "行囊装备分解累计 40 次",
+    rewardStones: 480,
+    rewardEssence: 28,
+    listDeco: "forge",
+  },
+  {
+    id: "gear_salvages_200",
+    title: "千锻余烬",
+    desc: "行囊装备分解累计 200 次",
+    rewardStones: 3600,
+    rewardEssence: 88,
+    listDeco: "forgeNova",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -801,6 +833,14 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.estateCommissionCompletions ?? 0) >= 20;
     case "estate_commissions_120":
       return (state.lifetimeStats?.estateCommissionCompletions ?? 0) >= 120;
+    case "battle_skill_pulls_50":
+      return (state.lifetimeStats?.battleSkillPulls ?? 0) >= 50;
+    case "battle_skill_pulls_250":
+      return (state.lifetimeStats?.battleSkillPulls ?? 0) >= 250;
+    case "gear_salvages_40":
+      return (state.lifetimeStats?.gearSalvages ?? 0) >= 40;
+    case "gear_salvages_200":
+      return (state.lifetimeStats?.gearSalvages ?? 0) >= 200;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

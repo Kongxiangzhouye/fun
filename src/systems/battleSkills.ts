@@ -1,6 +1,7 @@
 import type { GameState } from "../types";
 import { BATTLE_SKILLS, getBattleSkill } from "../data/battleSkills";
 import { nextRand01 } from "../rng";
+import { normalizeLifetimeStats } from "./pullChronicle";
 
 const PULL_COST_ESSENCE = 28;
 
@@ -22,6 +23,8 @@ export function pullBattleSkill(state: GameState): { ok: boolean; msg: string; i
   const pick = pool[Math.floor(roll * pool.length)]!;
   const cur = state.battleSkills[pick.id] ?? 0;
   state.battleSkills[pick.id] = Math.min(20, cur + 1);
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.battleSkillPulls += 1;
   return { ok: true, msg: cur === 0 ? `领悟「${pick.name}」` : `「${pick.name}」精进至 Lv.${state.battleSkills[pick.id]}`, id: pick.id };
 }
 
