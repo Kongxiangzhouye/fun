@@ -25,6 +25,19 @@ export function pullBattleSkill(state: GameState): { ok: boolean; msg: string; i
   return { ok: true, msg: cur === 0 ? `领悟「${pick.name}」` : `「${pick.name}」精进至 Lv.${state.battleSkills[pick.id]}`, id: pick.id };
 }
 
+/** 主循环：`uiPrefs.autoPullBattleSkill` 时连续调用 `pullBattleSkill`，返回本轮成功次数 */
+export function tryAutoPullBattleSkillsIfPref(state: GameState): number {
+  if (!state.uiPrefs.autoPullBattleSkill) return 0;
+  let n = 0;
+  let guard = 0;
+  while (guard++ < 500) {
+    const r = pullBattleSkill(state);
+    if (!r.ok) break;
+    n += 1;
+  }
+  return n;
+}
+
 export function dungeonAtkBonusFromSkills(state: GameState): number {
   let s = 0;
   for (const def of BATTLE_SKILLS) {

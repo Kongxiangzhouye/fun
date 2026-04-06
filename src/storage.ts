@@ -821,6 +821,7 @@ export function deserialize(json: string): GameState {
     autoRedeemCelestialStash: !!data.uiPrefs?.autoRedeemCelestialStash,
     autoFeedPets: !!data.uiPrefs?.autoFeedPets,
     autoUpgradeSpiritArray: !!data.uiPrefs?.autoUpgradeSpiritArray,
+    autoPullBattleSkill: !!data.uiPrefs?.autoPullBattleSkill,
   };
 
   if (data.pets && typeof data.pets === "object") {

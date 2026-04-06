@@ -469,6 +469,8 @@ export interface UiPrefs {
   autoFeedPets: boolean;
   /** 纳灵阵图：灵石与灵砂足够时自动连续绘阵直至买不起或满级（需已解锁阵图页） */
   autoUpgradeSpiritArray: boolean;
+  /** 心法：唤灵髓足够且尚有未满级条目时自动连续领悟/精进（需已解锁心法页） */
+  autoPullBattleSkill: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

@@ -93,6 +93,7 @@ import {
   UI_PET_FEED_ACTION,
   UI_HEAD_TRAIN,
   UI_HEAD_COMBAT,
+  UI_BATTLE_SKILL_AUTO,
 } from "./visualAssets";
 import { formatMobDisplayName } from "../data/dungeonMobs";
 import { PET_DEFS } from "../data/pets";
@@ -783,6 +784,11 @@ export function renderBattleSkillPanel(state: GameState): string {
           </div>`;
         }).join("")}
       </div>
+      <label class="battle-skill-auto-row">
+        <input type="checkbox" id="chk-battle-skill-auto" data-ui-pref="autoPullBattleSkill" ${state.uiPrefs.autoPullBattleSkill ? "checked" : ""} />
+        <img class="battle-skill-auto-ico" src="${UI_BATTLE_SKILL_AUTO}" alt="" width="18" height="18" loading="lazy" />
+        <span class="battle-skill-auto-text">主循环自动领悟/精进（唤灵髓不足或全部 Lv.20 则停）</span>
+      </label>
       <p class="inv-meta" id="battle-skills-readout">当前：${describeBattleSkillLevels(state)}</p>
       <button class="btn btn-primary" type="button" id="btn-pull-battle-skill" ${state.summonEssence >= battleSkillPullCost() ? "" : "disabled"}>领悟心法（${battleSkillPullCost()} 唤灵髓）</button>
     </section>`;

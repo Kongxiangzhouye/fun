@@ -15,6 +15,7 @@ import {
 import { addStones } from "../stones";
 import { tryAutoFeedAllPetsIfPref } from "../systems/pets";
 import { tryAutoUpgradeSpiritArrayIfPref } from "../systems/spiritArray";
+import { tryAutoPullBattleSkillsIfPref } from "../systems/battleSkills";
 import {
   chooseOfflineAdventureOption,
   commitOfflineAdventureAutoReceipt,
@@ -495,6 +496,18 @@ function runCelestialStashProgressSmoke(): void {
   assert.equal(p1.purchased, 1);
 }
 
+function runBattleSkillAutoPullSmoke(): void {
+  const st = createInitialState();
+  st.summonEssence = 400;
+  st.uiPrefs.autoPullBattleSkill = false;
+  assert.equal(tryAutoPullBattleSkillsIfPref(st), 0);
+  st.uiPrefs.autoPullBattleSkill = true;
+  const before = st.summonEssence;
+  const n = tryAutoPullBattleSkillsIfPref(st);
+  assert.ok(n >= 1, "auto battle skill pull should run at least once");
+  assert.ok(st.summonEssence < before, "essence should decrease after pulls");
+}
+
 function runSpiritArrayAutoUpgradeSmoke(): void {
   const st = createInitialState();
   st.spiritStones = "999999";
@@ -621,6 +634,7 @@ function main(): void {
   runCelestialStashAutoRedeemSmoke();
   runPetAutoFeedPrefSmoke();
   runSpiritArrayAutoUpgradeSmoke();
+  runBattleSkillAutoPullSmoke();
   runWeeklyBountyAutoClaimSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console

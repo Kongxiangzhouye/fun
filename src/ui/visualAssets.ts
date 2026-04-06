@@ -296,6 +296,8 @@ export const UI_PET_FEED_ACTION = asset("pet-feed-action.svg");
 export const UI_PET_AUTO_FEED = asset("pet-auto-feed.svg");
 export const UI_HEAD_STATS = asset(HUB_SECTION_HEADER_UI_FILES.stats);
 export const UI_HEAD_COMBAT = asset(HUB_SECTION_HEADER_UI_FILES.combat);
+/** 心法 · 自动领悟开关旁 */
+export const UI_BATTLE_SKILL_AUTO = asset("battle-skill-auto.svg");
 export const UI_HEAD_GARDEN = asset(HUB_SECTION_HEADER_UI_FILES.garden);
 export const UI_HEAD_BOUNTY = asset(HUB_SECTION_HEADER_UI_FILES.bounty);
 /** 周常悬赏 · 铸灵功课卡片标题旁；与 `WEEKLY_BOUNTY_UI_FILES` 同源 */

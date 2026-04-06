@@ -350,7 +350,12 @@ import {
 import { PULL_CHRONICLE_MAX } from "./systems/pullChronicle";
 import { GEAR_BASES } from "./data/gearBases";
 import { isSlotTopPowerGear, salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
-import { pullBattleSkill, battleSkillPullCost, describeBattleSkillLevels } from "./systems/battleSkills";
+import {
+  pullBattleSkill,
+  battleSkillPullCost,
+  describeBattleSkillLevels,
+  tryAutoPullBattleSkillsIfPref,
+} from "./systems/battleSkills";
 const EL_ZH: Record<string, string> = {
   metal: "金",
   wood: "木",
@@ -887,6 +892,8 @@ const PET_AUTO_FEED_TOAST_GAP_MS = 6000;
 let lastPetAutoFeedToastAtMs = 0;
 const SPIRIT_ARRAY_AUTO_TOAST_GAP_MS = 5500;
 let lastSpiritArrayAutoToastAtMs = 0;
+const BATTLE_SKILL_AUTO_TOAST_GAP_MS = 5500;
+let lastBattleSkillAutoToastAtMs = 0;
 let lastCombatPower = 0;
 const COMBAT_POWER_POPUP_DURATION_MS = 1000;
 const COMBAT_POWER_POPUP_HOLD_MS = 520;
@@ -4222,6 +4229,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoRedeemCelestialStash") state.uiPrefs.autoRedeemCelestialStash = checked;
       else if (t === "autoFeedPets") state.uiPrefs.autoFeedPets = checked;
       else if (t === "autoUpgradeSpiritArray") state.uiPrefs.autoUpgradeSpiritArray = checked;
+      else if (t === "autoPullBattleSkill") state.uiPrefs.autoPullBattleSkill = checked;
       else return;
       saveGame(state);
       render();
@@ -5562,6 +5570,30 @@ function loop(): void {
       }
     }
   }
+  if (
+    typeof document !== "undefined" &&
+    state.uiPrefs.autoPullBattleSkill &&
+    uLoop.tabBattleSkills
+  ) {
+    const bsPulls = tryAutoPullBattleSkillsIfPref(state);
+    if (bsPulls > 0) {
+      tryCompleteAchievements(state);
+      requestSave("心法自动领悟", true);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      if (now - lastBattleSkillAutoToastAtMs >= BATTLE_SKILL_AUTO_TOAST_GAP_MS) {
+        lastBattleSkillAutoToastAtMs = now;
+        toast(`心法已自动领悟/精进 ${bsPulls} 次（唤灵髓不足或已满级则停）`);
+      }
+      if (activeHub === "cultivate" && cultivateSub === "xinfa") {
+        const bsr = document.getElementById("battle-skills-readout");
+        if (bsr) bsr.textContent = `当前：${describeBattleSkillLevels(state)}`;
+        const btnPull = document.getElementById("btn-pull-battle-skill") as HTMLButtonElement | null;
+        if (btnPull) btnPull.disabled = state.summonEssence < battleSkillPullCost();
+      }
+    }
+  }
   const autoSettledOfflineInLoop = maybeAutoSettleOfflineAdventure(now, "loop");
   const autoSettledEstateInLoop = maybeAutoSettleEstateCommission(now, "loop");
   if (autoSettledOfflineInLoop || autoSettledEstateInLoop) {
@@ -5752,6 +5784,8 @@ function loop(): void {
     }
   }
   if (activeHub === "cultivate" && cultivateSub === "xinfa") {
+    const autoBs = document.getElementById("chk-battle-skill-auto") as HTMLInputElement | null;
+    if (autoBs) autoBs.checked = state.uiPrefs.autoPullBattleSkill;
     const bsr = document.getElementById("battle-skills-readout");
     if (bsr) bsr.textContent = `当前：${describeBattleSkillLevels(state)}`;
     const btnPull = document.getElementById("btn-pull-battle-skill") as HTMLButtonElement | null;

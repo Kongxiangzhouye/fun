@@ -5513,6 +5513,36 @@ html.ui-reduce-motion *::after {
   font-family: var(--font-mono);
 }
 
+.battle-skill-auto-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(120, 100, 180, 0.38);
+  background: rgba(18, 12, 32, 0.52);
+  cursor: pointer;
+  user-select: none;
+}
+
+.battle-skill-auto-row input {
+  margin-top: 3px;
+  accent-color: #a080d8;
+}
+
+.battle-skill-auto-ico {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.92;
+}
+
+.battle-skill-auto-text {
+  font-size: 0.82rem;
+  color: #c8b8e8;
+  line-height: 1.45;
+}
+
 .daily-pack-list,
 .daily-task-list {
   display: flex;
