@@ -11,6 +11,7 @@ import {
   UI_CHRONICLE_CARD_STAR_STAT,
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
+  UI_CHRONICLE_BI_GUAN_STAT,
   UI_CHRONICLE_FORTUNE_STAT,
   UI_CHRONICLE_SPIRIT_TIDE_STAT,
   UI_CHRONICLE_GEAR_ENHANCE_STAT,
@@ -258,6 +259,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">焚天成功</span>
             <strong class="chronicle-stat-val">${ls.fenTianBursts} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--bi-guan">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_BI_GUAN_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">闭关推进</span>
+            <strong class="chronicle-stat-val">${ls.biGuanCompletions} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card">

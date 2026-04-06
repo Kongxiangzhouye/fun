@@ -336,6 +336,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "realm",
   },
   {
+    id: "bi_guan_completions_8",
+    title: "纪行初启",
+    desc: "闭关「时间推进」成功累计 8 次",
+    rewardStones: 320,
+    rewardEssence: 16,
+    listDeco: "train",
+  },
+  {
+    id: "bi_guan_completions_40",
+    title: "一纪千息",
+    desc: "闭关「时间推进」成功累计 40 次",
+    rewardStones: 1600,
+    rewardEssence: 42,
+    listDeco: "train",
+  },
+  {
     id: "estate_commissions_20",
     title: "洞府初务",
     desc: "洞府委托成功结算累计 20 次",
@@ -1053,6 +1069,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.fenTianBursts ?? 0) >= 15;
     case "fen_tian_bursts_150":
       return (state.lifetimeStats?.fenTianBursts ?? 0) >= 150;
+    case "bi_guan_completions_8":
+      return (state.lifetimeStats?.biGuanCompletions ?? 0) >= 8;
+    case "bi_guan_completions_40":
+      return (state.lifetimeStats?.biGuanCompletions ?? 0) >= 40;
     case "estate_commissions_20":
       return (state.lifetimeStats?.estateCommissionCompletions ?? 0) >= 20;
     case "estate_commissions_120":

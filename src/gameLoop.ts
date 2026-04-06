@@ -16,7 +16,7 @@ import { tryTuna, tunaCooldownLeftMs } from "./systems/tuna";
 import { checkTrueEnding } from "./trueEnding";
 import { tryAutoSalvageInventory } from "./systems/salvage";
 import { ensureWeeklyBountyWeek, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
-import { recordRealmBreakthroughLifetime } from "./systems/pullChronicle";
+import { recordBiGuanFastForwardLifetime, recordRealmBreakthroughLifetime } from "./systems/pullChronicle";
 import { ensureCelestialStashWeek } from "./systems/celestialStash";
 import { tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
 import { tickDailyFortune } from "./systems/dailyFortune";
@@ -296,5 +296,6 @@ export function fastForward(state: GameState, seconds: number, now = Date.now())
   if (dt <= 1e-6) return new Decimal(0);
   const advanced = advanceOfflineLikeTimeline(state, state.lastTick, dt, now);
   tickEstateCommission(state, now);
+  if (advanced.settledSec > 1e-6) recordBiGuanFastForwardLifetime(state);
   return advanced.gained;
 }

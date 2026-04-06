@@ -660,6 +660,17 @@ function runFenTianBurstAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
 }
 
+function runBiGuanAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("bi_guan_completions_8"));
+  st.lifetimeStats.biGuanCompletions = 8;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "bi_guan_completions_8"));
+  st.lifetimeStats.biGuanCompletions = 40;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "bi_guan_completions_40"));
+}
+
 function runCardLevelAndStarAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("card_level_ups_60"), "card level 60 should start locked");
@@ -928,6 +939,7 @@ function main(): void {
   runResonancePayoutAchievementsSmoke();
   runTunaCompletionAchievementsSmoke();
   runFenTianBurstAchievementsSmoke();
+  runBiGuanAchievementsSmoke();
   runEstateCommissionAchievementsSmoke();
   runReincarnationTierAchievementsSmoke();
   runBattleSkillAndGearSalvageAchievementsSmoke();

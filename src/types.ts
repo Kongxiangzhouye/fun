@@ -124,6 +124,8 @@ export interface LifetimeStatsState {
   spiritTideHours: number;
   /** 纳灵阵图绘阵成功次数（每次升 1 级计 1，含自动绘阵） */
   spiritArrayUpgrades: number;
+  /** 闭关「时间推进」成功结算次数（每次闭关一纪计 1） */
+  biGuanCompletions: number;
 }
 
 /** 灵田作物 id */

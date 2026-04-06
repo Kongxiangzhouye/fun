@@ -61,6 +61,8 @@ export const UI_RESONANCE_PAYOUT_STAT = asset("resonance-payout-milestone.svg");
 export const UI_CHRONICLE_TUNA_STAT = asset("chronicle-tuna-stat.svg");
 /** 唤灵通鉴 · 焚天累计次数小标 */
 export const UI_CHRONICLE_FENTIAN_STAT = asset("chronicle-fentian-stat.svg");
+/** 唤灵通鉴 · 闭关时间推进累计小标 */
+export const UI_CHRONICLE_BI_GUAN_STAT = asset("chronicle-bi-guan-stat.svg");
 /** 唤灵通鉴 · 洞府委托累计次数小标 */
 export const UI_CHRONICLE_ESTATE_STAT = asset("chronicle-estate-stat.svg");
 /** 唤灵通鉴 · 灵宠唤引累计小标 */

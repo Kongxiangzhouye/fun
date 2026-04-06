@@ -2965,6 +2965,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `心斋卦象刷新次数: ${lt.dailyFortuneRolls}`,
     `灵潮时辰进入次数: ${lt.spiritTideHours}`,
     `纳灵阵图绘阵累计: ${lt.spiritArrayUpgrades}`,
+    `闭关时间推进累计: ${lt.biGuanCompletions}`,
     `铸灵累计次数: ${lt.gearForgesTotal}`,
     `历史最高铸灵稀有度: ${rarityPeak}`,
     `周常悬赏单周清满次数: ${lt.weeklyBountyFullWeeks}`,
@@ -3051,6 +3052,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">心斋卦象刷新次数</span><strong class="d-val" id="data-overview-lt-fortune">${lt.dailyFortuneRolls}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵潮时辰进入次数</span><strong class="d-val" id="data-overview-lt-spirit-tide">${lt.spiritTideHours}</strong></div>
         <div class="data-overview-cell"><span class="d-label">纳灵阵图绘阵累计</span><strong class="d-val" id="data-overview-lt-spirit-array">${lt.spiritArrayUpgrades}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">闭关时间推进累计</span><strong class="d-val" id="data-overview-lt-bi-guan">${lt.biGuanCompletions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">铸灵累计次数</span><strong class="d-val" id="data-overview-lt-forge">${lt.gearForgesTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历史最高铸灵稀有度</span><strong class="d-val" id="data-overview-lt-rarity">${rarityPeak}</strong></div>
         <div class="data-overview-cell"><span class="d-label">周常悬赏单周清满次数</span><strong class="d-val" id="data-overview-lt-bounty-weeks">${lt.weeklyBountyFullWeeks}</strong></div>
@@ -3098,6 +3100,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
   set("data-overview-lt-spirit-tide", String(lt.spiritTideHours));
   set("data-overview-lt-spirit-array", String(lt.spiritArrayUpgrades));
+  set("data-overview-lt-bi-guan", String(lt.biGuanCompletions));
   set("data-overview-lt-forge", String(lt.gearForgesTotal));
   const rarityPeak =
     lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length

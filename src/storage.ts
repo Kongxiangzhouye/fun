@@ -962,6 +962,7 @@ export function deserialize(json: string): GameState {
       cardStarUps: Math.max(0, Math.floor(data.lifetimeStats.cardStarUps ?? 0)),
       spiritTideHours: Math.max(0, Math.floor(data.lifetimeStats.spiritTideHours ?? 0)),
       spiritArrayUpgrades: Math.max(0, Math.floor(data.lifetimeStats.spiritArrayUpgrades ?? 0)),
+      biGuanCompletions: Math.max(0, Math.floor(data.lifetimeStats.biGuanCompletions ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

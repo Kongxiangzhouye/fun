@@ -63,6 +63,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       cardStarUps: 0,
       spiritTideHours: 0,
       spiritArrayUpgrades: 0,
+      biGuanCompletions: 0,
     };
     return;
   }
@@ -161,6 +162,15 @@ export function normalizeLifetimeStats(st: GameState): void {
   const sau = st.lifetimeStats.spiritArrayUpgrades;
   if (sau == null || !Number.isFinite(sau)) st.lifetimeStats.spiritArrayUpgrades = 0;
   else st.lifetimeStats.spiritArrayUpgrades = Math.max(0, Math.floor(sau));
+  const bg = st.lifetimeStats.biGuanCompletions;
+  if (bg == null || !Number.isFinite(bg)) st.lifetimeStats.biGuanCompletions = 0;
+  else st.lifetimeStats.biGuanCompletions = Math.max(0, Math.floor(bg));
+}
+
+/** 闭关时间推进（fastForward）成功结算后累加 */
+export function recordBiGuanFastForwardLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.biGuanCompletions += 1;
 }
 
 /** 纳灵阵图绘阵成功（等级 +1）后累加 */
