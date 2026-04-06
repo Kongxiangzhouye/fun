@@ -351,8 +351,10 @@ export function serialize(state: GameState): string {
             : null,
           activeBoostUntilMs: state.offlineAdventure.activeBoostUntilMs,
           activeBoostMult: state.offlineAdventure.activeBoostMult,
+          resonanceType: state.offlineAdventure.resonanceType,
+          resonanceStacks: state.offlineAdventure.resonanceStacks,
         }
-      : { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1 },
+      : { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1, resonanceType: null, resonanceStacks: 0 },
     estateCommission: {
       offer: state.estateCommission.offer ? { ...state.estateCommission.offer, reward: { ...state.estateCommission.offer.reward } } : null,
       active: state.estateCommission.active
@@ -543,9 +545,18 @@ export function deserialize(json: string): GameState {
       pending,
       activeBoostUntilMs,
       activeBoostMult,
+      resonanceType:
+        oa.resonanceType === "instant" || oa.resonanceType === "boost" || oa.resonanceType === "essence"
+          ? oa.resonanceType
+          : null,
+      resonanceStacks:
+        Number.isFinite((oa as { resonanceStacks?: unknown }).resonanceStacks) &&
+        Number((oa as { resonanceStacks?: unknown }).resonanceStacks) >= 0
+          ? Math.max(0, Math.floor(Number((oa as { resonanceStacks?: unknown }).resonanceStacks)))
+          : 0,
     };
   } else {
-    st.offlineAdventure = { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1 };
+    st.offlineAdventure = { pending: null, activeBoostUntilMs: 0, activeBoostMult: 1, resonanceType: null, resonanceStacks: 0 };
   }
   normalizeOfflineAdventureState(st, Date.now());
   if (data.estateCommission && typeof data.estateCommission === "object") {

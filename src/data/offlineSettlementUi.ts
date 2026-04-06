@@ -4,4 +4,8 @@ export const OFFLINE_SETTLEMENT_UI_FILES = {
   summaryBadge: "offline-summary-badge.svg",
   transitionShine: "offline-transition-shine.svg",
   idleBadge: "offline-idle-badge.svg",
+  resonanceChain: "offline-resonance-chain.svg",
+  resonanceInstant: "offline-resonance-instant.svg",
+  resonanceBoost: "offline-resonance-boost.svg",
+  resonanceEssence: "offline-resonance-essence.svg",
 } as const;

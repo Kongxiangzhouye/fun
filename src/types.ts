@@ -146,6 +146,10 @@ export interface OfflineAdventureState {
   pending: OfflineAdventurePendingState | null;
   activeBoostUntilMs: number;
   activeBoostMult: number;
+  /** 连选共鸣：最近一次选择类型 */
+  resonanceType: OfflineAdventureOptionState["id"] | null;
+  /** 连选共鸣：连续选择同类型层数 */
+  resonanceStacks: number;
 }
 
 export type EstateCommissionType = "resource" | "combat" | "cultivation";

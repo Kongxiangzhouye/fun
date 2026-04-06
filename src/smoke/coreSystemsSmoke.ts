@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { createInitialState } from "../state";
-import { catchUpOffline, maxOfflineSec } from "../gameLoop";
+import { applyTick, catchUpOffline, maxOfflineSec } from "../gameLoop";
 import { ensureWeeklyBountyWeek, currentWeekKey } from "../systems/weeklyBounty";
+import { chooseOfflineAdventureOption } from "../systems/offlineAdventure";
 import {
   serialize,
   deserialize,
@@ -157,6 +158,38 @@ function runDefaultMigrationSmoke(): void {
   assert.equal(migrated.dungeonDeferBoss, true, "missing defer-boss field should migrate to true");
 }
 
+function runOfflineBoostRenewRuleSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.offlineAdventure.activeBoostUntilMs = now + 30 * 60 * 1000;
+  st.offlineAdventure.activeBoostMult = 1.6;
+  st.offlineAdventure.pending = {
+    triggeredAtMs: now,
+    settledSec: 3600,
+    options: [
+      { id: "instant", title: "I", desc: "", instantStones: "100", instantEssence: 1, boostMult: 1, boostDurationSec: 0 },
+      { id: "boost", title: "B", desc: "", instantStones: "0", instantEssence: 0, boostMult: 1.24, boostDurationSec: 7200 },
+      { id: "essence", title: "E", desc: "", instantStones: "0", instantEssence: 3, boostMult: 1, boostDurationSec: 0, zhuLingBonus: 2 },
+    ],
+  };
+  const oldUntil = st.offlineAdventure.activeBoostUntilMs;
+  assert.equal(chooseOfflineAdventureOption(st, "boost", now), true, "boost option should be selectable");
+  assert.equal(st.offlineAdventure.activeBoostMult, 1.6, "lower multiplier should not overwrite active higher multiplier");
+  assert.equal(st.offlineAdventure.activeBoostUntilMs, oldUntil, "lower multiplier should not extend active higher multiplier");
+}
+
+function runApplyTickSegmentedCatchUpSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  const oldTick = now - 300_000;
+  st.lastTick = oldTick;
+  const prevPlaytime = st.playtimeSec;
+  applyTick(st, now);
+  assert.ok(st.lastTick > oldTick, "tick should advance forward");
+  assert.equal(st.lastTick, oldTick + 120_000, "large dt should respect capped segmented advancement");
+  assert.ok(st.playtimeSec >= prevPlaytime + 120 - 1e-6, "playtime should include full capped dt");
+}
+
 function main(): void {
   runOfflineCapSmoke();
   runWeeklySyncSmoke();
@@ -164,6 +197,8 @@ function main(): void {
   runSaveSlotSwitchIsolationSmoke();
   runImportExportRoundtripSmoke();
   runDefaultMigrationSmoke();
+  runOfflineBoostRenewRuleSmoke();
+  runApplyTickSegmentedCatchUpSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");
 }

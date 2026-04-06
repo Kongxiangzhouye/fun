@@ -226,6 +226,14 @@ export const UI_OFFLINE_SUMMARY_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.summar
 export const UI_OFFLINE_IDLE_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.idleBadge);
 /** 离线结算过渡光带（可用于摘要区块分隔） */
 export const UI_OFFLINE_TRANSITION_SHINE = asset(OFFLINE_SETTLEMENT_UI_FILES.transitionShine);
+/** 离线奇遇：连选共鸣链总览图标 */
+export const UI_OFFLINE_RESONANCE_CHAIN = asset(OFFLINE_SETTLEMENT_UI_FILES.resonanceChain);
+/** 离线奇遇：灵脉馈赠共鸣图标 */
+export const UI_OFFLINE_RESONANCE_INSTANT = asset(OFFLINE_SETTLEMENT_UI_FILES.resonanceInstant);
+/** 离线奇遇：静修余韵共鸣图标 */
+export const UI_OFFLINE_RESONANCE_BOOST = asset(OFFLINE_SETTLEMENT_UI_FILES.resonanceBoost);
+/** 离线奇遇：髓潮归元共鸣图标 */
+export const UI_OFFLINE_RESONANCE_ESSENCE = asset(OFFLINE_SETTLEMENT_UI_FILES.resonanceEssence);
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
 
 /** 离线奇遇三选一 · 选项图标（内联 SVG） */

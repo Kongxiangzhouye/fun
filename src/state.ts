@@ -189,6 +189,8 @@ export function createInitialState(): GameState {
       pending: null,
       activeBoostUntilMs: 0,
       activeBoostMult: 1,
+      resonanceType: null,
+      resonanceStacks: 0,
     },
     estateCommission: createEmptyEstateCommissionState(),
     spiritArrayLevel: 0,

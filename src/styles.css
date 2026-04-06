@@ -3725,6 +3725,26 @@ h1 {
   min-height: 84px;
 }
 
+.offline-resonance-line,
+.offline-resonance-preview,
+.offline-boost-rule-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.offline-resonance-line,
+.offline-boost-rule-line {
+  border-radius: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(118, 152, 224, 0.24);
+  background: rgba(36, 50, 84, 0.32);
+}
+
+.offline-boost-rule-line {
+  color: #c6d5f3;
+}
+
 .offline-choice-card.is-recommended {
   border-color: rgba(141, 182, 255, 0.54);
   box-shadow: 0 0 0 1px rgba(137, 180, 255, 0.12) inset;

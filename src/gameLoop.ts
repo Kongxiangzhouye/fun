@@ -23,6 +23,8 @@ import { spiritReservoirUnlocked, tickSpiritReservoir } from "./systems/spiritRe
 import { tickEstateCommission } from "./systems/estateCommission";
 
 const TICK_MAX_DT = 120;
+const TICK_SEGMENT_SEC = 1;
+const TICK_MAX_SEGMENTS = 240;
 const OFFLINE_RESONANCE_GAIN_MULT = 0.28;
 
 /** 当前存档离线收益秒上限（土系等可抬高） */
@@ -122,27 +124,33 @@ export function applyTick(state: GameState, now: number): void {
   tickDailyFortune(state, now);
   const elapsedSec = Math.max(0, (now - state.lastTick) / 1000);
   if (elapsedSec <= 0) return;
-  const dt = Math.min(TICK_MAX_DT, elapsedSec);
-  // 仅推进已处理的时间，避免大间隔时丢失剩余进度。
-  state.lastTick += dt * 1000;
-  const tickNow = state.lastTick;
-  state.playtimeSec += dt;
-  tickInGameClock(state, dt);
-  tickWishResonancePassive(state, dt);
-  tickSkillTraining(state, dt);
-  tickCombatHpRegen(state, dt);
-  tickDungeon(state, dt, tickNow);
-  tickEstateCommission(state, tickNow);
-  const ips = incomePerSecond(state, totalCardsInPool());
-  if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips);
-  addStones(state, ips.mul(dt));
-  runAutoSchedulers(state, tickNow);
-  if (state.autoSalvageAccumSec == null || !Number.isFinite(state.autoSalvageAccumSec)) state.autoSalvageAccumSec = 0;
-  state.autoSalvageAccumSec += dt;
-  if (state.autoSalvageAccumSec >= 2.5) {
-    state.autoSalvageAccumSec = 0;
-    tryAutoSalvageInventory(state);
+  let remainSec = Math.min(TICK_MAX_DT, elapsedSec);
+  let segments = 0;
+  while (remainSec > 1e-6 && segments < TICK_MAX_SEGMENTS) {
+    const dt = Math.min(TICK_SEGMENT_SEC, remainSec);
+    // 仅推进已处理的时间，避免大间隔时丢失剩余进度。
+    state.lastTick += dt * 1000;
+    const tickNow = state.lastTick;
+    state.playtimeSec += dt;
+    tickInGameClock(state, dt);
+    tickWishResonancePassive(state, dt);
+    tickSkillTraining(state, dt);
+    tickCombatHpRegen(state, dt);
+    tickDungeon(state, dt, tickNow);
+    tickEstateCommission(state, tickNow);
+    const ips = incomePerSecond(state, totalCardsInPool());
+    if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips);
+    addStones(state, ips.mul(dt));
+    if (state.autoSalvageAccumSec == null || !Number.isFinite(state.autoSalvageAccumSec)) state.autoSalvageAccumSec = 0;
+    state.autoSalvageAccumSec += dt;
+    if (state.autoSalvageAccumSec >= 2.5) {
+      state.autoSalvageAccumSec = 0;
+      tryAutoSalvageInventory(state);
+    }
+    remainSec -= dt;
+    segments += 1;
   }
+  runAutoSchedulers(state, state.lastTick);
   tryCompleteAchievements(state);
   checkTrueEnding(state);
 }

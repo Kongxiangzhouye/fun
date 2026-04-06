@@ -180,6 +180,10 @@ import {
   UI_OFFLINE_SUMMARY_BADGE,
   UI_OFFLINE_SUMMARY_DECO,
   UI_OFFLINE_TRANSITION_SHINE,
+  UI_OFFLINE_RESONANCE_CHAIN,
+  UI_OFFLINE_RESONANCE_INSTANT,
+  UI_OFFLINE_RESONANCE_BOOST,
+  UI_OFFLINE_RESONANCE_ESSENCE,
   UI_OFFLINE_EVENT_OPTION_SAFE,
   UI_OFFLINE_EVENT_OPTION_RISK,
   UI_OFFLINE_EVENT_OPTION_ESSENCE,
@@ -293,10 +297,12 @@ import {
 import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
 import {
   chooseOfflineAdventureOption,
+  describeOfflineAdventureResonanceRule,
   maybeQueueOfflineAdventure,
   normalizeOfflineAdventureState,
   offlineAdventureBoostLeftMs,
   offlineAdventureBoostMult,
+  previewOfflineAdventureResonance,
 } from "./systems/offlineAdventure";
 import {
   abandonEstateCommission,
@@ -389,6 +395,17 @@ function fmtOfflineDurationSec(sec: number): string {
   const h = Math.floor(m / 60);
   const mr = m % 60;
   return `${h} 小时 ${mr} 分`;
+}
+
+function offlineResonanceTypeZh(type: "instant" | "boost" | "essence" | null): string {
+  if (type === "instant") return "灵脉馈赠";
+  if (type === "boost") return "静修余韵";
+  if (type === "essence") return "髓潮归元";
+  return "无";
+}
+
+function offlineBoostRenewRuleText(): string {
+  return "续时规则：仅当新倍率不低于当前倍率时才可续时；低倍率不会续命高倍率。";
 }
 
 function fmtSkillEta(sec: number | null): string {
@@ -3153,6 +3170,15 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const oaPending = state.offlineAdventure.pending;
   const oaBoostLeftMs = offlineAdventureBoostLeftMs(state, now);
   const oaBoostMul = offlineAdventureBoostMult(state, now);
+  const oaInstantPreview = previewOfflineAdventureResonance(state, "instant");
+  const oaBoostPreview = previewOfflineAdventureResonance(state, "boost");
+  const oaEssencePreview = previewOfflineAdventureResonance(state, "essence");
+  const oaResType = state.offlineAdventure.resonanceType;
+  const oaResStacks = state.offlineAdventure.resonanceStacks;
+  const oaResLine =
+    oaResType && oaResStacks > 0
+      ? `当前连选：${offlineResonanceTypeZh(oaResType)}（${oaResStacks} 层） · ${describeOfflineAdventureResonanceRule(oaResType, oaResStacks)}`
+      : "当前连选：无（首次选择将从 1 层起步）";
   const oaBoostTag =
     oaBoostLeftMs > 0 ? `当前增益 ×${oaBoostMul.toFixed(2)}（剩余约 ${Math.ceil(oaBoostLeftMs / 60000)} 分）` : "当前无挂机增益";
   const fortuneBlock =
@@ -3180,6 +3206,11 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <h2>离线奇遇三选一</h2>
       </div>
       <p class="hint sm">离线达阈值会生成三选一；灵脉/髓潮奖励立即到账，静修增益在持续时间后自动失效。${oaBoostTag}</p>
+      <p class="hint sm offline-resonance-line" id="offline-resonance-line">
+        <img src="${UI_OFFLINE_RESONANCE_CHAIN}" alt="" width="14" height="14" loading="lazy" />
+        <span>${oaResLine}</span>
+      </p>
+      <p class="hint sm offline-boost-rule-line" id="offline-boost-rule-line">${offlineBoostRenewRuleText()}</p>
       <div class="offline-choice-tabs" role="tablist" aria-label="离线奇遇选项">
         <button type="button" class="offline-choice-tab is-active" aria-selected="true">${oaPending ? "可结算" : "待触发"}</button>
         <button type="button" class="offline-choice-tab" aria-selected="false">${oaBoostLeftMs > 0 ? "增益生效中" : "增益未激活"}</button>
@@ -3198,6 +3229,10 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
               ? `即时获得 ${fmtDecimal(new Decimal(oaPending.options[0].instantStones))} 灵石 + ${oaPending.options[0].instantEssence} 唤灵髓。`
               : "离线达到阈值后可选择立即资源奖励。"
           }</p>
+          <p class="hint sm offline-resonance-preview">
+            <img src="${UI_OFFLINE_RESONANCE_INSTANT}" alt="" width="14" height="14" loading="lazy" />
+            <span>${oaInstantPreview.summary}</span>
+          </p>
           <button class="btn btn-primary" type="button" data-offline-choice="instant" ${oaPending ? "" : "disabled"}>选择本项</button>
         </article>
         <article class="offline-choice-card">
@@ -3215,6 +3250,10 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
               ? `挂机收益 ×${oaPending.options[1].boostMult.toFixed(2)}，持续 ${Math.ceil(oaPending.options[1].boostDurationSec / 60)} 分钟。`
               : "离线达到阈值后可选择限时挂机增益。"
           }</p>
+          <p class="hint sm offline-resonance-preview">
+            <img src="${UI_OFFLINE_RESONANCE_BOOST}" alt="" width="14" height="14" loading="lazy" />
+            <span>${oaBoostPreview.summary}</span>
+          </p>
           <button class="btn" type="button" data-offline-choice="boost" ${oaPending ? "" : "disabled"}>选择本项</button>
         </article>
         <article class="offline-choice-card">
@@ -3230,6 +3269,10 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
               ? `唤灵髓 +${oaPending.options[2].instantEssence}，筑灵髓 +${oaPending.options[2].zhuLingBonus ?? 0}（无灵石、无挂机增益）。`
               : "离线达到阈值后可选择双髓补给。"
           }</p>
+          <p class="hint sm offline-resonance-preview">
+            <img src="${UI_OFFLINE_RESONANCE_ESSENCE}" alt="" width="14" height="14" loading="lazy" />
+            <span>${oaEssencePreview.summary}</span>
+          </p>
           <button class="btn" type="button" data-offline-choice="essence" ${oaPending ? "" : "disabled"}>选择本项</button>
         </article>
       </div>
@@ -4657,7 +4700,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
         toast("已选择髓潮归元：唤灵髓与筑灵髓已到账。");
       } else {
         const leftMin = Math.ceil(offlineAdventureBoostLeftMs(state, t) / 60000);
-        toast(`已选择静修余韵：挂机增益已生效（约 ${leftMin} 分）。`);
+        toast(`已选择静修余韵：挂机增益状态已更新（约 ${leftMin} 分）。${offlineBoostRenewRuleText()}`);
       }
       render();
     });
@@ -5316,6 +5359,11 @@ function updateEstateIdleLiveReadouts(now: number): void {
   const oaPending = state.offlineAdventure.pending;
   const oaBoostLeftMs = offlineAdventureBoostLeftMs(state, now);
   const oaBoostMul = offlineAdventureBoostMult(state, now);
+  const oaInstantPreview = previewOfflineAdventureResonance(state, "instant");
+  const oaBoostPreview = previewOfflineAdventureResonance(state, "boost");
+  const oaEssencePreview = previewOfflineAdventureResonance(state, "essence");
+  const oaResType = state.offlineAdventure.resonanceType;
+  const oaResStacks = state.offlineAdventure.resonanceStacks;
   const tabs = document.querySelectorAll(".offline-choice-tab");
   if (tabs[0]) tabs[0].textContent = oaPending ? "可结算" : "待触发";
   if (tabs[1]) tabs[1].textContent = oaBoostLeftMs > 0 ? "增益生效中" : "增益未激活";
@@ -5329,6 +5377,9 @@ function updateEstateIdleLiveReadouts(now: number): void {
   const card1Desc = cards[0]?.querySelector(".hint.sm");
   const card2Desc = cards[1]?.querySelector(".hint.sm");
   const card3Desc = cards[2]?.querySelector(".hint.sm");
+  const card1Res = cards[0]?.querySelector(".offline-resonance-preview");
+  const card2Res = cards[1]?.querySelector(".offline-resonance-preview");
+  const card3Res = cards[2]?.querySelector(".offline-resonance-preview");
   if (card1Desc) {
     card1Desc.textContent = oaPending
       ? `即时获得 ${fmtDecimal(new Decimal(oaPending.options[0].instantStones))} 灵石 + ${oaPending.options[0].instantEssence} 唤灵髓。`
@@ -5344,6 +5395,12 @@ function updateEstateIdleLiveReadouts(now: number): void {
       ? `唤灵髓 +${oaPending.options[2].instantEssence}，筑灵髓 +${oaPending.options[2].zhuLingBonus ?? 0}（无灵石、无挂机增益）。`
       : "离线达到阈值后可选择双髓补给。";
   }
+  const card1ResText = card1Res?.querySelector("span");
+  const card2ResText = card2Res?.querySelector("span");
+  const card3ResText = card3Res?.querySelector("span");
+  if (card1ResText) card1ResText.textContent = oaInstantPreview.summary;
+  if (card2ResText) card2ResText.textContent = oaBoostPreview.summary;
+  if (card3ResText) card3ResText.textContent = oaEssencePreview.summary;
   const panelHint = document.querySelector(".offline-event-panel .hint.sm");
   if (panelHint) {
     panelHint.textContent =
@@ -5352,6 +5409,18 @@ function updateEstateIdleLiveReadouts(now: number): void {
         ? `当前增益 ×${oaBoostMul.toFixed(2)}（剩余约 ${Math.ceil(oaBoostLeftMs / 60000)} 分）`
         : "当前无挂机增益");
   }
+  const resonanceLine = document.getElementById("offline-resonance-line");
+  if (resonanceLine) {
+    const t = resonanceLine.querySelector("span");
+    if (t) {
+      t.textContent =
+      oaResType && oaResStacks > 0
+        ? `当前连选：${offlineResonanceTypeZh(oaResType)}（${oaResStacks} 层） · ${describeOfflineAdventureResonanceRule(oaResType, oaResStacks)}`
+        : "当前连选：无（首次选择将从 1 层起步）";
+    }
+  }
+  const boostRuleLine = document.getElementById("offline-boost-rule-line");
+  if (boostRuleLine) boostRuleLine.textContent = offlineBoostRenewRuleText();
   const ecActive = state.estateCommission.active;
   const statusEl = document.getElementById("estate-commission-status");
   const timerEl = document.getElementById("estate-commission-timer");
