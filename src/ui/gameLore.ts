@@ -7,6 +7,10 @@ import {
   UI_LORE_BOUNTY,
   UI_LORE_ESTATE,
   UI_LORE_UNLOCKS,
+  UI_LORE_DUNGEON,
+  UI_LORE_GEAR,
+  UI_LORE_REINCARNATION,
+  UI_RESONANCE_CORE,
 } from "./visualAssets";
 
 export function renderGameLoreHtml(): string {
@@ -60,7 +64,7 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary>聚灵共鸣</summary>
+        <summary><img src="${UI_RESONANCE_CORE}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 聚灵共鸣</summary>
         <p class="hint sm">共鸣度随<strong>游戏时间</strong>自动涨（与当前页签无关），<strong>不可点击</strong>；满百得 <strong>唤灵髓 +1</strong>，无次数上限。<strong>在线、离线追赶、闭关预演</strong>均按同公式累积。法篆与洞府「共鸣」可略加快涨速（叠乘）。</p>
       </details>
 
@@ -97,7 +101,7 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary>幻域副本</summary>
+        <summary><img src="${UI_LORE_DUNGEON}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 幻域副本</summary>
         <ul class="game-lore-list">
           <li>首通主要掉落<strong>唤灵髓</strong>；<strong>整关清完</strong>后统一入背包。复刷关会额外给灵砂。</li>
           <li><strong>幻域生命</strong>为全局状态，进关不会自动回满；接战恢复慢，游走较快。</li>
@@ -106,6 +110,16 @@ export function renderGameLoreHtml(): string {
           <li><strong>阵线对决</strong>：敌我各按攻击间隔<strong>离散出伤 / 承击</strong>，顶条为敌阵总灵压；剑气 / 凶煞读条对齐期望 DPS 与敌方节奏，便于对照数值。</li>
           <li>五行克制会影响伤害；<strong>化劲</strong>可在无敌帧内化解敌方一击。</li>
           <li>魔物<strong>闪避</strong>以飘字「偏斜」表现；我方闪避以「闪避」表现。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_GEAR}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 行囊与铸灵</summary>
+        <ul class="game-lore-list">
+          <li><strong>行囊</strong>：武器 / 衣甲 / 戒指三槽可装备；可<strong>锁定</strong>以防分解与自动分解误吞。</li>
+          <li><strong>铸灵池</strong>：消耗<strong>唤灵髓</strong>铸灵，随机基底与稀有度；连续未出珍品以上会累积珍品保底计数。</li>
+          <li><strong>强化 / 精炼</strong>：消耗<strong>玄铁</strong>提升强化等级；UR 可继续精炼（细则见背包页）。</li>
+          <li><strong>分解</strong>：多余装备可分解为玄铁；可在行囊内勾选自动分解的品阶。</li>
         </ul>
       </details>
 
@@ -139,7 +153,7 @@ export function renderGameLoreHtml(): string {
       </details>
 
       <details class="game-lore-block">
-        <summary>卡组与轮回</summary>
+        <summary><img src="${UI_LORE_REINCARNATION}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 卡组与轮回</summary>
         <ul class="game-lore-list">
           <li><strong>上阵</strong>：点空阵位再点仓库，或先点仓库再点阵位；点已有卡的阵位可选中该卡。升阶需灵砂。</li>
           <li>境界达到 <strong>${REINCARNATION_REALM_REQ}</strong> 后可轮回：清空境界、灵石、卡组与持有卡牌；保留图鉴邂逅、成就与元强化。道韵按本轮灵石巅峰等规则结算。</li>
