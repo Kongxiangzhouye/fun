@@ -5094,9 +5094,10 @@ function init(): void {
   bindModernFxInteraction();
   bindMotionUiFx();
   updateModernVisualFx(t);
-  const offline = catchUpOffline(state, t);
+  // Daily state should refresh before offline settlement.
   tickDailyLoginCalendar(state, t);
   tickDailyFortune(state, t);
+  const offline = catchUpOffline(state, t);
   if (offline.stoneGain.gt(0.01)) {
     const dur = fmtOfflineDurationSec(offline.settledSec);
     const capSec = maxOfflineSec(state);
