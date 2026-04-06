@@ -90,6 +90,7 @@ export function performReincarnate(state: GameState): void {
   state.offlineAdventure.activeBoostMult = 1;
   state.offlineAdventure.resonanceType = null;
   state.offlineAdventure.resonanceStacks = 0;
+  state.offlineAdventure.lastAutoSettleReceipt = null;
   state.estateCommission = createEmptyEstateCommissionState();
   reseedRng(state);
 }

@@ -5,6 +5,7 @@ import { ensureWeeklyBountyWeek, currentWeekKey, noteWeeklyBountyEstateCompletio
 import { ensureCelestialStashWeek } from "../systems/celestialStash";
 import {
   chooseOfflineAdventureOption,
+  commitOfflineAdventureAutoReceipt,
   maybeQueueOfflineAdventure,
   normalizeOfflineAdventureState,
   OFFLINE_ADVENTURE_TRIGGER_SEC,
@@ -340,6 +341,44 @@ function runOfflineAdventureAutoPolicySmoke(): void {
   assert.equal(st.offlineAdventure.pending, null, "smart auto settled pending should be cleared");
 }
 
+function runOfflineAdventureAutoReceiptSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.offlineAdventure.pending = {
+    triggeredAtMs: now,
+    settledSec: 4200,
+    options: [
+      { id: "instant", title: "I", desc: "", instantStones: "100", instantEssence: 1, boostMult: 1, boostDurationSec: 0 },
+      { id: "boost", title: "B", desc: "", instantStones: "0", instantEssence: 0, boostMult: 1.3, boostDurationSec: 3600 },
+      { id: "essence", title: "E", desc: "", instantStones: "0", instantEssence: 5, boostMult: 1, boostDurationSec: 0, zhuLingBonus: 3 },
+    ],
+    rerolled: false,
+    rerollCostStones: "190",
+  };
+  st.offlineAdventure.autoPolicyEnabled = true;
+  st.offlineAdventure.autoPolicy = "boost";
+  const economyBefore = {
+    spiritStones: st.spiritStones,
+    summonEssence: st.summonEssence,
+    zhuLingEssence: st.zhuLingEssence,
+  };
+  const policy = st.offlineAdventure.autoPolicy;
+  const auto = tryAutoSettleOfflineAdventurePending(st, now);
+  assert.equal(auto.settled, true);
+  commitOfflineAdventureAutoReceipt(st, now, {
+    policy,
+    optionId: auto.optionId!,
+    rerolled: auto.rerolled,
+    economyBefore,
+  });
+  const line = st.offlineAdventure.lastAutoSettleReceipt?.summaryLine ?? "";
+  assert.ok(line.length > 0, "auto settle should write receipt summary");
+  assert.ok(line.includes("增益优先") || line.includes("静修余韵"), "receipt should describe policy/option");
+  const prevLine = line;
+  st.offlineAdventure.autoPolicyEnabled = false;
+  assert.equal(st.offlineAdventure.lastAutoSettleReceipt?.summaryLine, prevLine, "turning off auto policy must not clear receipt");
+}
+
 function runOfflineAdventureAutoRerollBudgetSmoke(): void {
   const st = createInitialState();
   const now = Date.now();
@@ -431,6 +470,7 @@ function main(): void {
   runEstateCommissionDueSettleSmoke();
   runOfflineAdventureQueueNoOverwriteSmoke();
   runOfflineAdventureAutoPolicySmoke();
+  runOfflineAdventureAutoReceiptSmoke();
   runOfflineAdventureAutoRerollBudgetSmoke();
   runOfflineAdventurePendingNormalizeSmoke();
   runEstateCommissionAutoSettleLoopSmoke();

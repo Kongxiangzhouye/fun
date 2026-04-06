@@ -1,6 +1,6 @@
 import Decimal from "decimal.js";
-import type { GameState, OfflineAdventureOptionState } from "../types";
-import { addStones } from "../stones";
+import type { GameState, OfflineAdventureOptionState, OfflineAdventureState } from "../types";
+import { addStones, fmtDecimal } from "../stones";
 import { normalizeLifetimeStats } from "./pullChronicle";
 
 export const OFFLINE_ADVENTURE_TRIGGER_SEC = 45 * 60;
@@ -399,6 +399,7 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
       autoPolicy: "steady",
       autoRerollEnabled: false,
       autoRerollBudgetStones: "0",
+      lastAutoSettleReceipt: null,
     };
     return;
   }
@@ -416,6 +417,24 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
   oa.autoRerollBudgetStones = safeNonNegativeIntString(oa.autoRerollBudgetStones, "0");
   if (oa.autoPolicy !== "steady" && oa.autoPolicy !== "boost" && oa.autoPolicy !== "essence" && oa.autoPolicy !== "smart") {
     oa.autoPolicy = "steady";
+  }
+  if (oa.lastAutoSettleReceipt && typeof oa.lastAutoSettleReceipt === "object") {
+    const r = oa.lastAutoSettleReceipt;
+    const policyOk = r.policy === "steady" || r.policy === "boost" || r.policy === "essence" || r.policy === "smart";
+    const optOk = r.optionId === "instant" || r.optionId === "boost" || r.optionId === "essence";
+    if (!policyOk || !optOk || typeof r.summaryLine !== "string" || !Number.isFinite(r.atMs)) {
+      oa.lastAutoSettleReceipt = null;
+    } else {
+      oa.lastAutoSettleReceipt = {
+        atMs: Math.max(0, Math.floor(r.atMs)),
+        policy: r.policy,
+        optionId: r.optionId,
+        rerolled: !!r.rerolled,
+        summaryLine: r.summaryLine,
+      };
+    }
+  } else {
+    oa.lastAutoSettleReceipt = null;
   }
   if (!Number.isFinite(oa.resonanceStacks) || oa.resonanceStacks < 0) oa.resonanceStacks = 0;
   oa.resonanceStacks = Math.max(0, Math.min(RESONANCE_STACK_CAP, Math.floor(oa.resonanceStacks)));
@@ -438,4 +457,66 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
     p.rerollCostStones = calcRerollStoneCost(p.settledSec);
   }
   p.rerollCostStones = safeNonNegativeIntString(p.rerollCostStones, calcRerollStoneCost(p.settledSec));
+}
+
+function autoPolicyLabelZhForReceipt(policy: OfflineAdventureState["autoPolicy"]): string {
+  if (policy === "boost") return "增益优先";
+  if (policy === "essence") return "髓潮优先";
+  if (policy === "smart") return "智能策略";
+  return "稳态优先";
+}
+
+/** 在一次成功的自动结算后写入回执（关闭自动策略时勿调用） */
+export function commitOfflineAdventureAutoReceipt(
+  state: GameState,
+  now: number,
+  input: {
+    policy: OfflineAdventureState["autoPolicy"];
+    optionId: "instant" | "boost" | "essence";
+    rerolled: boolean;
+    economyBefore: { spiritStones: string; summonEssence: number; zhuLingEssence: number };
+  },
+): void {
+  const dSt = new Decimal(state.spiritStones).sub(input.economyBefore.spiritStones);
+  const dSe = state.summonEssence - input.economyBefore.summonEssence;
+  const dZl = state.zhuLingEssence - input.economyBefore.zhuLingEssence;
+  const policyLabel = autoPolicyLabelZhForReceipt(input.policy);
+  const optLabel =
+    input.optionId === "instant" ? "灵脉馈赠" : input.optionId === "boost" ? "静修余韵" : "髓潮归元";
+  let detail = "";
+  if (input.optionId === "instant") {
+    detail = `${optLabel} · 灵石 +${fmtDecimal(dSt)} · 唤灵髓 +${dSe}`;
+  } else if (input.optionId === "essence") {
+    detail = `${optLabel} · 唤灵髓 +${dSe} · 筑灵髓 +${dZl}`;
+  } else {
+    const leftMin = Math.ceil(offlineAdventureBoostLeftMs(state, now) / 60000);
+    const mul = offlineAdventureBoostMult(state, now);
+    detail = `${optLabel} · ×${mul.toFixed(2)} · 约 ${leftMin} 分`;
+    if (dSt.gt(0)) detail += ` · 灵石 +${fmtDecimal(dSt)}`;
+  }
+  if (input.rerolled) detail = `自动重掷 → ${detail}`;
+  state.offlineAdventure.lastAutoSettleReceipt = {
+    atMs: now,
+    policy: input.policy,
+    optionId: input.optionId,
+    rerolled: input.rerolled,
+    summaryLine: `${policyLabel} · ${detail}`,
+  };
+}
+
+/** 与面板回执同一口径的自动结算提示文案 */
+export function formatOfflineAdventureAutoSettleToast(
+  optionId: "instant" | "boost" | "essence",
+  rerolled: boolean,
+  boostLeftMin: number | null,
+): string {
+  const rerollPrefix = rerolled ? "已先自动重掷并" : "";
+  if (optionId === "instant") {
+    return `离线奇遇${rerollPrefix}按策略自动结算：灵脉馈赠。`;
+  }
+  if (optionId === "essence") {
+    return `离线奇遇${rerollPrefix}按策略自动结算：髓潮归元。`;
+  }
+  const left = Math.max(0, boostLeftMin ?? 0);
+  return `离线奇遇${rerollPrefix}按策略自动结算：静修余韵（约 ${left} 分）。`;
 }

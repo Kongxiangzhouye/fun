@@ -151,6 +151,16 @@ export interface OfflineAdventurePendingState {
   rerollCostStones: string;
 }
 
+/** 离线奇遇自动结算回执（持久化） */
+export interface OfflineAdventureLastAutoSettleReceipt {
+  atMs: number;
+  policy: "steady" | "boost" | "essence" | "smart";
+  optionId: OfflineAdventureOptionState["id"];
+  rerolled: boolean;
+  /** 一行可读摘要，含策略名与资源/增益要点 */
+  summaryLine: string;
+}
+
 /** 离线奇遇系统持久状态 */
 export interface OfflineAdventureState {
   pending: OfflineAdventurePendingState | null;
@@ -168,6 +178,8 @@ export interface OfflineAdventureState {
   autoRerollEnabled: boolean;
   /** 自动重掷预算上限（灵石）；超出则不自动重掷 */
   autoRerollBudgetStones: string;
+  /** 最近一次自动策略结算摘要（仅在一次成功的自动结算后写入；关闭自动策略不会清除） */
+  lastAutoSettleReceipt: OfflineAdventureLastAutoSettleReceipt | null;
 }
 
 export type EstateCommissionType = "resource" | "combat" | "cultivation";

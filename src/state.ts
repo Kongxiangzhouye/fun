@@ -198,6 +198,7 @@ export function createInitialState(): GameState {
       autoPolicy: "steady",
       autoRerollEnabled: false,
       autoRerollBudgetStones: "0",
+      lastAutoSettleReceipt: null,
     },
     estateCommission: createEmptyEstateCommissionState(),
     spiritArrayLevel: 0,

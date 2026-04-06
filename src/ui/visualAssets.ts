@@ -604,6 +604,8 @@ export const UI_OFFLINE_AUTO_REROLL_TOGGLE = asset("offline-auto-reroll-toggle.s
 export const UI_OFFLINE_AUTO_REROLL_BUDGET = asset("offline-auto-reroll-budget.svg");
 /** 离线奇遇 · pending 异常降级展示徽记 */
 export const UI_OFFLINE_PENDING_FALLBACK = asset("offline-pending-fallback.svg");
+/** 离线奇遇 · 自动策略执行回执条左侧图标 */
+export const UI_OFFLINE_AUTO_RECEIPT_DECO = asset("offline-auto-receipt-deco.svg");
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);

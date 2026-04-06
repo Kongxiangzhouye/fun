@@ -34,6 +34,7 @@ import {
   UI_OFFLINE_AUTO_REROLL_TOGGLE,
   UI_OFFLINE_AUTO_REROLL_BUDGET,
   UI_OFFLINE_PENDING_FALLBACK,
+  UI_OFFLINE_AUTO_RECEIPT_DECO,
 } from "./visualAssets";
 
 function rerollHint(state: GameState): string {
@@ -103,6 +104,15 @@ interface OfflineAdventurePanelModel {
   decisionGoHub: "estate" | "battle";
   decisionGoSub: "idle" | "dungeon";
   decisionGoTarget: string;
+  /** 自动策略回执区：无持久化时由开关+pending 派生，供 Step3 覆盖 data-* */
+  autoReceiptState: "disabled" | "armed" | "idle";
+  autoReceiptBadgeLabel: string;
+  autoReceiptBadgeClass: "status-badge--ready" | "status-badge--pending";
+  autoReceiptSummary: string;
+  /** 最近一次自动结算一行摘要（持久化 lastAutoSettleReceipt） */
+  autoReceiptLastLine: string;
+  autoReceiptLastOptionAttr: string;
+  autoReceiptLastRerolledAttr: "" | "0" | "1";
 }
 
 function autoPolicyLabelZh(policy: "steady" | "boost" | "essence" | "smart"): string {
@@ -262,6 +272,38 @@ function buildOfflineAdventurePanelModel(
     decisionGoSub = "idle";
     decisionGoTarget = "#offline-adventure-panel";
   }
+  const autoReceiptState: "disabled" | "armed" | "idle" = !autoPolicyEnabled
+    ? "disabled"
+    : pending
+      ? "armed"
+      : "idle";
+  const lastReceipt = state.offlineAdventure.lastAutoSettleReceipt;
+  const autoReceiptLastLine = lastReceipt?.summaryLine ?? "—";
+  const autoReceiptLastOptionAttr = lastReceipt?.optionId ?? "";
+  const autoReceiptLastRerolledAttr: "" | "0" | "1" = lastReceipt
+    ? lastReceipt.rerolled
+      ? "1"
+      : "0"
+    : "";
+  const autoReceiptBadgeLabel =
+    autoReceiptState === "disabled" ? "未启用" : autoReceiptState === "armed" ? "待执行" : "待命";
+  const autoReceiptBadgeClass: "status-badge--ready" | "status-badge--pending" =
+    autoReceiptState === "armed" ? "status-badge--ready" : "status-badge--pending";
+  const autoReceiptSummary = (() => {
+    if (autoReceiptState === "disabled") {
+      return lastReceipt
+        ? "自动策略已关闭；下方保留最近一次自动结算摘要（关闭操作不会清空记录）。"
+        : "开启自动结算后，此处展示策略执行摘要与自动重掷标记。";
+    }
+    if (autoReceiptState === "armed") {
+      return `本轮将按「${autoPolicyLabelZh(autoPolicy)}」尝试自动结算；${
+        autoRerollEnabled ? "自动重掷已纳入预算判定。" : "自动重掷关闭。"
+      }`;
+    }
+    return lastReceipt
+      ? "当前无待结算奇遇；最近一次自动结算摘要见下方。"
+      : "当前无待结算奇遇；完成一次自动结算后，此处将显示执行摘要。";
+  })();
   return {
     pending,
     pendingVisualState,
@@ -314,6 +356,13 @@ function buildOfflineAdventurePanelModel(
     decisionGoHub,
     decisionGoSub,
     decisionGoTarget,
+    autoReceiptState,
+    autoReceiptBadgeLabel,
+    autoReceiptBadgeClass,
+    autoReceiptSummary,
+    autoReceiptLastLine,
+    autoReceiptLastOptionAttr,
+    autoReceiptLastRerolledAttr,
   };
 }
 
@@ -324,7 +373,7 @@ export function renderOfflineAdventurePanel(
   offlineResonanceTypeZh: (type: "instant" | "boost" | "essence" | null) => string,
 ): string {
   const vm = buildOfflineAdventurePanelModel(state, now, offlineResonanceTypeZh);
-  return `<section class="panel offline-event-panel" id="offline-adventure-panel" data-offline-panel="adventure">
+  return `<section class="panel offline-event-panel" id="offline-adventure-panel" data-offline-panel="adventure" data-binder-scope="offline-adventure">
       <div class="panel-title-art-row panel-title-art-row--sub">
         <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_BADGE}" alt="" width="24" height="24" loading="lazy" />
         <h2>离线奇遇三选一</h2>
@@ -361,6 +410,7 @@ export function renderOfflineAdventurePanel(
         id="offline-decision-panel"
         data-offline-decision-state="${vm.decisionState}"
         data-offline-decision-recommend="${vm.autoPolicy}"
+        data-binder-target="offline-decision"
       >
         <p class="hint sm offline-decision-title" id="offline-decision-title">
           <img src="${vm.decisionIcon}" alt="" width="14" height="14" loading="lazy" />
@@ -375,13 +425,23 @@ export function renderOfflineAdventurePanel(
           data-offline-go-hub="${vm.decisionGoHub}"
           data-offline-go-sub="${vm.decisionGoSub}"
           data-offline-go-target="${vm.decisionGoTarget}"
+          data-offline-decision-go-variant="${vm.decisionGo}"
+          data-offline-decision-go-ready="${vm.decisionState === "ready" ? "true" : "false"}"
+          data-binder-target="offline-decision-go"
           ${vm.decisionState === "ready" ? "" : "disabled"}
         >
-          <img src="${UI_OFFLINE_DECISION_GO}" alt="" width="14" height="14" loading="lazy" />
-          <span id="offline-decision-go-label">${vm.decisionGoLabel}</span>
+          <span class="offline-decision-go-btn__content">
+            <img class="offline-decision-go-btn__icon" src="${UI_OFFLINE_DECISION_GO}" alt="" width="14" height="14" loading="lazy" />
+            <span id="offline-decision-go-label">${vm.decisionGoLabel}</span>
+          </span>
         </button>
       </div>
-      <div class="offline-control-surface offline-auto-config" data-offline-auto-state="${vm.pending ? "ready" : "standby"}">
+      <div
+        class="offline-control-surface offline-auto-config"
+        id="offline-auto-config-root"
+        data-offline-auto-state="${vm.pending ? "ready" : "standby"}"
+        data-binder-target="offline-auto-config"
+      >
         <div class="offline-auto-config-head">
           <p class="hint sm offline-auto-config-title">
             <img src="${UI_OFFLINE_AUTO_STRATEGY_STATUS}" alt="" width="14" height="14" loading="lazy" />
@@ -389,7 +449,7 @@ export function renderOfflineAdventurePanel(
           </p>
           <span class="status-badge ${vm.autoStatusClass}" id="offline-auto-status-badge">${vm.autoStatusLabel}</span>
         </div>
-        <div class="offline-auto-strategy-row" role="group" aria-label="离线奇遇自动策略">
+        <div class="offline-auto-strategy-row" role="group" aria-label="离线奇遇自动策略" data-binder-target="offline-auto-strategy-row">
           <button id="offline-auto-strategy-steady" class="btn offline-auto-strategy-btn ${vm.autoPolicyEnabled && vm.autoPolicy === "steady" ? "btn-primary" : ""}" type="button" data-offline-auto-strategy="steady">
             <img src="${UI_OFFLINE_AUTO_STRATEGY_STEADY}" alt="" width="14" height="14" loading="lazy" />
             稳态优先
@@ -406,6 +466,32 @@ export function renderOfflineAdventurePanel(
             <img src="${UI_OFFLINE_AUTO_STRATEGY_SMART}" alt="" width="14" height="14" loading="lazy" />
             智能策略
           </button>
+        </div>
+        <div
+          class="offline-auto-receipt"
+          id="offline-auto-receipt-root"
+          data-binder-target="offline-auto-receipt"
+          data-offline-auto-receipt-state="${vm.autoReceiptState}"
+          data-offline-auto-policy="${vm.autoPolicy}"
+          data-offline-auto-receipt-enabled="${vm.autoPolicyEnabled ? "1" : "0"}"
+        >
+          <div class="offline-auto-receipt__bar">
+            <img class="offline-auto-receipt__icon" src="${UI_OFFLINE_AUTO_RECEIPT_DECO}" alt="" width="20" height="20" loading="lazy" />
+            <div class="offline-auto-receipt__head">
+              <span class="offline-auto-receipt__title">自动策略执行回执</span>
+              <span class="status-badge ${vm.autoReceiptBadgeClass}" id="offline-auto-receipt-badge">${vm.autoReceiptBadgeLabel}</span>
+            </div>
+          </div>
+          <p class="hint sm offline-auto-receipt__summary" id="offline-auto-receipt-summary" data-offline-auto-receipt-line="summary">${vm.autoReceiptSummary}</p>
+          <p
+            class="hint sm offline-auto-receipt__detail"
+            id="offline-auto-receipt-detail"
+            data-offline-auto-receipt-line="last"
+            data-offline-auto-receipt-last-option="${vm.autoReceiptLastOptionAttr}"
+            data-offline-auto-receipt-last-rerolled="${vm.autoReceiptLastRerolledAttr}"
+          >
+            <span>最近一次自动结算：</span><span class="offline-auto-receipt__last" id="offline-auto-receipt-last-stub">${vm.autoReceiptLastLine}</span>
+          </p>
         </div>
         <p class="hint sm offline-auto-policy-line" id="offline-auto-policy-line">${vm.autoPolicyLabel}</p>
         <p class="hint sm offline-auto-tip-line" id="offline-auto-tip-line">${vm.autoTipLine}</p>
@@ -626,6 +712,26 @@ export function updateOfflineAdventurePanelReadouts(
   }
   if (autoPolicyLine) autoPolicyLine.textContent = vm.autoPolicyLabel;
   if (autoTipLine) autoTipLine.textContent = vm.autoTipLine;
+  const receiptRoot = document.getElementById("offline-auto-receipt-root");
+  if (receiptRoot) {
+    receiptRoot.setAttribute("data-offline-auto-receipt-state", vm.autoReceiptState);
+    receiptRoot.setAttribute("data-offline-auto-policy", vm.autoPolicy);
+    receiptRoot.setAttribute("data-offline-auto-receipt-enabled", vm.autoPolicyEnabled ? "1" : "0");
+  }
+  const receiptBadge = document.getElementById("offline-auto-receipt-badge");
+  if (receiptBadge) {
+    receiptBadge.textContent = vm.autoReceiptBadgeLabel;
+    receiptBadge.className = `status-badge ${vm.autoReceiptBadgeClass}`;
+  }
+  const receiptSummary = document.getElementById("offline-auto-receipt-summary");
+  if (receiptSummary) receiptSummary.textContent = vm.autoReceiptSummary;
+  const receiptLastStub = document.getElementById("offline-auto-receipt-last-stub");
+  if (receiptLastStub) receiptLastStub.textContent = vm.autoReceiptLastLine;
+  const receiptDetail = document.getElementById("offline-auto-receipt-detail");
+  if (receiptDetail) {
+    receiptDetail.setAttribute("data-offline-auto-receipt-last-option", vm.autoReceiptLastOptionAttr);
+    receiptDetail.setAttribute("data-offline-auto-receipt-last-rerolled", vm.autoReceiptLastRerolledAttr);
+  }
   if (pendingStateChip) pendingStateChip.setAttribute("data-offline-pending-state", vm.pendingVisualState);
   if (pendingHintLine) pendingHintLine.textContent = vm.pendingHintLine;
   if (pendingStatusBadge) {
@@ -679,6 +785,8 @@ export function updateOfflineAdventurePanelReadouts(
     decisionGoBtn.dataset.offlineGoHub = vm.decisionGoHub;
     decisionGoBtn.dataset.offlineGoSub = vm.decisionGoSub;
     decisionGoBtn.dataset.offlineGoTarget = vm.decisionGoTarget;
+    decisionGoBtn.dataset.offlineDecisionGoVariant = vm.decisionGo;
+    decisionGoBtn.dataset.offlineDecisionGoReady = vm.decisionState === "ready" ? "true" : "false";
     decisionGoBtn.className = `btn btn-primary offline-decision-go-btn offline-decision-go-btn--${vm.decisionGo}`;
   }
   if (decisionGoLabel) decisionGoLabel.textContent = vm.decisionGoLabel;

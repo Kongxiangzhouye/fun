@@ -243,13 +243,9 @@ import { bindDungeonInteractions } from "./ui/dungeonInteractions";
 import { showHtmlFeedbackToast, showPlainFeedbackToast } from "./ui/feedbackToasts";
 import { tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
 import {
-  claimAllCompletableWeeklyBounties,
-  claimWeeklyBountyMilestone,
-  claimWeeklyBountyTask,
   ensureWeeklyBountyWeek,
   formatWeeklyBountyFeedbackLine,
   noteWeeklyBountyBreakthrough,
-  weeklyBountyNextAction,
   weeklyBountyFeedbackState,
 } from "./systems/weeklyBounty";
 import {
@@ -307,16 +303,17 @@ import {
 } from "./systems/pets";
 import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "./systems/dungeonAffix";
 import {
-  chooseOfflineAdventureOption,
+  commitOfflineAdventureAutoReceipt,
   describeOfflineAdventureResonanceRule,
+  formatOfflineAdventureAutoSettleToast,
   maybeQueueOfflineAdventure,
   normalizeOfflineAdventureState,
   offlineAdventureBoostLeftMs,
   offlineAdventureBoostMult,
   previewOfflineAdventureResonance,
-  rerollOfflineAdventureOptions,
   tryAutoSettleOfflineAdventurePending,
 } from "./systems/offlineAdventure";
+import { bindOfflinePanelAndWeeklyBountyEvents } from "./ui/offlineWeeklyBinder";
 import {
   abandonEstateCommission,
   acceptEstateCommission,
@@ -976,21 +973,25 @@ function toastFastForwardTimelineHint(adventureQueued: boolean, fastForwardSec: 
 }
 
 function maybeAutoSettleOfflineAdventure(now: number, source: "loop" | "resume" | "init" | "ui"): boolean {
+  const economyBefore = {
+    spiritStones: state.spiritStones,
+    summonEssence: state.summonEssence,
+    zhuLingEssence: state.zhuLingEssence,
+  };
+  const policy = state.offlineAdventure.autoPolicy;
   const auto = tryAutoSettleOfflineAdventurePending(state, now);
   if (!auto.settled || !auto.optionId) return false;
+  commitOfflineAdventureAutoReceipt(state, now, {
+    policy,
+    optionId: auto.optionId,
+    rerolled: auto.rerolled,
+    economyBefore,
+  });
   tryCompleteAchievements(state);
-  const rerollPrefix = auto.rerolled ? "已先自动重掷并" : "";
   if (source !== "loop") {
-    if (auto.optionId === "boost") {
-      const leftMin = Math.ceil(offlineAdventureBoostLeftMs(state, now) / 60000);
-      tryToast(`离线奇遇${rerollPrefix}按策略自动结算：静修余韵（约 ${leftMin} 分）。`);
-    } else if (auto.optionId === "instant") {
-      tryToast(`离线奇遇${rerollPrefix}按策略自动结算：灵脉馈赠。`);
-    } else if (auto.optionId === "essence") {
-      tryToast(`离线奇遇${rerollPrefix}按策略自动结算：髓潮归元。`);
-    } else {
-      tryToast(`离线奇遇${rerollPrefix}按策略自动结算。`);
-    }
+    const boostLeftMin =
+      auto.optionId === "boost" ? Math.ceil(offlineAdventureBoostLeftMs(state, now) / 60000) : null;
+    tryToast(formatOfflineAdventureAutoSettleToast(auto.optionId, auto.rerolled, boostLeftMin));
   }
   return true;
 }
@@ -4024,7 +4025,7 @@ function renderAch(): string {
 }
 
 function bindEvents(rb: Decimal, _slots: number): void {
-  const applyHub = (hub: HubId): void => {
+  const applyHubSideEffects = (hub: HubId): void => {
     activeHub = hub;
     if (hub !== "cultivate") deckModalSlot = null;
     if (hub !== "character") gearDetailSlot = null;
@@ -4036,10 +4037,13 @@ function bindEvents(rb: Decimal, _slots: number): void {
       state.tutorialStep = 5;
       saveGame(state);
     }
+  };
+  const applyHub = (hub: HubId): void => {
+    applyHubSideEffects(hub);
     render();
   };
   const routeByOfflineDecision = (hub: HubId, sub: string, targetSelector: string): void => {
-    applyHub(hub);
+    applyHubSideEffects(hub);
     if (hub === "estate") {
       if (sub === "idle" || sub === "vein" || sub === "garden" || sub === "array") {
         estateSub = sub;
@@ -4640,101 +4644,23 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   });
 
-  document.querySelectorAll("[data-offline-choice]").forEach((el) => {
-    el.addEventListener("click", () => {
-      const id = (el as HTMLElement).dataset.offlineChoice;
-      if (id !== "instant" && id !== "boost" && id !== "essence") return;
-      const t = nowMs();
-      if (!chooseOfflineAdventureOption(state, id, t)) {
-        toast("当前没有可结算的离线奇遇。");
-        return;
-      }
-      tryCompleteAchievements(state);
-      saveGame(state);
-      if (id === "instant") {
-        toast("已选择灵脉馈赠：奖励已到账。");
-      } else if (id === "essence") {
-        toast("已选择髓潮归元：唤灵髓与筑灵髓已到账。");
-      } else {
-        const leftMin = Math.ceil(offlineAdventureBoostLeftMs(state, t) / 60000);
-        toast(`已选择静修余韵：挂机增益状态已更新（约 ${leftMin} 分）。${offlineBoostRenewRuleText()}`);
-      }
-      render();
-    });
+  bindOfflinePanelAndWeeklyBountyEvents({
+    state,
+    getNow: nowMs,
+    render,
+    saveGame,
+    toast,
+    fmtDecimal,
+    offlineBoostRenewRuleText,
+    maybeAutoSettleOfflineAdventure,
+    tryCompleteAchievements,
+    updateTopResourcePillsAndVigor,
+    totalCardsInPool,
+    routeByOfflineDecision,
+    isBountyPanelVisible: () => activeHub === "cultivate" && cultivateSub === "bounty",
+    playBountyClaimBurstFx,
   });
-  document.querySelectorAll("[data-offline-reroll]").forEach((el) => {
-    el.addEventListener("click", () => {
-      const t = nowMs();
-      const result = rerollOfflineAdventureOptions(state, t);
-      if (!result.ok) {
-        if (result.reason === "no_pending") toast("当前没有可重掷的离线奇遇。");
-        else if (result.reason === "already_rerolled") toast("本轮离线奇遇已重掷过一次。");
-        else toast(`灵石不足：重掷需 ${fmtDecimal(new Decimal(result.costStones))}。`);
-        return;
-      }
-      saveGame(state);
-      toast(`重掷完成：已消耗 ${fmtDecimal(new Decimal(result.costStones))} 灵石，并刷新三选一。`);
-      render();
-    });
-  });
-  document.querySelectorAll("[data-offline-auto-strategy]").forEach((el) => {
-    el.addEventListener("click", () => {
-      const strategy = (el as HTMLElement).dataset.offlineAutoStrategy;
-      if (strategy !== "steady" && strategy !== "boost" && strategy !== "essence" && strategy !== "smart") return;
-      const t = nowMs();
-      if (state.offlineAdventure.autoPolicyEnabled && state.offlineAdventure.autoPolicy === strategy) {
-        state.offlineAdventure.autoPolicyEnabled = false;
-        toast("离线奇遇自动结算已关闭。");
-      } else {
-        state.offlineAdventure.autoPolicyEnabled = true;
-        state.offlineAdventure.autoPolicy = strategy;
-        const strategyText =
-          strategy === "boost"
-            ? "增益优先"
-            : strategy === "essence"
-              ? "髓潮优先"
-              : strategy === "smart"
-                ? "智能策略"
-                : "稳态优先";
-        toast(`离线奇遇自动结算已开启：${strategyText}。`);
-      }
-      const autoSettled = maybeAutoSettleOfflineAdventure(t, "ui");
-      tryCompleteAchievements(state);
-      saveGame(state);
-      if (autoSettled) updateTopResourcePillsAndVigor(totalCardsInPool());
-      render();
-    });
-  });
-  document.querySelectorAll("[data-offline-auto-reroll-toggle]").forEach((el) => {
-    el.addEventListener("click", () => {
-      state.offlineAdventure.autoRerollEnabled = !state.offlineAdventure.autoRerollEnabled;
-      saveGame(state);
-      toast(state.offlineAdventure.autoRerollEnabled ? "离线奇遇自动重掷已开启。" : "离线奇遇自动重掷已关闭。");
-      render();
-    });
-  });
-  document.querySelectorAll("[data-offline-auto-reroll-budget-input]").forEach((el) => {
-    const input = el as HTMLInputElement;
-    const apply = () => {
-      const raw = Number.isFinite(Number(input.value)) ? Number(input.value) : 0;
-      const budget = Math.max(0, Math.floor(raw));
-      state.offlineAdventure.autoRerollBudgetStones = String(budget);
-      saveGame(state);
-      render();
-    };
-    input.addEventListener("change", apply);
-    input.addEventListener("blur", apply);
-  });
-  document.querySelectorAll("[data-offline-go]").forEach((el) => {
-    el.addEventListener("click", () => {
-      const node = el as HTMLElement;
-      const hub = node.dataset.offlineGoHub;
-      const sub = node.dataset.offlineGoSub ?? "";
-      const targetSelector = node.dataset.offlineGoTarget ?? "#offline-adventure-panel";
-      if (hub !== "estate" && hub !== "battle") return;
-      routeByOfflineDecision(hub, sub, targetSelector);
-    });
-  });
+
   document.querySelectorAll("[data-estate-commission-accept]").forEach((el) => {
     el.addEventListener("click", () => {
       const t = nowMs();
@@ -4901,82 +4827,6 @@ function bindEvents(rb: Decimal, _slots: number): void {
       for (const a of newly) toastAchievement(a);
       render();
     });
-  });
-
-  document.querySelectorAll("[data-bounty-claim]").forEach((el) => {
-    el.addEventListener("click", () => {
-      const id = (el as HTMLElement).dataset.bountyClaim;
-      if (!id) return;
-      const t = nowMs();
-      if (claimWeeklyBountyTask(state, id, t)) {
-        playBountyClaimBurstFx(el as HTMLElement);
-        tryCompleteAchievements(state);
-        saveGame(state);
-        const fb = weeklyBountyFeedbackState(state, t);
-        toast(`悬赏奖励已领取（${formatWeeklyBountyFeedbackLine(fb)}）`);
-        updateTopResourcePillsAndVigor(totalCardsInPool());
-        if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
-          render();
-        }
-      } else {
-        toast("无法领取：未达成或本周已领过。");
-        if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
-          render();
-        }
-      }
-    });
-  });
-
-  document.querySelectorAll("[data-bounty-milestone-claim]").forEach((el) => {
-    el.addEventListener("click", () => {
-      const id = (el as HTMLElement).dataset.bountyMilestoneClaim;
-      if (!id) return;
-      const t = nowMs();
-      if (claimWeeklyBountyMilestone(state, id, t)) {
-        playBountyClaimBurstFx(el as HTMLElement);
-        tryCompleteAchievements(state);
-        saveGame(state);
-        const fb = weeklyBountyFeedbackState(state, t);
-        toast(`里程奖励已领取（${formatWeeklyBountyFeedbackLine(fb)}）`);
-        updateTopResourcePillsAndVigor(totalCardsInPool());
-        if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
-          render();
-        }
-      } else {
-        toast("无法领取：进度不足或本周已领过。");
-        if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
-          render();
-        }
-      }
-    });
-  });
-
-  document.getElementById("btn-bounty-claim-all")?.addEventListener("click", () => {
-    const t = nowMs();
-    const trigger = document.getElementById("btn-bounty-claim-all");
-    const r = claimAllCompletableWeeklyBounties(state, t);
-    if (r.claimedTasks + r.claimedMilestones <= 0) {
-      toast("当前没有可领取的悬赏或里程奖励。");
-      if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
-        render();
-      }
-      return;
-    }
-    playBountyClaimBurstFx(trigger);
-    tryCompleteAchievements(state);
-    saveGame(state);
-    const fb = weeklyBountyFeedbackState(state, t);
-    const next = weeklyBountyNextAction(state, t);
-    toast(
-      `已领取 ${r.claimedTasks} 条悬赏、${r.claimedMilestones} 档里程：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardSummonEssence} · 筑灵髓 +${r.rewardZhuLingEssence}（${formatWeeklyBountyFeedbackLine(fb)}）`,
-    );
-    if (next) {
-      toast(`下一步建议：${next.title}（${next.progress}/${next.target}）`);
-    }
-    updateTopResourcePillsAndVigor(totalCardsInPool());
-    if (!refreshBountyPanelLiveIfVisible(state, t, activeHub === "cultivate" && cultivateSub === "bounty")) {
-      render();
-    }
   });
 
   if (!delegatedPanelClickListenersBound) {

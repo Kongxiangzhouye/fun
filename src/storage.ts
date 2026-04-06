@@ -365,6 +365,15 @@ export function serialize(state: GameState): string {
           autoPolicy: state.offlineAdventure.autoPolicy,
           autoRerollEnabled: state.offlineAdventure.autoRerollEnabled,
           autoRerollBudgetStones: state.offlineAdventure.autoRerollBudgetStones,
+          lastAutoSettleReceipt: state.offlineAdventure.lastAutoSettleReceipt
+            ? {
+                atMs: state.offlineAdventure.lastAutoSettleReceipt.atMs,
+                policy: state.offlineAdventure.lastAutoSettleReceipt.policy,
+                optionId: state.offlineAdventure.lastAutoSettleReceipt.optionId,
+                rerolled: !!state.offlineAdventure.lastAutoSettleReceipt.rerolled,
+                summaryLine: state.offlineAdventure.lastAutoSettleReceipt.summaryLine,
+              }
+            : null,
         }
       : {
           pending: null,
@@ -376,6 +385,7 @@ export function serialize(state: GameState): string {
           autoPolicy: "steady",
           autoRerollEnabled: false,
           autoRerollBudgetStones: "0",
+          lastAutoSettleReceipt: null,
         },
     estateCommission: {
       offer: state.estateCommission.offer ? { ...state.estateCommission.offer, reward: { ...state.estateCommission.offer.reward } } : null,
@@ -618,6 +628,23 @@ export function deserialize(json: string): GameState {
         typeof (oa as { autoRerollBudgetStones?: unknown }).autoRerollBudgetStones === "string"
           ? (oa as { autoRerollBudgetStones?: string }).autoRerollBudgetStones || "0"
           : "0",
+      lastAutoSettleReceipt: (() => {
+        const raw = (oa as { lastAutoSettleReceipt?: unknown }).lastAutoSettleReceipt;
+        if (!raw || typeof raw !== "object") return null;
+        const r = raw as Record<string, unknown>;
+        const policy = r.policy;
+        const optionId = r.optionId;
+        const policyOk = policy === "steady" || policy === "boost" || policy === "essence" || policy === "smart";
+        const optOk = optionId === "instant" || optionId === "boost" || optionId === "essence";
+        if (!policyOk || !optOk || typeof r.summaryLine !== "string" || !Number.isFinite(r.atMs)) return null;
+        return {
+          atMs: Math.max(0, Math.floor(Number(r.atMs))),
+          policy,
+          optionId,
+          rerolled: !!r.rerolled,
+          summaryLine: r.summaryLine,
+        };
+      })(),
     };
   } else {
     st.offlineAdventure = {
@@ -630,6 +657,7 @@ export function deserialize(json: string): GameState {
       autoPolicy: "steady",
       autoRerollEnabled: false,
       autoRerollBudgetStones: "0",
+      lastAutoSettleReceipt: null,
     };
   }
   normalizeOfflineAdventureState(st, Date.now());
