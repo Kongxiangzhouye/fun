@@ -187,7 +187,9 @@ import {
   UI_OFFLINE_SUMMARY_BADGE,
   UI_OFFLINE_TRANSITION_SHINE,
   UI_DUNGEON_HIT_FLASH_DECO,
+  UI_DUNGEON_HIT_CONFIRM_RING_DECO,
   UI_DUNGEON_CRIT_BURST_DECO,
+  UI_DUNGEON_CRIT_ECHO_DECO,
   UI_DUNGEON_STAGGER_PULSE_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
@@ -4005,7 +4007,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
         tryCompleteAchievements(state);
         saveGame(state);
         const fb = weeklyBountyFeedbackState(state, t);
-        toast(`悬赏奖励已领取（已领 ${fb.claimed}/${fb.total}，可领 ${fb.claimable}）`);
+        toast(`悬赏奖励已领取（待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}）`);
         updateTopResourcePillsAndVigor(totalCardsInPool());
         if (activeHub === "cultivate" && cultivateSub === "bounty") {
           updateBountyPanelReadouts(state, t);
@@ -4031,7 +4033,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     saveGame(state);
     const fb = weeklyBountyFeedbackState(state, t);
     toast(
-      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（已领 ${fb.claimed}/${fb.total}）`,
+      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}）`,
     );
     updateTopResourcePillsAndVigor(totalCardsInPool());
     if (activeHub === "cultivate" && cultivateSub === "bounty") {
@@ -4693,8 +4695,8 @@ function loop(): void {
     if (layer) {
       for (const f of floatPopups) {
         if (state.dungeon.active) {
-          if (f.cls === "dmg-out") duelHitFlashAtMs = fxNow;
-          if (f.text === "暴击") duelCritBurstAtMs = fxNow;
+          if (f.cls === "dmg-out" || f.cls === "dmg-out-crit") duelHitFlashAtMs = fxNow;
+          if (f.cls === "dmg-out-crit" || f.text === "暴击") duelCritBurstAtMs = fxNow;
           if (f.text === "破绽") duelGuardBreakAtMs = fxNow;
         }
         const el = document.createElement("span");
@@ -4887,9 +4889,16 @@ function loop(): void {
         d.playerMax > 0 && d.playerHp / d.playerMax < 0.28,
       );
       mapEl.classList.toggle("duel-is-boss", !!(tgt?.isBoss));
-      mapEl.style.setProperty("--duel-hit-flash-deco", `url("${UI_DUNGEON_HIT_FLASH_DECO}")`);
-      mapEl.style.setProperty("--duel-crit-burst-deco", `url("${UI_DUNGEON_CRIT_BURST_DECO}")`);
+      const hitDecoSrc = d.duelComboStacks >= 3 ? UI_DUNGEON_HIT_CONFIRM_RING_DECO : UI_DUNGEON_HIT_FLASH_DECO;
+      const critDecoSrc = d.duelComboStacks >= 7 ? UI_DUNGEON_CRIT_ECHO_DECO : UI_DUNGEON_CRIT_BURST_DECO;
+      mapEl.style.setProperty("--duel-hit-flash-deco", `url("${hitDecoSrc}")`);
+      mapEl.style.setProperty("--duel-crit-burst-deco", `url("${critDecoSrc}")`);
       mapEl.style.setProperty("--duel-guard-break-deco", `url("${UI_DUNGEON_STAGGER_PULSE_DECO}")`);
+      const hitDecoEl = document.getElementById("dungeon-duel-fx-hit-deco") as HTMLImageElement | null;
+      const critDecoEl = document.getElementById("dungeon-duel-fx-crit-deco") as HTMLImageElement | null;
+      if (hitDecoEl && hitDecoEl.getAttribute("src") !== hitDecoSrc) hitDecoEl.setAttribute("src", hitDecoSrc);
+      if (critDecoEl && critDecoEl.getAttribute("src") !== critDecoSrc)
+        critDecoEl.setAttribute("src", critDecoSrc);
       const waveTxt = document.getElementById("duel-wave-pill-txt");
       if (waveTxt) waveTxt.textContent = `第 ${d.wave} 波`;
       const plHpWrap = document.getElementById("dungeon-pl-hp-wrap");

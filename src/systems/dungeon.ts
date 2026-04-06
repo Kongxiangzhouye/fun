@@ -564,7 +564,7 @@ export interface DungeonDamageFloat {
   nx: number;
   ny: number;
   text: string;
-  cls: "dmg-out" | "dmg-in" | "dmg-miss" | "dmg-special";
+  cls: "dmg-out" | "dmg-out-crit" | "dmg-in" | "dmg-miss" | "dmg-special";
 }
 
 const damageFloatQueue: DungeonDamageFloat[] = [];
@@ -575,7 +575,7 @@ function pushDamageFloat(
   nx: number,
   ny: number,
   text: string,
-  cls: "dmg-out" | "dmg-in" | "dmg-miss" | "dmg-special",
+  cls: "dmg-out" | "dmg-out-crit" | "dmg-in" | "dmg-miss" | "dmg-special",
 ): void {
   damageFloatQueue.push({ nx, ny, text, cls });
 }
@@ -1730,7 +1730,12 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
         d.duelFervor = Math.min(DUEL_FERVOR_MAX, d.duelFervor + 6);
         pushDamageFloat(0.54, 0.36, "暴击", "dmg-special");
       }
-      pushDamageFloat(fx, fy, String(Math.max(1, Math.round(hitDmg))), "dmg-out");
+      pushDamageFloat(
+        fx,
+        fy,
+        String(Math.max(1, Math.round(hitDmg))),
+        critRoll > 1 ? "dmg-out-crit" : "dmg-out",
+      );
       if (target.hp <= 0) {
         if (registerDungeonKill(state, d, target, now)) {
           syncBars(state, d);

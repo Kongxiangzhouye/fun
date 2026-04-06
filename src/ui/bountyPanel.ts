@@ -19,6 +19,7 @@ import {
   UI_BOUNTY_REALM_DECO,
   UI_BOUNTY_STREAK_BADGE,
   UI_BOUNTY_COMPLETE_BADGE,
+  UI_BOUNTY_PENDING_BADGE,
   UI_HEAD_BOUNTY,
 } from "./visualAssets";
 
@@ -50,7 +51,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
             ${deco}
             <h3>${t.title}</h3>
           </div>
-          <span class="bounty-status ${claimed ? "claimed" : done ? "done" : "prog"}">${claimed ? "已领" : done ? "可领" : "进行中"}</span>
+          <span class="bounty-status ${claimed ? "claimed" : done ? "done" : "pending"}">${claimed ? "已领" : done ? "可领" : "待完成"}</span>
         </div>
         <p class="hint sm">${t.desc}</p>
         <div class="bounty-bar-wrap"><div class="bounty-bar"><div class="bounty-bar-fill" style="width:${pct}%"></div></div>
@@ -72,8 +73,12 @@ export function renderBountyPanel(state: GameState, now: number): string {
       <p class="hint sm bounty-week-line">当前周次：<strong>${wk}</strong></p>
       <div class="bounty-feedback-row">
         <span class="bounty-feedback-pill">
+          <img class="bounty-feedback-ico" src="${UI_BOUNTY_PENDING_BADGE}" alt="" width="18" height="18" loading="lazy" />
+          <span id="bounty-feedback-pending">待完成 ${fb.pending} / ${fb.total}</span>
+        </span>
+        <span class="bounty-feedback-pill">
           <img class="bounty-feedback-ico" src="${UI_BOUNTY_STREAK_BADGE}" alt="" width="18" height="18" loading="lazy" />
-          <span id="bounty-feedback-complete">达成 ${fb.completed} / ${fb.total}</span>
+          <span id="bounty-feedback-claimable">可领 ${fb.claimable} / ${fb.total}</span>
         </span>
         <span class="bounty-feedback-pill ${fb.claimed >= fb.total ? "is-ready" : ""}">
           <img class="bounty-feedback-ico" src="${UI_BOUNTY_COMPLETE_BADGE}" alt="" width="18" height="18" loading="lazy" />
@@ -101,8 +106,10 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   const cn = fb.claimable;
   if (claimAllBtn) claimAllBtn.disabled = cn <= 0;
   if (claimAllLbl) claimAllLbl.textContent = `一键领取可领悬赏（${cn}）`;
-  const completeLbl = document.getElementById("bounty-feedback-complete");
-  if (completeLbl) completeLbl.textContent = `达成 ${fb.completed} / ${fb.total}`;
+  const pendingLbl = document.getElementById("bounty-feedback-pending");
+  if (pendingLbl) pendingLbl.textContent = `待完成 ${fb.pending} / ${fb.total}`;
+  const claimableLbl = document.getElementById("bounty-feedback-claimable");
+  if (claimableLbl) claimableLbl.textContent = `可领 ${fb.claimable} / ${fb.total}`;
   const claimedLbl = document.getElementById("bounty-feedback-claimed");
   if (claimedLbl) claimedLbl.textContent = `已领 ${fb.claimed} / ${fb.total}`;
   const claimPill = claimedLbl?.closest(".bounty-feedback-pill");
@@ -121,8 +128,8 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
     if (lbl) lbl.textContent = `${prog} / ${t.target}`;
     const status = card.querySelector(".bounty-status");
     if (status) {
-      status.className = `bounty-status ${claimed ? "claimed" : done ? "done" : "prog"}`;
-      status.textContent = claimed ? "已领" : done ? "可领" : "进行中";
+      status.className = `bounty-status ${claimed ? "claimed" : done ? "done" : "pending"}`;
+      status.textContent = claimed ? "已领" : done ? "可领" : "待完成";
     }
     const btn = card.querySelector("[data-bounty-claim]") as HTMLButtonElement | null;
     if (btn) {
