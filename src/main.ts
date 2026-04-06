@@ -145,6 +145,7 @@ import {
   UI_ACH_DUNGEON_DECO,
   UI_ACH_LOGIN_DECO,
   UI_ACH_BOUNTY_DECO,
+  UI_ACH_MERIDIAN_DECO,
   UI_SAVE_DOWNLOAD_DECO,
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
@@ -3181,7 +3182,9 @@ function renderAch(): string {
               ? `<img class="ach-deco-icon" src="${UI_ACH_LOGIN_DECO}" alt="" width="22" height="22" loading="lazy" />`
               : a.listDeco === "bounty"
                 ? `<img class="ach-deco-icon" src="${UI_ACH_BOUNTY_DECO}" alt="" width="22" height="22" loading="lazy" />`
-                : "";
+                : a.listDeco === "meridian"
+                  ? `<img class="ach-deco-icon" src="${UI_ACH_MERIDIAN_DECO}" alt="" width="22" height="22" loading="lazy" />`
+                  : "";
     html += `
       <div class="ach-item ${done ? "done" : ""} ${a.listDeco ? `ach-item--${a.listDeco}` : ""}">
         <div class="ach-item-main">

@@ -251,6 +251,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>固本窍</strong>：生命上限提升。</li>
           <li><strong>战意窍</strong>：幻域内攻击提升。</li>
           <li>各重效果与面板数值一致，并与其它乘区<strong>叠乘</strong>；灵窍进度<strong>跨轮回保留</strong>。</li>
+          <li>达到 <strong>3 重</strong>与<strong>五重圆满</strong>时可在<strong>成就</strong>领取额外奖励。</li>
         </ul>
       </details>
     </div>`;

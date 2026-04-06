@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty";
+  listDeco?: "forge" | "train" | "dungeon" | "login" | "bounty" | "meridian";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -295,6 +295,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardEssence: 55,
     listDeco: "forge",
   },
+  {
+    id: "dao_meridian_3",
+    title: "灵窍三明",
+    desc: "道韵灵窍达到 3 重",
+    rewardStones: 480,
+    rewardEssence: 20,
+    listDeco: "meridian",
+  },
+  {
+    id: "dao_meridian_5",
+    title: "灵窍贯通",
+    desc: "道韵灵窍五重圆满",
+    rewardStones: 1600,
+    rewardEssence: 45,
+    listDeco: "meridian",
+  },
 ];
 
 function hasUr(state: GameState): boolean {
@@ -408,6 +424,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 2;
     case "forge_celestial":
       return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 4;
+    case "dao_meridian_3":
+      return state.daoMeridian >= 3;
+    case "dao_meridian_5":
+      return state.daoMeridian >= 5;
     default:
       return false;
   }
