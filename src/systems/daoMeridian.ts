@@ -126,3 +126,15 @@ export function tryBuyDaoMeridian(state: GameState): boolean {
   state.daoMeridian += 1;
   return true;
 }
+
+/** 主循环：`uiPrefs.autoBuyDaoMeridian` 时连续贯通，返回本轮成功层数 */
+export function tryAutoBuyDaoMeridianIfPref(state: GameState): number {
+  if (!state.uiPrefs.autoBuyDaoMeridian) return 0;
+  let n = 0;
+  let guard = 0;
+  while (guard++ < DAO_MERIDIAN_MAX + 2) {
+    if (!tryBuyDaoMeridian(state)) break;
+    n += 1;
+  }
+  return n;
+}

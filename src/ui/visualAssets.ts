@@ -441,6 +441,8 @@ export const UI_DUNGEON_REALM_CLASSIC_FRAME_DECO = asset(DUNGEON_DUEL_UI_FILES.r
 export const UI_DUNGEON_REALM_VORTEX_FRAME_DECO = asset(DUNGEON_DUEL_UI_FILES.realmVortexFrameDeco);
 /** 道韵灵窍页标题装饰；与 `CHRONICLE_HEADERS_UI_FILES` 同源 */
 export const UI_HEAD_DAO_MERIDIAN = asset(CHRONICLE_HEADERS_UI_FILES.daoMeridianHead);
+/** 道韵灵窍 · 自动贯通开关旁 */
+export const UI_DAO_MERIDIAN_AUTO = asset("dao-meridian-auto.svg");
 /** 唤灵通鉴页标题 */
 export const UI_HEAD_CHRONICLE = asset(CHRONICLE_HEADERS_UI_FILES.chronicleHead);
 /** 通鉴页「最近铸灵」小标题旁装饰（与灵卡卷轴区分） */

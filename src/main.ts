@@ -246,7 +246,7 @@ import { renderSaveToolsPanel } from "./ui/saveToolsView";
 import { setupSaveToolsBridge } from "./ui/saveToolsBridge";
 import { bindDungeonInteractions } from "./ui/dungeonInteractions";
 import { showHtmlFeedbackToast, showPlainFeedbackToast } from "./ui/feedbackToasts";
-import { tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
+import { tryAutoBuyDaoMeridianIfPref, tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
 import {
   ensureWeeklyBountyWeek,
   formatWeeklyBountyFeedbackLine,
@@ -894,6 +894,8 @@ const SPIRIT_ARRAY_AUTO_TOAST_GAP_MS = 5500;
 let lastSpiritArrayAutoToastAtMs = 0;
 const BATTLE_SKILL_AUTO_TOAST_GAP_MS = 5500;
 let lastBattleSkillAutoToastAtMs = 0;
+const DAO_MERIDIAN_AUTO_TOAST_GAP_MS = 5500;
+let lastDaoMeridianAutoToastAtMs = 0;
 let lastCombatPower = 0;
 const COMBAT_POWER_POPUP_DURATION_MS = 1000;
 const COMBAT_POWER_POPUP_HOLD_MS = 520;
@@ -4230,6 +4232,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoFeedPets") state.uiPrefs.autoFeedPets = checked;
       else if (t === "autoUpgradeSpiritArray") state.uiPrefs.autoUpgradeSpiritArray = checked;
       else if (t === "autoPullBattleSkill") state.uiPrefs.autoPullBattleSkill = checked;
+      else if (t === "autoBuyDaoMeridian") state.uiPrefs.autoBuyDaoMeridian = checked;
       else return;
       saveGame(state);
       render();
@@ -5591,6 +5594,27 @@ function loop(): void {
         if (bsr) bsr.textContent = `当前：${describeBattleSkillLevels(state)}`;
         const btnPull = document.getElementById("btn-pull-battle-skill") as HTMLButtonElement | null;
         if (btnPull) btnPull.disabled = state.summonEssence < battleSkillPullCost();
+      }
+    }
+  }
+  if (
+    typeof document !== "undefined" &&
+    state.uiPrefs.autoBuyDaoMeridian &&
+    uLoop.tabDaoMeridian
+  ) {
+    const dmLayers = tryAutoBuyDaoMeridianIfPref(state);
+    if (dmLayers > 0) {
+      tryCompleteAchievements(state);
+      requestSave("灵窍自动贯通", true);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      if (now - lastDaoMeridianAutoToastAtMs >= DAO_MERIDIAN_AUTO_TOAST_GAP_MS) {
+        lastDaoMeridianAutoToastAtMs = now;
+        toast(`道韵灵窍已自动贯通 ${dmLayers} 层（道韵不足或已满层则停）`);
+      }
+      if (activeHub === "character" && characterSub === "meridian") {
+        render();
       }
     }
   }

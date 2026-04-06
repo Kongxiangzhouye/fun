@@ -1,6 +1,6 @@
 import type { GameState } from "../types";
 import { DAO_MERIDIAN_MAX, DAO_MERIDIAN_TIERS, nextDaoMeridianCost } from "../systems/daoMeridian";
-import { UI_HEAD_DAO_MERIDIAN } from "./visualAssets";
+import { UI_DAO_MERIDIAN_AUTO, UI_HEAD_DAO_MERIDIAN } from "./visualAssets";
 
 export function renderDaoMeridianPanel(state: GameState): string {
   const n = state.daoMeridian;
@@ -29,6 +29,11 @@ export function renderDaoMeridianPanel(state: GameState): string {
       <p class="hint">消耗<strong>道韵</strong>贯通灵窍，获得永久加成（<strong>轮回不重置</strong>）。自浅至深依次解锁。</p>
       <p class="hint sm">已贯通 <strong id="dao-meridian-count">${n}</strong> / ${DAO_MERIDIAN_MAX} 层 · 持有道韵 <strong id="dao-meridian-ess">${state.daoEssence}</strong></p>
       <div class="dao-meridian-list">${rows}</div>
+      <label class="dao-meridian-auto-row">
+        <input type="checkbox" id="chk-dao-meridian-auto" data-ui-pref="autoBuyDaoMeridian" ${state.uiPrefs.autoBuyDaoMeridian ? "checked" : ""} />
+        <img class="dao-meridian-auto-ico" src="${UI_DAO_MERIDIAN_AUTO}" alt="" width="18" height="18" loading="lazy" />
+        <span class="dao-meridian-auto-text">道韵足够时自动贯通下一层（可连续多层，直至不足或全部贯通）</span>
+      </label>
       <div class="dao-meridian-actions">
         <button type="button" class="btn ${canBuy ? "btn-primary" : ""}" id="btn-dao-meridian-buy" ${canBuy ? "" : "disabled"}>
           ${nextCost == null ? "已全部贯通" : `贯通下一层（${nextCost} 道韵）`}

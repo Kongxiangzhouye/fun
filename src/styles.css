@@ -10121,6 +10121,36 @@ p.gear-forge-tier-hint {
   margin-top: 4px;
 }
 
+.dao-meridian-auto-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(200, 170, 100, 0.38);
+  background: rgba(28, 22, 10, 0.48);
+  cursor: pointer;
+  user-select: none;
+}
+
+.dao-meridian-auto-row input {
+  margin-top: 3px;
+  accent-color: #d4a85c;
+}
+
+.dao-meridian-auto-ico {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.92;
+}
+
+.dao-meridian-auto-text {
+  font-size: 0.82rem;
+  color: #d8c8a8;
+  line-height: 1.45;
+}
+
 .dao-meridian-actions {
   margin-top: 4px;
 }

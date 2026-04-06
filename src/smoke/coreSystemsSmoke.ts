@@ -16,6 +16,7 @@ import { addStones } from "../stones";
 import { tryAutoFeedAllPetsIfPref } from "../systems/pets";
 import { tryAutoUpgradeSpiritArrayIfPref } from "../systems/spiritArray";
 import { tryAutoPullBattleSkillsIfPref } from "../systems/battleSkills";
+import { tryAutoBuyDaoMeridianIfPref } from "../systems/daoMeridian";
 import {
   chooseOfflineAdventureOption,
   commitOfflineAdventureAutoReceipt,
@@ -496,6 +497,18 @@ function runCelestialStashProgressSmoke(): void {
   assert.equal(p1.purchased, 1);
 }
 
+function runDaoMeridianAutoBuySmoke(): void {
+  const st = createInitialState();
+  st.daoEssence = 300;
+  st.daoMeridian = 0;
+  st.uiPrefs.autoBuyDaoMeridian = false;
+  assert.equal(tryAutoBuyDaoMeridianIfPref(st), 0);
+  st.uiPrefs.autoBuyDaoMeridian = true;
+  const n = tryAutoBuyDaoMeridianIfPref(st);
+  assert.ok(n >= 1, "auto dao meridian should buy at least one tier");
+  assert.ok(st.daoMeridian >= 1);
+}
+
 function runBattleSkillAutoPullSmoke(): void {
   const st = createInitialState();
   st.summonEssence = 400;
@@ -635,6 +648,7 @@ function main(): void {
   runPetAutoFeedPrefSmoke();
   runSpiritArrayAutoUpgradeSmoke();
   runBattleSkillAutoPullSmoke();
+  runDaoMeridianAutoBuySmoke();
   runWeeklyBountyAutoClaimSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
