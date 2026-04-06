@@ -15,6 +15,7 @@ import {
   UI_LORE_VEIN,
   UI_LORE_ELEMENTS,
   UI_LORE_PET,
+  UI_LORE_META,
   UI_RESONANCE_CORE,
 } from "./visualAssets";
 
@@ -173,6 +174,21 @@ export function renderGameLoreHtml(): string {
         <ul class="game-lore-list">
           <li><strong>上阵</strong>：点空阵位再点仓库，或先点仓库再点阵位；点已有卡的阵位可选中该卡。升阶需灵砂。</li>
           <li>境界达到 <strong>${REINCARNATION_REALM_REQ}</strong> 后可轮回：清空境界、灵石、卡组与持有卡牌；保留图鉴邂逅、成就与元强化。道韵按本轮灵石巅峰等规则结算。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_META}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 元强化与道韵</summary>
+        <ul class="game-lore-list">
+          <li><strong>轮回阁</strong>（养成→轮回）：境界≥<strong>十八重</strong>或已完成过轮回后，可见<strong>元强化</strong>与轮回说明。</li>
+          <li><strong>道韵</strong>：每次轮回结算获得，用于购买元强化；<strong>跨轮回保留</strong>。</li>
+          <li><strong>灵脉共鸣</strong>：每级全局挂机效率 +8%。</li>
+          <li><strong>祈愿加护</strong>：每级略提高唤引高稀有权重。</li>
+          <li><strong>额外槽位</strong>：每级卡组 +1 阵位，最多强化 2 级（总槽位上限 6）。</li>
+          <li><strong>轮回赠髓</strong>：每级提高轮回后的初始唤灵髓。</li>
+          <li><strong>灵石心印</strong>：每级灵石获取 +6%。</li>
+          <li>除「额外槽位」外，各条目最高可升至 <strong>20</strong> 级；花费道韵随等级递增。</li>
+          <li><strong>造化玉</strong>：与道韵不同，用于「角色」等处解锁便利功能（如十连、自动抽卡等），多来自成就等。</li>
         </ul>
       </details>
     </div>`;
