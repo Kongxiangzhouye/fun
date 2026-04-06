@@ -123,6 +123,7 @@ export function applyTick(state: GameState, now: number): void {
   ensureCelestialStashWeek(state, now);
   tickDailyLoginCalendar(state, now);
   tickDailyFortune(state, now);
+  tickEstateCommission(state, now);
   const elapsedSec = Math.max(0, (now - state.lastTick) / 1000);
   if (elapsedSec <= 0) return;
   let remainSec = Math.min(TICK_MAX_DT, elapsedSec);
@@ -138,7 +139,6 @@ export function applyTick(state: GameState, now: number): void {
     tickSkillTraining(state, dt);
     tickCombatHpRegen(state, dt);
     tickDungeon(state, dt, tickNow);
-    tickEstateCommission(state, tickNow);
     const ips = incomePerSecondAt(state, totalCardsInPool(), tickNow);
     if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips);
     addStones(state, ips.mul(dt));
@@ -263,14 +263,19 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
   });
   if (now < state.lastTick) {
     state.lastTick = now;
+    tickEstateCommission(state, now);
     return empty(0);
   }
   const raw = (now - state.lastTick) / 1000;
   const cap = maxOfflineSec(state);
   const dt = Math.min(cap, Math.max(0, raw));
-  if (dt < 1) return empty(raw);
+  if (dt < 1) {
+    tickEstateCommission(state, now);
+    return empty(raw);
+  }
   const advanced = advanceOfflineLikeTimeline(state, state.lastTick, dt, now);
   state.lastTick = now;
+  tickEstateCommission(state, now);
   return {
     stoneGain: advanced.gained,
     settledSec: advanced.settledSec,
@@ -286,5 +291,6 @@ export function fastForward(state: GameState, seconds: number, now = Date.now())
   const dt = Math.min(seconds, maxOfflineSec(state));
   if (dt <= 1e-6) return new Decimal(0);
   const advanced = advanceOfflineLikeTimeline(state, state.lastTick, dt, now);
+  tickEstateCommission(state, now);
   return advanced.gained;
 }

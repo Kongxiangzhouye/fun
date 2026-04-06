@@ -68,6 +68,10 @@ export function createEmptyEstateCommissionState(): EstateCommissionState {
     refreshCooldownUntilMs: 0,
     autoQueueEnabled: false,
     autoQueueStrategy: "same-type",
+    autoQueueLastResult: "none",
+    autoQueueLastAtMs: 0,
+    autoQueueLastOfferType: null,
+    autoQueueLastOfferTitle: "",
   };
 }
 
@@ -183,9 +187,16 @@ export function estateCommissionTimeLeftMs(state: GameState, now: number): numbe
   return Math.max(0, active.dueAtMs - now);
 }
 
-export function settleEstateCommission(state: GameState, now: number): boolean {
+export interface EstateCommissionSettleResult {
+  autoQueued: boolean;
+  autoQueueReason: "disabled" | "accepted" | "blocked_type" | "blocked_offer_missing";
+  nextOfferType: EstateCommissionType | null;
+  nextOfferTitle: string;
+}
+
+export function settleEstateCommission(state: GameState, now: number): EstateCommissionSettleResult | null {
   const active = state.estateCommission?.active;
-  if (!active || active.completedAtMs == null) return false;
+  if (!active || active.completedAtMs == null) return null;
   const completedType = active.offer.type;
   const nextStreak = Math.max(0, Math.floor(state.estateCommission.streak)) + 1;
   const reward = applyEstateRewardBonus(
@@ -203,14 +214,40 @@ export function settleEstateCommission(state: GameState, now: number): boolean {
   state.estateCommission.refreshCooldownUntilMs = 0;
   state.estateCommission.active = null;
   noteWeeklyBountyEstateCompletion(state, now);
+  let autoQueueReason: EstateCommissionSettleResult["autoQueueReason"] = "disabled";
+  let autoQueued = false;
+  let nextOfferType: EstateCommissionType | null = null;
+  let nextOfferTitle = "";
   if (state.estateCommission.autoQueueEnabled) {
     ensureEstateCommissionOffer(state, now);
     const offer = state.estateCommission.offer;
     const strategy = state.estateCommission.autoQueueStrategy;
-    const canAutoAccept = !!offer && (strategy === "any-type" || offer.type === completedType);
-    if (canAutoAccept) acceptEstateCommission(state, now);
+    if (!offer) {
+      autoQueueReason = "blocked_offer_missing";
+    } else {
+      nextOfferType = offer.type;
+      nextOfferTitle = offer.title;
+      const canAutoAccept = strategy === "any-type" || offer.type === completedType;
+      if (canAutoAccept && acceptEstateCommission(state, now)) {
+        autoQueueReason = "accepted";
+        autoQueued = true;
+      } else {
+        autoQueueReason = "blocked_type";
+      }
+    }
   }
-  return true;
+  state.estateCommission.autoQueueLastResult =
+    autoQueueReason === "accepted"
+      ? "accepted"
+      : autoQueueReason === "blocked_type"
+        ? "blocked_type"
+        : autoQueueReason === "blocked_offer_missing"
+          ? "blocked_offer_missing"
+          : "none";
+  state.estateCommission.autoQueueLastAtMs = now;
+  state.estateCommission.autoQueueLastOfferType = nextOfferType;
+  state.estateCommission.autoQueueLastOfferTitle = nextOfferTitle;
+  return { autoQueued, autoQueueReason, nextOfferType, nextOfferTitle };
 }
 
 export function abandonEstateCommission(state: GameState, now: number): boolean {
@@ -273,6 +310,28 @@ export function normalizeEstateCommissionState(state: GameState, now: number): v
   const autoQueueStrategy = (state.estateCommission as { autoQueueStrategy?: unknown }).autoQueueStrategy;
   if (autoQueueStrategy !== "same-type" && autoQueueStrategy !== "any-type") {
     state.estateCommission.autoQueueStrategy = "same-type";
+  }
+  const autoQueueLastResult = (state.estateCommission as { autoQueueLastResult?: unknown }).autoQueueLastResult;
+  if (
+    autoQueueLastResult !== "none" &&
+    autoQueueLastResult !== "accepted" &&
+    autoQueueLastResult !== "blocked_type" &&
+    autoQueueLastResult !== "blocked_offer_missing"
+  ) {
+    state.estateCommission.autoQueueLastResult = "none";
+  }
+  if (!Number.isFinite(state.estateCommission.autoQueueLastAtMs) || state.estateCommission.autoQueueLastAtMs < 0) {
+    state.estateCommission.autoQueueLastAtMs = 0;
+  }
+  if (
+    state.estateCommission.autoQueueLastOfferType !== "resource" &&
+    state.estateCommission.autoQueueLastOfferType !== "combat" &&
+    state.estateCommission.autoQueueLastOfferType !== "cultivation"
+  ) {
+    state.estateCommission.autoQueueLastOfferType = null;
+  }
+  if (typeof state.estateCommission.autoQueueLastOfferTitle !== "string") {
+    state.estateCommission.autoQueueLastOfferTitle = "";
   }
   const active = state.estateCommission.active;
   if (active) {

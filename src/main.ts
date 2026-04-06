@@ -324,7 +324,6 @@ import {
   setEstateCommissionAutoQueueEnabled,
   setEstateCommissionAutoQueueStrategy,
   settleEstateCommission,
-  tickEstateCommission,
 } from "./systems/estateCommission";
 import { elementDamageMultiplier } from "./systems/elementCombat";
 import { playerBattleElement } from "./systems/playerElement";
@@ -359,6 +358,13 @@ const RARITY_ZH: Record<Rarity, string> = {
 
 function rarityZh(r: Rarity): string {
   return RARITY_ZH[r] ?? r;
+}
+
+function estateCommissionTypeZh(tp: "resource" | "combat" | "cultivation" | null): string {
+  if (tp === "resource") return "资源";
+  if (tp === "combat") return "战斗";
+  if (tp === "cultivation") return "养成";
+  return "未知";
 }
 
 /** 界面数字短写（中文量级，避免英文 K/M/B） */
@@ -4617,7 +4623,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.querySelectorAll("[data-estate-commission-settle]").forEach((el) => {
     el.addEventListener("click", () => {
       const t = nowMs();
-      if (!settleEstateCommission(state, t)) {
+      const settleResult = settleEstateCommission(state, t);
+      if (!settleResult) {
         toast("委托尚未完成。");
         return;
       }
@@ -4625,10 +4632,17 @@ function bindEvents(rb: Decimal, _slots: number): void {
       tryCompleteAchievements(state);
       saveGame(state);
       const streak = state.estateCommission.streak;
-      const autoAccepted = !!state.estateCommission.active;
       const bounty = weeklyBountyFeedbackState(state, t);
+      const autoFeedback =
+        settleResult.autoQueueReason === "accepted"
+          ? ` 托管续单成功：已自动接取「${settleResult.nextOfferTitle}」。`
+          : settleResult.autoQueueReason === "blocked_type"
+            ? ` 托管未续单：当前策略要求同类型，下一单为${estateCommissionTypeZh(settleResult.nextOfferType)}。`
+            : settleResult.autoQueueReason === "blocked_offer_missing"
+              ? " 托管未续单：未生成可接取的下一单。"
+              : "";
       toast(
-        `委托结算完成，奖励已到账（连携 ${streak}）。周常进度：${formatWeeklyBountyFeedbackLine(bounty)}。${autoAccepted ? " 托管已自动接取下一单。" : ""}`,
+        `委托结算完成，奖励已到账（连携 ${streak}）。周常进度：${formatWeeklyBountyFeedbackLine(bounty)}。${autoFeedback}`,
       );
       updateTopResourcePillsAndVigor(totalCardsInPool());
       render();
@@ -5300,7 +5314,6 @@ function loop(): void {
   syncDecimalFormatFromState(state);
   const now = nowMs();
   normalizeOfflineAdventureState(state, now);
-  tickEstateCommission(state, now);
   updateZhuLingRateEstimate(now);
   ensureWeeklyBountyWeek(state, now);
   if (lastUiWeekKey !== state.weeklyBounty.weekKey) {
@@ -5974,7 +5987,6 @@ function loop(): void {
 function init(): void {
   const t = nowMs();
   normalizeOfflineAdventureState(state, t);
-  tickEstateCommission(state, t);
   ensureEstateCommissionOffer(state, t);
   ensureWeeklyBountyWeek(state, t);
   ensureCelestialStashWeek(state, t);

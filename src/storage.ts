@@ -380,6 +380,10 @@ export function serialize(state: GameState): string {
       refreshCooldownUntilMs: state.estateCommission.refreshCooldownUntilMs,
       autoQueueEnabled: state.estateCommission.autoQueueEnabled,
       autoQueueStrategy: state.estateCommission.autoQueueStrategy,
+      autoQueueLastResult: state.estateCommission.autoQueueLastResult,
+      autoQueueLastAtMs: state.estateCommission.autoQueueLastAtMs,
+      autoQueueLastOfferType: state.estateCommission.autoQueueLastOfferType,
+      autoQueueLastOfferTitle: state.estateCommission.autoQueueLastOfferTitle,
     },
     spiritArrayLevel: state.spiritArrayLevel,
     lastTunaMs: state.lastTunaMs,
@@ -620,6 +624,29 @@ export function deserialize(json: string): GameState {
       autoQueueEnabled: !!(data.estateCommission as { autoQueueEnabled?: unknown }).autoQueueEnabled,
       autoQueueStrategy:
         (data.estateCommission as { autoQueueStrategy?: unknown }).autoQueueStrategy === "any-type" ? "any-type" : "same-type",
+      autoQueueLastResult:
+        (data.estateCommission as { autoQueueLastResult?: unknown }).autoQueueLastResult === "accepted" ||
+        (data.estateCommission as { autoQueueLastResult?: unknown }).autoQueueLastResult === "blocked_type" ||
+        (data.estateCommission as { autoQueueLastResult?: unknown }).autoQueueLastResult === "blocked_offer_missing"
+          ? ((data.estateCommission as { autoQueueLastResult?: "accepted" | "blocked_type" | "blocked_offer_missing" })
+              .autoQueueLastResult ?? "none")
+          : "none",
+      autoQueueLastAtMs:
+        Number.isFinite((data.estateCommission as { autoQueueLastAtMs?: unknown }).autoQueueLastAtMs) &&
+        Number((data.estateCommission as { autoQueueLastAtMs?: unknown }).autoQueueLastAtMs) >= 0
+          ? Math.floor(Number((data.estateCommission as { autoQueueLastAtMs?: unknown }).autoQueueLastAtMs))
+          : 0,
+      autoQueueLastOfferType:
+        (data.estateCommission as { autoQueueLastOfferType?: unknown }).autoQueueLastOfferType === "resource" ||
+        (data.estateCommission as { autoQueueLastOfferType?: unknown }).autoQueueLastOfferType === "combat" ||
+        (data.estateCommission as { autoQueueLastOfferType?: unknown }).autoQueueLastOfferType === "cultivation"
+          ? ((data.estateCommission as { autoQueueLastOfferType?: "resource" | "combat" | "cultivation" })
+              .autoQueueLastOfferType ?? null)
+          : null,
+      autoQueueLastOfferTitle:
+        typeof (data.estateCommission as { autoQueueLastOfferTitle?: unknown }).autoQueueLastOfferTitle === "string"
+          ? String((data.estateCommission as { autoQueueLastOfferTitle?: unknown }).autoQueueLastOfferTitle)
+          : "",
     };
   }
   normalizeEstateCommissionState(st, Date.now());
@@ -938,6 +965,10 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
     refreshCooldownUntilMs: 0,
     autoQueueEnabled: false,
     autoQueueStrategy: "same-type",
+    autoQueueLastResult: "none",
+    autoQueueLastAtMs: 0,
+    autoQueueLastOfferType: null,
+    autoQueueLastOfferTitle: "",
   };
   st.trueEndingSeen = false;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 };

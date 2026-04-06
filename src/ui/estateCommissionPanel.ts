@@ -14,6 +14,8 @@ import {
   UI_ESTATE_COMMISSION_AUTO_QUEUE_OFF,
   UI_ESTATE_COMMISSION_AUTO_STRATEGY_ANY,
   UI_ESTATE_COMMISSION_AUTO_STRATEGY_SAME,
+  UI_ESTATE_COMMISSION_AUTO_FEEDBACK,
+  UI_ESTATE_COMMISSION_AUTO_NEXT,
   UI_ESTATE_COMMISSION_STREAK,
   UI_ESTATE_COMMISSION_REFRESH_COOLDOWN,
   UI_ESTATE_COMMISSION_REFRESH_BLOCKED,
@@ -22,6 +24,44 @@ import {
 
 function ecTypeZh(tp: string): string {
   return tp === "resource" ? "资源" : tp === "combat" ? "战斗" : "养成";
+}
+
+function autoQueuePolicyLine(state: GameState): string {
+  const ec = state.estateCommission;
+  return ec.autoQueueStrategy === "same-type"
+    ? "自动队列策略：同类型续签（下一单需与本次完成类型一致）"
+    : "自动队列策略：任意类型续签（结算后直接续接）";
+}
+
+function autoQueueNextLine(state: GameState): string {
+  const ec = state.estateCommission;
+  if (!ec.autoQueueEnabled) return "下一单预览：自动队列关闭";
+  if (ec.active) {
+    if (ec.autoQueueStrategy === "same-type") return `下一单预览：等待与当前类型一致（${ecTypeZh(ec.active.offer.type)}）`;
+    return "下一单预览：当前策略允许任意类型";
+  }
+  if (ec.offer) return `下一单预览：${ec.offer.title}（${ecTypeZh(ec.offer.type)}）`;
+  if (ec.autoQueueLastOfferTitle) {
+    return `下一单预览：${ec.autoQueueLastOfferTitle}（${ecTypeZh(ec.autoQueueLastOfferType ?? "resource")}）`;
+  }
+  return "下一单预览：暂未生成";
+}
+
+function autoQueueFeedbackLine(state: GameState): string {
+  const ec = state.estateCommission;
+  if (!ec.autoQueueEnabled) return "托管反馈：自动队列未启用。";
+  if (ec.autoQueueLastResult === "accepted") {
+    return ec.autoQueueLastOfferTitle
+      ? `托管反馈：已自动续单「${ec.autoQueueLastOfferTitle}」。`
+      : "托管反馈：已自动续单。";
+  }
+  if (ec.autoQueueLastResult === "blocked_type") {
+    return ec.autoQueueLastOfferType
+      ? `托管反馈：未续单（策略限制，下一单为${ecTypeZh(ec.autoQueueLastOfferType)}）。`
+      : "托管反馈：未续单（策略限制）。";
+  }
+  if (ec.autoQueueLastResult === "blocked_offer_missing") return "托管反馈：未续单（未生成下一单）。";
+  return "托管反馈：等待当前委托结算后判定。";
 }
 
 export function renderEstateCommissionPanel(
@@ -115,6 +155,20 @@ export function renderEstateCommissionPanel(
             : "托管已开启：结算后将自动接取下一单（不限类型）。"
           : "托管已关闭：结算后需手动接取下一单。"
       }</p>
+      <div class="estate-commission-auto-info-block">
+        <p class="hint sm estate-commission-auto-policy" id="estate-commission-auto-policy">
+          <img src="${UI_ESTATE_COMMISSION_AUTO_FEEDBACK}" alt="" width="14" height="14" loading="lazy" />
+          ${autoQueuePolicyLine(state)}
+        </p>
+        <p class="hint sm estate-commission-auto-next" id="estate-commission-auto-next">
+          <img src="${UI_ESTATE_COMMISSION_AUTO_NEXT}" alt="" width="14" height="14" loading="lazy" />
+          ${autoQueueNextLine(state)}
+        </p>
+        <p class="hint sm estate-commission-auto-feedback" id="estate-commission-auto-feedback">
+          <img src="${UI_ESTATE_COMMISSION_AUTO_FEEDBACK}" alt="" width="14" height="14" loading="lazy" />
+          ${autoQueueFeedbackLine(state)}
+        </p>
+      </div>
       ${
         ecActive
           ? `<div class="estate-commission-card ${ecReady ? "is-ready" : ""}">
@@ -169,6 +223,9 @@ export function updateEstateCommissionPanelReadouts(
   const refreshLineEl = document.getElementById("estate-commission-refresh-line");
   const settleBtn = document.getElementById("btn-estate-commission-settle") as HTMLButtonElement | null;
   const autoTipEl = document.getElementById("estate-commission-auto-tip");
+  const autoPolicyEl = document.getElementById("estate-commission-auto-policy");
+  const autoNextEl = document.getElementById("estate-commission-auto-next");
+  const autoFeedbackEl = document.getElementById("estate-commission-auto-feedback");
   const streak = getEstateCommissionStreakPreview(state);
   if (specLineEl) {
     specLineEl.textContent = streak.specializationType
@@ -205,5 +262,20 @@ export function updateEstateCommissionPanelReadouts(
         ? "托管已开启：仅在下一单与本次完成类型一致时自动接取。"
         : "托管已开启：结算后将自动接取下一单（不限类型）。"
       : "托管已关闭：结算后需手动接取下一单。";
+  }
+  if (autoPolicyEl) {
+    autoPolicyEl.innerHTML =
+      `<img src="${UI_ESTATE_COMMISSION_AUTO_FEEDBACK}" alt="" width="14" height="14" loading="lazy" />` +
+      autoQueuePolicyLine(state);
+  }
+  if (autoNextEl) {
+    autoNextEl.innerHTML =
+      `<img src="${UI_ESTATE_COMMISSION_AUTO_NEXT}" alt="" width="14" height="14" loading="lazy" />` +
+      autoQueueNextLine(state);
+  }
+  if (autoFeedbackEl) {
+    autoFeedbackEl.innerHTML =
+      `<img src="${UI_ESTATE_COMMISSION_AUTO_FEEDBACK}" alt="" width="14" height="14" loading="lazy" />` +
+      autoQueueFeedbackLine(state);
   }
 }

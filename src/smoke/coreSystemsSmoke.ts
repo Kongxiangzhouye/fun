@@ -4,6 +4,7 @@ import { applyTick, catchUpOffline, fastForward, maxOfflineSec } from "../gameLo
 import { ensureWeeklyBountyWeek, currentWeekKey, noteWeeklyBountyEstateCompletion } from "../systems/weeklyBounty";
 import { ensureCelestialStashWeek } from "../systems/celestialStash";
 import { chooseOfflineAdventureOption } from "../systems/offlineAdventure";
+import { acceptEstateCommission, settleEstateCommission } from "../systems/estateCommission";
 import {
   serialize,
   deserialize,
@@ -243,6 +244,20 @@ function runFastForwardCrossWeekSyncSmoke(): void {
   assert.ok(st.lastTunaMs >= startMs, "fast-forward should follow offline auto tuna timing");
 }
 
+function runEstateCommissionDueSettleSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.lastTick = now;
+  assert.equal(acceptEstateCommission(st, now), true, "commission should be accepted");
+  assert.ok(st.estateCommission.active, "active commission should exist after accept");
+  if (!st.estateCommission.active) return;
+  st.estateCommission.active.dueAtMs = now + 500;
+  applyTick(st, now + 500);
+  assert.ok(st.estateCommission.active?.completedAtMs != null, "commission should become completable at due time");
+  const settled = settleEstateCommission(st, now + 500);
+  assert.ok(settled, "completed commission should be settleable");
+}
+
 function main(): void {
   runOfflineCapSmoke();
   runWeeklySyncSmoke();
@@ -255,6 +270,7 @@ function main(): void {
   runApplyTickSegmentedCatchUpSmoke();
   runAutoSalvageAccumulatorRemainderSmoke();
   runFastForwardCrossWeekSyncSmoke();
+  runEstateCommissionDueSettleSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");
 }

@@ -242,6 +242,10 @@ export const UI_OFFLINE_REROLL_READY = asset(OFFLINE_SETTLEMENT_UI_FILES.rerollR
 export const UI_OFFLINE_REROLL_LOCKED = asset(OFFLINE_SETTLEMENT_UI_FILES.rerollLocked);
 /** 离线奇遇：重掷成本图标 */
 export const UI_OFFLINE_REROLL_COST = asset(OFFLINE_SETTLEMENT_UI_FILES.rerollCost);
+/** 离线奇遇：下一档共鸣层数预览 */
+export const UI_OFFLINE_RESONANCE_NEXT_STACK = asset("offline-resonance-next-stack.svg");
+/** 离线奇遇：下一档共鸣加成预览 */
+export const UI_OFFLINE_RESONANCE_NEXT_BONUS = asset("offline-resonance-next-bonus.svg");
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
 
 /** 离线奇遇三选一 · 选项图标（内联 SVG） */
@@ -556,6 +560,10 @@ export const UI_ESTATE_COMMISSION_AUTO_QUEUE_OFF = asset("icon-estate-commission
 export const UI_ESTATE_COMMISSION_AUTO_STRATEGY_SAME = asset("icon-estate-commission-auto-same-type.svg");
 /** 洞府委托 · 托管任意类型策略 */
 export const UI_ESTATE_COMMISSION_AUTO_STRATEGY_ANY = asset("icon-estate-commission-auto-any-type.svg");
+/** 洞府委托 · 托管续单反馈 */
+export const UI_ESTATE_COMMISSION_AUTO_FEEDBACK = asset("icon-estate-commission-auto-feedback.svg");
+/** 洞府委托 · 托管下一单预览 */
+export const UI_ESTATE_COMMISSION_AUTO_NEXT = asset("icon-estate-commission-auto-next.svg");
 /** 周常悬赏 · 状态快照徽记 */
 export const UI_WEEKLY_BOUNTY_STATE_SYNC = asset("icon-weekly-bounty-state-sync.svg");
 /** 闭关快进 · 触发离线奇遇提示 */

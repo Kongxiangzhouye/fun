@@ -3770,6 +3770,22 @@ h1 {
   gap: 6px;
 }
 
+.offline-resonance-next-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 6px;
+}
+
+.offline-resonance-next-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(118, 152, 224, 0.2);
+  background: rgba(28, 42, 74, 0.28);
+}
+
 .offline-panel-summary {
   display: inline-flex;
   align-items: center;
@@ -4043,6 +4059,24 @@ h1 {
 
 .estate-commission-auto-tip {
   margin: 0 0 8px;
+}
+
+.estate-commission-auto-info-block {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.estate-commission-auto-policy,
+.estate-commission-auto-next,
+.estate-commission-auto-feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 6px 8px;
+  border: 1px solid rgba(114, 162, 204, 0.24);
+  background: rgba(20, 33, 50, 0.48);
 }
 
 @media (max-width: 768px) {

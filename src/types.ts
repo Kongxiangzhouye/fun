@@ -164,6 +164,7 @@ export interface OfflineAdventureState {
 
 export type EstateCommissionType = "resource" | "combat" | "cultivation";
 export type EstateCommissionAutoStrategy = "same-type" | "any-type";
+export type EstateCommissionAutoQueueLastResult = "none" | "accepted" | "blocked_type" | "blocked_offer_missing";
 
 export interface EstateCommissionReward {
   spiritStones: string;
@@ -200,6 +201,14 @@ export interface EstateCommissionState {
   autoQueueEnabled: boolean;
   /** 托管策略：同类型优先 / 任意类型 */
   autoQueueStrategy: EstateCommissionAutoStrategy;
+  /** 最近一次结算后的托管续单结果（用于提示） */
+  autoQueueLastResult: EstateCommissionAutoQueueLastResult;
+  /** 最近一次可见托管反馈的时间戳 */
+  autoQueueLastAtMs: number;
+  /** 最近一次托管看到的下一单类型 */
+  autoQueueLastOfferType: EstateCommissionType | null;
+  /** 最近一次托管看到的下一单标题 */
+  autoQueueLastOfferTitle: string;
 }
 
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */
