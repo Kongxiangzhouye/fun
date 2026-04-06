@@ -4,6 +4,7 @@
  */
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
 import { GEAR_BASES } from "../data/gearBases";
+import { PET_DEFS } from "../data/pets";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -276,16 +277,10 @@ export const GARDEN_CROP_IMG: Record<GardenCropId, string> = {
   jade_mist: asset("garden-crop-jade.svg"),
 };
 
-/** 灵宠立绘（SVG） */
-export const PET_PORTRAIT: Record<PetId, string> = {
-  yuling: asset("pet-yuling.svg"),
-  zijing: asset("pet-zijing.svg"),
-  chiyan: asset("pet-chiyan.svg"),
-  qingluan: asset("pet-qingluan.svg"),
-  xuangui: asset("pet-xuangui.svg"),
-  linghu: asset("pet-linghu.svg"),
-  qilin: asset("pet-qilin.svg"),
-};
+/** 灵宠立绘（SVG）；与 `PET_DEFS[].artFile` 同源 */
+export const PET_PORTRAIT: Record<PetId, string> = Object.fromEntries(
+  PET_DEFS.map((p) => [p.id, asset(p.artFile)]),
+) as Record<PetId, string>;
 
 export function cardPortraitClass(rarity: string, element: Element): string {
   return `card-portrait rarity-${rarity} el-${element}`;

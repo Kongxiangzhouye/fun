@@ -56,6 +56,7 @@ import {
   type PullResult,
 } from "./gacha";
 import { CARDS, getCard } from "./data/cards";
+import { rarityRank } from "./data/rarityRank";
 import { tryCompleteAchievements, drainAchievementToastQueue, ACHIEVEMENTS, type AchievementDef } from "./achievements";
 import { countUniqueOwned, SAVE_VERSION } from "./state";
 import pkg from "../package.json";
@@ -929,10 +930,14 @@ function showGachaRevealOverlay(results: PullResult[], bonusStones: number, toas
 }
 
 function highestGearRarityInList(gears: GearItem[]): Rarity {
-  const order: Rarity[] = ["N", "R", "SR", "SSR", "UR"];
   let best: Rarity = "N";
+  let bestRank = rarityRank(best);
   for (const g of gears) {
-    if (order.indexOf(g.rarity) > order.indexOf(best)) best = g.rarity;
+    const rr = rarityRank(g.rarity);
+    if (rr > bestRank) {
+      best = g.rarity;
+      bestRank = rr;
+    }
   }
   return best;
 }

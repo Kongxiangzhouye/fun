@@ -1,5 +1,6 @@
 import type { GameState, PetId, Rarity } from "../types";
 import { nextRand01 } from "../rng";
+import { rarityRank } from "../data/rarityRank";
 import { PET_DEFS } from "../data/pets";
 import { PET_PULL_COST, addPetXp, petSystemUnlocked } from "./pets";
 
@@ -23,8 +24,6 @@ function pickPetRarity(state: GameState): Rarity {
   return "UR";
 }
 
-const RARITY_ORDER: Rarity[] = ["N", "R", "SR", "SSR", "UR"];
-
 export function pullPet(state: GameState): {
   ok: boolean;
   msg: string;
@@ -47,8 +46,7 @@ export function pullPet(state: GameState): {
   const had = state.pets[def.id] != null;
 
   if (had) {
-    const idx = RARITY_ORDER.indexOf(def.rarity);
-    const bonusXp = 38 + Math.max(0, idx) * 26;
+    const bonusXp = 38 + Math.max(0, rarityRank(def.rarity)) * 26;
     addPetXp(state, def.id, bonusXp);
     return {
       ok: true,
