@@ -4,6 +4,7 @@
   "states": [
     { "id": "gear", "file": "art-empty-gear.svg" },
     { "id": "pet", "file": "art-empty-pet.svg" },
-    { "id": "unlock", "file": "art-empty-unlock.svg" }
+    { "id": "unlock", "file": "art-empty-unlock.svg" },
+    { "id": "weekly", "file": "art-empty-weekly.svg" }
   ]
 }

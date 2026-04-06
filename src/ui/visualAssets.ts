@@ -109,11 +109,13 @@ export const UI_DATA_STATS_DOWNLOAD_DECO = asset(PLAYER_PROFILE_UI_FILES.dataSta
 export const UI_PANEL_CORNER = asset(PANEL_CHROME_UI_FILES.panelCorner);
 export const UI_BG_SPARKLES = asset(PANEL_CHROME_UI_FILES.bgSparkles);
 /** 离线收益摘要条左侧装饰 */
-export const UI_OFFLINE_SUMMARY_DECO = asset(PANEL_CHROME_UI_FILES.offlineSummaryDeco);
+export const UI_OFFLINE_SUMMARY_DECO = asset(OFFLINE_SETTLEMENT_UI_FILES.summaryDeco);
 /** 离线结算摘要徽记（用于摘要标题或关键收益行） */
 export const UI_OFFLINE_SUMMARY_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.summaryBadge);
 /** 离线结算过渡光带（可用于摘要区块分隔） */
 export const UI_OFFLINE_TRANSITION_SHINE = asset(OFFLINE_SETTLEMENT_UI_FILES.transitionShine);
+/** 离线收益为空时的小徽记（预留） */
+export const UI_OFFLINE_IDLE_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.idleBadge);
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
 
 /** 分区标题与空状态插画（自绘 SVG）；主分区头图与 `HUB_SECTION_HEADER_UI_FILES` 同源 */
@@ -302,6 +304,7 @@ export const UI_HEAD_SPIRIT_ARRAY = asset(FEATURE_PAGE_HEADS_UI_FILES.spiritArra
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);
 export const UI_EMPTY_UNLOCK = asset(EMPTY_STATE_UI_FILES.unlock);
+export const UI_EMPTY_WEEKLY = asset(EMPTY_STATE_UI_FILES.weekly);
 
 /** 灵田作物图标（自绘 SVG）；与 `GARDEN_CROPS[].artFile` 同源 */
 export const GARDEN_CROP_IMG: Record<GardenCropId, string> = Object.fromEntries(

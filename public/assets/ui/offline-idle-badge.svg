@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Offline idle badge">
+  <defs>
+    <linearGradient id="idleOrb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d6f8ff"/>
+      <stop offset="0.56" stop-color="#97d5f6"/>
+      <stop offset="1" stop-color="#4f79cf"/>
+    </linearGradient>
+    <linearGradient id="idleRing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8fbff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#9fd7f3" stop-opacity="0.45"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="64" cy="104" rx="30" ry="8" fill="#89cbed" fill-opacity="0.24"/>
+  <circle cx="64" cy="64" r="42" fill="none" stroke="url(#idleRing)" stroke-width="6"/>
+  <circle cx="64" cy="64" r="26" fill="url(#idleOrb)"/>
+  <rect x="60" y="42" width="8" height="24" rx="4" fill="#edf9ff"/>
+  <circle cx="64" cy="76" r="6" fill="#edf9ff"/>
+  <path d="M30 64h18M80 64h18" stroke="#d7f3ff" stroke-width="3" stroke-linecap="round" stroke-opacity="0.7"/>
+</svg>
