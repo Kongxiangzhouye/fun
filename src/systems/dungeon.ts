@@ -1520,6 +1520,20 @@ export function requestBossChallenge(state: GameState): void {
   spawnMobsForWave(state);
 }
 
+/** 幻域阶段统一口径：普通清剿 / 首领前哨 / 首领战 */
+export type DungeonCombatPhase = "trash" | "boss_prep" | "boss_fight";
+
+/** 供系统与 UI 统一读取，避免「状态已切换但展示仍沿旧口径」 */
+export function dungeonCombatPhase(state: GameState): DungeonCombatPhase {
+  const d = state.dungeon;
+  if (!d.active) return "trash";
+  const isBossWave = d.wave % 5 === 0;
+  if (!isBossWave) return "trash";
+  if (state.dungeonDeferBoss) return "boss_prep";
+  const live = d.mobs.find((m) => m.hp > 0);
+  return live?.isBoss ? "boss_fight" : "trash";
+}
+
 export function canEnterDungeon(state: GameState, now: number): boolean {
   return !state.dungeon.active && now >= state.dungeon.deathCooldownUntil;
 }

@@ -289,6 +289,7 @@ export function weeklyBountyFeedbackState(state: GameState, now: number): Weekly
     }
   }
   const total = WEEKLY_BOUNTY_TASKS.length;
-  const hasOverdue = pending > 0 && claimable <= 0;
+  // overdue 仅表示“已有可领但尚未结清”，避免跨周重置后误报
+  const hasOverdue = claimable > 0;
   return { total, completed, pending, claimed, claimable, hasOverdue };
 }

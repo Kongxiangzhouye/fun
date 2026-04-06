@@ -7,6 +7,7 @@ const indexFile = path.join(uiDir, "ui-art-manifest-index.json");
 const allowedAssetExt = new Set([".svg", ".png", ".jpg", ".jpeg", ".webp"]);
 const nameRegex = /^[a-z0-9]+(?:[-_][a-z0-9]+)*\.(svg|png|jpg|jpeg|webp)$/;
 const preferredAssetArrayKeys = ["assets", "items", "entries", "icons", "files", "list"];
+const REQUIRED_DUNGEON_PHASE_BADGE_IDS = new Set(["phaseTrashBadgeDeco", "phaseBossPrepBadgeDeco"]);
 
 /** @param {string} p */
 function readJson(p) {
@@ -142,6 +143,14 @@ for (const manifestName of indexManifestFiles) {
     const assetPath = path.join(uiDir, asset.file);
     if (!fs.existsSync(assetPath)) {
       errors.push(`Asset missing on disk referenced by ${rel(manifestPath)} -> ${assetsKey}[${idx}]: ${rel(assetPath)}`);
+    }
+  }
+  if (manifestName === "dungeon-duel-ui-manifest.json") {
+    const manifestAssetIds = new Set(assets.map((a) => getAssetId(a)).filter(Boolean));
+    for (const reqId of REQUIRED_DUNGEON_PHASE_BADGE_IDS) {
+      if (!manifestAssetIds.has(reqId)) {
+        errors.push(`Missing required dungeon phase badge id in ${rel(manifestPath)} -> ${assetsKey}: ${reqId}`);
+      }
     }
   }
 }

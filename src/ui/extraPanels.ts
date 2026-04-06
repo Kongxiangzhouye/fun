@@ -9,6 +9,7 @@ import {
 import {
   canEnterDungeon,
   describeWaveProfile,
+  dungeonCombatPhase,
   dungeonFrontierWave,
   essenceRewardTotalFloat,
   packSizeForWave,
@@ -111,23 +112,17 @@ function fmtEta(sec: number | null): string {
   return `约 ${Math.floor(sec / 60)} 分钟`;
 }
 
-/** 战斗中阶段：清剿 / 首领前小怪 / 真正首领（用于界面拆分） */
-export function getDungeonCombatPhase(state: GameState): "trash" | "boss_prep" | "boss_fight" {
-  const d = state.dungeon;
-  if (!d.active) return "trash";
-  const isBossWave = d.wave % 5 === 0;
-  if (isBossWave && state.dungeonDeferBoss) return "boss_prep";
-  const live = d.mobs.find((m) => m.hp > 0);
-  if (isBossWave && live?.isBoss) return "boss_fight";
-  return "trash";
-}
-
 /** 幻域战斗中：波次、锁定、掉落说明等合并为一段文字（由 loop 刷新） */
 export function formatDungeonActiveMeta(state: GameState, now: number): string {
   const d = state.dungeon;
   const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
   const fmtSessEss = (n: number) => (n >= 200 ? n.toFixed(1) : n.toFixed(2));
-  const waveEssF = essenceRewardTotalFloat(d.wave, state, d.wave % 5 === 0, d.rewardModeRepeat);
+  const waveEssF = essenceRewardTotalFloat(
+    d.wave,
+    state,
+    dungeonCombatPhase(state) === "boss_fight",
+    d.rewardModeRepeat,
+  );
   const nPk = packSizeForWave(d.wave + 1);
   const tgt = d.mobs.find((m) => m.hp > 0);
   const lockLine = tgt
@@ -154,7 +149,12 @@ export function formatDungeonActiveMetaBrief(state: GameState, now: number): str
   const d = state.dungeon;
   const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
   const fmtSessEss = (n: number) => (n >= 200 ? n.toFixed(1) : n.toFixed(2));
-  const waveEssF = essenceRewardTotalFloat(d.wave, state, d.wave % 5 === 0, d.rewardModeRepeat);
+  const waveEssF = essenceRewardTotalFloat(
+    d.wave,
+    state,
+    dungeonCombatPhase(state) === "boss_fight",
+    d.rewardModeRepeat,
+  );
   const tgt = d.mobs.find((m) => m.hp > 0);
   const iframesLeft = now < d.dodgeIframesUntil ? Math.ceil((d.dodgeIframesUntil - now) / 1000) : 0;
   const dodgeTip = `点屏闪避 · 耗体${DUNGEON_DODGE_STAMINA_COST} · 化劲${(DUNGEON_DODGE_IFRAMES_MS / 1000).toFixed(1)}秒${iframesLeft > 0 ? ` · 余${iframesLeft}秒` : ""}`;
@@ -172,7 +172,7 @@ export function formatDungeonInterMeta(): string {
 function renderDungeonMapHtml(state: GameState): string {
   const d = state.dungeon;
   if (!d.active) return "";
-  const combatPhase = getDungeonCombatPhase(state);
+  const combatPhase = dungeonCombatPhase(state);
   const phaseClass =
     combatPhase === "boss_fight"
       ? "dungeon-duel-stage--phase-boss-fight"
@@ -429,7 +429,7 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
     (d.mobs.some((m) => m.hp > 0) || d.mobs.length === 0);
   const showIdleBossBtn =
     !d.active && !sanctuaryIdle && state.dungeonDeferBoss && fw % 5 === 0 && canEnter;
-  const combatPhase = d.active ? getDungeonCombatPhase(state) : "trash";
+  const combatPhase = d.active ? dungeonCombatPhase(state) : "trash";
   const phaseBadgeSrc =
     combatPhase === "boss_fight"
       ? UI_DUEL_BOSS_BADGE
