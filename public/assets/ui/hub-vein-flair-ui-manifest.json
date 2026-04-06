@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "naming": "Filenames from HUB_VEIN_FLAIR_UI_FILES in src/data/hubVeinFlairUi.ts; served as public/assets/ui/<file>.",
+  "assets": [
+    { "id": "hubSectionFlair", "file": "hub-section-flair.svg" },
+    { "id": "veinGongmingLink", "file": "deco-vein-gongming-link.svg" }
+  ]
+}

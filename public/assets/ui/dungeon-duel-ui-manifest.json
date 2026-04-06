@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "naming": "Filenames from DUNGEON_DUEL_UI_FILES in src/data/dungeonDuelUi.ts; served as public/assets/ui/<file>.",
+  "assets": [
+    { "id": "readinessDeco", "file": "deco-dungeon-readiness-ribbon.svg" },
+    { "id": "affixDeco", "file": "deco-dungeon-affix.svg" },
+    { "id": "duelDeco", "file": "deco-dungeon-duel.svg" },
+    { "id": "gaugeSword", "file": "deco-duel-gauge-sword.svg" },
+    { "id": "gaugeThreat", "file": "deco-duel-gauge-threat.svg" },
+    { "id": "idleMist", "file": "deco-dungeon-idle-mist.svg" },
+    { "id": "waveBadge", "file": "deco-duel-wave-badge.svg" },
+    { "id": "frameCorner", "file": "deco-duel-corner.svg" },
+    { "id": "interWaveDeco", "file": "deco-dungeon-inter-wave.svg" },
+    { "id": "footTimerDeco", "file": "deco-dungeon-foot-timer.svg" },
+    { "id": "panelLiveStrip", "file": "deco-dungeon-panel-live.svg" },
+    { "id": "enterDeco", "file": "deco-dungeon-enter-btn.svg" },
+    { "id": "leaveDeco", "file": "deco-dungeon-leave-btn.svg" },
+    { "id": "bossBadge", "file": "deco-duel-boss-badge.svg" },
+    { "id": "realmClassic", "file": "deco-dungeon-realm-classic.svg" },
+    { "id": "realmVortex", "file": "deco-dungeon-realm-vortex.svg" }
+  ]
+}
