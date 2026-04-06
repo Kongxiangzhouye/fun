@@ -159,6 +159,8 @@ export const UI_BOUNTY_COMPLETE_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.completeBad
 export const UI_BOUNTY_PENDING_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.pendingBadge);
 /** 周常悬赏 · 周目标逾期/未达成状态徽记 */
 export const UI_BOUNTY_OVERDUE_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.overdueBadge);
+/** 周常悬赏 · 周循环末日提醒徽记（高频收尾冲刺提示） */
+export const UI_BOUNTY_LAST_DAY_ALERT_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.lastDayAlertBadge);
 /** 周常悬赏 · 幻域任务高频反馈聚焦徽记 */
 export const UI_BOUNTY_WAVES_FOCUS_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.wavesFocusBadge);
 /** 周常悬赏 · 周节奏冲刺反馈徽记（周循环末段强化提示） */
@@ -201,6 +203,8 @@ export const UI_DUNGEON_COMBO_CHAIN_DECO = asset(DUNGEON_DUEL_UI_FILES.comboChai
 export const UI_DUNGEON_PHASE_TRASH_BADGE_DECO = asset(DUNGEON_DUEL_UI_FILES.phaseTrashBadgeDeco);
 /** 阵线对决 · 阶段条首领前哨阶段徽记 */
 export const UI_DUNGEON_PHASE_BOSS_PREP_BADGE_DECO = asset(DUNGEON_DUEL_UI_FILES.phaseBossPrepBadgeDeco);
+/** 阵线对决 · 反击窗口提示徽记（高频攻防切换提示） */
+export const UI_DUNGEON_COUNTER_WINDOW_BADGE_DECO = asset(DUNGEON_DUEL_UI_FILES.counterWindowBadgeDeco);
 /** 阵线对决 · 招架成功火花反馈（近战高频防反阶段） */
 export const UI_DUNGEON_PARRY_SPARK_DECO = asset(DUNGEON_DUEL_UI_FILES.parrySparkDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 弱点命中提示反馈（高压窗口弱点确认，2026-04-06 P1 二次打磨） */

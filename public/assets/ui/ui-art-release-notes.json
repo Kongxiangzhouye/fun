@@ -3,6 +3,15 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Weekly + dungeon feedback badge closure (Module 3)",
+      "highlights": [
+        "Added weekly last-day-alert badge SVG to improve end-of-week high-frequency claim/finish urgency recognition.",
+        "Added dungeon counter-window badge SVG to reinforce attack-defense switch readability in dense duel loops.",
+        "Synced weekly/dungeon source maps, manifest entries, visual-asset export keys, and manifest-index wording with no business-logic changes."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Offline settlement idle badge wiring (P1)",
       "highlights": [
         "Mapped and exported offline idle badge key for low-yield/idle settlement toast usage.",

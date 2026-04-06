@@ -15,6 +15,7 @@
     { "id": "completeBadge", "file": "bounty-weekly-complete-badge.svg" },
     { "id": "pendingBadge", "file": "bounty-weekly-pending-badge.svg" },
     { "id": "overdueBadge", "file": "bounty-weekly-overdue-badge.svg" },
+    { "id": "lastDayAlertBadge", "file": "bounty-weekly-last-day-alert-badge.svg" },
     { "id": "wavesFocusBadge", "file": "bounty-weekly-waves-focus-badge.svg" },
     { "id": "surgeBadge", "file": "bounty-weekly-surge-badge.svg" }
   ]

@@ -14,6 +14,7 @@
     { "id": "comboChainDeco", "file": "deco-dungeon-combo-chain.svg" },
     { "id": "phaseTrashBadgeDeco", "file": "deco-dungeon-phase-trash-badge.svg" },
     { "id": "phaseBossPrepBadgeDeco", "file": "deco-dungeon-phase-boss-prep-badge.svg" },
+    { "id": "counterWindowBadgeDeco", "file": "deco-dungeon-counter-window-badge.svg" },
     { "id": "parrySparkDeco", "file": "deco-dungeon-parry-spark.svg" },
     { "id": "weaknessPingDeco", "file": "deco-dungeon-weakness-ping.svg" },
     { "id": "staggerPulseDeco", "file": "deco-dungeon-stagger-pulse.svg" },

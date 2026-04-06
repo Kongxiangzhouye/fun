@@ -1,0 +1,19 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="dungeon counter window badge">
+  <defs>
+    <linearGradient id="counterWindowA" x1="16" y1="16" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7FBFF"/>
+      <stop offset="0.52" stop-color="#7FD1FF"/>
+      <stop offset="1" stop-color="#67F0C5"/>
+    </linearGradient>
+    <radialGradient id="counterWindowB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(48 48) rotate(90) scale(30)">
+      <stop stop-color="#EAF6FF" stop-opacity="0.74"/>
+      <stop offset="1" stop-color="#EAF6FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="48" cy="48" r="35" fill="#0B1529" stroke="url(#counterWindowA)" stroke-width="2.4"/>
+  <circle cx="48" cy="48" r="26" fill="url(#counterWindowB)" opacity="0.75"/>
+  <path d="M48 22L57 39H75L60 50L66 69L48 58L30 69L36 50L21 39H39L48 22Z" fill="#E6F3FF" opacity="0.9"/>
+  <path d="M48 27L54 39H67L56 47L61 60L48 52L35 60L40 47L29 39H42L48 27Z" fill="url(#counterWindowA)" opacity="0.94"/>
+  <path d="M18 48H31M65 48H78M48 18V31M48 65V78" stroke="#C7E4FF" stroke-width="2.2" stroke-linecap="round" opacity="0.84"/>
+  <circle cx="48" cy="48" r="4.2" fill="#F7FCFF"/>
+</svg>
