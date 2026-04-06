@@ -78,6 +78,11 @@ function pickRarity(state: GameState): Rarity {
 
 function randomCardOfRarity(state: GameState, rarity: Rarity): CardDef {
   const pool = CARD_POOL_BY_RARITY[rarity];
+  if (pool.length <= 0) {
+    const fallback = CARD_POOL_BY_RARITY.N;
+    const fi = Math.floor(nextRand01(state) * fallback.length);
+    return fallback[Math.min(fi, fallback.length - 1)]!;
+  }
   const idx = Math.floor(nextRand01(state) * pool.length);
   return pool[Math.min(idx, pool.length - 1)]!;
 }
