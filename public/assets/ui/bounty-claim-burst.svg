@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Weekly bounty claim burst">
+  <defs>
+    <linearGradient id="burstCore" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7dc"/>
+      <stop offset="0.55" stop-color="#ffd978"/>
+      <stop offset="1" stop-color="#f6a93c"/>
+    </linearGradient>
+    <linearGradient id="burstRing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff3c4" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#ffbf4f" stop-opacity="0.75"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke-linecap="round">
+    <circle cx="64" cy="64" r="46" stroke="url(#burstRing)" stroke-width="7" opacity="0.8"/>
+    <circle cx="64" cy="64" r="34" stroke="#fff9e2" stroke-opacity="0.75" stroke-width="2.5"/>
+    <path d="M64 18v16M64 94v16M18 64h16M94 64h16M31 31l11 11M86 86l11 11M31 97l11-11M86 42l11-11"
+      stroke="#ffe7a0" stroke-width="5" opacity="0.9"/>
+  </g>
+  <path d="M64 34 74 54 96 57 80 73 84 95 64 84 44 95 48 73 32 57 54 54Z" fill="url(#burstCore)"/>
+  <circle cx="64" cy="64" r="13" fill="#fff9eb" fill-opacity="0.65"/>
+</svg>

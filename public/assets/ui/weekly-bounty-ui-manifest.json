@@ -8,6 +8,7 @@
     { "id": "garden", "file": "bounty-garden-deco.svg" },
     { "id": "tuna", "file": "bounty-tuna-deco.svg" },
     { "id": "realm", "file": "bounty-realm-deco.svg" },
-    { "id": "claimAll", "file": "bounty-claim-all-deco.svg" }
+    { "id": "claimAll", "file": "bounty-claim-all-deco.svg" },
+    { "id": "claimBurst", "file": "bounty-claim-burst.svg" }
   ]
 }

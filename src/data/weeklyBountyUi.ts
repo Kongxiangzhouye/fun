@@ -7,4 +7,5 @@ export const WEEKLY_BOUNTY_UI_FILES = {
   tuna: "bounty-tuna-deco.svg",
   realm: "bounty-realm-deco.svg",
   claimAll: "bounty-claim-all-deco.svg",
+  claimBurst: "bounty-claim-burst.svg",
 } as const;

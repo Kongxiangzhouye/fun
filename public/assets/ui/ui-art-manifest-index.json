@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Entry points for static UI art manifests (HUD, empty states, gacha pool, panel chrome, player profile, hub headers, hub vein flair, dungeon duel, chronicle headers, achievements list, lore journal, feature page heads, gear inventory, weekly bounty, gear, pets, garden, elements, rarity). Not loaded at runtime.",
+  "description": "Entry points for static UI art manifests (HUD, empty states, gacha pool, panel chrome, offline settlement, player profile, hub headers, hub vein flair, dungeon duel, chronicle headers, achievements list, lore journal, feature page heads, gear inventory, weekly bounty, gear, pets, garden, elements, rarity). Not loaded at runtime.",
   "conventions": "ui-art-conventions.json",
   "categories": "ui-art-manifest-categories.json",
   "handoffManifest": "ui-art-handoff-manifest.json",
@@ -15,6 +15,7 @@
     { "id": "empty_state_art", "file": "empty-state-art-manifest.json" },
     { "id": "gacha_pool_ui", "file": "gacha-pool-ui-manifest.json" },
     { "id": "panel_chrome", "file": "panel-chrome-manifest.json" },
+    { "id": "offline_settlement_ui", "file": "offline-settlement-ui-manifest.json" },
     { "id": "player_profile_ui", "file": "player-profile-ui-manifest.json" },
     { "id": "hub_section_headers", "file": "hub-section-headers-manifest.json" },
     { "id": "gear_inventory_ui", "file": "gear-inventory-ui-manifest.json" },

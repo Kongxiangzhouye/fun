@@ -3,7 +3,7 @@
   "categories": [
     {
       "id": "global_hud_and_shell",
-      "manifests": ["hud_bar_icons", "empty_state_art", "panel_chrome"]
+      "manifests": ["hud_bar_icons", "empty_state_art", "panel_chrome", "offline_settlement_ui"]
     },
     {
       "id": "battle_and_dungeon",

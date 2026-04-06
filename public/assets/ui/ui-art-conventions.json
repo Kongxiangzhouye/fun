@@ -15,6 +15,7 @@
     "hubVeinFlairUi.ts",
     "hudBarUi.ts",
     "loreJournalUi.ts",
+    "offlineSettlementUi.ts",
     "panelChromeUi.ts",
     "playerProfileUi.ts",
     "rarityBadgeUi.ts",

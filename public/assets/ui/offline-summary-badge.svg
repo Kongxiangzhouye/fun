@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Offline settlement summary badge">
+  <defs>
+    <linearGradient id="orb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#baf5ff"/>
+      <stop offset="0.58" stop-color="#79c7f3"/>
+      <stop offset="1" stop-color="#4667c8"/>
+    </linearGradient>
+    <linearGradient id="halo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d9f9ff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#86cff3" stop-opacity="0.45"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="64" cy="102" rx="28" ry="8" fill="#7ec4ed" fill-opacity="0.25"/>
+  <circle cx="64" cy="64" r="44" fill="none" stroke="url(#halo)" stroke-width="7"/>
+  <path d="M64 22 76 50 106 52 82 72 90 102 64 85 38 102 46 72 22 52 52 50Z" fill="#9ee0ff" fill-opacity="0.28"/>
+  <circle cx="64" cy="64" r="28" fill="url(#orb)"/>
+  <path d="M64 43a2 2 0 0 1 2 2v19l13 7a2 2 0 1 1-2 3L62 66a2 2 0 0 1-1-2V45a2 2 0 0 1 2-2Z" fill="#e9fbff"/>
+</svg>

@@ -25,6 +25,15 @@
         "Added zh/en UI glossary with manifest cross-references.",
         "Added non-runtime palette swatch SVG aligned with gacha decor accents."
       ]
+    },
+    {
+      "date": "2026-04-06",
+      "title": "Weekly bounty and offline readability pack",
+      "highlights": [
+        "Added bounty claim burst badge for weekly reward feedback.",
+        "Added offline summary badge and transition shine strip for settlement readability.",
+        "Registered offline settlement module/manifest in index, categories, and conventions."
+      ]
     }
   ]
 }

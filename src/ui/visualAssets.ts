@@ -17,6 +17,7 @@ import { HUB_SECTION_HEADER_UI_FILES } from "../data/hubSectionHeadersUi";
 import { HUB_VEIN_FLAIR_UI_FILES } from "../data/hubVeinFlairUi";
 import { HUD_BAR_UI_FILES } from "../data/hudBarUi";
 import { LORE_JOURNAL_UI_FILES } from "../data/loreJournalUi";
+import { OFFLINE_SETTLEMENT_UI_FILES } from "../data/offlineSettlementUi";
 import { PANEL_CHROME_UI_FILES } from "../data/panelChromeUi";
 import { PLAYER_PROFILE_UI_FILES } from "../data/playerProfileUi";
 import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
@@ -106,6 +107,10 @@ export const UI_PANEL_CORNER = asset(PANEL_CHROME_UI_FILES.panelCorner);
 export const UI_BG_SPARKLES = asset(PANEL_CHROME_UI_FILES.bgSparkles);
 /** 离线收益摘要条左侧装饰 */
 export const UI_OFFLINE_SUMMARY_DECO = asset(PANEL_CHROME_UI_FILES.offlineSummaryDeco);
+/** 离线结算摘要徽记（用于摘要标题或关键收益行） */
+export const UI_OFFLINE_SUMMARY_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.summaryBadge);
+/** 离线结算过渡光带（可用于摘要区块分隔） */
+export const UI_OFFLINE_TRANSITION_SHINE = asset(OFFLINE_SETTLEMENT_UI_FILES.transitionShine);
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
 
 /** 分区标题与空状态插画（自绘 SVG）；主分区头图与 `HUB_SECTION_HEADER_UI_FILES` 同源 */
@@ -137,6 +142,8 @@ export const UI_BOUNTY_TUNA_DECO = asset(WEEKLY_BOUNTY_UI_FILES.tuna);
 export const UI_BOUNTY_REALM_DECO = asset(WEEKLY_BOUNTY_UI_FILES.realm);
 /** 周常悬赏 · 一键领取按钮内图标 */
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset(WEEKLY_BOUNTY_UI_FILES.claimAll);
+/** 周常悬赏 · 领取反馈爆闪徽记 */
+export const UI_BOUNTY_CLAIM_BURST = asset(WEEKLY_BOUNTY_UI_FILES.claimBurst);
 /** 养成二级导航 · 分组标题前小徽记；与 `HUB_VEIN_FLAIR_UI_FILES` 同源 */
 export const UI_HUB_SECTION_FLAIR = asset(HUB_VEIN_FLAIR_UI_FILES.hubSectionFlair);
 /** 洞府蕴灵 · 共鸣乘区说明行左侧小标（双环链意象） */
