@@ -10610,6 +10610,91 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--playtime {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(120, 150, 200, 0.38);
+  background: linear-gradient(145deg, rgba(22, 32, 48, 0.68), rgba(12, 16, 28, 0.76));
+}
+
+.chronicle-stat-card--playtime .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--playtime .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.chronicle-stat-card--dungeon-essence-gained {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(160, 120, 200, 0.38);
+  background: linear-gradient(145deg, rgba(32, 22, 44, 0.65), rgba(14, 10, 22, 0.74));
+}
+
+.chronicle-stat-card--dungeon-essence-gained .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--dungeon-essence-gained .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.chronicle-stat-card--celestial-stash-buys {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(140, 150, 200, 0.4);
+  background: linear-gradient(145deg, rgba(26, 30, 48, 0.7), rgba(12, 14, 24, 0.76));
+}
+
+.chronicle-stat-card--celestial-stash-buys .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--celestial-stash-buys .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.chronicle-stat-card--weekly-bounty-full {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(100, 170, 130, 0.4);
+  background: linear-gradient(145deg, rgba(18, 40, 32, 0.62), rgba(10, 18, 16, 0.74));
+}
+
+.chronicle-stat-card--weekly-bounty-full .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--weekly-bounty-full .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.chronicle-stat-card--current-stones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(200, 170, 90, 0.42);
+  background: linear-gradient(145deg, rgba(40, 34, 20, 0.58), rgba(16, 14, 10, 0.72));
+}
+
+.chronicle-stat-card--current-stones .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--current-stones .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--spirit-array-upgrade {
   display: flex;
   align-items: center;

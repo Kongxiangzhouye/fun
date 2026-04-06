@@ -728,6 +728,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "reincarnation",
   },
   {
+    id: "meta_upgrades_300",
+    title: "元极归真",
+    desc: "轮回元强化成功购买累计 300 次",
+    rewardStones: 22000,
+    rewardEssence: 240,
+    listDeco: "reincarnation",
+  },
+  {
     id: "pet_feeds_100",
     title: "饲灵百课",
     desc: "灵宠喂养成功累计 100 次",
@@ -1495,6 +1503,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.metaUpgrades ?? 0) >= 30;
     case "meta_upgrades_120":
       return (state.lifetimeStats?.metaUpgrades ?? 0) >= 120;
+    case "meta_upgrades_300":
+      return (state.lifetimeStats?.metaUpgrades ?? 0) >= 300;
     case "pet_feeds_100":
       return (state.lifetimeStats?.petFeeds ?? 0) >= 100;
     case "pet_feeds_500":

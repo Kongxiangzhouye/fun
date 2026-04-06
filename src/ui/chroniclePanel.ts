@@ -20,6 +20,9 @@ import {
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
   UI_CHRONICLE_BI_GUAN_STAT,
+  UI_CHRONICLE_CELESTIAL_STASH_BUYS_STAT,
+  UI_CHRONICLE_CURRENT_STONES_STAT,
+  UI_CHRONICLE_DUNGEON_ESSENCE_GAINED_STAT,
   UI_CHRONICLE_FORTUNE_STAT,
   UI_CHRONICLE_DAILY_LOGIN_STAT,
   UI_CHRONICLE_SPIRIT_TIDE_STAT,
@@ -41,6 +44,7 @@ import {
   UI_CHRONICLE_SPIRIT_RESERVOIR_CLAIMS_STAT,
   UI_CHRONICLE_PET_FEED_STAT,
   UI_CHRONICLE_PET_PULL_STAT,
+  UI_CHRONICLE_PLAYTIME_STAT,
   UI_CHRONICLE_REALM_BREAKTHROUGH_STAT,
   UI_CHRONICLE_IN_GAME_DAY_PEAK_STAT,
   UI_CHRONICLE_SKILL_LEVEL_STAT,
@@ -48,6 +52,7 @@ import {
   UI_CHRONICLE_TUNA_STAT,
   UI_CHRONICLE_UR_REFINE_STAT,
   UI_CHRONICLE_VEIN_UPGRADE_STAT,
+  UI_CHRONICLE_WEEKLY_BOUNTY_FULL_WEEKS_STAT,
   UI_GEAR_CHRONICLE_DECO,
   UI_HEAD_CHRONICLE,
   UI_RESONANCE_PAYOUT_STAT,
@@ -103,9 +108,12 @@ export function renderChroniclePanel(state: GameState): string {
       </div>
       <p class="hint">灵卡唤引与境界铸灵产出分栏记录；下方为部分终身统计。</p>
       <div class="chronicle-stats-grid">
-        <div class="chronicle-stat-card">
-          <span class="chronicle-stat-lbl">累计在线</span>
-          <strong class="chronicle-stat-val">${h} 时 ${m} 分</strong>
+        <div class="chronicle-stat-card chronicle-stat-card--playtime">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_PLAYTIME_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">累计在线</span>
+            <strong class="chronicle-stat-val">${h} 时 ${m} 分</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--in-game-day-peak">
           <img class="chronicle-stat-ico" src="${UI_CHRONICLE_IN_GAME_DAY_PEAK_STAT}" alt="" width="32" height="32" loading="lazy" />
@@ -219,9 +227,12 @@ export function renderChroniclePanel(state: GameState): string {
             <strong class="chronicle-stat-val">${ls.cardSalvages} 次</strong>
           </div>
         </div>
-        <div class="chronicle-stat-card">
-          <span class="chronicle-stat-lbl">幻域累计入包髓</span>
-          <strong class="chronicle-stat-val">${ls.dungeonEssenceIntGained}</strong>
+        <div class="chronicle-stat-card chronicle-stat-card--dungeon-essence-gained">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_DUNGEON_ESSENCE_GAINED_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">幻域累计入包髓</span>
+            <strong class="chronicle-stat-val">${ls.dungeonEssenceIntGained}</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--dungeon-boss">
           <img class="chronicle-stat-ico" src="${UI_CHRONICLE_DUNGEON_BOSS_KILL_STAT}" alt="" width="32" height="32" loading="lazy" />
@@ -258,9 +269,12 @@ export function renderChroniclePanel(state: GameState): string {
             <strong class="chronicle-stat-val">${ls.spiritArrayUpgrades} 次</strong>
           </div>
         </div>
-        <div class="chronicle-stat-card">
-          <span class="chronicle-stat-lbl">天机匣兑换</span>
-          <strong class="chronicle-stat-val">${ls.celestialStashBuys} 次</strong>
+        <div class="chronicle-stat-card chronicle-stat-card--celestial-stash-buys">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_CELESTIAL_STASH_BUYS_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">天机匣兑换</span>
+            <strong class="chronicle-stat-val">${ls.celestialStashBuys} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--fortune">
           <img class="chronicle-stat-ico" src="${UI_CHRONICLE_FORTUNE_STAT}" alt="" width="32" height="32" loading="lazy" />
@@ -360,9 +374,12 @@ export function renderChroniclePanel(state: GameState): string {
             <strong class="chronicle-stat-val">${ls.biGuanCompletions} 次</strong>
           </div>
         </div>
-        <div class="chronicle-stat-card">
-          <span class="chronicle-stat-lbl">周常单周清满</span>
-          <strong class="chronicle-stat-val">${ls.weeklyBountyFullWeeks} 次</strong>
+        <div class="chronicle-stat-card chronicle-stat-card--weekly-bounty-full">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_WEEKLY_BOUNTY_FULL_WEEKS_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">周常单周清满</span>
+            <strong class="chronicle-stat-val">${ls.weeklyBountyFullWeeks} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--meta-upgrade">
           <img class="chronicle-stat-ico" src="${UI_CHRONICLE_META_UPGRADE_STAT}" alt="" width="32" height="32" loading="lazy" />
@@ -427,9 +444,12 @@ export function renderChroniclePanel(state: GameState): string {
             <strong class="chronicle-stat-val">${ls.zaoHuaYuSpentLifetime}</strong>
           </div>
         </div>
-        <div class="chronicle-stat-card">
-          <span class="chronicle-stat-lbl">当前灵石</span>
-          <strong class="chronicle-stat-val">${fmtDecimal(stones(state))}</strong>
+        <div class="chronicle-stat-card chronicle-stat-card--current-stones">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_CURRENT_STONES_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">当前灵石</span>
+            <strong class="chronicle-stat-val">${fmtDecimal(stones(state))}</strong>
+          </div>
         </div>
       </div>
       <h3 class="sub-h chronicle-sub-h">最近灵卡唤引</h3>

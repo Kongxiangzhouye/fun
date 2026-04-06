@@ -3536,6 +3536,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
     <section class="panel">
       <h2>灵脉汇聚</h2>
       ${spiritTideRow}
+      <p class="hint sm idle-offline-cap-hint" id="idle-offline-cap-hint">离线灵石回补单次最长累计：<strong id="idle-offline-cap-val">${fmtOfflineDurationSec(maxOfflineSec(state))}</strong>（厚土灵脉等可延长上限）。</p>
       <div class="income-hero">
         <div class="income-hero-label">每秒灵石</div>
         <div class="income-hero-value"><strong id="income-total-live">${fmtDecimal(ips)}</strong></div>
@@ -5590,6 +5591,8 @@ function updateEstateIdleLiveReadouts(now: number): void {
       ? `灵潮涌动 · 灵石收益 +${p}%`
       : `灵潮未启 · 每游戏日内前三时辰（内部刻度 0～2）灵石 +${p}%`;
   }
+  const offlineCapVal = document.getElementById("idle-offline-cap-val");
+  if (offlineCapVal) offlineCapVal.textContent = fmtOfflineDurationSec(maxOfflineSec(state));
   const huiSpan = document.getElementById("idle-vein-hui");
   const lingSpan = document.getElementById("idle-vein-ling");
   if (huiSpan) huiSpan.textContent = veinHuiLingMult(state.vein.huiLing).toFixed(2);

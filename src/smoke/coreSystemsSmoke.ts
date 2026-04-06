@@ -1024,6 +1024,9 @@ function runOfflineAdventureAndMetaAchievementsSmoke(): void {
   st.lifetimeStats.metaUpgrades = 120;
   const d = tryCompleteAchievements(st);
   assert.ok(d.some((x) => x.id === "meta_upgrades_120"), "120 meta upgrades should unlock");
+  st.lifetimeStats.metaUpgrades = 300;
+  const e = tryCompleteAchievements(st);
+  assert.ok(e.some((x) => x.id === "meta_upgrades_300"), "300 meta upgrades should unlock");
 }
 
 function runCardSalvageAndVeinAchievementsSmoke(): void {

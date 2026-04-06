@@ -139,6 +139,16 @@ export const UI_CHRONICLE_SKILL_LEVEL_STAT = asset("chronicle-skill-level-stat.s
 export const UI_CHRONICLE_REALM_BREAKTHROUGH_STAT = asset("chronicle-realm-breakthrough-stat.svg");
 /** 唤灵通鉴 · 历世日序峰值小标 */
 export const UI_CHRONICLE_IN_GAME_DAY_PEAK_STAT = asset("chronicle-in-game-day-peak-stat.svg");
+/** 唤灵通鉴 · 累计在线时长小标 */
+export const UI_CHRONICLE_PLAYTIME_STAT = asset("chronicle-playtime-stat.svg");
+/** 唤灵通鉴 · 幻域累计入包髓小标 */
+export const UI_CHRONICLE_DUNGEON_ESSENCE_GAINED_STAT = asset("chronicle-dungeon-essence-gained-stat.svg");
+/** 唤灵通鉴 · 天机匣兑换累计小标 */
+export const UI_CHRONICLE_CELESTIAL_STASH_BUYS_STAT = asset("chronicle-celestial-stash-buys-stat.svg");
+/** 唤灵通鉴 · 周常单周清满次数小标 */
+export const UI_CHRONICLE_WEEKLY_BOUNTY_FULL_WEEKS_STAT = asset("chronicle-weekly-bounty-full-weeks-stat.svg");
+/** 唤灵通鉴 · 当前灵石快照小标 */
+export const UI_CHRONICLE_CURRENT_STONES_STAT = asset("chronicle-current-stones-stat.svg");
 /** 唤灵通鉴 · 槽位强化累计小标 */
 export const UI_CHRONICLE_GEAR_ENHANCE_STAT = asset("chronicle-gear-enhance-stat.svg");
 /** 唤灵通鉴 · 天极精炼累计小标 */
