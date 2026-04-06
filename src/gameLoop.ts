@@ -103,6 +103,25 @@ export function applyTick(state: GameState, now: number): void {
   checkTrueEnding(state);
 }
 
+/** 离线结算与闭关跳时共用的灵石与被动推进（不含 `lastTick`） */
+function applyOfflineLikeProgress(
+  state: GameState,
+  dt: number,
+  stoneGain: Decimal,
+  ips: Decimal,
+  mult: number,
+): void {
+  if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips.mul(mult));
+  addStones(state, stoneGain);
+  state.playtimeSec += dt;
+  tickInGameClock(state, dt);
+  tickWishResonancePassive(state, dt, OFFLINE_RESONANCE_GAIN_MULT);
+  tickSkillTraining(state, dt);
+  if (!state.dungeon.active) tickCombatHpRegen(state, dt);
+  tryCompleteAchievements(state);
+  checkTrueEnding(state);
+}
+
 export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSummary {
   const empty = (rawAway: number): OfflineCatchUpSummary => ({
     stoneGain: new Decimal(0),
@@ -121,16 +140,8 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
   const ips = incomePerSecond(state, totalCardsInPool());
   const mult = earthOfflineIncomeMult(state);
   const gained = ips.mul(dt).mul(mult);
-  if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips.mul(mult));
-  addStones(state, gained);
+  applyOfflineLikeProgress(state, dt, gained, ips, mult);
   state.lastTick = now;
-  state.playtimeSec += dt;
-  tickInGameClock(state, dt);
-  tickWishResonancePassive(state, dt, OFFLINE_RESONANCE_GAIN_MULT);
-  tickSkillTraining(state, dt);
-  if (!state.dungeon.active) tickCombatHpRegen(state, dt);
-  tryCompleteAchievements(state);
-  checkTrueEnding(state);
   return {
     stoneGain: gained,
     settledSec: dt,
@@ -146,14 +157,6 @@ export function fastForward(state: GameState, seconds: number): Decimal {
   const ips = incomePerSecond(state, totalCardsInPool());
   const mult = earthOfflineIncomeMult(state);
   const gained = ips.mul(dt).mul(mult);
-  if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips.mul(mult));
-  addStones(state, gained);
-  state.playtimeSec += dt;
-  tickInGameClock(state, dt);
-  tickWishResonancePassive(state, dt, OFFLINE_RESONANCE_GAIN_MULT);
-  tickSkillTraining(state, dt);
-  if (!state.dungeon.active) tickCombatHpRegen(state, dt);
-  tryCompleteAchievements(state);
-  checkTrueEnding(state);
+  applyOfflineLikeProgress(state, dt, gained, ips, mult);
   return gained;
 }
