@@ -645,6 +645,18 @@ function runLifePlaytimeHourAchievementSmoke(): void {
   assert.ok(st.achievementsDone.has("life_playtime_3600"), "achievement should be marked done");
 }
 
+function runCumulativePlaytime24hAchievementSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("cumulative_playtime_86400"), "24h total playtime achievement should start locked");
+  st.playtimeSec = 86400;
+  const newly = tryCompleteAchievements(st);
+  assert.ok(
+    newly.some((a) => a.id === "cumulative_playtime_86400"),
+    "86400s cumulative playtime should unlock achievement",
+  );
+  assert.ok(st.achievementsDone.has("cumulative_playtime_86400"), "achievement should be marked done");
+}
+
 function runDaoEssenceBreakdownSmoke(): void {
   const st = createInitialState();
   st.peakSpiritStonesThisLife = "1000000";
@@ -691,6 +703,7 @@ function main(): void {
   runDaoEssenceBreakdownSmoke();
   runLifePlaytimeSecSmoke();
   runLifePlaytimeHourAchievementSmoke();
+  runCumulativePlaytime24hAchievementSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

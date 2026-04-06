@@ -479,6 +479,8 @@ export interface UiPrefs {
   autoBuyMeta: boolean;
   /** 点击「确认轮回」时是否弹出浏览器确认框；关闭后一键直接轮回（仍受境界条件限制） */
   confirmReincarnation: boolean;
+  /** 是否在浏览器标签标题中显示境界与灵石摘要；关闭后固定为「万象唤灵」 */
+  dynamicDocumentTitle: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

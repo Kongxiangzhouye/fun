@@ -5049,6 +5049,11 @@ h1 {
   background: linear-gradient(165deg, rgba(48, 22, 32, 0.42), rgba(12, 14, 22, 0.55));
 }
 
+.ui-prefs-panel .ui-pref-row--doc-title {
+  border-color: rgba(100, 140, 210, 0.42);
+  background: linear-gradient(165deg, rgba(18, 28, 52, 0.55), rgba(10, 12, 22, 0.58));
+}
+
 .ui-prefs-panel .ui-pref-inline-ico {
   flex-shrink: 0;
   opacity: 0.95;

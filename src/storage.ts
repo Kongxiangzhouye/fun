@@ -834,6 +834,7 @@ export function deserialize(json: string): GameState {
     autoUpgradeVein: !!data.uiPrefs?.autoUpgradeVein,
     autoBuyMeta: !!data.uiPrefs?.autoBuyMeta,
     confirmReincarnation: data.uiPrefs?.confirmReincarnation !== false,
+    dynamicDocumentTitle: data.uiPrefs?.dynamicDocumentTitle !== false,
   };
 
   if (data.pets && typeof data.pets === "object") {

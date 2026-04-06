@@ -57,6 +57,8 @@ export const UI_SESSION_STONE_GAIN = asset("session-stone-gain.svg");
 export const UI_DAO_BREAKDOWN_DECO = asset("dao-essence-breakdown-deco.svg");
 /** 偏好设置 · 轮回确认框开关旁 */
 export const UI_PREF_CONFIRM_REINCARNATION = asset("ui-pref-confirm-reincarnation.svg");
+/** 偏好设置 · 动态标签标题开关旁 */
+export const UI_PREF_DYNAMIC_TITLE = asset("ui-pref-dynamic-title.svg");
 /** 轮回 · 元强化自动购买开关旁 */
 export const UI_META_AUTO_BUY = asset("meta-auto-buy.svg");
 /** 轮回面板 · 本轮灵石峰值恢复条标题小标 */

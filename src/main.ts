@@ -179,6 +179,7 @@ import {
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
   UI_PREF_CONFIRM_REINCARNATION,
+  UI_PREF_DYNAMIC_TITLE,
   UI_META_AUTO_BUY,
   UI_META_LIFE_PEAK,
   UI_DATA_EXPORT_DECO,
@@ -2727,6 +2728,17 @@ function renderUiPrefsPanel(): string {
         </label>
         <p class="hint sm ui-pref-desc">关闭后点击「确认轮回」将不再出现浏览器确认框，适合已熟悉后果的周回玩家；仍须满足境界条件。</p>
       </li>
+      <li class="ui-pref-row ui-pref-row--doc-title">
+        <div class="ui-pref-inline-head">
+          <img class="ui-pref-inline-ico" src="${UI_PREF_DYNAMIC_TITLE}" alt="" width="22" height="22" loading="lazy" />
+          <span class="ui-pref-section-title">标签页</span>
+        </div>
+        <label class="ui-pref-label">
+          <input type="checkbox" class="ui-pref-input" data-ui-pref="dynamicDocumentTitle" ${p.dynamicDocumentTitle ? "checked" : ""} />
+          <span class="ui-pref-title">标题显示境界与灵石摘要</span>
+        </label>
+        <p class="hint sm ui-pref-desc">开启时浏览器标签会显示「万象唤灵 · 境界 · 灵石」便于切后台查看；关闭则固定为「万象唤灵」。</p>
+      </li>
       <li class="ui-pref-row ui-pref-audio-block">
         <div class="ui-pref-audio-head">
           <img class="ui-pref-inline-ico" src="${UI_SOUND_PREFS_DECO}" alt="" width="22" height="22" loading="lazy" />
@@ -4301,6 +4313,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoUpgradeVein") state.uiPrefs.autoUpgradeVein = checked;
       else if (t === "autoBuyMeta") state.uiPrefs.autoBuyMeta = checked;
       else if (t === "confirmReincarnation") state.uiPrefs.confirmReincarnation = checked;
+      else if (t === "dynamicDocumentTitle") state.uiPrefs.dynamicDocumentTitle = checked;
       else return;
       saveGame(state);
       render();
@@ -5333,6 +5346,18 @@ function updateCombatPowerTip(power: number): void {
   lastCombatPower = power;
 }
 
+const STATIC_DOCUMENT_TITLE = "万象唤灵";
+
+/** 按偏好刷新浏览器标签标题（挂机时便于扫一眼境界与灵石） */
+function syncDocumentTitleFromState(): void {
+  if (typeof document === "undefined") return;
+  if (!state.uiPrefs.dynamicDocumentTitle) {
+    document.title = STATIC_DOCUMENT_TITLE;
+    return;
+  }
+  document.title = `${STATIC_DOCUMENT_TITLE} · 境界${state.realmLevel} · ${fmtDecimal(stones(state))}灵石`;
+}
+
 /** 顶栏灵石/髓等 + 道韵行：局部操作后调用，避免整页 innerHTML 重绘 */
 function updateTopResourcePillsAndVigor(pool: number): void {
   syncDecimalFormatFromState(state);
@@ -5366,6 +5391,7 @@ function updateTopResourcePillsAndVigor(pool: number): void {
     vigLine.textContent = t;
     (vigLine as HTMLElement).hidden = !t;
   }
+  syncDocumentTitleFromState();
 }
 
 /** 养成·轮回页：道韵预估、峰值条与本世时长（仅在该子页时 DOM 存在） */
