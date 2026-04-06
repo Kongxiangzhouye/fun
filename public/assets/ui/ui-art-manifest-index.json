@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Entry points for static UI art manifests (HUD, empty states, gacha pool, panel chrome, player profile, hub headers, hub vein flair, dungeon duel, chronicle headers, achievements list, gear inventory, weekly bounty, gear, pets, garden, elements, rarity). Not loaded at runtime.",
+  "description": "Entry points for static UI art manifests (HUD, empty states, gacha pool, panel chrome, player profile, hub headers, hub vein flair, dungeon duel, chronicle headers, achievements list, lore journal, feature page heads, gear inventory, weekly bounty, gear, pets, garden, elements, rarity). Not loaded at runtime.",
   "manifests": [
     { "id": "hud_bar_icons", "file": "hud-bar-icons-manifest.json" },
     { "id": "empty_state_art", "file": "empty-state-art-manifest.json" },
@@ -14,6 +14,8 @@
     { "id": "dungeon_duel_ui", "file": "dungeon-duel-ui-manifest.json" },
     { "id": "chronicle_headers_ui", "file": "chronicle-headers-ui-manifest.json" },
     { "id": "achievements_list_ui", "file": "achievements-list-ui-manifest.json" },
+    { "id": "lore_journal_ui", "file": "lore-journal-ui-manifest.json" },
+    { "id": "feature_page_heads_ui", "file": "feature-page-heads-ui-manifest.json" },
     { "id": "gear_bases", "file": "gear-bases-manifest.json" },
     { "id": "gear_slot_icons", "file": "gear-slot-icons-manifest.json" },
     { "id": "pet_portraits", "file": "pet-portraits-manifest.json" },

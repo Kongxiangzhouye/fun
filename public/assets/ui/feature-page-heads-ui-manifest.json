@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "naming": "Filenames from FEATURE_PAGE_HEADS_UI_FILES in src/data/featurePageHeadsUi.ts; served as public/assets/ui/<file>.",
+  "assets": [
+    { "id": "dailyLogin", "file": "deco-daily-login.svg" },
+    { "id": "celestialStash", "file": "deco-celestial-stash.svg" },
+    { "id": "spiritReservoir", "file": "deco-spirit-reservoir.svg" },
+    { "id": "dailyFortune", "file": "deco-daily-fortune.svg" },
+    { "id": "spiritArray", "file": "deco-spirit-array.svg" }
+  ]
+}

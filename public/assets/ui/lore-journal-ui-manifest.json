@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "naming": "Filenames from LORE_JOURNAL_UI_FILES in src/data/loreJournalUi.ts; served as public/assets/ui/<file>.",
+  "assets": [
+    { "id": "threeArts", "file": "deco-lore-three-arts.svg" },
+    { "id": "bounty", "file": "deco-lore-bounty.svg" },
+    { "id": "estate", "file": "deco-lore-estate.svg" },
+    { "id": "unlocks", "file": "deco-lore-unlocks.svg" },
+    { "id": "dungeon", "file": "deco-lore-dungeon.svg" },
+    { "id": "gear", "file": "deco-lore-gear.svg" },
+    { "id": "reincarnation", "file": "deco-lore-reincarnation.svg" },
+    { "id": "glossary", "file": "deco-lore-glossary.svg" },
+    { "id": "resources", "file": "deco-lore-resources.svg" },
+    { "id": "vein", "file": "deco-lore-vein.svg" },
+    { "id": "elements", "file": "deco-lore-elements.svg" },
+    { "id": "pet", "file": "deco-lore-pet.svg" },
+    { "id": "meta", "file": "deco-lore-meta.svg" },
+    { "id": "daoMeridian", "file": "deco-lore-dao-meridian.svg" },
+    { "id": "battleSkill", "file": "deco-lore-battle-skill.svg" },
+    { "id": "loginCalendar", "file": "deco-lore-login-calendar.svg" },
+    { "id": "chronicle", "file": "deco-lore-chronicle.svg" },
+    { "id": "tunaMeditation", "file": "deco-lore-tuna-meditation.svg" }
+  ]
+}
