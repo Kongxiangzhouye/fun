@@ -3928,6 +3928,35 @@ h1 {
   margin-bottom: 4px;
 }
 
+.estate-commission-streak-row {
+  margin: 8px 0 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.estate-commission-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(132, 176, 214, 0.5);
+  background: rgba(16, 28, 40, 0.78);
+  color: #c8daef;
+  font-size: 0.75rem;
+}
+
+.estate-commission-spec-line {
+  margin-bottom: 8px;
+}
+
+.estate-commission-refresh-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 @media (max-width: 768px) {
   .offline-choice-grid,
   .income-guide-cards,
@@ -9056,6 +9085,17 @@ p.gear-forge-tier-hint {
 .bounty-feedback-surge-ico.is-on {
   opacity: 1;
   transform: scale(1);
+}
+
+.bounty-observe-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bounty-observe-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
 }
 
 .bounty-claim-all-row {

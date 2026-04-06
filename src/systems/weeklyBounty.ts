@@ -278,6 +278,11 @@ export interface WeeklyBountyNextAction {
   priority: number;
 }
 
+export interface WeeklyBountySnapshotBundle {
+  snapshot: WeeklyBountySnapshot;
+  nextAction: WeeklyBountyNextAction | null;
+}
+
 export function weeklyBountyTaskState(state: GameState, def: WeeklyBountyTaskDef): WeeklyBountyTaskState {
   if (isWeeklyBountyClaimed(state, def.id)) return "claimed";
   return isWeeklyBountyComplete(state, def) ? "claimable" : "pending";
@@ -293,11 +298,16 @@ export interface WeeklyBountyTaskSnapshot {
   progress: number;
 }
 
+export interface WeeklyBountySnapshot {
+  tasks: WeeklyBountyTaskSnapshot[];
+  taskMap: Map<string, WeeklyBountyTaskSnapshot>;
+}
+
 /** 统一周常条目状态口径：pending / claimable / claimed / overdue。 */
-export function weeklyBountyTaskSnapshots(state: GameState, now: number): WeeklyBountyTaskSnapshot[] {
+export function weeklyBountySnapshot(state: GameState, now: number): WeeklyBountySnapshot {
   ensureWeeklyBountyWeek(state, now);
   const overdueGate = isLastDayOfWeek(now);
-  return WEEKLY_BOUNTY_TASKS.map((def) => {
+  const tasks = WEEKLY_BOUNTY_TASKS.map((def) => {
     const base = weeklyBountyTaskState(state, def);
     const displayState: WeeklyBountyTaskDisplayState = base === "claimable" && overdueGate ? "overdue" : base;
     return {
@@ -306,6 +316,15 @@ export function weeklyBountyTaskSnapshots(state: GameState, now: number): Weekly
       progress: weeklyBountyProgress(state, def),
     };
   });
+  return {
+    tasks,
+    taskMap: new Map(tasks.map((x) => [x.id, x])),
+  };
+}
+
+/** 兼容旧调用：返回周常任务快照列表。 */
+export function weeklyBountyTaskSnapshots(state: GameState, now: number): WeeklyBountyTaskSnapshot[] {
+  return weeklyBountySnapshot(state, now).tasks;
 }
 
 function normalizeWeeklyBountyEventNow(nowMs?: number): number {
@@ -443,7 +462,7 @@ export interface WeeklyBountyFeedbackState {
 /** UI 反馈闭环：统一“进度→可领→已领”数量口径。 */
 export function weeklyBountyFeedbackState(state: GameState, now: number): WeeklyBountyFeedbackState {
   ensureWeeklyBountyWeek(state, now);
-  const snapshots = weeklyBountyTaskSnapshots(state, now);
+  const snapshots = weeklyBountySnapshot(state, now).tasks;
   let completed = 0;
   let pending = 0;
   let claimed = 0;
@@ -488,8 +507,7 @@ export function formatWeeklyBountyObserveLine(fb: WeeklyBountyFeedbackState): st
   return `${consistency} · ${align}`;
 }
 
-function weeklyBountyTaskPriority(state: GameState, def: WeeklyBountyTaskDef, now: number): number {
-  const snap = weeklyBountyTaskSnapshots(state, now).find((x) => x.id === def.id);
+function weeklyBountyTaskPriority(state: GameState, def: WeeklyBountyTaskDef, snap: WeeklyBountyTaskSnapshot | undefined): number {
   const prog = snap?.progress ?? 0;
   const done = prog >= def.target;
   if (isWeeklyBountyClaimed(state, def.id)) return -1000;
@@ -548,15 +566,17 @@ function reasonForTask(def: WeeklyBountyTaskDef, progress: number): string {
   return `距离完成还差 ${left} 次。`;
 }
 
-export function weeklyBountyNextAction(state: GameState, now: number): WeeklyBountyNextAction | null {
-  ensureWeeklyBountyWeek(state, now);
-  const snapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
+export function weeklyBountyNextActionFromSnapshot(
+  state: GameState,
+  snapshot: WeeklyBountySnapshot,
+): WeeklyBountyNextAction | null {
+  const snapshots = snapshot.taskMap;
   let best: WeeklyBountyNextAction | null = null;
   for (const def of WEEKLY_BOUNTY_TASKS) {
     if (isWeeklyBountyClaimed(state, def.id)) continue;
     const snap = snapshots.get(def.id);
     const progress = snap?.progress ?? 0;
-    const priority = weeklyBountyTaskPriority(state, def, now);
+    const priority = weeklyBountyTaskPriority(state, def, snap);
     const next: WeeklyBountyNextAction = {
       taskId: def.id,
       action: actionForTaskKind(def.kind),
@@ -569,4 +589,17 @@ export function weeklyBountyNextAction(state: GameState, now: number): WeeklyBou
     if (!best || next.priority > best.priority) best = next;
   }
   return best;
+}
+
+export function weeklyBountySnapshotBundle(state: GameState, now: number): WeeklyBountySnapshotBundle {
+  ensureWeeklyBountyWeek(state, now);
+  const snapshot = weeklyBountySnapshot(state, now);
+  return {
+    snapshot,
+    nextAction: weeklyBountyNextActionFromSnapshot(state, snapshot),
+  };
+}
+
+export function weeklyBountyNextAction(state: GameState, now: number): WeeklyBountyNextAction | null {
+  return weeklyBountySnapshotBundle(state, now).nextAction;
 }

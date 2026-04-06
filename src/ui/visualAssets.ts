@@ -514,6 +514,14 @@ export const UI_ESTATE_COMMISSION_RESOURCE = asset("icon-estate-commission-resou
 export const UI_ESTATE_COMMISSION_COMBAT = asset("icon-estate-commission-combat.svg");
 /** 洞府委托 · 养成类图标 */
 export const UI_ESTATE_COMMISSION_CULTIVATION = asset("icon-estate-commission-cultivation.svg");
+/** 洞府委托 · 连携徽记 */
+export const UI_ESTATE_COMMISSION_STREAK = asset("icon-estate-commission-streak.svg");
+/** 洞府委托 · 刷新冷却 */
+export const UI_ESTATE_COMMISSION_REFRESH_COOLDOWN = asset("icon-estate-commission-refresh-cooldown.svg");
+/** 洞府委托 · 刷新受限/不足 */
+export const UI_ESTATE_COMMISSION_REFRESH_BLOCKED = asset("icon-estate-commission-refresh-blocked.svg");
+/** 周常悬赏 · 状态快照徽记 */
+export const UI_WEEKLY_BOUNTY_STATE_SYNC = asset("icon-weekly-bounty-state-sync.svg");
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);

@@ -365,6 +365,9 @@ export function serialize(state: GameState): string {
           }
         : null,
       refreshCount: state.estateCommission.refreshCount,
+      streak: state.estateCommission.streak,
+      lastSuccessType: state.estateCommission.lastSuccessType,
+      refreshCooldownUntilMs: state.estateCommission.refreshCooldownUntilMs,
     },
     spiritArrayLevel: state.spiritArrayLevel,
     lastTunaMs: state.lastTunaMs,
@@ -552,6 +555,22 @@ export function deserialize(json: string): GameState {
       refreshCount:
         data.estateCommission.refreshCount != null && Number.isFinite(data.estateCommission.refreshCount)
           ? Math.max(0, Math.floor(data.estateCommission.refreshCount))
+          : 0,
+      streak:
+        (data.estateCommission as { streak?: unknown }).streak != null &&
+        Number.isFinite((data.estateCommission as { streak?: number }).streak)
+          ? Math.max(0, Math.floor((data.estateCommission as { streak?: number }).streak ?? 0))
+          : 0,
+      lastSuccessType:
+        (data.estateCommission as { lastSuccessType?: unknown }).lastSuccessType === "resource" ||
+        (data.estateCommission as { lastSuccessType?: unknown }).lastSuccessType === "combat" ||
+        (data.estateCommission as { lastSuccessType?: unknown }).lastSuccessType === "cultivation"
+          ? ((data.estateCommission as { lastSuccessType?: "resource" | "combat" | "cultivation" }).lastSuccessType ?? null)
+          : null,
+      refreshCooldownUntilMs:
+        (data.estateCommission as { refreshCooldownUntilMs?: unknown }).refreshCooldownUntilMs != null &&
+        Number.isFinite((data.estateCommission as { refreshCooldownUntilMs?: number }).refreshCooldownUntilMs)
+          ? Math.max(0, Math.floor((data.estateCommission as { refreshCooldownUntilMs?: number }).refreshCooldownUntilMs ?? 0))
           : 0,
     };
   }
@@ -856,7 +875,14 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.autoSalvageAccumSec = 0;
   st.autoGearForge = false;
   st.autoBossChallenge = false;
-  st.estateCommission = { offer: null, active: null, refreshCount: 0 };
+  st.estateCommission = {
+    offer: null,
+    active: null,
+    refreshCount: 0,
+    streak: 0,
+    lastSuccessType: null,
+    refreshCooldownUntilMs: 0,
+  };
   st.trueEndingSeen = false;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 };
   st.pullsThisLife = 0;

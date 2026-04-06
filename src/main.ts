@@ -189,6 +189,10 @@ import {
   UI_ESTATE_COMMISSION_RESOURCE,
   UI_ESTATE_COMMISSION_COMBAT,
   UI_ESTATE_COMMISSION_CULTIVATION,
+  UI_ESTATE_COMMISSION_STREAK,
+  UI_ESTATE_COMMISSION_REFRESH_COOLDOWN,
+  UI_ESTATE_COMMISSION_REFRESH_BLOCKED,
+  UI_WEEKLY_BOUNTY_STATE_SYNC,
   UI_DUNGEON_HIT_FLASH_DECO,
   UI_DUNGEON_HIT_TRACE_RING_DECO,
   UI_DUNGEON_CRIT_BURST_DECO,
@@ -299,6 +303,8 @@ import {
   acceptEstateCommission,
   ensureEstateCommissionOffer,
   estateCommissionTimeLeftMs,
+  getEstateCommissionRefreshStatus,
+  getEstateCommissionStreakPreview,
   refreshEstateCommissionOffer,
   settleEstateCommission,
   tickEstateCommission,
@@ -3234,6 +3240,19 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const ecOffer = ec.offer;
   const ecReady = !!(ecActive && ecActive.completedAtMs != null);
   const ecRemainSec = Math.ceil(estateCommissionTimeLeftMs(state, now) / 1000);
+  const ecRefresh = getEstateCommissionRefreshStatus(state, now);
+  const ecStreak = getEstateCommissionStreakPreview(state);
+  const ecTypeZh = (tp: string): string => (tp === "resource" ? "资源" : tp === "combat" ? "战斗" : "养成");
+  const ecRefreshReason =
+    ecRefresh.reason === "active"
+      ? "活动中不可刷新"
+      : ecRefresh.reason === "cooldown"
+        ? `冷却中（约 ${Math.ceil(ecRefresh.cooldownLeftMs / 1000)} 息）`
+        : ecRefresh.reason === "insufficient_stones"
+          ? `灵石不足（需 ${fmtDecimal(new Decimal(ecRefresh.costStones))}）`
+          : ecRefresh.reason === "limit_reached"
+            ? "本轮刷新次数已用尽"
+            : `可刷新（消耗 ${fmtDecimal(new Decimal(ecRefresh.costStones))} 灵石）`;
   const commissionIconByType: Record<string, string> = {
     resource: UI_ESTATE_COMMISSION_RESOURCE,
     combat: UI_ESTATE_COMMISSION_COMBAT,
@@ -3247,6 +3266,25 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <h2>洞府委托</h2>
       </div>
       <p class="hint sm">当前仅可同时进行 1 个委托。离线归来会按时长自动判定完成，可直接结算。</p>
+      <div class="estate-commission-streak-row">
+        <span class="estate-commission-pill">
+          <img src="${UI_ESTATE_COMMISSION_STREAK}" alt="" width="16" height="16" loading="lazy" />
+          当前连携 +${(ecStreak.bonusRate * 100).toFixed(0)}%（连续 ${ecStreak.streak} 次）
+        </span>
+        <span class="estate-commission-pill">
+          <img src="${UI_WEEKLY_BOUNTY_STATE_SYNC}" alt="" width="16" height="16" loading="lazy" />
+          ${
+            ecStreak.nextThreshold == null
+              ? "已达连携高阶阈值"
+              : `下一档 ${ecStreak.nextThreshold} 连携（再成功 ${ecStreak.toNextThreshold} 次）`
+          }
+        </span>
+      </div>
+      <p class="hint sm estate-commission-spec-line" id="estate-commission-spec-line">${
+        ecStreak.specializationType
+          ? `专精路径：${ecTypeZh(ecStreak.specializationType)}（同类型额外 +${(ecStreak.specializationRate * 100).toFixed(0)}%）`
+          : "专精路径：未锁定（连续完成同类型委托可建立专精）"
+      }</p>
       ${
         ecActive
           ? `<div class="estate-commission-card ${ecReady ? "is-ready" : ""}">
@@ -3275,9 +3313,13 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
                 <p class="hint sm">${ecOffer.desc}</p>
                 <p class="hint sm">类型：${ecOffer.type === "resource" ? "资源" : ecOffer.type === "combat" ? "战斗" : "养成"} · 时长 ${fmtOfflineDurationSec(ecOffer.durationSec)}</p>
                 <p class="hint sm">奖励：灵石 ${fmtDecimal(new Decimal(ecOffer.reward.spiritStones))} · 唤灵髓 +${ecOffer.reward.summonEssence} · 筑灵髓 +${ecOffer.reward.zhuLingEssence}</p>
+                <p class="hint sm estate-commission-refresh-line" id="estate-commission-refresh-line">
+                  <img src="${ecRefresh.reason === "none" || ecRefresh.reason === "cooldown" ? UI_ESTATE_COMMISSION_REFRESH_COOLDOWN : UI_ESTATE_COMMISSION_REFRESH_BLOCKED}" alt="" width="14" height="14" loading="lazy" />
+                  ${ecRefreshReason} · 已用 ${ecRefresh.refreshUsed}/${ecRefresh.refreshLimit}
+                </p>
                 <div class="btn-row">
                   <button class="btn btn-primary" type="button" data-estate-commission-accept="1">接取委托</button>
-                  <button class="btn" type="button" data-estate-commission-refresh="1">刷新委托</button>
+                  <button class="btn" type="button" data-estate-commission-refresh="1" ${ecRefresh.canRefresh ? "" : "disabled"}>刷新委托</button>
                 </div>
               </div>`
             : `<p class="hint sm">暂无可接委托，稍后可刷新。</p>`
@@ -4635,12 +4677,21 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.querySelectorAll("[data-estate-commission-refresh]").forEach((el) => {
     el.addEventListener("click", () => {
       const t = nowMs();
+      const status = getEstateCommissionRefreshStatus(state, t);
+      if (!status.canRefresh) {
+        if (status.reason === "active") toast("活动委托进行中，无法刷新。");
+        else if (status.reason === "cooldown") toast(`刷新冷却中，约 ${Math.ceil(status.cooldownLeftMs / 1000)} 息后可用。`);
+        else if (status.reason === "insufficient_stones") toast(`灵石不足，刷新需 ${fmtDecimal(new Decimal(status.costStones))}。`);
+        else if (status.reason === "limit_reached") toast("本轮刷新次数已达上限，请先完成一次委托。");
+        else toast("当前无法刷新委托。");
+        return;
+      }
       if (!refreshEstateCommissionOffer(state, t)) {
-        toast("已有活动委托，无法刷新。");
+        toast("当前无法刷新委托。");
         return;
       }
       saveGame(state);
-      toast("委托已刷新。");
+      toast(`委托已刷新，消耗 ${fmtDecimal(new Decimal(status.costStones))} 灵石。`);
       render();
     });
   });
@@ -4653,7 +4704,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
       ensureEstateCommissionOffer(state, nowMs());
       tryCompleteAchievements(state);
       saveGame(state);
-      toast("委托结算完成，奖励已到账。");
+      const streak = state.estateCommission.streak;
+      toast(`委托结算完成，奖励已到账（连携 ${streak}）。`);
       updateTopResourcePillsAndVigor(totalCardsInPool());
       render();
     });
@@ -4666,7 +4718,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
         return;
       }
       saveGame(state);
-      toast("已放弃当前委托。");
+      toast("已放弃当前委托，连携衰减。");
       render();
     });
   });
@@ -5303,7 +5355,29 @@ function updateEstateIdleLiveReadouts(now: number): void {
   const ecActive = state.estateCommission.active;
   const statusEl = document.getElementById("estate-commission-status");
   const timerEl = document.getElementById("estate-commission-timer");
+  const specLineEl = document.getElementById("estate-commission-spec-line");
+  const refreshLineEl = document.getElementById("estate-commission-refresh-line");
   const settleBtn = document.getElementById("btn-estate-commission-settle") as HTMLButtonElement | null;
+  const streak = getEstateCommissionStreakPreview(state);
+  if (specLineEl) {
+    specLineEl.textContent = streak.specializationType
+      ? `专精路径：${streak.specializationType === "resource" ? "资源" : streak.specializationType === "combat" ? "战斗" : "养成"}（同类型额外 +${(streak.specializationRate * 100).toFixed(0)}%）`
+      : "专精路径：未锁定（连续完成同类型委托可建立专精）";
+  }
+  if (refreshLineEl) {
+    const st = getEstateCommissionRefreshStatus(state, now);
+    const tip =
+      st.reason === "active"
+        ? "活动中不可刷新"
+        : st.reason === "cooldown"
+          ? `冷却中（约 ${Math.ceil(st.cooldownLeftMs / 1000)} 息）`
+          : st.reason === "insufficient_stones"
+            ? `灵石不足（需 ${fmtDecimal(new Decimal(st.costStones))}）`
+            : st.reason === "limit_reached"
+              ? "本轮刷新次数已用尽"
+              : `可刷新（消耗 ${fmtDecimal(new Decimal(st.costStones))} 灵石）`;
+    refreshLineEl.textContent = `${tip} · 已用 ${st.refreshUsed}/${st.refreshLimit}`;
+  }
   if (ecActive && statusEl && timerEl) {
     const ready = ecActive.completedAtMs != null;
     statusEl.textContent = ready ? "已完成" : "进行中";

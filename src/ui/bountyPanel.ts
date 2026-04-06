@@ -3,9 +3,8 @@ import {
   WEEKLY_BOUNTY_TASKS,
   WEEKLY_BOUNTY_MILESTONES,
   ensureWeeklyBountyWeek,
-  weeklyBountyNextAction,
+  weeklyBountySnapshotBundle,
   weeklyBountyFeedbackState,
-  weeklyBountyTaskSnapshots,
   formatWeeklyBountyObserveLine,
   countWeeklyBountyTasksCompleted,
   weeklyBountyMilestoneUiState,
@@ -33,6 +32,7 @@ import {
   UI_BOUNTY_LAST_DAY_ALERT_BADGE,
   UI_BOUNTY_MILESTONE_DECO,
   UI_HEAD_BOUNTY,
+  UI_WEEKLY_BOUNTY_STATE_SYNC,
 } from "./visualAssets";
 
 const BOUNTY_CARD_DECO_SRC: Record<WeeklyBountyCardDeco, string> = {
@@ -81,8 +81,9 @@ export function renderBountyPanel(state: GameState, now: number): string {
   const fb = weeklyBountyFeedbackState(state, now);
   const doneCount = countWeeklyBountyTasksCompleted(state);
   const claimableN = countClaimableWeeklyAll(state, now);
-  const nextAction = weeklyBountyNextAction(state, now);
-  const taskSnapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
+  const bountyBundle = weeklyBountySnapshotBundle(state, now);
+  const nextAction = bountyBundle.nextAction;
+  const taskSnapshots = bountyBundle.snapshot.taskMap;
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
     const snap = taskSnapshots.get(t.id);
     const prog = snap?.progress ?? 0;
@@ -168,7 +169,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
           <span id="bounty-feedback-overdue">${fb.hasOverdue ? `逾期 ${fb.overdue} / ${fb.total}` : "进度正常"}</span>
         </span>
       </div>
-      <p class="hint sm" id="bounty-feedback-observe">状态校验：${formatWeeklyBountyObserveLine(fb)}</p>
+      <p class="hint sm bounty-observe-line" id="bounty-feedback-observe"><img class="bounty-observe-ico" src="${UI_WEEKLY_BOUNTY_STATE_SYNC}" alt="" width="16" height="16" loading="lazy" />状态校验：${formatWeeklyBountyObserveLine(fb)}</p>
       <div class="bounty-milestone-block">
         <h3 class="bounty-milestone-heading">
           <img class="bounty-milestone-heading-ico" src="${UI_BOUNTY_MILESTONE_DECO}" alt="" width="22" height="22" loading="lazy" />
@@ -211,12 +212,13 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   const claimAllBtn = document.getElementById("btn-bounty-claim-all") as HTMLButtonElement | null;
   const claimAllLbl = document.getElementById("bounty-claim-all-lbl");
   const fb = weeklyBountyFeedbackState(state, now);
-  const nextAction = weeklyBountyNextAction(state, now);
+  const bountyBundle = weeklyBountySnapshotBundle(state, now);
+  const nextAction = bountyBundle.nextAction;
   const cn = countClaimableWeeklyAll(state, now);
   const doneCount = countWeeklyBountyTasksCompleted(state);
   const doneEl = document.getElementById("bounty-milestone-done-count");
   if (doneEl) doneEl.textContent = String(doneCount);
-  const taskSnapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
+  const taskSnapshots = bountyBundle.snapshot.taskMap;
   if (claimAllBtn) claimAllBtn.disabled = cn <= 0;
   if (claimAllLbl) claimAllLbl.textContent = `一键领取可领奖励（悬赏+里程 ${cn}）`;
   const pendingLbl = document.getElementById("bounty-feedback-pending");

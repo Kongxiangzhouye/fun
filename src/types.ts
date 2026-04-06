@@ -177,6 +177,10 @@ export interface EstateCommissionState {
   offer: EstateCommissionOffer | null;
   active: EstateCommissionActive | null;
   refreshCount: number;
+  streak: number;
+  /** 连续成功类型（用于专精加成）；中断时清空 */
+  lastSuccessType: EstateCommissionType | null;
+  refreshCooldownUntilMs: number;
 }
 
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */
