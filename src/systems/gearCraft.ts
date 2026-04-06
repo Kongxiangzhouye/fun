@@ -1,5 +1,5 @@
 import type { GameState, GearAffixRoll, GearItem, GearSlot, GearStatKey, Rarity } from "../types";
-import { normalizeLifetimeStats } from "./pullChronicle";
+import { normalizeLifetimeStats, recordXuanTieSpentLifetime } from "./pullChronicle";
 import { xuanTieFromGearPiece } from "./salvage";
 import { GEAR_GRADE_MAX } from "../types";
 import { nextRand01 } from "../rng";
@@ -235,6 +235,7 @@ export function enhanceGear(state: GameState, id: string): { ok: boolean; msg: s
   const cost = xuanTieEnhanceCost(curLv);
   if (state.xuanTie < cost) return { ok: false, msg: "玄铁不足" };
   state.xuanTie -= cost;
+  recordXuanTieSpentLifetime(state, cost);
   state.gearSlotEnhance[g.slot] = curLv + 1;
   for (const m of [...g.prefixes, ...g.suffixes]) {
     m.value *= 1.035;

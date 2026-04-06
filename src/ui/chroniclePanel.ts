@@ -29,6 +29,8 @@ import {
   UI_CHRONICLE_DAO_ESSENCE_SPENT_STAT,
   UI_CHRONICLE_SUMMON_ESSENCE_SPENT_STAT,
   UI_CHRONICLE_ZHULING_ESSENCE_SPENT_STAT,
+  UI_CHRONICLE_LING_SHA_SPENT_STAT,
+  UI_CHRONICLE_XUAN_TIE_SPENT_STAT,
   UI_CHRONICLE_OFFLINE_ADVENTURE_STAT,
   UI_CHRONICLE_OFFLINE_STONE_SETTLEMENT_STAT,
   UI_CHRONICLE_PET_FEED_STAT,
@@ -373,6 +375,20 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">累计消耗筑灵髓</span>
             <strong class="chronicle-stat-val">${ls.zhuLingEssenceSpentLifetime}</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--ling-spend">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_LING_SHA_SPENT_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">累计消耗灵砂</span>
+            <strong class="chronicle-stat-val">${ls.lingShaSpentLifetime}</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--xuan-spend">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_XUAN_TIE_SPENT_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">累计消耗玄铁</span>
+            <strong class="chronicle-stat-val">${ls.xuanTieSpentLifetime}</strong>
           </div>
         </div>
         <div class="chronicle-stat-card">

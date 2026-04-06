@@ -1,7 +1,7 @@
 import Decimal from "decimal.js";
 import type { GameState } from "../types";
 import { canAfford, subStones } from "../stones";
-import { recordSpiritArrayUpgradeLifetime } from "./pullChronicle";
+import { recordLingShaSpentLifetime, recordSpiritArrayUpgradeLifetime } from "./pullChronicle";
 
 export const SPIRIT_ARRAY_MAX_LEVEL = 30;
 
@@ -37,6 +37,7 @@ export function tryUpgradeSpiritArray(state: GameState): boolean {
   if (!canAfford(state, sc) || state.lingSha < lc) return false;
   if (!subStones(state, sc)) return false;
   state.lingSha -= lc;
+  recordLingShaSpentLifetime(state, lc);
   state.spiritArrayLevel = lv + 1;
   recordSpiritArrayUpgradeLifetime(state);
   return true;

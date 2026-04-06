@@ -76,6 +76,8 @@ export function normalizeLifetimeStats(st: GameState): void {
       daoEssenceSpentLifetime: 0,
       summonEssenceSpentLifetime: 0,
       zhuLingEssenceSpentLifetime: 0,
+      lingShaSpentLifetime: 0,
+      xuanTieSpentLifetime: 0,
     };
     return;
   }
@@ -217,6 +219,12 @@ export function normalizeLifetimeStats(st: GameState): void {
   const zls = st.lifetimeStats.zhuLingEssenceSpentLifetime;
   if (zls == null || !Number.isFinite(zls)) st.lifetimeStats.zhuLingEssenceSpentLifetime = 0;
   else st.lifetimeStats.zhuLingEssenceSpentLifetime = Math.max(0, Math.floor(zls));
+  const lss = st.lifetimeStats.lingShaSpentLifetime;
+  if (lss == null || !Number.isFinite(lss)) st.lifetimeStats.lingShaSpentLifetime = 0;
+  else st.lifetimeStats.lingShaSpentLifetime = Math.max(0, Math.floor(lss));
+  const xts = st.lifetimeStats.xuanTieSpentLifetime;
+  if (xts == null || !Number.isFinite(xts)) st.lifetimeStats.xuanTieSpentLifetime = 0;
+  else st.lifetimeStats.xuanTieSpentLifetime = Math.max(0, Math.floor(xts));
 }
 
 /** 幻域击败真首领时累加 */
@@ -261,6 +269,28 @@ export function recordZhuLingEssenceSpentLifetime(state: GameState, amount: numb
   const cur = state.lifetimeStats.zhuLingEssenceSpentLifetime;
   const next = cur + a;
   state.lifetimeStats.zhuLingEssenceSpentLifetime =
+    next > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : next;
+}
+
+/** 任意途径消耗灵砂时累加（整数，防溢出截断至安全整数上限） */
+export function recordLingShaSpentLifetime(state: GameState, amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  normalizeLifetimeStats(state);
+  const a = Math.floor(amount);
+  const cur = state.lifetimeStats.lingShaSpentLifetime;
+  const next = cur + a;
+  state.lifetimeStats.lingShaSpentLifetime =
+    next > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : next;
+}
+
+/** 任意途径消耗玄铁时累加（整数，防溢出截断至安全整数上限） */
+export function recordXuanTieSpentLifetime(state: GameState, amount: number): void {
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  normalizeLifetimeStats(state);
+  const a = Math.floor(amount);
+  const cur = state.lifetimeStats.xuanTieSpentLifetime;
+  const next = cur + a;
+  state.lifetimeStats.xuanTieSpentLifetime =
     next > Number.MAX_SAFE_INTEGER ? Number.MAX_SAFE_INTEGER : next;
 }
 

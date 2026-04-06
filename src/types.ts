@@ -150,6 +150,10 @@ export interface LifetimeStatsState {
   summonEssenceSpentLifetime: number;
   /** 累计消耗筑灵髓（境界铸灵、幻域入場费等所有扣费合计，整数） */
   zhuLingEssenceSpentLifetime: number;
+  /** 累计消耗灵砂（灵卡升阶、纳灵阵图、天机匣等合计，整数） */
+  lingShaSpentLifetime: number;
+  /** 累计消耗玄铁（槽位强化、天机匣等合计，整数） */
+  xuanTieSpentLifetime: number;
 }
 
 /** 灵田作物 id */

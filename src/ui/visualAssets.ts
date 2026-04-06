@@ -113,6 +113,10 @@ export const UI_CHRONICLE_DAO_ESSENCE_SPENT_STAT = asset("chronicle-dao-essence-
 export const UI_CHRONICLE_SUMMON_ESSENCE_SPENT_STAT = asset("chronicle-summon-essence-spent-stat.svg");
 /** 唤灵通鉴 · 累计消耗筑灵髓小标 */
 export const UI_CHRONICLE_ZHULING_ESSENCE_SPENT_STAT = asset("chronicle-zhuling-essence-spent-stat.svg");
+/** 唤灵通鉴 · 累计消耗灵砂小标 */
+export const UI_CHRONICLE_LING_SHA_SPENT_STAT = asset("chronicle-ling-sha-spent-stat.svg");
+/** 唤灵通鉴 · 累计消耗玄铁小标 */
+export const UI_CHRONICLE_XUAN_TIE_SPENT_STAT = asset("chronicle-xuan-tie-spent-stat.svg");
 /** 唤灵通鉴 · 灵宠喂养累计小标 */
 export const UI_CHRONICLE_PET_FEED_STAT = asset("chronicle-pet-feed-stat.svg");
 /** 唤灵通鉴 · 灵田种植累计小标 */

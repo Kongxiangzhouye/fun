@@ -368,6 +368,38 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "forgeNova",
   },
   {
+    id: "ling_sha_spent_800",
+    title: "砂流千点",
+    desc: "累计消耗灵砂 800（升阶、绘阵、天机匣等合计）",
+    rewardStones: 900,
+    rewardEssence: 48,
+    listDeco: "stash",
+  },
+  {
+    id: "ling_sha_spent_15000",
+    title: "砂尽尘明",
+    desc: "累计消耗灵砂 15000",
+    rewardStones: 5200,
+    rewardEssence: 200,
+    listDeco: "stashBloom",
+  },
+  {
+    id: "xuan_tie_spent_400",
+    title: "铁火铸基",
+    desc: "累计消耗玄铁 400（槽位强化、天机匣等合计）",
+    rewardStones: 700,
+    rewardEssence: 38,
+    listDeco: "forge",
+  },
+  {
+    id: "xuan_tie_spent_12000",
+    title: "玄铁成山",
+    desc: "累计消耗玄铁 12000",
+    rewardStones: 4200,
+    rewardEssence: 168,
+    listDeco: "forgeEmber",
+  },
+  {
     id: "pet_first_feed",
     title: "灵契初结",
     desc: "在唤灵池结缘任意灵宠",
@@ -1233,6 +1265,14 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.zhuLingEssenceSpentLifetime ?? 0) >= 2500;
     case "zhu_ling_essence_spent_35000":
       return (state.lifetimeStats?.zhuLingEssenceSpentLifetime ?? 0) >= 35000;
+    case "ling_sha_spent_800":
+      return (state.lifetimeStats?.lingShaSpentLifetime ?? 0) >= 800;
+    case "ling_sha_spent_15000":
+      return (state.lifetimeStats?.lingShaSpentLifetime ?? 0) >= 15000;
+    case "xuan_tie_spent_400":
+      return (state.lifetimeStats?.xuanTieSpentLifetime ?? 0) >= 400;
+    case "xuan_tie_spent_12000":
+      return (state.lifetimeStats?.xuanTieSpentLifetime ?? 0) >= 12000;
     case "pet_first_feed":
       return anyPetOwned(state);
     case "pet_level_30":
