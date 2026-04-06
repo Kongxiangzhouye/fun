@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "notes": [
+    {
+      "date": "2026-04-06",
+      "title": "UI asset pipeline baseline",
+      "highlights": [
+        "Established src/data/*Ui.ts single-source mapping.",
+        "Added manifest index, category view, and conventions.",
+        "Added handoff, import profiles, quality checklist, and version history."
+      ]
+    },
+    {
+      "date": "2026-04-06",
+      "title": "Cross-team delivery alignment",
+      "highlights": [
+        "Added task-level handoff manifest with programHook keys.",
+        "Added import profiles for PNG icon and SVG panel assets."
+      ]
+    }
+  ]
+}

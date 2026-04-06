@@ -7,6 +7,7 @@
   "importProfiles": "ui-art-import-profiles.json",
   "qualityChecklist": "ui-art-qc-checklist.json",
   "versionHistory": "ui-art-version-history.json",
+  "releaseNotes": "ui-art-release-notes.json",
   "manifests": [
     { "id": "hud_bar_icons", "file": "hud-bar-icons-manifest.json" },
     { "id": "empty_state_art", "file": "empty-state-art-manifest.json" },
