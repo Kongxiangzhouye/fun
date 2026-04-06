@@ -35,6 +35,83 @@ export interface PetProgress {
   xp: number;
 }
 
+/** 灵卡唤引通鉴单条 */
+export interface PullChronicleEntry {
+  atMs: number;
+  defId: string;
+  rarity: Rarity;
+  isNew: boolean;
+}
+
+/** 行囊背包列表排序（与 UI 一致，持久化） */
+export type GearInventorySortMode = "rarity" | "ilvl" | "slot" | "name";
+
+/** 铸灵池产出通鉴单条（与灵卡分表） */
+export interface GearPullChronicleEntry {
+  atMs: number;
+  baseId: string;
+  rarity: Rarity;
+  /** 产出时的展示名快照 */
+  displayName: string;
+}
+
+/** 终身统计（部分由事件累加） */
+export interface LifetimeStatsState {
+  /** 历练副本入包累计的整数筑灵髓（不含唤灵髓、抽卡/成就等来源） */
+  dungeonEssenceIntGained: number;
+  /** 天机匣累计成功兑换次数 */
+  celestialStashBuys: number;
+  /** 蓄灵池累计收取次数 */
+  spiritReservoirClaims: number;
+  /** 心斋卦象累计刷新次数（跨日计数） */
+  dailyFortuneRolls: number;
+  /** 累计铸灵次数（铸灵池成功产出装备） */
+  gearForgesTotal: number;
+  /** 历史铸灵达到过的最高稀有度阶位 0–4（N…UR），用于成就，不因分解降低） */
+  maxGearRarityRankForged: number;
+  /** 累计有多少个自然周曾完成并领取全部周常悬赏条目（每周最多计 1 次） */
+  weeklyBountyFullWeeks: number;
+  /** 最近一次计入 `weeklyBountyFullWeeks` 的周 key（与 `weeklyBounty.weekKey` 同源），防同周重复累加 */
+  lastWeeklyBountyFullWeekKey: string;
+}
+
+/** 灵田作物 id */
+export type GardenCropId = "qing_grass" | "cloud_shroom" | "jade_mist";
+
+/** 洞府灵田：时间制种植，轮回不重置 */
+export interface SpiritGardenState {
+  plots: Array<{ crop: GardenCropId | null; plantedAtMs: number }>;
+  /** 累计收获次数（成就） */
+  totalHarvests: number;
+}
+
+/** 周常悬赏：按自然周（本地周一）重置 */
+export interface WeeklyBountyState {
+  weekKey: string;
+  waves: number;
+  cardPulls: number;
+  /** 本周铸灵池成功产出次数 */
+  gearForges: number;
+  gardenHarvests: number;
+  tuna: number;
+  breakthroughs: number;
+  claimed: string[];
+}
+
+/** 天机匣：每周轮换限购兑换（与周悬赏同周 key） */
+export interface CelestialStashState {
+  weekKey: string;
+  /** 本周已兑换的 offer id */
+  purchased: string[];
+}
+
+/** 心斋卦象：按本地日刷新的一条运势（影响灵石/幻域等乘区） */
+export interface DailyFortuneState {
+  /** 当前卦象对应的日历日 YYYY-MM-DD */
+  calendarDay: string;
+  fortuneId: string;
+}
+
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */
 export type GearStatKey =
   | "life_flat"
@@ -55,21 +132,42 @@ export interface GearAffixRoll {
   text: string;
 }
 
+export type GearSlot =
+  | "weapon"
+  | "body"
+  | "ring"
+  | "slot4"
+  | "slot5"
+  | "slot6"
+  | "slot7"
+  | "slot8"
+  | "slot9"
+  | "slot10"
+  | "slot11"
+  | "slot12";
+
 /** 一件装备实例 */
 export interface GearItem {
   instanceId: string;
   baseId: string;
   displayName: string;
-  slot: "weapon" | "body" | "ring";
+  slot: GearSlot;
   rarity: Rarity;
+  /** 筑灵阶 1–48：越高词条池越强（与稀有度、装等协同） */
+  gearGrade: number;
   itemLevel: number;
-  /** SSR 及以下：与灵卡同级强化感；UR 可继续精炼 */
+  /** 旧存档兼容字段：强化已迁移为槽位强化，不再绑定单件装备 */
   enhanceLevel: number;
   /** 仅 UR：消耗同基底同稀有度提升 */
   refineLevel: number;
   prefixes: GearAffixRoll[];
   suffixes: GearAffixRoll[];
+  /** 锁定后不可分解，且不能作为自动分解与精炼消耗（可手动解锁） */
+  locked?: boolean;
 }
+
+export type EquippedGearState = Record<GearSlot, string | null>;
+export type GearSlotEnhanceState = Record<GearSlot, number>;
 
 /** 幻域地图上的单只魔物（位置 0–1 归一化，对应格子中心） */
 export interface DungeonMob {
@@ -118,6 +216,16 @@ export interface WaveCheckpoint {
   spawnY: number;
   /** 接续时是否复刷关（影响唤灵髓倍率） */
   rewardModeRepeat?: boolean;
+  /** 阵线对决暂离：连击/破绽/战意（与 DungeonState 同名场一致） */
+  duelComboStacks?: number;
+  duelWeakUntilMs?: number;
+  duelWeakNextAtMs?: number;
+  duelFervor?: number;
+  duelElemSurgeCounter?: number;
+  /** 首领前哨：本波累计击杀的小兵数（用于解锁挑战首领） */
+  bossPrepKills?: number;
+  /** 首领前哨：是否已达到挑战门槛 */
+  bossPrepChallengeReady?: boolean;
 }
 
 export interface DungeonState {
@@ -164,16 +272,16 @@ export interface DungeonState {
   attackAnimPhase: number;
   /** 是否与目标接战（供 UI 动画） */
   inMelee: boolean;
-  /** 幻域表现：接战且出手时为圆形 AoE（`aoe`）；`single` 保留兼容旧存档 */
-  attackVisualMode: "none" | "aoe" | "single";
+  /** 幻域表现：接战且出手时为圆形 AoE */
+  attackVisualMode: "none" | "aoe";
   /** 清完一波后，到下一波刷怪前的休整截止时间（ms）；0 表示未在休整 */
   interWaveCooldownUntil: number;
   /** 当前波累计获得唤灵髓（本关结算展示） */
   essenceThisWave: number;
   /** 待主界面 toast 的关卡结算文案（消费后清空） */
   pendingToast: string | null;
-  /** 兼容旧存档；已不再用于 UI，阵亡说明见 `pendingToast` */
-  pendingDeathPresentation: boolean;
+  /** 单次击杀即时入袋整数筑灵髓的提示（小兵；消费后清空） */
+  pendingKillToast: string | null;
   /** 各波次未通关时的进度（反复挑战同一关时魔物血量持久化） */
   waveCheckpoint: Record<number, WaveCheckpoint>;
   /** 当前波地图生成时的出生点（用于阵亡/暂离后再入） */
@@ -198,6 +306,32 @@ export interface DungeonState {
   autoEnterConsumed: boolean;
   /** 本次进本时刻（ms），用于本局用时；进本时写入，暂离/阵亡出本后保留至下次进本覆盖 */
   sessionEnterAtMs: number;
+  /** 阵线对决：连击层数（命中累加，偏斜或换目标清零） */
+  duelComboStacks: number;
+  /** 破绽窗口结束时间（ms）；≤now 表示未激活 */
+  duelWeakUntilMs: number;
+  /** 下次尝试触发破绽的时间（ms） */
+  duelWeakNextAtMs: number;
+  /** 战意 0–100，满额下一击消耗并增伤 */
+  duelFervor: number;
+  /** 克制命中计数，用于灵脉共鸣 */
+  duelElemSurgeCounter: number;
+  /** 首领前哨：本波累计击杀的小兵数（达到门槛后可随时挑战首领） */
+  bossPrepKills: number;
+  /** 首领前哨：是否已达到挑战门槛（达到后即便继续刷小兵也保持可挑战） */
+  bossPrepChallengeReady: boolean;
+}
+
+/** 界面偏好（写入存档；不影响玩法数值） */
+export interface UiPrefs {
+  /** 减弱装饰性过渡与动画（根节点 CSS 类） */
+  reduceMotion: boolean;
+  /** true：灵石等使用 K/M/B 缩写；false：尽量完整数字 */
+  compactNumbers: boolean;
+  /** 全局静音（保留主音量数值，取消静音后恢复） */
+  soundMuted: boolean;
+  /** 主音量 0–1（未静音时对 Web Audio / 后续音效生效） */
+  masterVolume: number;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */
@@ -220,8 +354,10 @@ export interface GameState {
   spiritStones: string;
   /** 本轮轮回内峰值灵石（道韵对数结算） */
   peakSpiritStonesThisLife: string;
-  /** 唤灵髓：抽卡唯一货币，仅副本掉落 */
+  /** 唤灵髓：共鸣、心法、灵宠等（非副本抽卡） */
   summonEssence: number;
+  /** 筑灵髓：历练副本掉落；灵卡池与境界铸灵消耗 */
+  zhuLingEssence: number;
   /** 道韵：轮回货币 */
   daoEssence: number;
   /** 造化玉：QoL 解锁 */
@@ -237,14 +373,21 @@ export interface GameState {
   dungeonSanctuaryMode: boolean;
   /** 自动传送目标波次（阵亡时记录，0 表示无） */
   dungeonPortalTargetWave: number;
-  /** 圣所回满后是否自动进本（付入场髓）；未勾选则需手动点击 */
+  /** 圣所回满后是否自动进本；未勾选则需手动点击 */
   dungeonSanctuaryAutoEnter: boolean;
+  /**
+   * 首领关（每 5 波）是否先刷小怪群；为 false 时该波为真正首领。
+   * 击败首领后会自动设回 true，进入「先清小怪再点挑战首领」节奏。
+   */
+  dungeonDeferBoss: boolean;
   /** 已抽总次数（用于统计与成就） */
   totalPulls: number;
   /** 距离 UR 保底的计数（大保底） */
   pityUr: number;
   /** 距离 SSR+ 软保底的计数 */
   pitySsrSoft: number;
+  /** 铸灵池：连续未出珍品+（SR 及以上）的计数，用于珍品保底 */
+  gearPityPulls: number;
   owned: Record<string, OwnedCard>;
   /** 卡组槽位：最多 6 张，存 defId 或 null */
   deck: (string | null)[];
@@ -309,6 +452,9 @@ export interface GameState {
   /** 勾选后不再弹出任何功能说明 */
   suppressFeatureGuides: boolean;
 
+  /** 显示与舒适度偏好 */
+  uiPrefs: UiPrefs;
+
   /** 洞府蕴灵（卡组外持久养成，轮回不重置） */
   vein: {
     huiLing: number;
@@ -336,6 +482,10 @@ export interface GameState {
   firstOpenTodayMs: number;
   dailyStreak: number;
   lastLoginCalendarDate: string | null;
+  /** 上次执行灵息日历跨日逻辑的本机日 YYYY-MM-DD */
+  dailyLoginTickDay: string | null;
+  /** 上次领取灵息日历礼的本机日 */
+  dailyLoginClaimedDate: string | null;
 
   /** 吐纳：上次点击时间 ms，0 表示从未 */
   lastTunaMs: number;
@@ -347,18 +497,58 @@ export interface GameState {
   dungeon: DungeonState;
 
   gearInventory: Record<string, GearItem>;
-  equippedGear: { weapon: string | null; body: string | null; ring: string | null };
+  equippedGear: EquippedGearState;
+  /** 槽位强化等级：替换装备后仍保留在该部位 */
+  gearSlotEnhance: GearSlotEnhanceState;
   nextGearInstanceId: number;
+  /** 行囊背包排序偏好 */
+  gearInventorySort: GearInventorySortMode;
 
   /** 已邂逅的灵宠（仅存在的键）；唤灵池抽到后才可喂养 */
   pets: Partial<Record<PetId, PetProgress>>;
   /** 累计唤灵次数（统计） */
   petPullsTotal: number;
+
+  /** 灵府·灵田（种植收获，持久养成） */
+  spiritGarden: SpiritGardenState;
+
+  /** 周常悬赏进度与领取记录 */
+  weeklyBounty: WeeklyBountyState;
+
+  /** 天机匣：周限购资源兑换 */
+  celestialStash: CelestialStashState;
+
+  /**
+   * 蓄灵池：额外比例灵石蓄存（与每秒灵石挂钩，收取时并入灵石）
+   */
+  spiritReservoirStored: string;
+
+  /** 心斋卦象（每日运势） */
+  dailyFortune: DailyFortuneState;
+
+  /**
+   * 纳灵阵图等级（灵府；轮回不重置）：提升全局灵石收益乘区
+   */
+  spiritArrayLevel: number;
+
+  /**
+   * 道韵灵窍：0–5 已解锁层数（消耗道韵；轮回不重置）
+   */
+  daoMeridian: number;
+
+  /** 最近灵卡唤引记录（轮替 FIFO） */
+  pullChronicle: PullChronicleEntry[];
+  /** 最近铸灵池产出记录（轮替 FIFO） */
+  gearPullChronicle: GearPullChronicleEntry[];
+  /** 终身统计 */
+  lifetimeStats: LifetimeStatsState;
 }
 
 export const DECK_SIZE = 6;
 export const MAX_CARD_LEVEL = 100;
 export const MAX_STARS = 5;
+/** 装备筑灵阶上限（与稀有度并行，用于词条池分层） */
+export const GEAR_GRADE_MAX = 48;
 
 /** 升级消耗：灵石 = base * level^gamma */
 export const LEVEL_COST_BASE = 12;
@@ -402,7 +592,7 @@ export const DUNGEON_INTER_WAVE_CD_MS = 4_000;
 
 /** 复刷已通关波次：唤灵髓相对首通的比例 */
 export const DUNGEON_REPEAT_ESSENCE_MULT = 0.2;
-/** 复刷关入场费相对首通的比例 */
+/** 历史：复刷关入场费相对首通的比例；当前无入场费，保留常量以免改存档键 */
 export const DUNGEON_REPEAT_ENTRY_FEE_MULT = 0.45;
 
 /** 怪物攻击间隔（秒） */

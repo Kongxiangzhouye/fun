@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "naming": "Filenames from GEAR_SLOT_UI_FILES in src/data/gearSlotUi.ts; served as public/assets/ui/<file>.",
+  "slots": [
+    { "id": "weapon", "file": "gear-weapon.svg" },
+    { "id": "body", "file": "gear-body.svg" },
+    { "id": "ring", "file": "gear-ring.svg" },
+    { "id": "slot4", "file": "gear-slot-slot4.svg" },
+    { "id": "slot5", "file": "gear-slot-slot5.svg" },
+    { "id": "slot6", "file": "gear-slot-slot6.svg" },
+    { "id": "slot7", "file": "gear-slot-slot7.svg" },
+    { "id": "slot8", "file": "gear-slot-slot8.svg" },
+    { "id": "slot9", "file": "gear-slot-slot9.svg" },
+    { "id": "slot10", "file": "gear-slot-slot10.svg" },
+    { "id": "slot11", "file": "gear-slot-slot11.svg" },
+    { "id": "slot12", "file": "gear-slot-slot12.svg" }
+  ]
+}

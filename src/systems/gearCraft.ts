@@ -1,6 +1,41 @@
-import type { GameState, GearAffixRoll, GearItem, GearStatKey, Rarity } from "../types";
+import type { GameState, GearAffixRoll, GearItem, GearSlot, GearStatKey, Rarity } from "../types";
+import { xuanTieFromGearPiece } from "./salvage";
+import { GEAR_GRADE_MAX } from "../types";
 import { nextRand01 } from "../rng";
-import { GEAR_BASES, getGearBase, maxAffixCount, maxEnhanceLevel } from "../data/gearBases";
+import { rarityRank } from "../data/rarityRank";
+import { ALL_GEAR_SLOTS, GEAR_BASES, getGearBase, maxAffixCount, maxEnhanceLevel } from "../data/gearBases";
+import { gearForgeAscensionLevel, gearForgeIlvlBonus, rollGearRarityForForge } from "./gearGachaTier";
+
+/** 单件装备战力（与顶栏综合战力不同：仅用于同部位替换比对） */
+export function gearItemPower(g: GearItem, slotEnhanceLevel = 0): number {
+  const rr = rarityRank(g.rarity);
+  const grade = Math.max(1, Math.min(GEAR_GRADE_MAX, g.gearGrade ?? 1 + rr * 8));
+  let affixSum = 0;
+  for (const a of [...g.prefixes, ...g.suffixes]) affixSum += a.value;
+  return (
+    g.itemLevel * 10 +
+    rr * 220 +
+    grade * 6 +
+    affixSum * 2 +
+    Math.max(0, Math.floor(slotEnhanceLevel)) * 22 +
+    (g.rarity === "UR" ? g.refineLevel * 55 : 0)
+  );
+}
+
+export function slotEnhanceLevel(state: GameState, slot: GearSlot): number {
+  const raw = state.gearSlotEnhance?.[slot] ?? 0;
+  return Math.max(0, Math.floor(Number.isFinite(raw) ? raw : 0));
+}
+
+/** 存档迁移：缺省时由稀有度推导筑灵阶 */
+export function normalizeGearGrade(g: GearItem): void {
+  if (g.gearGrade != null && Number.isFinite(g.gearGrade) && g.gearGrade >= 1) {
+    g.gearGrade = Math.min(GEAR_GRADE_MAX, Math.max(1, Math.floor(g.gearGrade)));
+    return;
+  }
+  const rr = rarityRank(g.rarity);
+  g.gearGrade = Math.min(GEAR_GRADE_MAX, Math.max(1, rr * 9 + 4));
+}
 
 interface AffixTemplate {
   groupId: string;
@@ -46,7 +81,7 @@ const PREFIXES: AffixTemplate[] = [
     groupId: "hun",
     stat: "essence_find",
     roll: (t, il) => 3 + t * 2 + il * 0.05,
-    text: (v) => `噬髓 唤灵髓发现 ${v.toFixed(1)}%`,
+    text: (v) => `噬髓 筑灵髓发现 ${v.toFixed(1)}%`,
   },
 ];
 
@@ -83,17 +118,11 @@ const SUFFIXES: AffixTemplate[] = [
   },
 ];
 
-function pickRarity(state: GameState): Rarity {
-  const r = nextRand01(state);
-  if (r < 0.38) return "N";
-  if (r < 0.68) return "R";
-  if (r < 0.88) return "SR";
-  if (r < 0.97) return "SSR";
-  return "UR";
-}
-
-function rollTier(state: GameState): number {
-  return 1 + Math.min(4, Math.floor(nextRand01(state) * 5));
+/** 筑灵阶越高，词条 tier 越容易Roll到高位 */
+function rollAffixTier(state: GameState, gearGrade: number): number {
+  const base = 1 + Math.min(7, Math.floor(gearGrade / 6));
+  const jitter = Math.floor(nextRand01(state) * 3);
+  return Math.min(8, Math.max(1, base + jitter - 1));
 }
 
 function fillMods(
@@ -102,6 +131,7 @@ function fillMods(
   count: number,
   ilvl: number,
   rarity: Rarity,
+  gearGrade: number,
   used: Set<string>,
 ): GearAffixRoll[] {
   const out: GearAffixRoll[] = [];
@@ -109,7 +139,7 @@ function fillMods(
   for (let i = 0; i < count && pool.length > 0; i++) {
     const pick = pool.splice(Math.floor(nextRand01(state) * pool.length), 1)[0]!;
     used.add(pick.groupId);
-    const tier = rollTier(state);
+    const tier = rollAffixTier(state, gearGrade);
     const val = pick.roll(tier, ilvl, rarity);
     out.push({
       groupId: pick.groupId,
@@ -123,15 +153,30 @@ function fillMods(
 }
 
 export function generateRandomGear(state: GameState, forceRarity?: Rarity): GearItem {
-  const rarity = forceRarity ?? pickRarity(state);
-  const base = GEAR_BASES[Math.floor(nextRand01(state) * GEAR_BASES.length)]!;
+  const forgeTier = gearForgeAscensionLevel(state);
+  const rarity = forceRarity ?? rollGearRarityForForge(state, forgeTier);
+  // 槽位等权：12 个部位等概率，再在该部位基底池内随机。
+  const slot = ALL_GEAR_SLOTS[Math.floor(nextRand01(state) * ALL_GEAR_SLOTS.length)]!;
+  const slotBases = GEAR_BASES.filter((x) => x.slot === slot);
+  const basePool = slotBases.length > 0 ? slotBases : GEAR_BASES;
+  const base = basePool[Math.floor(nextRand01(state) * basePool.length)]!;
   const b = getGearBase(base.id)!;
-  const ilvl = Math.floor(b.baseItemLevel + state.realmLevel * 0.9 + state.skills.combat.level * 0.4);
+  const ilvl = Math.floor(
+    b.baseItemLevel + state.realmLevel * 0.9 + state.skills.combat.level * 0.4 + gearForgeIlvlBonus(forgeTier),
+  );
+  const rr = rarityRank(rarity);
+  const gearGrade = Math.min(
+    GEAR_GRADE_MAX,
+    Math.max(
+      1,
+      rr * 9 + 1 + Math.floor(nextRand01(state) * 10) + Math.floor(ilvl / 28) + Math.floor(forgeTier * 0.35),
+    ),
+  );
   const counts = maxAffixCount(rarity);
   const usedP = new Set<string>();
   const usedS = new Set<string>();
-  const prefixes = fillMods(state, PREFIXES, counts.p, ilvl, rarity, usedP);
-  const suffixes = fillMods(state, SUFFIXES, counts.s, ilvl, rarity, usedS);
+  const prefixes = fillMods(state, PREFIXES, counts.p, ilvl, rarity, gearGrade, usedP);
+  const suffixes = fillMods(state, SUFFIXES, counts.s, ilvl, rarity, gearGrade, usedS);
   const id = `gear_${state.nextGearInstanceId++}`;
   return {
     instanceId: id,
@@ -139,11 +184,13 @@ export function generateRandomGear(state: GameState, forceRarity?: Rarity): Gear
     displayName: `${b.name}`,
     slot: b.slot,
     rarity,
+    gearGrade,
     itemLevel: ilvl,
     enhanceLevel: 0,
     refineLevel: 0,
     prefixes,
     suffixes,
+    locked: false,
   };
 }
 
@@ -153,16 +200,16 @@ export function tryRefineUr(
   targetId: string,
   consumeId: string,
 ): { ok: boolean; msg: string } {
+  const isEquipped = (id: string): boolean => Object.values(state.equippedGear).some((v) => v === id);
   if (targetId === consumeId) return { ok: false, msg: "不能消耗自身" };
   const a = state.gearInventory[targetId];
   const b = state.gearInventory[consumeId];
   if (!a || !b) return { ok: false, msg: "装备不存在" };
   if (a.rarity !== "UR" || b.rarity !== "UR") return { ok: false, msg: "仅天极可精炼" };
   if (a.baseId !== b.baseId) return { ok: false, msg: "需同基底资质" };
+  if (b.locked) return { ok: false, msg: "消耗件已锁定，请先解锁" };
+  if (isEquipped(consumeId)) return { ok: false, msg: "请先卸下消耗件" };
   delete state.gearInventory[consumeId];
-  if (state.equippedGear.weapon === consumeId) state.equippedGear.weapon = null;
-  if (state.equippedGear.body === consumeId) state.equippedGear.body = null;
-  if (state.equippedGear.ring === consumeId) state.equippedGear.ring = null;
   a.refineLevel += 1;
   return { ok: true, msg: "精炼成功" };
 }
@@ -174,12 +221,13 @@ export function xuanTieEnhanceCost(enhanceLevel: number): number {
 export function enhanceGear(state: GameState, id: string): { ok: boolean; msg: string } {
   const g = state.gearInventory[id];
   if (!g) return { ok: false, msg: "无此装备" };
+  const curLv = slotEnhanceLevel(state, g.slot);
   const max = maxEnhanceLevel(g.rarity);
-  if (g.enhanceLevel >= max) return { ok: false, msg: "强化已达上限" };
-  const cost = xuanTieEnhanceCost(g.enhanceLevel);
+  if (curLv >= max) return { ok: false, msg: "强化已达上限" };
+  const cost = xuanTieEnhanceCost(curLv);
   if (state.xuanTie < cost) return { ok: false, msg: "玄铁不足" };
   state.xuanTie -= cost;
-  g.enhanceLevel += 1;
+  state.gearSlotEnhance[g.slot] = curLv + 1;
   for (const m of [...g.prefixes, ...g.suffixes]) {
     m.value *= 1.035;
     const tpl = findAffixTemplate(m.groupId, m.stat);
@@ -195,6 +243,18 @@ export function equipGear(state: GameState, instanceId: string): { ok: boolean; 
   return { ok: true, msg: "已装备" };
 }
 
-export function unequipGear(state: GameState, slot: "weapon" | "body" | "ring"): void {
+/** 无背包：卸下视为拆解该件并获得玄铁（与分解规则一致）；已锁定则无法卸下 */
+export function unequipGear(state: GameState, slot: GearSlot): boolean {
+  const id = state.equippedGear[slot];
+  if (!id) return false;
+  const g = state.gearInventory[id];
+  if (!g) {
+    state.equippedGear[slot] = null;
+    return true;
+  }
+  if (g.locked) return false;
+  state.xuanTie += xuanTieFromGearPiece(g);
+  delete state.gearInventory[id];
   state.equippedGear[slot] = null;
+  return true;
 }

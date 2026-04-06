@@ -1,6 +1,7 @@
 import type { GameState } from "../types";
 import { TUNA_COOLDOWN_MS } from "../types";
 import { addStones } from "../stones";
+import { noteWeeklyBountyTuna } from "./weeklyBounty";
 
 export function tunaStoneReward(realmLevel: number): number {
   const rl = Math.max(1, Math.floor(realmLevel));
@@ -23,6 +24,7 @@ export function tryTuna(state: GameState, nowMs: number): number {
   const gain = tunaStoneReward(state.realmLevel);
   addStones(state, gain);
   state.lastTunaMs = nowMs;
+  noteWeeklyBountyTuna(state, nowMs);
   return gain;
 }
 

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "date": "2026-04-06",
+      "change": "Bootstrapped UI art manifest system and module-level *Ui.ts single-source mapping.",
+      "impact": ["pipeline", "documentation"]
+    },
+    {
+      "date": "2026-04-06",
+      "change": "Added handoff manifest, import profiles, quality checklist, and category index.",
+      "impact": ["outsourcing", "engine-import", "qa"]
+    },
+    {
+      "date": "2026-04-06",
+      "change": "Added UI terminology glossary, palette swatch SVG, and style-reference manifest.",
+      "impact": ["documentation", "outsourcing", "visual-consistency"]
+    },
+    {
+      "date": "2026-04-06",
+      "change": "Added weekly bounty claim burst and offline settlement SVG set with dedicated manifest/module wiring.",
+      "impact": ["weekly-bounty", "offline-settlement", "pipeline"]
+    },
+    {
+      "date": "2026-04-06",
+      "change": "Fixed empty-state SVG label encoding; replaced mojibake with readable zh captions and system-ui stack.",
+      "impact": ["empty-state", "localization", "visual-quality"]
+    }
+  ]
+}

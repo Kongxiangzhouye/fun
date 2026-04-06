@@ -1,28 +1,30 @@
-import type { GameState, Rarity, SkillId } from "../types";
+import type { Element, GameState, GearInventorySortMode, GearItem, Rarity, SkillId } from "../types";
 import {
   DUNGEON_DEATH_CD_MS,
   DUNGEON_DODGE_IFRAMES_MS,
   DUNGEON_DODGE_STAMINA_COST,
-  DUNGEON_INTER_WAVE_CD_MS,
   DUNGEON_STAMINA_MAX,
   PLAYER_DUNGEON_HIT_INTERVAL_SEC,
 } from "../types";
 import {
   canEnterDungeon,
   describeWaveProfile,
-  describeMobBattleRole,
-  dungeonEntryFeeForSelectedWave,
+  dungeonBossPrepSnapshot,
+  dungeonCombatPhase,
+  dungeonFrontierWave,
   essenceRewardTotalFloat,
   packSizeForWave,
-  pickCombatTargetMob,
-  playerEngageRadiusNorm,
+  currentBossMob,
 } from "../systems/dungeon";
 import {
   playerAttack,
   playerDungeonAttackSpeedMult,
-  playerExpectedDps,
   playerMaxHp,
 } from "../systems/playerCombat";
+import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "../systems/dungeonAffix";
+import { elementDamageMultiplier } from "../systems/elementCombat";
+import { playerBattleElement } from "../systems/playerElement";
+import { currentWeekKey } from "../systems/weeklyBounty";
 import {
   SKILL_HINT,
   SKILL_LABEL,
@@ -30,25 +32,57 @@ import {
   skillXpPerSecond,
   xpToNextLevel,
 } from "../systems/skillTraining";
-import { getGearBase } from "../data/gearBases";
-import { xuanTieEnhanceCost } from "../systems/gearCraft";
+import { rarityRank } from "../data/rarityRank";
+import { ALL_GEAR_SLOTS, getGearBase, GEAR_SLOT_LABEL } from "../data/gearBases";
+import { gearItemPower, xuanTieEnhanceCost } from "../systems/gearCraft";
 import { BATTLE_SKILLS } from "../data/battleSkills";
 import { battleSkillPullCost, describeBattleSkillLevels } from "../systems/battleSkills";
+import { isSlotTopPowerGear } from "../systems/salvage";
 import { rarityZh } from "./rarityZh";
 import {
-  GEAR_SLOT_ICON,
+  gearPortraitSrc,
   PET_PORTRAIT,
   UI_ESSENCE,
   UI_EMPTY_GEAR,
   UI_EMPTY_PET,
   UI_EMPTY_UNLOCK,
   UI_HEAD_DUNGEON,
+  UI_DUNGEON_DUEL_DECO,
+  UI_DUNGEON_HIT_FLASH_DECO,
+  UI_DUNGEON_CRIT_ECHO_DECO,
+  UI_DUNGEON_COMBO_CHAIN_DECO,
+  UI_DUNGEON_PHASE_TRASH_BADGE_DECO,
+  UI_DUNGEON_PHASE_BOSS_PREP_BADGE_DECO,
+  UI_DUNGEON_WEAKNESS_PING_DECO,
+  UI_DUEL_GAUGE_SWORD,
+  UI_DUEL_GAUGE_THREAT,
+  UI_DUNGEON_IDLE_MIST,
+  UI_DUEL_WAVE_BADGE,
+  UI_DUEL_FRAME_CORNER,
+  UI_DUNGEON_FOOT_TIMER_DECO,
+  UI_DUNGEON_PANEL_LIVE_STRIP,
+  UI_DUNGEON_ENTER_DECO,
+  UI_DUNGEON_READINESS_DECO,
+  UI_DUEL_BOSS_BADGE,
+  UI_DUNGEON_AFFIX_DECO,
+  UI_DUNGEON_AFFIX_CLASSIC_DECO,
+  UI_DUNGEON_AFFIX_VORTEX_DECO,
+  UI_DUNGEON_COUNTER_WINDOW_BADGE_DECO,
+  UI_DUNGEON_BOSS_READY_BADGE,
+  UI_DUNGEON_BOSS_LOCKED_BADGE,
+  UI_DUNGEON_BOSS_PROGRESS_RING,
+  UI_DUNGEON_REALM_CLASSIC_FRAME_DECO,
+  UI_DUNGEON_REALM_VORTEX_FRAME_DECO,
+  ELEMENT_ICON,
+  UI_GEAR_LOCK_DECO,
+  UI_GEAR_UPGRADE_UP,
+  UI_GEAR_UPGRADE_DOWN,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
   UI_HEAD_TRAIN,
+  UI_HEAD_COMBAT,
 } from "./visualAssets";
 import { formatMobDisplayName } from "../data/dungeonMobs";
-import { currentBossMob } from "../systems/dungeon";
 import { PET_DEFS } from "../data/pets";
 import {
   describePetBonusesSummary,
@@ -61,8 +95,13 @@ import {
   petDungeonAtkAdditive,
 } from "../systems/pets";
 
-/** 灵宠列表：稀有度天极 → 凡品 */
-const PET_RARITY_ORDER_DESC: Rarity[] = ["UR", "SSR", "SR", "R", "N"];
+const EL_ZH: Record<Element, string> = {
+  metal: "金",
+  wood: "木",
+  water: "水",
+  fire: "火",
+  earth: "土",
+};
 
 function fmtNum(n: number): string {
   if (n >= 1e4) return (n / 1e4).toFixed(1) + "万";
@@ -86,219 +125,402 @@ export function formatDungeonActiveMeta(state: GameState, now: number): string {
   const d = state.dungeon;
   const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
   const fmtSessEss = (n: number) => (n >= 200 ? n.toFixed(1) : n.toFixed(2));
-  const curMob = Math.min(d.packKilled + 1, d.packSize);
-  const waveEssF = essenceRewardTotalFloat(d.wave, state, d.wave % 5 === 0, d.rewardModeRepeat);
+  const waveEssF = essenceRewardTotalFloat(
+    d.wave,
+    state,
+    dungeonCombatPhase(state) === "boss_fight",
+    d.rewardModeRepeat,
+  );
   const nPk = packSizeForWave(d.wave + 1);
-  const aliveN = d.mobs.filter((m) => m.hp > 0).length;
-  const nearest = pickCombatTargetMob(d, playerEngageRadiusNorm(state));
-  const bossAlive = d.mobs.some((m) => m.isBoss && m.hp > 0);
-  const lockLine = nearest
-    ? `锁定 ${describeMobBattleRole(nearest)}：${fmtN(Math.max(0, nearest.hp))} / ${fmtN(nearest.maxHp)}`
+  const tgt = d.mobs.find((m) => m.hp > 0);
+  const lockLine = tgt
+    ? `敌阵灵压 ${fmtN(Math.max(0, tgt.hp))} / ${fmtN(tgt.maxHp)}${tgt.isBoss ? " · 首领" : ""}`
     : "—";
+  const pEl = playerBattleElement(state);
+  const elemLine = tgt
+    ? `五行 ${EL_ZH[pEl]}→${EL_ZH[tgt.element]} · 绽×${elementDamageMultiplier(pEl, tgt.element).toFixed(2)} · 承×${elementDamageMultiplier(tgt.element, pEl).toFixed(2)}`
+    : "五行 —";
   const lines = [
-    `本次击杀 ${d.sessionKills} · 本次髓 +${fmtSessEss(d.sessionEssence)} · 累计通关 ${d.totalWavesCleared} 波`,
-    `第 ${d.wave} 波 · 本波第 ${curMob} / ${d.packSize} · 场上 ${aliveN} 存活`,
-    `${lockLine} · 本关清完约 ${waveEssF.toFixed(2)} 髓 · 下波约 ${nPk} 只`,
+    `本次击溃 ${d.sessionKills} · 本次髓累计 +${fmtSessEss(d.sessionEssence)}（小兵即时入袋，关末记入此累计） · 通关 ${d.totalWavesCleared} 波`,
+    elemLine,
+    `第 ${d.wave} 波 · ${lockLine} · 本关清完约 ${waveEssF.toFixed(2)} 髓 · 下波灵压档参考 ${nPk}`,
   ];
-  if (!bossAlive && d.monsterMax > 0) {
-    lines.push(`汇总额 ${fmtN(Math.max(0, d.monsterHp))} / ${fmtN(d.monsterMax)}`);
-  }
   const iframesLeft = now < d.dodgeIframesUntil ? Math.ceil((d.dodgeIframesUntil - now) / 1000) : 0;
   lines.push(
-    `点击地图闪避（空格） · 耗体 ${DUNGEON_DODGE_STAMINA_COST} · 化劲 ${(DUNGEON_DODGE_IFRAMES_MS / 1000).toFixed(1)} 秒${iframesLeft > 0 ? ` · 余 ${iframesLeft} 秒` : ""}`,
+    `点击战场闪避 · 耗体 ${DUNGEON_DODGE_STAMINA_COST} · 化劲 ${(DUNGEON_DODGE_IFRAMES_MS / 1000).toFixed(1)} 秒${iframesLeft > 0 ? ` · 余 ${iframesLeft} 秒` : ""}`,
   );
   return lines.join("\n");
 }
 
+/** 手机端战报：少行、字号可读，与 formatDungeonActiveMeta 数据一致 */
+export function formatDungeonActiveMetaBrief(state: GameState, now: number): string {
+  const d = state.dungeon;
+  const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
+  const fmtSessEss = (n: number) => (n >= 200 ? n.toFixed(1) : n.toFixed(2));
+  const waveEssF = essenceRewardTotalFloat(
+    d.wave,
+    state,
+    dungeonCombatPhase(state) === "boss_fight",
+    d.rewardModeRepeat,
+  );
+  const tgt = d.mobs.find((m) => m.hp > 0);
+  const iframesLeft = now < d.dodgeIframesUntil ? Math.ceil((d.dodgeIframesUntil - now) / 1000) : 0;
+  const dodgeTip = `点屏闪避 · 耗体${DUNGEON_DODGE_STAMINA_COST} · 化劲${(DUNGEON_DODGE_IFRAMES_MS / 1000).toFixed(1)}秒${iframesLeft > 0 ? ` · 余${iframesLeft}秒` : ""}`;
+  const line1 = `第${d.wave}波 · 击溃${d.sessionKills} · 髓+${fmtSessEss(d.sessionEssence)} · 累计${d.totalWavesCleared}波`;
+  const line2 = tgt
+    ? `灵压 ${fmtN(Math.max(0, tgt.hp))}/${fmtN(tgt.maxHp)}${tgt.isBoss ? " · 首领" : ""} · 本关髓≈${waveEssF.toFixed(1)}`
+    : "";
+  return [line1, line2, dodgeTip].filter((s) => s.length > 0).join("\n");
+}
+
 export function formatDungeonInterMeta(): string {
-  return "本关结算完成。休整后进入下一关。接战时移速会降低，出手和受击后会短暂停顿。";
+  return "本关结算完成。休整后进入下一关。剑气/凶煞双轴读条，出手与受击会有短暂硬直。";
 }
 
 function renderDungeonMapHtml(state: GameState): string {
   const d = state.dungeon;
   if (!d.active) return "";
-  let cells = "";
-  if (d.walkable.length && d.mapW > 0) {
-    for (let y = 0; y < d.mapH; y++) {
-      for (let x = 0; x < d.mapW; x++) {
-        const w = d.walkable[y * d.mapW + x];
-        cells += `<div class="dcell ${w ? "walk" : "wall"}"></div>`;
-      }
-    }
-  }
-  let mobs = "";
-  for (const m of d.mobs) {
-    const boss = m.isBoss ? " mob-boss" : "";
-    const skin = ` mob-skin-${((m.mobKind % 8) + 8) % 8}`;
-    const hpPct = m.maxHp > 0 ? Math.min(100, (100 * Math.max(0, m.hp)) / m.maxHp) : 0;
-    const miniHp = m.isBoss
-      ? ""
-      : `<div class="mob-hp-mini" aria-hidden="true"><span class="mob-hp-fill" style="width:${hpPct}%"></span></div>`;
-    const roleCls = !m.isBoss && m.mobRole === "ranged" ? " mob-stack-ranged" : "";
-    mobs += `<div class="dungeon-mob-stack${roleCls}" data-mob-id="${m.id}" style="left:${m.x * 100}%;top:${m.y * 100}%">
-      ${miniHp}
-      <div class="dungeon-entity mob${skin}${boss} ${m.hp <= 0 ? "mob-dead" : ""}"></div>
-    </div>`;
-  }
-  const atkCls = d.inMelee ? " attacking" : "";
-  /** 幻域普攻与转圈剑气一致，不再用群怪爆发圈 */
-  const fxAoe = "";
-  const fxSingle = d.inMelee && d.attackVisualMode === "single" ? " is-single" : "";
+  const combatPhase = dungeonCombatPhase(state);
+  const phaseClass =
+    combatPhase === "boss_fight"
+      ? "dungeon-duel-stage--phase-boss-fight"
+      : combatPhase === "boss_prep"
+        ? "dungeon-duel-stage--phase-boss-prep"
+        : "dungeon-duel-stage--phase-trash";
+  const tagFull =
+    combatPhase === "boss_fight"
+      ? "首领对决 · 可对你造成真实伤害 · 击败后进入下一关"
+      : combatPhase === "boss_prep"
+        ? "首领前哨 · 清完小怪后须点「挑战首领」才会进入首领战"
+        : "阵线清剿 · 自动接战 · 每击杀一只小兵即时结算筑灵髓";
+  const tagCompact =
+    combatPhase === "boss_fight"
+      ? "首领战 · 击败后进下一关"
+      : combatPhase === "boss_prep"
+        ? "清小怪 → 挑战首领"
+        : "清剿 · 击杀即时入髓";
   const bossMob = currentBossMob(d);
-  const bossAlive = !!bossMob;
+  const frontMob = d.mobs.find((m) => m.hp > 0) ?? d.mobs[0];
   const mobPct = d.monsterMax > 0 ? Math.min(100, (100 * Math.max(0, d.monsterHp)) / d.monsterMax) : 0;
-  const bossTitle = bossMob
-    ? formatMobDisplayName(bossMob.element, bossMob.mobKind, true, bossMob.bossEpithet, undefined)
-    : "首领";
-  const bossHud = bossAlive
-    ? `<div class="dungeon-map-hud-overlay" aria-hidden="true">
-      <div class="dungeon-boss-strip" id="dungeon-boss-hud">
-        <div class="dungeon-boss-strip-title" id="dungeon-boss-name">${bossTitle}</div>
-        <div class="dungeon-boss-strip-bar-wrap">
-          <div class="dungeon-boss-strip-bar-bg" aria-hidden="true"></div>
-          <div class="dungeon-boss-strip-bar-fill" id="dungeon-boss-bar" style="width:${mobPct}%"></div>
-        </div>
-        <div class="dungeon-boss-strip-readout" id="dungeon-boss-hp-txt">${fmtNum(Math.max(0, d.monsterHp))} / ${fmtNum(d.monsterMax)}</div>
-      </div>
-      <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
-    </div>`
-    : `<div class="dungeon-map-hud-overlay" aria-hidden="true">
-      <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
-    </div>`;
+  const title =
+    bossMob || frontMob
+      ? formatMobDisplayName(
+          (bossMob ?? frontMob)!.element,
+          (bossMob ?? frontMob)!.mobKind,
+          !!(bossMob ?? frontMob)!.isBoss,
+          (bossMob ?? frontMob)!.bossEpithet,
+          undefined,
+        )
+      : "敌阵";
   const hpPct = d.playerMax > 0 ? Math.min(100, (100 * Math.max(0, d.playerHp)) / d.playerMax) : 0;
   const staPct = DUNGEON_STAMINA_MAX > 0 ? Math.min(100, (100 * Math.max(0, d.stamina)) / DUNGEON_STAMINA_MAX) : 0;
   const hitIntSec = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / playerDungeonAttackSpeedMult(state));
+  const pEl = playerBattleElement(state);
+  const em = frontMob ? frontMob.element : ("metal" as Element);
+  const mulOut = elementDamageMultiplier(pEl, em);
+  const mulIn = elementDamageMultiplier(em, pEl);
+  const liveMob = d.mobs.find((m) => m.hp > 0);
+  const isBossFight = !!(liveMob?.isBoss);
+  const floatOverlay = `<div class="dungeon-map-hud-overlay" aria-hidden="true">
+      <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
+    </div>`;
   return `
     <div class="dungeon-map-frame">
-      <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
-      <div class="dungeon-map-hud-bl" aria-hidden="true">
-        <div class="dungeon-hud-mini-row"><span>生命</span><span id="dungeon-pl-txt">${fmtNum(Math.max(0, d.playerHp))} / ${fmtNum(d.playerMax)}</span></div>
-        <div class="progress-track dungeon slim hud-mini"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
-        <div class="dungeon-hud-mini-row"><span>体力</span><span id="dungeon-stamina-txt">${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}</span></div>
-        <div class="progress-track dungeon slim stamina-track hud-mini"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
-      </div>
       <div class="dungeon-map-wrap">
-        <div class="dungeon-map${fxAoe}${fxSingle}" id="dungeon-map" aria-label="幻域俯视" style="--gw:${d.mapW || 1};--gh:${d.mapH || 1};--dungeon-player-hit-interval:${hitIntSec}s">
-          ${bossHud}
-          <div class="dungeon-cells">${cells}</div>
-          <div class="dungeon-entities">
-          <div class="dungeon-player-stack" id="dungeon-player-stack" style="left:${d.playerX * 100}%;top:${d.playerY * 100}%">
-            <div class="dungeon-player-fx" aria-hidden="true">
-              <div class="dungeon-engage-ring"></div>
-              <div class="fx-aoe-ring"></div>
-              <div class="fx-single-slash"></div>
-            </div>
-            <div class="dungeon-player-rot" id="dungeon-player-rot">
-              <span class="player-facing-wedge" aria-hidden="true"></span>
-              <div class="dungeon-entity player${atkCls}" id="dungeon-player"></div>
+        <div class="dungeon-map dungeon-duel-stage is-aoe in-combat ${phaseClass}" id="dungeon-map" aria-label="幻域阵线对决" style="--dungeon-player-hit-interval:${hitIntSec}s">
+          <div class="dungeon-duel-frame-corners" aria-hidden="true">
+            <img class="duel-corner duel-corner--tl" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
+            <img class="duel-corner duel-corner--tr" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
+            <img class="duel-corner duel-corner--bl" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
+            <img class="duel-corner duel-corner--br" src="${UI_DUEL_FRAME_CORNER}" alt="" width="32" height="32" loading="lazy" />
+          </div>
+          <div class="dungeon-duel-top-hud" aria-hidden="true">
+            <div class="dungeon-duel-wave-pill" id="duel-wave-pill-wrap">
+              <img class="dungeon-duel-wave-ico" src="${UI_DUEL_WAVE_BADGE}" alt="" width="18" height="18" loading="lazy" />
+              <span id="duel-wave-pill-txt">第 ${d.wave} 波</span>
             </div>
           </div>
-          ${mobs}
+          <div class="dungeon-duel-vs-bar" aria-hidden="true">
+            <div class="dungeon-duel-side dungeon-duel-side--player">
+              <span class="dungeon-duel-side-tag">我方</span>
+              <div class="dungeon-hud-mini-row"><span>生命</span><span id="dungeon-pl-txt">${fmtNum(Math.max(0, d.playerHp))} / ${fmtNum(d.playerMax)}</span></div>
+              <div class="progress-track dungeon slim hud-mini" id="dungeon-pl-hp-wrap"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
+              <div class="dungeon-hud-mini-row"><span>体力</span><span id="dungeon-stamina-txt">${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}</span></div>
+              <div class="progress-track dungeon slim stamina-track hud-mini" id="dungeon-stamina-wrap"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
+            </div>
+            <div class="dungeon-duel-vs-mid">
+              <div class="dungeon-duel-elem-icons">
+                <img class="dungeon-duel-elem-ico" src="${ELEMENT_ICON[pEl]}" alt="" width="22" height="22" loading="lazy" />
+                <span class="dungeon-duel-vs-core">VS</span>
+                <img class="dungeon-duel-elem-ico" src="${ELEMENT_ICON[em]}" alt="" width="22" height="22" loading="lazy" />
+              </div>
+              <div class="dungeon-duel-elem-pills">
+                <span class="duel-elem-pill duel-elem-pill--out" id="duel-elem-out-pill" title="对敌伤害五行倍率">绽 ×${mulOut.toFixed(2)}</span>
+                <span class="duel-elem-pill duel-elem-pill--in" id="duel-elem-in-pill" title="敌对你造成伤害倍率">承 ×${mulIn.toFixed(2)}</span>
+              </div>
+            </div>
+            <div class="dungeon-duel-side dungeon-duel-side--enemy">
+              <span class="dungeon-duel-side-tag">敌方</span>
+              <div class="dungeon-boss-strip dungeon-boss-strip--duel" id="dungeon-boss-hud">
+                <div class="dungeon-boss-strip-title-wrap${isBossFight ? " dungeon-boss-strip-title-wrap--boss" : ""}" id="dungeon-boss-name-wrap">
+                  ${isBossFight ? `<img class="dungeon-boss-crown-ico" src="${UI_DUEL_BOSS_BADGE}" alt="" width="18" height="18" loading="lazy" />` : ""}
+                  <div class="dungeon-boss-strip-title" id="dungeon-boss-name">${title}</div>
+                </div>
+                <div class="dungeon-boss-strip-bar-wrap">
+                  <div class="dungeon-boss-strip-bar-bg" aria-hidden="true"></div>
+                  <div class="dungeon-boss-strip-bar-fill" id="dungeon-boss-bar" style="width:${mobPct}%"></div>
+                </div>
+                <div class="dungeon-boss-strip-readout" id="dungeon-boss-hp-txt">${fmtNum(Math.max(0, d.monsterHp))} / ${fmtNum(d.monsterMax)}</div>
+              </div>
+            </div>
+          </div>
+          <div class="dungeon-duel-fx-core" aria-hidden="true">
+            <div class="dungeon-player-fx">
+              <div class="dungeon-engage-ring dungeon-duel-engage-ring"></div>
+              <div class="fx-aoe-ring"></div>
+            </div>
+            <img class="dungeon-duel-fx-deco dungeon-duel-fx-hit-deco" id="dungeon-duel-fx-hit-deco" src="${UI_DUNGEON_HIT_FLASH_DECO}" alt="" width="160" height="160" loading="lazy" />
+            <img class="dungeon-duel-fx-deco dungeon-duel-fx-crit-deco" id="dungeon-duel-fx-crit-deco" src="${UI_DUNGEON_CRIT_ECHO_DECO}" alt="" width="184" height="184" loading="lazy" />
+            <img class="dungeon-duel-fx-deco dungeon-duel-fx-guard-deco" src="${UI_DUNGEON_WEAKNESS_PING_DECO}" alt="" width="168" height="168" loading="lazy" />
+          </div>
+          ${floatOverlay}
+          <div class="dungeon-duel-center">
+            <img class="dungeon-duel-deco" src="${UI_DUNGEON_DUEL_DECO}" alt="" width="100" height="100" loading="lazy" />
+          </div>
+          <div class="dungeon-duel-momentum" id="dungeon-duel-momentum" aria-live="polite">
+            <img class="dungeon-duel-counter-window-badge" id="dungeon-duel-counter-window-badge" src="${UI_DUNGEON_COUNTER_WINDOW_BADGE_DECO}" alt="" width="96" height="22" loading="lazy" />
+            <img class="dungeon-duel-combo-chain-deco" id="dungeon-duel-combo-chain-deco" src="${UI_DUNGEON_COMBO_CHAIN_DECO}" alt="" width="120" height="24" loading="lazy" />
+            <span class="duel-mom-pill duel-mom-pill--tier" id="duel-combo-tier">蓄势</span>
+            <span class="duel-mom-pill" id="duel-combo-pill">连击 0</span>
+            <span class="duel-mom-pill duel-weak-pill" id="duel-weak-pill" hidden title="弱点窗口优先反馈">弱点窗口</span>
+            <span class="duel-mom-pill">战意 <span id="duel-fervor-pct">0</span>%</span>
+          </div>
+          <p class="dungeon-duel-dodge-chip hint sm" id="dungeon-duel-dodge-chip">点击战场 · 化劲闪避</p>
+          <div class="dungeon-duel-gauge-row">
+            <div class="dungeon-duel-gauge">
+              <span class="dungeon-duel-gauge-lbl"><img class="dungeon-duel-gauge-ico" src="${UI_DUEL_GAUGE_SWORD}" alt="" width="16" height="16" loading="lazy" />剑气</span>
+              <div class="progress-track dungeon duel-gauge" id="dungeon-duel-pl-gauge-track"><div class="progress-fill player" id="dungeon-duel-pl-gauge" style="width:0%"></div></div>
+            </div>
+            <div class="dungeon-duel-gauge">
+              <span class="dungeon-duel-gauge-lbl"><img class="dungeon-duel-gauge-ico" src="${UI_DUEL_GAUGE_THREAT}" alt="" width="16" height="16" loading="lazy" />凶煞</span>
+              <div class="progress-track dungeon duel-gauge" id="dungeon-duel-en-gauge-track"><div class="progress-fill enemy" id="dungeon-duel-en-gauge" style="width:0%"></div></div>
+            </div>
           </div>
         </div>
+        <p class="hint sm dungeon-duel-tagline-outside" role="note">
+          <span class="dungeon-duel-tagline-full">${tagFull}</span>
+          <span class="dungeon-duel-tagline-compact">${tagCompact}</span>
+        </p>
       </div>
     </div>`;
 }
 
-const DUNGEON_HELP_BLURB = `幻域只掉唤灵髓，按关结算。幻域生命为全局共享，进关不会回满。每次进关都会重置地图和怪物。入场费、阵亡损失和复刷规则见「养成→图鉴·札记」。`;
+const DUNGEON_HELP_BLURB = `筑灵髓来自战斗：普通波为小怪群，每击杀一只即入袋整数唤灵髓；清完一波进下一波。每逢第 5、10…波为首领关：前哨小怪可持续清剿，达成挑战门槛后可随时点「挑战首领」；击败首领后进下一关。首领可造成伤害，小怪不会致死（灵护）。唤灵髓用于本页聚灵阵。幻域生命全局共享。阵亡无灵石损失。`;
 
 function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
   const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
   const w = state.dungeonPortalTargetWave;
-  const auto = state.dungeonSanctuaryAutoEnter;
-  const autoAttr = auto ? "checked" : "";
   const portalSection = portalReady
-    ? auto
-      ? `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
+    ? `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
       <div class="sanctuary-portal-ring" aria-hidden="true"></div>
-      <p class="sanctuary-portal-msg">生命已回满，将自动进入第 <strong>${w}</strong> 关</p>
+      <p class="sanctuary-portal-msg">生命已回满，将<strong>自动</strong>进入段首第 <strong>${w}</strong> 关继续清小怪</p>
     </div>`
-      : `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
-      <div class="sanctuary-portal-ring" aria-hidden="true"></div>
-      <p class="sanctuary-portal-msg">生命已回满，可进入第 <strong>${w}</strong> 关（需入场髓）</p>
-      <button type="button" class="btn btn-primary btn-sanctuary-portal" id="btn-sanctuary-portal">进入副本</button>
-    </div>`
-    : auto
-      ? `<p class="sanctuary-wait-txt">恢复中，回满后将自动进入</p>`
-      : `<p class="sanctuary-wait-txt">恢复中，回满后可手动进入第 <strong>${w}</strong> 关</p>`;
+    : `<p class="sanctuary-wait-txt">恢复中，回满后将自动返回段首第 <strong>${w}</strong> 关</p>`;
   return `<div class="sanctuary-visual">
     <div class="sanctuary-visual-bg" aria-hidden="true"></div>
     <div class="sanctuary-heal-particles" aria-hidden="true"></div>
     <div class="sanctuary-player-dot" aria-hidden="true"></div>
-    <div class="sanctuary-auto-row">
-      <label class="sanctuary-auto-label">
-        <input type="checkbox" id="sanctuary-auto-enter" ${autoAttr} />
-        <span>回满后自动进本</span>
-      </label>
-      <span class="hint sm sanctuary-auto-hint">未勾选时，进本前会先确认</span>
-    </div>
+    <p class="hint sm sanctuary-auto-hint">阵亡后从本段起始波继续；首领需点「挑战首领」再进关。</p>
     ${portalSection}
   </div>`;
 }
 
 function renderIdlePreviewMap(): string {
-  return `<div class="dungeon-idle-preview-map" aria-hidden="true"><div class="dungeon-idle-preview-grid"></div></div>`;
+  return `<div class="dungeon-idle-preview-map dungeon-idle-preview-map--mist" style="--dungeon-idle-mist:url('${UI_DUNGEON_IDLE_MIST}')" aria-hidden="true"><div class="dungeon-idle-preview-grid"></div></div>`;
 }
 
-export function renderDungeonPanel(state: GameState): string {
+function battleGearStarLine(r: Rarity): string {
+  const n = r === "UR" ? 5 : r === "SSR" ? 4 : r === "SR" ? 3 : r === "R" ? 2 : 1;
+  return `<span class="battle-gear-stars" aria-hidden="true">${"★".repeat(n)}<span class="battle-gear-stars-dim">${"★".repeat(5 - n)}</span></span>`;
+}
+
+/** 历练页中部：三件筑灵装备概览；默认收起，长按展开详情 */
+export function renderBattleEquippedStrip(state: GameState, expanded: boolean): string {
+  const displaySlots = ALL_GEAR_SLOTS;
+  let cells = "";
+  let collapsedIcons = "";
+  for (const s of displaySlots) {
+    const id = state.equippedGear[s];
+    const g = id ? state.gearInventory[id] : null;
+    if (g) {
+      const pw = gearItemPower(g);
+      collapsedIcons += `<div class="battle-gear-ico-mini rarity-${g.rarity}" title="${GEAR_SLOT_LABEL[s]}">
+        <img src="${gearPortraitSrc(g.baseId, g.slot)}" alt="" width="36" height="36" loading="lazy" />
+      </div>`;
+      cells += `
+      <div class="battle-gear-cell rarity-${g.rarity}">
+        <div class="battle-gear-cell-top">${battleGearStarLine(g.rarity)}</div>
+        <div class="battle-gear-icon-wrap">
+          <img src="${gearPortraitSrc(g.baseId, g.slot)}" alt="" width="48" height="48" loading="lazy" class="battle-gear-icon" />
+        </div>
+        <div class="battle-gear-lv">Lv.${g.itemLevel}</div>
+        <div class="battle-gear-pw">战力 ${fmtNum(pw)}</div>
+        <span class="battle-gear-slot-label">${GEAR_SLOT_LABEL[s]}</span>
+      </div>`;
+    } else {
+      collapsedIcons += `<div class="battle-gear-ico-mini battle-gear-ico-mini--empty" aria-hidden="true"><span>+</span></div>`;
+      cells += `
+      <div class="battle-gear-cell battle-gear-cell--empty">
+        <div class="battle-gear-cell-top">&nbsp;</div>
+        <div class="battle-gear-icon-wrap battle-gear-icon-wrap--empty" aria-hidden="true">
+          <span class="battle-gear-empty-plus">+</span>
+        </div>
+        <div class="battle-gear-lv">—</div>
+        <div class="battle-gear-pw">空位</div>
+        <span class="battle-gear-slot-label">${GEAR_SLOT_LABEL[s]}</span>
+      </div>`;
+    }
+  }
+  const stripClass = `battle-equipped-strip battle-equipped-strip--collapsible${expanded ? " battle-equipped-strip--expanded" : ""}`;
+  return `
+      <div class="${stripClass}" id="battle-equipped-strip" role="region" aria-label="筑灵装备" aria-expanded="${expanded ? "true" : "false"}">
+        <div class="battle-equipped-collapsed-only" ${expanded ? "hidden" : ""}>
+          <div class="battle-equipped-touch-target" title="长按展开装备详情">
+            <div class="battle-equipped-mini-icons">${collapsedIcons}</div>
+            <p class="battle-equipped-longpress-hint">筑灵装备 · 长按展开</p>
+          </div>
+        </div>
+        <div class="battle-equipped-expanded-only" ${expanded ? "" : "hidden"}>
+          <div class="battle-equipped-strip-head">
+            <span class="battle-equipped-strip-title">筑灵装备</span>
+            <span class="hint sm battle-equipped-strip-hint">12 部位等权掉落，按同部位战力自动替换</span>
+          </div>
+          <div class="battle-gear-grid">${cells}</div>
+          <div class="battle-equipped-actions">
+            <button type="button" class="btn" id="btn-battle-equipped-collapse">收起</button>
+            <button type="button" class="btn btn-primary" id="btn-battle-gear-open-manage">强化 / 锁定 / 分解</button>
+          </div>
+        </div>
+      </div>`;
+}
+
+export function renderDungeonPanel(state: GameState, battleGearStripExpanded = false, now = Date.now()): string {
   const d = state.dungeon;
-  const now = Date.now();
   const cd = Math.max(0, d.deathCooldownUntil - now);
   const canEnter = canEnterDungeon(state, now);
-  const edps = playerExpectedDps(state);
+  const edps = playerExpectedDpsDungeonAffix(state, now);
+  const weekLine = state.weeklyBounty?.weekKey || currentWeekKey(now);
+  const affix = getDungeonAffixForWeekKey(weekLine);
+  const isVortexAffix = affix.id === "storm_sigil" || affix.id === "iron_march";
+  const affixModeDecoSrc = isVortexAffix
+    ? UI_DUNGEON_AFFIX_VORTEX_DECO
+    : UI_DUNGEON_AFFIX_CLASSIC_DECO;
   const pmax = playerMaxHp(state);
   const chp = state.combatHpCurrent;
   const chpPctGlobal = pmax > 0 ? Math.min(100, (100 * Math.max(0, chp)) / pmax) : 0;
-  const entryFeeShow = dungeonEntryFeeForSelectedWave(
-    state,
-    Math.max(1, Math.min(d.maxWaveRecord + 1, d.entryWave)),
-  );
   const petAtkPct =
     petSystemUnlocked(state) && petDungeonAtkAdditive(state) > 0
       ? (petDungeonAtkAdditive(state) * 100).toFixed(2)
       : null;
+  const fw = dungeonFrontierWave(state);
   const nextWavePreview = describeWaveProfile(Math.max(1, d.entryWave));
   const cdPct = cd > 0 ? Math.min(100, 100 - (100 * cd) / DUNGEON_DEATH_CD_MS) : 100;
-  const interWaveWait = d.active && d.mobs.length === 0 && d.interWaveCooldownUntil > now;
-  const interSec = interWaveWait ? Math.max(0, Math.ceil((d.interWaveCooldownUntil - now) / 1000)) : 0;
-  const interPct =
-    interWaveWait && DUNGEON_INTER_WAVE_CD_MS > 0
-      ? Math.min(100, (100 * (DUNGEON_INTER_WAVE_CD_MS - (d.interWaveCooldownUntil - now))) / DUNGEON_INTER_WAVE_CD_MS)
-      : 0;
   const sanctuaryIdle = state.dungeonSanctuaryMode && !d.active;
+  const showCombatBossBtn =
+    d.active &&
+    state.dungeonDeferBoss &&
+    d.wave % 5 === 0 &&
+    (d.mobs.some((m) => m.hp > 0) || d.mobs.length === 0);
+  const showIdleBossBtn =
+    !d.active && !sanctuaryIdle && state.dungeonDeferBoss && fw % 5 === 0 && canEnter;
+  const combatPhase = d.active ? dungeonCombatPhase(state) : "trash";
+  const bossPrep = dungeonBossPrepSnapshot(state);
+  const bossPrepProgress = `${bossPrep.kills}/${bossPrep.req}`;
+  const phaseBadgeSrc =
+    combatPhase === "boss_fight"
+      ? UI_DUEL_BOSS_BADGE
+      : combatPhase === "boss_prep"
+        ? UI_DUNGEON_PHASE_BOSS_PREP_BADGE_DECO
+        : UI_DUNGEON_PHASE_TRASH_BADGE_DECO;
 
   const helpPop = `<div id="dungeon-help-popover" class="dungeon-help-popover" role="region" aria-label="幻域说明" hidden>
     <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
   </div>`;
 
+  const panelRunClass = d.active ? " dungeon-panel--run dungeon-panel--live-fight" : "";
+  const panelRunStyle = d.active ? ` style="--dungeon-live-strip:url('${UI_DUNGEON_PANEL_LIVE_STRIP}')"` : "";
+
   return `
-    <section class="panel dungeon-strip-panel">
-      <div class="panel-title-art-row">
+    <section class="panel dungeon-strip-panel${panelRunClass}"${panelRunStyle}>
+      <div class="panel-title-art-row dungeon-panel-title-cluster">
         <img class="panel-title-art-icon" src="${UI_HEAD_DUNGEON}" alt="" width="28" height="28" loading="lazy" />
-        <h2>幻域</h2>
+        <div class="dungeon-panel-title-text">
+          <h2>历练·筑灵</h2>
+          <p class="hint sm dungeon-panel-subtitle">上为阵线战斗 · 中为筑灵装备（默认收起，长按展开）· 下为聚灵抽卡</p>
+        </div>
       </div>
+      <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner">
+        <img class="dungeon-affix-icon" src="${UI_DUNGEON_AFFIX_DECO}" alt="" width="40" height="40" loading="lazy" />
+        <img class="dungeon-affix-mode-deco" id="dungeon-affix-mode-deco" src="${affixModeDecoSrc}" alt="" width="124" height="24" loading="lazy" />
+        <div class="dungeon-affix-text">
+          <strong class="dungeon-affix-title" id="dungeon-affix-title">本周词缀 · ${affix.title}</strong>
+          <p class="hint sm dungeon-affix-desc" id="dungeon-affix-desc">${affix.desc}<span class="dungeon-affix-wk" id="dungeon-affix-week">（周次 ${weekLine}）</span></p>
+        </div>
+      </div>
+      ${
+        !d.active && !sanctuaryIdle
+          ? `<div class="dungeon-battle-readiness" role="region" aria-label="备战摘要" id="dungeon-battle-readiness-strip">
+        <img class="dungeon-readiness-ico" src="${UI_DUNGEON_READINESS_DECO}" alt="" width="36" height="36" loading="lazy" />
+        <div class="dungeon-readiness-body">
+          <span class="dungeon-readiness-kicker">备战</span>
+          <p class="dungeon-readiness-line hint sm">
+            期望秒伤 <strong id="dungeon-idle-readiness-edps">${fmtNum(edps)}</strong>/s
+            · 幻域生命 <strong id="dungeon-idle-readiness-chp">${fmtNum(Math.max(0, chp))}</strong>/<strong id="dungeon-idle-readiness-pmax">${fmtNum(pmax)}</strong>
+            · 目标第 <strong id="dungeon-idle-readiness-wave">${Math.max(1, d.entryWave)}</strong> 波
+          </p>
+        </div>
+      </div>`
+          : ""
+      }
+      <div class="dungeon-combat-module">
       <div class="dungeon-map-stage">
         <button type="button" class="dungeon-map-help-btn" id="btn-dungeon-help" aria-expanded="false" aria-controls="dungeon-help-popover" aria-label="查看幻域说明" title="幻域说明">?</button>
         ${helpPop}
       ${
         d.active
-          ? interWaveWait
-            ? `<div class="dungeon-active-stack">
-          <div class="dungeon-viewport dungeon-inter-wave">
-            <button type="button" class="dungeon-map-leave-btn" id="btn-dungeon-leave">暂离</button>
-            <div class="dungeon-inter-wave-inner">
-              <p class="dungeon-inter-title">休整中 · 即将进入第 <strong>${d.wave}</strong> 关</p>
-              <div class="bar-label"><span>下一关就绪</span><span id="dungeon-inter-sec">${interSec} 秒</span></div>
-              <div class="progress-track cd"><div class="progress-fill cd" id="dungeon-inter-bar-fill" style="width:${interPct}%"></div></div>
+          ? `<div class="dungeon-active-stack dungeon-active-stack--live">
+          <div class="dungeon-phase-banner dungeon-phase-banner--${combatPhase}" role="region" aria-label="阶段说明" id="dungeon-phase-banner">
+            <div class="dungeon-phase-banner-head">
+              <span class="dungeon-phase-badge-wrap">
+                <img class="dungeon-phase-progress-ring" src="${UI_DUNGEON_BOSS_PROGRESS_RING}" alt="" width="22" height="22" loading="lazy" ${combatPhase === "boss_prep" ? "" : "hidden"} />
+                <img class="dungeon-phase-badge-ico" src="${phaseBadgeSrc}" alt="" width="18" height="18" loading="lazy" />
+              </span>
+              <span class="dungeon-phase-badge" id="dungeon-phase-badge">${
+                combatPhase === "boss_fight" ? "首领对决" : combatPhase === "boss_prep" ? "首领前哨" : "阵线清剿"
+              }</span>
+              <span class="dungeon-phase-wave-hint hint sm" id="dungeon-phase-wave-hint">第 ${d.wave} 波</span>
             </div>
+            <p class="dungeon-phase-banner-guide" id="dungeon-phase-guide">${
+              combatPhase === "boss_fight"
+                ? "首领可对你造成真实伤害。击败首领后本关胜利，并自动进入下一波。"
+                : combatPhase === "boss_prep"
+                  ? `首领前哨可无限清剿；累计击败小兵达到门槛后可随时挑战首领（当前 ${bossPrepProgress}）。`
+                  : "普通清剿：敌人自动接战；每击杀一只小兵，唤灵髓整数立即入袋。清完本关后进入下一波。"
+            }</p>
+            ${
+              showCombatBossBtn
+                ? `<div class="dungeon-phase-banner-cta" id="dungeon-phase-cta">
+              <button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss" ${bossPrep.canChallenge ? "" : "disabled"}>挑战首领</button>
+              <span class="hint sm dungeon-phase-cta-note" id="dungeon-phase-cta-note"><img class="dungeon-boss-progress-badge" src="${bossPrep.canChallenge ? UI_DUNGEON_BOSS_READY_BADGE : UI_DUNGEON_BOSS_LOCKED_BADGE}" alt="" width="16" height="16" loading="lazy" />${bossPrep.challengeHint}</span>
+            </div>`
+                : ""
+            }
           </div>
-          <p class="dungeon-active-meta hint sm" id="dungeon-active-meta">${formatDungeonInterMeta()}</p>
-        </div>`
-            : `<div class="dungeon-active-stack">
           <div class="dungeon-viewport dungeon-live-combat" id="dungeon-live-root">
           ${renderDungeonMapHtml(state)}
           </div>
-          <p class="dungeon-active-meta hint sm" id="dungeon-active-meta">${formatDungeonActiveMeta(state, now)}</p>
+          <p class="dungeon-active-meta hint sm dungeon-active-meta--combat dungeon-active-meta--detail" id="dungeon-active-meta">${formatDungeonActiveMeta(state, now)}</p>
+          <p class="dungeon-active-meta hint sm dungeon-active-meta--combat dungeon-active-meta--brief" id="dungeon-active-meta-brief">${formatDungeonActiveMetaBrief(state, now)}</p>
         </div>`
           : sanctuaryIdle
             ? `<div class="dungeon-idle-sanctuary dungeon-stage-fill">
@@ -310,7 +532,20 @@ export function renderDungeonPanel(state: GameState): string {
           ${renderIdlePreviewMap()}
           <p class="dungeon-idle-stats">累计通关 <strong>${d.totalWavesCleared}</strong> 波 · 最高第 <strong>${d.maxWaveRecord}</strong> 波</p>
           <p class="hint sm">目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波：${nextWavePreview}</p>
-          <p class="hint sm">可选下一关或已通关关卡复刷。入场约 <strong>${entryFeeShow}</strong> 髓；阵亡损失灵石 <strong>5%</strong>（至少 1）。</p>
+          <p class="hint sm">下一未通关波为第 <strong>${fw}</strong> 波（前沿）。首领关可持续清剿前哨小怪，达门槛后可随时挑战首领。</p>
+          <ol class="dungeon-idle-guide-steps hint sm">
+            <li>点「进入副本」开始；普通波自动打小怪，每只掉落即时入袋。</li>
+            <li>首领波前哨可无限刷；达成挑战门槛后可点「挑战首领」，击败后自动进下一波。</li>
+            <li>下方聚灵阵消耗筑灵髓抽卡；筑灵条长按可展开。</li>
+          </ol>
+          ${
+            showIdleBossBtn
+              ? `<div class="dungeon-boss-intent-row">
+            <button type="button" class="btn btn-primary" id="btn-dungeon-boss-next-entry">下一关为首领 · 挑战首领</button>
+            <p class="hint sm">默认进关为首领位小怪群；点此后再进关将面对真正首领。</p>
+          </div>`
+              : ""
+          }
           <div class="dungeon-entry-tools">
             <label class="dungeon-entry-label">起始波次（1～${Math.max(1, d.maxWaveRecord + 1)}）
               <input type="number" id="dungeon-entry-wave" min="1" max="${Math.max(1, d.maxWaveRecord + 1)}" step="1" value="${d.entryWave}" />
@@ -322,8 +557,9 @@ export function renderDungeonPanel(state: GameState): string {
               <div class="progress-track cd"><div class="progress-fill cd" id="dungeon-cd-bar-fill" style="width:${cdPct}%"></div></div>
           </div>
           <p class="hint" id="dungeon-idle-ready-hint" ${cd > 0 ? "hidden" : ""}>可进入幻域</p>
-          <button class="btn btn-primary" type="button" id="btn-dungeon-enter" ${canEnter ? "" : "disabled"}>
-            ${canEnter ? "进入副本" : cd > 0 ? "冷却中" : "无法进入"}
+          <button class="btn btn-primary btn-dungeon-enter" type="button" id="btn-dungeon-enter" ${canEnter ? "" : "disabled"}>
+            <img class="btn-dungeon-enter-ico" src="${UI_DUNGEON_ENTER_DECO}" alt="" width="18" height="18" loading="lazy" />
+            <span id="btn-dungeon-enter-label">${canEnter ? "进入副本" : cd > 0 ? "冷却中" : "无法进入"}</span>
           </button>
         </div>`
       }
@@ -340,11 +576,14 @@ export function renderDungeonPanel(state: GameState): string {
           }
         </div>
         <div class="dungeon-foot-timer hint sm" id="dungeon-foot-timer-row" aria-live="polite">
+          <img class="dungeon-foot-timer-ico" src="${UI_DUNGEON_FOOT_TIMER_DECO}" alt="" width="15" height="15" loading="lazy" />
           <span>本局用时 <strong id="dungeon-session-elapsed">—</strong></span>
           <span class="dungeon-foot-timer-sep">·</span>
           <span>预计剩余 <strong id="dungeon-eta-remaining">—</strong></span>
           <span class="dungeon-foot-timer-hint">（估算值）</span>
         </div>
+      </div>
+      ${renderBattleEquippedStrip(state, battleGearStripExpanded)}
       </div>
     </section>`;
 }
@@ -407,7 +646,16 @@ export function renderTrainPanel(state: GameState): string {
       </div>
       <div class="skill-list">${rows}</div>
       <button class="btn" type="button" id="btn-skill-none" ${state.activeSkillId === null ? "disabled" : ""}>暂停修炼</button>
-      <h3 class="sub-h">心法</h3>
+    </section>`;
+}
+
+export function renderBattleSkillPanel(state: GameState): string {
+  return `
+    <section class="panel battle-skill-panel">
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_COMBAT}" alt="" width="28" height="28" loading="lazy" />
+        <h2>心法</h2>
+      </div>
       <p class="hint">消耗唤灵髓随机获得或升级心法，同名最高 Lv.20。</p>
       <div class="battle-skill-catalog" aria-label="心法说明">
         ${BATTLE_SKILLS.map((def) => {
@@ -447,69 +695,127 @@ export function renderTrainPanel(state: GameState): string {
     </section>`;
 }
 
+const RARITY_ORDER_SORT: Record<string, number> = { UR: 0, SSR: 1, SR: 2, R: 3, N: 4 };
+const SLOT_ORDER_SORT: Record<string, number> = Object.fromEntries(ALL_GEAR_SLOTS.map((s, i) => [s, i]));
+
+function sortGearInventoryItems(items: GearItem[], mode: GearInventorySortMode): GearItem[] {
+  const ro = RARITY_ORDER_SORT;
+  const so = SLOT_ORDER_SORT;
+  return [...items].sort((a, b) => {
+    if (mode === "rarity") {
+      const dr = (ro[a.rarity] ?? 9) - (ro[b.rarity] ?? 9);
+      if (dr !== 0) return dr;
+      if (b.itemLevel !== a.itemLevel) return b.itemLevel - a.itemLevel;
+      return a.displayName.localeCompare(b.displayName, "zh-Hans-CN");
+    }
+    if (mode === "ilvl") {
+      if (b.itemLevel !== a.itemLevel) return b.itemLevel - a.itemLevel;
+      const dr = (ro[a.rarity] ?? 9) - (ro[b.rarity] ?? 9);
+      if (dr !== 0) return dr;
+      return a.displayName.localeCompare(b.displayName, "zh-Hans-CN");
+    }
+    if (mode === "slot") {
+      const ds = (so[a.slot] ?? 9) - (so[b.slot] ?? 9);
+      if (ds !== 0) return ds;
+      const dr = (ro[a.rarity] ?? 9) - (ro[b.rarity] ?? 9);
+      if (dr !== 0) return dr;
+      return b.itemLevel - a.itemLevel;
+    }
+    const c = a.displayName.localeCompare(b.displayName, "zh-Hans-CN");
+    if (c !== 0) return c;
+    return (ro[a.rarity] ?? 9) - (ro[b.rarity] ?? 9);
+  });
+}
+
+function slotPowerDeltaText(delta: number): string {
+  if (delta > 0) return `+${delta}`;
+  if (delta < 0) return `${delta}`;
+  return "±0";
+}
+
+const GEAR_SORT_LABELS: Record<GearInventorySortMode, string> = {
+  rarity: "稀有度",
+  ilvl: "装等",
+  slot: "部位",
+  name: "名称",
+};
+
 export function renderGearPanel(
   state: GameState,
   refineTargetId: string | null = null,
-  gearDetailSlot: "weapon" | "body" | "ring" | null = null,
+  gearDetailSlot: (typeof ALL_GEAR_SLOTS)[number] | null = null,
+  gearInvSort: GearInventorySortMode = "rarity",
 ): string {
-  const refineHint = refineTargetId
-    ? `<p class="hint refine-hint">精炼：已选主件，再点<strong>另一件</strong>同基底天极作为消耗；再点主件可取消。</p>`
-    : "";
-  const rarityOrder: Record<string, number> = { UR: 0, SSR: 1, SR: 2, R: 3, N: 4 };
-  const items = Object.values(state.gearInventory).sort((a, b) => {
-    const dr = (rarityOrder[a.rarity] ?? 9) - (rarityOrder[b.rarity] ?? 9);
-    if (dr !== 0) return dr;
-    return a.displayName.localeCompare(b.displayName, "zh-Hans-CN");
-  });
+  void refineTargetId;
+  const items = sortGearInventoryItems(Object.values(state.gearInventory), gearInvSort);
+  const slotTopPower = new Map<string, number>();
+  const slotSecondPower = new Map<string, number>();
+  for (const it of Object.values(state.gearInventory)) {
+    const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[it.slot] ?? 0));
+    const pw = gearItemPower(it, slotLv);
+    const top = slotTopPower.get(it.slot) ?? Number.NEGATIVE_INFINITY;
+    const second = slotSecondPower.get(it.slot) ?? Number.NEGATIVE_INFINITY;
+    if (pw > top) {
+      slotSecondPower.set(it.slot, top);
+      slotTopPower.set(it.slot, pw);
+    } else if (pw > second) {
+      slotSecondPower.set(it.slot, pw);
+    }
+  }
   let inv = "";
   for (const g of items) {
     const eq =
-      state.equippedGear.weapon === g.instanceId ||
-      state.equippedGear.body === g.instanceId ||
-      state.equippedGear.ring === g.instanceId;
+      Object.values(state.equippedGear).some((id) => id === g.instanceId);
+    if (!eq) continue;
     const pre = g.prefixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
     const suf = g.suffixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
-    const picked = refineTargetId === g.instanceId;
-    const refineBtn =
-      g.rarity === "UR"
-        ? `<button class="btn ${picked ? "btn-primary" : ""}" type="button" data-gear-refine="${g.instanceId}">${picked ? "取消精炼" : "精炼"}</button>`
-        : "";
-    const xt = xuanTieEnhanceCost(g.enhanceLevel);
+    const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0));
+    const xt = xuanTieEnhanceCost(slotLv);
+    const locked = !!g.locked;
+    const pw = gearItemPower(g, slotLv);
+    const top = slotTopPower.get(g.slot) ?? pw;
+    const second = slotSecondPower.get(g.slot) ?? Number.NEGATIVE_INFINITY;
+    const compareTarget = top > pw ? top : Number.isFinite(second) ? second : top;
+    const delta = pw - compareTarget;
+    const topTag = isSlotTopPowerGear(state, g.instanceId) ? " · 槽位Top1" : "";
     inv += `
-      <div class="gear-row ${eq ? "equipped" : ""} ${picked ? "refine-picked" : ""}">
+      <div class="gear-row equipped ${locked ? "is-locked" : ""}">
         <div class="gear-row-visual">
           <div class="gear-icon-wrap rarity-${g.rarity}">
-            <img src="${GEAR_SLOT_ICON[g.slot]}" alt="" width="32" height="32" loading="lazy" class="gear-slot-icon" />
+            <img src="${gearPortraitSrc(g.baseId, g.slot)}" alt="" width="32" height="32" loading="lazy" class="gear-slot-icon" />
           </div>
           <div>
-          <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · ilvl ${g.itemLevel}
-          <p class="inv-meta">强化 ${g.enhanceLevel}${g.rarity === "UR" ? ` · 精炼 ${g.refineLevel}` : ""}</p>
+          <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade} · ilvl ${g.itemLevel}
+          <p class="inv-meta">战力 ${pw} · 同槽对比 ${slotPowerDeltaText(delta)}${topTag} · 槽位强化 ${slotLv}${locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
           <div class="affix-block">${pre}${suf}</div>
           </div>
         </div>
         <div class="gear-actions">
-          <button class="btn btn-primary" type="button" data-gear-equip="${g.instanceId}" ${eq ? "disabled" : ""}>装备</button>
-          <button class="btn" type="button" data-gear-enhance="${g.instanceId}">强化（${xt} 玄铁）</button>
-          <button class="btn" type="button" data-gear-salvage="${g.instanceId}" ${eq ? "disabled" : ""}>分解</button>
-          ${refineBtn}
+          <button class="btn gear-upgrade-btn" type="button" data-gear-enhance="${g.instanceId}">
+            <img src="${UI_GEAR_UPGRADE_UP}" alt="" width="14" height="14" class="gear-upgrade-ico" loading="lazy" />强化（${xt} 玄铁）
+          </button>
+          <button class="btn gear-lock-toggle-btn ${locked ? "is-locked" : ""}" type="button" data-gear-toggle-lock="${g.instanceId}">
+            <img src="${UI_GEAR_LOCK_DECO}" alt="" width="16" height="16" class="gear-lock-ico" loading="lazy" />${locked ? "解锁" : "锁定"}
+          </button>
+          <button class="btn" type="button" data-gear-salvage="${g.instanceId}" ${locked ? "disabled" : ""}>分解</button>
         </div>
       </div>`;
   }
-  const slotLabel: Record<"weapon" | "body" | "ring", string> = {
-    weapon: "武器",
-    body: "衣甲",
-    ring: "指环",
-  };
-  const slots = ["weapon", "body", "ring"] as const;
+  const slotLabel = GEAR_SLOT_LABEL;
+  const slots = ALL_GEAR_SLOTS;
   let slotHtml = "";
   for (const s of slots) {
     const id = state.equippedGear[s];
     const g = id ? state.gearInventory[id] : null;
     const open = gearDetailSlot === s;
+    const slotLv = g ? Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0)) : 0;
+    const pw = g ? gearItemPower(g, slotLv) : 0;
+    const top = g ? (slotTopPower.get(s) ?? pw) : 0;
+    const delta = g ? pw - top : 0;
     slotHtml += `<div class="gear-slot-line">
       <button type="button" class="gear-slot-summary ${open ? "is-open" : ""}" data-gear-open-slot="${s}">
         <span class="gear-slot-summary-label">${slotLabel[s]}</span>
-        <span class="gear-slot-summary-name">${g ? g.displayName : "（空）"}</span>
+        <span class="gear-slot-summary-name">${g ? `${g.displayName} · 战力 ${pw} · 同槽 ${slotPowerDeltaText(delta)}` : "（空）"}</span>
         <span class="inv-meta gear-slot-summary-hint">${open ? "收起" : "详情 · 卸下 / 强化"}</span>
       </button>
     </div>`;
@@ -521,51 +827,62 @@ export function renderGearPanel(
     const g = id ? state.gearInventory[id] : null;
     if (!g) {
       detailBlock = `<div class="gear-equipped-detail" id="gear-equipped-detail">
-        <p class="hint">${slotLabel[s]}栏位为空。可在下方背包点击「装备」上阵。</p>
+        <p class="hint">${slotLabel[s]}栏位为空。请去「历练·筑灵→境界铸灵」获取装备。</p>
         <button type="button" class="btn" id="btn-gear-detail-close">关闭</button>
       </div>`;
     } else {
       const pre = g.prefixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
       const suf = g.suffixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
-      const xt = xuanTieEnhanceCost(g.enhanceLevel);
-      const picked = refineTargetId === g.instanceId;
-      const refineBtn =
-        g.rarity === "UR"
-          ? `<button class="btn ${picked ? "btn-primary" : ""}" type="button" data-gear-refine="${g.instanceId}">${picked ? "取消精炼" : "精炼"}</button>`
-          : "";
+      const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0));
+      const xt = xuanTieEnhanceCost(slotLv);
       detailBlock = `<div class="gear-equipped-detail" id="gear-equipped-detail">
         <div class="gear-equipped-detail-head">
           <div class="gear-icon-wrap rarity-${g.rarity}">
-            <img src="${GEAR_SLOT_ICON[g.slot]}" alt="" width="40" height="40" loading="lazy" class="gear-slot-icon" />
+            <img src="${gearPortraitSrc(g.baseId, g.slot)}" alt="" width="40" height="40" loading="lazy" class="gear-slot-icon" />
           </div>
           <div>
-            <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · ilvl ${g.itemLevel}
-            <p class="inv-meta">已装备于 ${slotLabel[s]} · 强化 ${g.enhanceLevel}${g.rarity === "UR" ? ` · 精炼 ${g.refineLevel}` : ""}</p>
+            <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade} · ilvl ${g.itemLevel}
+            <p class="inv-meta">已装备于 ${slotLabel[s]} · 战力 ${gearItemPower(g, slotLv)} · 槽位强化 ${slotLv}${g.locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
           </div>
         </div>
         <div class="affix-block">${pre}${suf}</div>
         <div class="gear-equipped-detail-actions">
-          <button class="btn btn-danger" type="button" data-gear-unequip-detail="${s}">卸下</button>
-          <button class="btn btn-primary" type="button" data-gear-enhance="${g.instanceId}">强化（${xt} 玄铁）</button>
-          ${refineBtn}
+          <button class="btn btn-danger gear-upgrade-btn gear-upgrade-btn-down" type="button" data-gear-unequip-detail="${s}" ${g.locked ? "disabled" : ""}>
+            <img src="${UI_GEAR_UPGRADE_DOWN}" alt="" width="14" height="14" class="gear-upgrade-ico" loading="lazy" />卸下并拆解
+          </button>
+          <button class="btn btn-primary gear-upgrade-btn" type="button" data-gear-enhance="${g.instanceId}">
+            <img src="${UI_GEAR_UPGRADE_UP}" alt="" width="14" height="14" class="gear-upgrade-ico" loading="lazy" />强化（${xt} 玄铁）
+          </button>
+          <button class="btn gear-lock-toggle-btn ${g.locked ? "is-locked" : ""}" type="button" data-gear-toggle-lock="${g.instanceId}">
+            <img src="${UI_GEAR_LOCK_DECO}" alt="" width="16" height="16" class="gear-lock-ico" loading="lazy" />${g.locked ? "解锁" : "锁定"}
+          </button>
           <button type="button" class="btn" id="btn-gear-detail-close">关闭</button>
         </div>
       </div>`;
     }
   }
+  const sortBar = `
+      <div class="gear-inv-sort-row" role="group" aria-label="装备排序">
+        ${(["rarity", "ilvl", "slot", "name"] as GearInventorySortMode[])
+          .map(
+            (m) =>
+              `<button type="button" class="btn gear-inv-sort-btn ${gearInvSort === m ? "is-active" : ""}" data-gear-inv-sort="${m}">${GEAR_SORT_LABELS[m]}</button>`,
+          )
+          .join("")}
+      </div>`;
   return `
     <section class="panel" id="gear-panel-root">
       <div class="panel-title-art-row">
         <img class="panel-title-art-icon" src="${UI_HEAD_GEAR}" alt="" width="28" height="28" loading="lazy" />
         <h2>装备</h2>
       </div>
-      <p class="hint">装备来自抽卡的铸灵池。强化消耗玄铁（分解装备获得）；天极可精炼。</p>
-      <p class="hint">点武器/衣甲/指环查看详情，可卸下或强化。背包中的未装备件也能强化。</p>
-      ${refineHint}
+      <p class="hint">装备按<strong>12 部位</strong>生效：新装在境界铸灵与当前部位比对<strong>战力</strong>，更高才替换。强化消耗玄铁。在「历练·筑灵」页长按筑灵条展开，点「管理」在此强化、锁定或分解。</p>
+      <p class="hint sm">锁定装备不可分解，也不会被自动分解（灵卡自动分解仍可在聚灵阵勾选）。</p>
       <h3 class="sub-h">已装备</h3>
       ${slotHtml}
       ${detailBlock}
-      <h3 class="sub-h">背包</h3>
+      <h3 class="sub-h">部位详情</h3>
+      ${sortBar}
       <div class="gear-inv">${inv || `<div class="empty-art-wrap"><img src="${UI_EMPTY_GEAR}" alt="暂无装备" class="empty-art-img" width="320" height="160" loading="lazy" /></div>`}</div>
     </section>`;
 }
@@ -587,7 +904,7 @@ export function renderPetPanel(state: GameState): string {
   const canPull = state.summonEssence >= PET_PULL_COST;
   const bonusLine = describePetBonusesSummary(state);
   const defsSorted = [...PET_DEFS].sort(
-    (a, b) => PET_RARITY_ORDER_DESC.indexOf(a.rarity) - PET_RARITY_ORDER_DESC.indexOf(b.rarity),
+    (a, b) => rarityRank(b.rarity) - rarityRank(a.rarity),
   );
   let cards = "";
   for (const def of defsSorted) {

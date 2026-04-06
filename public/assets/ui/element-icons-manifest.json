@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "naming": "Filenames from ELEMENT_UI_FILES in src/data/elementUi.ts; served as public/assets/ui/<file>.",
+  "elements": [
+    { "id": "metal", "file": "metal.png" },
+    { "id": "wood", "file": "wood.png" },
+    { "id": "water", "file": "water.png" },
+    { "id": "fire", "file": "fire.png" },
+    { "id": "earth", "file": "earth.png" }
+  ]
+}

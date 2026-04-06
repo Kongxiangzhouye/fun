@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "naming": "Filenames from RARITY_BADGE_UI_FILES in src/data/rarityBadgeUi.ts; served as public/assets/ui/<file>.",
+  "badges": [
+    { "rarity": "SSR", "file": "rarity-ssr.png" },
+    { "rarity": "UR", "file": "rarity-ur.png" }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "naming": "Non-runtime style references for artists; not imported by the game client.",
+  "assets": [
+    {
+      "id": "paletteSwatch",
+      "file": "ui-art-palette-swatch.svg",
+      "role": "color_reference",
+      "relatedModules": ["src/data/gachaPoolUi.ts", "public/assets/ui/gacha-decor.svg"]
+    }
+  ]
+}

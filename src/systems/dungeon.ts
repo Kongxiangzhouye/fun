@@ -36,6 +36,16 @@ import {
   dungeonPlayerMoveSpeedMult,
 } from "./battleSkills";
 import { petDungeonAtkAdditive } from "./pets";
+import { noteWeeklyBountyWave } from "./weeklyBounty";
+import {
+  dungeonAffixEssenceMult,
+  dungeonAffixMobDamageMult,
+  dungeonAffixMobHpMult,
+  dungeonAffixPlayerAtkMult,
+} from "./dungeonAffix";
+import { daoMeridianDungeonAtkMult, daoMeridianDungeonEssenceMult } from "./daoMeridian";
+import { veinGongMingResonanceMult } from "./veinCultivation";
+import { noteDungeonEssenceIntGained } from "./pullChronicle";
 import {
   DUNGEON_MAP_H,
   DUNGEON_MAP_W,
@@ -60,6 +70,26 @@ const BOSS_CHASE_VS_PLAYER = 0.8;
 const BOSS_CHASE_PULSE_AMP = 0.12;
 /** 新波次/进本短保护：避免刷怪瞬间互殴导致“刚进图就掉血” */
 const WAVE_START_GRACE_MS = 700;
+/** 单帧结算上限，避免切后台回前台后一帧累积导致“追击失控” */
+const DUEL_TICK_SLICE_SEC = 0.18;
+/** 首领前哨小兵收益折扣：允许无限刷，但单只收益降低避免失衡。 */
+const BOSS_PREP_TRASH_ESSENCE_MULT = 0.45;
+
+export type DungeonChallengeBlockReason =
+  | "not_active"
+  | "not_boss_wave"
+  | "already_boss"
+  | "threshold_not_met";
+
+export interface DungeonBossPrepSnapshot {
+  phase: DungeonCombatPhase;
+  req: number;
+  kills: number;
+  canChallenge: boolean;
+  prepEssenceMult: number;
+  challengeHint: string;
+}
+
 /** 刷怪与玩家出生点的最小格距（曼哈顿）；降低贴脸刷怪感 */
 const SPAWN_MIN_CELL_DIST = 3;
 /** 过渡波（每段第 4 波）稍降压，缓冲到下一波节点 */
@@ -106,7 +136,15 @@ function hasClearCombatLine(d: DungeonState, tx: number, ty: number): boolean {
   if (w <= 0 || h <= 0 || !d.walkable.length) return true;
   const [px, py] = normToCell(d.playerX, d.playerY, w, h);
   const [mx, my] = normToCell(tx, ty, w, h);
+  const pIdx = py * w + px;
+  const mIdx = my * w + mx;
+  if (!d.walkable[pIdx] || !d.walkable[mIdx]) return false;
   return gridLineInteriorWalkClear(w, h, d.walkable, px, py, mx, my);
+}
+
+/** 接战判定：距离命中圈内且战斗连线未被墙阻断。 */
+function canEngageMobNow(d: DungeonState, m: DungeonMob, pRange: number): boolean {
+  return mobInPlayerAttackDisk(d, m, pRange) && hasClearCombatLine(d, m.x, m.y);
 }
 
 /** 与 tick 内 inCombat 一致：锁定目标在「接战/被怪摸」带内则不因更近怪而切换 */
@@ -213,7 +251,7 @@ const EL_LIST: Element[] = ["metal", "wood", "water", "fire", "earth"];
 
 function saveWaveCheckpoint(state: GameState): void {
   const d = state.dungeon;
-  if (!d.mobs.some((m) => m.hp > 0) || d.mapW <= 0) return;
+  if (!d.mobs.some((m) => m.hp > 0)) return;
   d.waveCheckpoint[d.wave] = {
     mobs: d.mobs.map((m) => ({ ...m })),
     walkable: [...d.walkable],
@@ -228,6 +266,13 @@ function saveWaveCheckpoint(state: GameState): void {
     spawnX: d.waveEntrySpawnX,
     spawnY: d.waveEntrySpawnY,
     rewardModeRepeat: d.rewardModeRepeat,
+    duelComboStacks: d.duelComboStacks,
+    duelWeakUntilMs: d.duelWeakUntilMs,
+    duelWeakNextAtMs: d.duelWeakNextAtMs,
+    duelFervor: d.duelFervor,
+    duelElemSurgeCounter: d.duelElemSurgeCounter,
+    bossPrepKills: d.bossPrepKills,
+    bossPrepChallengeReady: d.bossPrepChallengeReady,
   };
 }
 
@@ -255,7 +300,62 @@ function restoreWaveFromCheckpoint(state: GameState, ck: WaveCheckpoint): void {
   d.waveEntrySpawnX = ck.spawnX;
   d.waveEntrySpawnY = ck.spawnY;
   d.rewardModeRepeat = ck.rewardModeRepeat ?? false;
+  d.duelComboStacks = ck.duelComboStacks ?? 0;
+  d.duelWeakUntilMs = ck.duelWeakUntilMs ?? 0;
+  d.duelWeakNextAtMs = ck.duelWeakNextAtMs ?? 0;
+  d.duelFervor = ck.duelFervor ?? 0;
+  d.duelElemSurgeCounter = ck.duelElemSurgeCounter ?? 0;
+  d.bossPrepKills = Math.max(0, Math.floor(ck.bossPrepKills ?? 0));
+  d.bossPrepChallengeReady = !!ck.bossPrepChallengeReady;
+  if (d.duelWeakNextAtMs <= 0) {
+    d.duelWeakNextAtMs = Date.now() + DUNGEON_DUEL_FEEDBACK.weakTriggerWindowBaseMs;
+  }
   syncBars(state, d);
+}
+
+/** 阵线对决趣味层：连击、破绽、战意、克制灵脉（期望 DPS 小幅上浮，偏保守） */
+const DUEL_COMBO_MAX = 12;
+const DUEL_COMBO_PER_STACK = 0.02;
+const DUEL_WEAK_DMG_MULT = 1.17;
+const DUEL_WEAK_MS = 2300;
+const DUEL_FERVOR_PER_HIT = 7;
+const DUEL_FERVOR_MAX = 100;
+const DUEL_FERVOR_MULT = 1.22;
+const DUEL_ELEM_ADV = 1.27;
+const DUEL_SURGE_EVERY = 4;
+const DUEL_SURGE_RATIO = 0.11;
+
+/** 幻域反馈阈值集中在此，供战斗与 UI 同口径读取 */
+export const DUNGEON_DUEL_FEEDBACK = {
+  comboHighStacks: 7,
+  hitDecoComboThreshold: 3,
+  critDecoComboThreshold: 7,
+  comboChainDecoThreshold: 5,
+  weakTriggerInitBaseMs: 900,
+  weakTriggerInitRandMs: 3200,
+  weakTriggerWindowBaseMs: 800,
+  weakTriggerWindowRandMs: 2800,
+  weakTriggerCooldownBaseMs: 7200,
+  weakTriggerCooldownRandMs: 5200,
+  weakTriggerChance: 0.42,
+  duelFxHitMs: 140,
+  duelFxHitDecoMs: 170,
+  duelFxCritDecoMs: 260,
+  duelFxGuardDecoMs: 320,
+  duelFxWeaknessPingMs: 360,
+  parryHitDecoIframesRemainMs: 180,
+} as const;
+
+function initDuelBattleState(state: GameState, now: number): void {
+  const d = state.dungeon;
+  d.duelComboStacks = 0;
+  d.duelWeakUntilMs = 0;
+  d.duelFervor = 0;
+  d.duelElemSurgeCounter = 0;
+  d.duelWeakNextAtMs =
+    now +
+    DUNGEON_DUEL_FEEDBACK.weakTriggerInitBaseMs +
+    nextRand01(state) * DUNGEON_DUEL_FEEDBACK.weakTriggerInitRandMs;
 }
 
 function playerMoveSpeed(state: GameState): number {
@@ -511,7 +611,7 @@ export interface DungeonDamageFloat {
   nx: number;
   ny: number;
   text: string;
-  cls: "dmg-out" | "dmg-in" | "dmg-miss";
+  cls: "dmg-out" | "dmg-out-crit" | "dmg-in" | "dmg-miss" | "dmg-special";
 }
 
 const damageFloatQueue: DungeonDamageFloat[] = [];
@@ -522,7 +622,7 @@ function pushDamageFloat(
   nx: number,
   ny: number,
   text: string,
-  cls: "dmg-out" | "dmg-in" | "dmg-miss",
+  cls: "dmg-out" | "dmg-out-crit" | "dmg-in" | "dmg-miss" | "dmg-special",
 ): void {
   damageFloatQueue.push({ nx, ny, text, cls });
 }
@@ -1095,10 +1195,18 @@ export function essenceRewardTotalFloat(
   state: GameState,
   isBoss: boolean,
   repeatMode = false,
+  affixNow = Date.now(),
 ): number {
   const base = 5 + wave * 2.1;
-  let v = Math.max(0.05, base * essenceFindMult(state) * (1 + dungeonEssenceBonusFromSkills(state)));
+  let v = Math.max(
+    0.05,
+    base *
+      essenceFindMult(state) *
+      (1 + dungeonEssenceBonusFromSkills(state)) *
+      veinGongMingResonanceMult(state.vein.gongMing),
+  );
   if (isBoss) v *= 1.45;
+  v *= dungeonAffixEssenceMult(affixNow) * daoMeridianDungeonEssenceMult(state);
   if (repeatMode) {
     v *= DUNGEON_REPEAT_ESSENCE_MULT;
     // 复刷若明显落后前沿波次，则再做温和衰减，避免长期低关稳定刷最优。
@@ -1151,7 +1259,7 @@ function aliveMobs(d: DungeonState): DungeonMob[] {
 export function countMobsInEngageRange(d: DungeonState, playerRangeNorm: number): number {
   let n = 0;
   for (const m of d.mobs) {
-    if (mobInPlayerAttackDisk(d, m, playerRangeNorm)) n += 1;
+    if (canEngageMobNow(d, m, playerRangeNorm)) n += 1;
   }
   return n;
 }
@@ -1195,6 +1303,45 @@ export function totalAliveMobHpSum(d: DungeonState): number {
   return s;
 }
 
+export function bossPrepKillRequirement(wave: number): number {
+  const stage = Math.max(1, Math.floor(wave / 5));
+  return 10 + stage * 2;
+}
+
+export function dungeonChallengeBlockReason(state: GameState): DungeonChallengeBlockReason | null {
+  const d = state.dungeon;
+  if (!d.active) return "not_active";
+  if (d.wave % 5 !== 0) return "not_boss_wave";
+  if (!state.dungeonDeferBoss) return "already_boss";
+  const req = bossPrepKillRequirement(d.wave);
+  if (!d.bossPrepChallengeReady || d.bossPrepKills < req) return "threshold_not_met";
+  return null;
+}
+
+export function dungeonBossPrepSnapshot(state: GameState): DungeonBossPrepSnapshot {
+  const d = state.dungeon;
+  const req = bossPrepKillRequirement(Math.max(1, d.wave));
+  const kills = Math.max(0, Math.floor(d.bossPrepKills));
+  const phase = dungeonCombatPhase(state);
+  const reason = dungeonChallengeBlockReason(state);
+  const canChallenge = reason === null;
+  let challengeHint = "";
+  if (canChallenge) challengeHint = "已达门槛，可随时挑战首领。";
+  else if (reason === "threshold_not_met") challengeHint = `挑战门槛：击败小兵 ${req}（当前 ${kills}/${req}）`;
+  else if (reason === "not_active") challengeHint = "需先进入副本并到达首领前哨。";
+  else if (reason === "not_boss_wave") challengeHint = "当前不是首领波，无法挑战首领。";
+  else if (reason === "already_boss") challengeHint = "当前已是首领战。";
+  else challengeHint = "当前不可挑战首领。";
+  return {
+    phase,
+    req,
+    kills,
+    canChallenge,
+    prepEssenceMult: BOSS_PREP_TRASH_ESSENCE_MULT,
+    challengeHint,
+  };
+}
+
 function syncBars(state: GameState, d: DungeonState): void {
   const t = pickCombatTargetMob(d, playerEngageRadiusNorm(state));
   if (t) {
@@ -1210,7 +1357,7 @@ function syncDungeonHpToState(state: GameState): void {
   clampCombatHpToMax(state);
 }
 
-/** 进入第 w 波所需唤灵髓（约本波首通预期收益的 5%；复刷再乘 `DUNGEON_REPEAT_ENTRY_FEE_MULT`） */
+/** 进入第 w 波所需筑灵髓（约本波首通预期收益的 5%；复刷再乘 `DUNGEON_REPEAT_ENTRY_FEE_MULT`） */
 export function dungeonEntryFeeEssence(state: GameState, wave: number, repeatMode = false): number {
   const w = Math.max(1, Math.floor(wave));
   const isBoss = w % 5 === 0;
@@ -1236,18 +1383,27 @@ function repeatLingShaBonus(wave: number): number {
   return 2 + Math.floor(wave / 2);
 }
 
-/**
- * 本波清关时统一结算：将本波累计的唤灵髓（含小数进位）写入背包与会话统计。
- * 击杀过程中只累加 essenceThisWave / essenceRemainder，不即时加 summonEssence。
- */
-function grantWaveEssenceToInventory(state: GameState): void {
+/** 将余数中满 1 的部分立即写入唤灵髓；返回本帧入袋整数个数 */
+function flushRemainderToZhuLing(state: GameState): number {
   const d = state.dungeon;
   let intGain = 0;
   while (d.essenceRemainder >= 1) {
     d.essenceRemainder -= 1;
     intGain += 1;
   }
-  state.summonEssence += intGain;
+  if (intGain > 0) {
+    state.zhuLingEssence += intGain;
+    noteDungeonEssenceIntGained(state, intGain);
+  }
+  return intGain;
+}
+
+/**
+ * 本波清关时：余数已在每杀flush；此处将本波髓总量记入会话统计。
+ */
+function grantWaveEssenceToInventory(state: GameState): void {
+  const d = state.dungeon;
+  flushRemainderToZhuLing(state);
   d.sessionEssence += d.essenceThisWave;
 }
 
@@ -1261,6 +1417,7 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
   d.maxWaveRecord = Math.max(d.maxWaveRecord, clearedWave);
   d.entryWave = Math.min(d.maxWaveRecord + 1, clearedWave + 1);
   d.totalWavesCleared += 1;
+  noteWeeklyBountyWave(state, now);
   d.wave = clearedWave + 1;
   d.playerMax = playerMaxHp(state);
   d.playerHp = Math.min(d.playerHp, d.playerMax);
@@ -1269,30 +1426,63 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
   d.packSize = 0;
   d.monsterHp = 0;
   d.monsterMax = 0;
-  d.interWaveCooldownUntil = now + DUNGEON_INTER_WAVE_CD_MS;
+  d.bossPrepKills = 0;
+  d.bossPrepChallengeReady = false;
+  d.interWaveCooldownUntil = 0;
   let extra = "";
   if (wasRepeat) {
     const ls = repeatLingShaBonus(clearedWave);
     state.lingSha += ls;
     extra = ` · 灵砂 +${ls}（复刷助养成）`;
   }
-  d.pendingToast = `第 ${clearedWave} 关完成！本关唤灵髓 +${waveEss.toFixed(2)}（已入背包）${extra}`;
+  d.pendingToast = `破阵胜利 · 第 ${clearedWave} 关\n本关筑灵髓 +${waveEss.toFixed(2)} 已结算${extra ? `\n${extra.replace(/^ · /, "")}` : ""}`;
   refreshRewardModeRepeat(state);
+  if (clearedWave % 5 === 0) {
+    state.dungeonDeferBoss = true;
+  }
+  spawnMobsForWave(state, now);
+  d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
 }
 
 /** 单只魔物阵亡结算；若本波清空则推进关卡并返回 true（调用方应结束本 tick） */
 function registerDungeonKill(state: GameState, d: DungeonState, mob: DungeonMob, now: number): boolean {
   resetDamageFloatAccum();
-  const totalFloat = essenceRewardTotalFloat(d.wave, state, mob.isBoss, d.rewardModeRepeat);
+  const inBossPrep = d.wave % 5 === 0 && state.dungeonDeferBoss && !mob.isBoss;
+  const bossLootWave = d.wave % 5 === 0 && !state.dungeonDeferBoss;
+  const totalFloatBase = essenceRewardTotalFloat(d.wave, state, bossLootWave, d.rewardModeRepeat, now);
+  const totalFloat = inBossPrep ? totalFloatBase * BOSS_PREP_TRASH_ESSENCE_MULT : totalFloatBase;
   const share = totalFloat / Math.max(1, d.packSize);
   d.essenceRemainder += share;
   d.essenceThisWave += share;
   d.packKilled += 1;
   d.sessionKills += 1;
+  if (inBossPrep) {
+    d.bossPrepKills += 1;
+    if (!d.bossPrepChallengeReady && d.bossPrepKills >= bossPrepKillRequirement(d.wave)) {
+      d.bossPrepChallengeReady = true;
+      d.pendingToast = "首领挑战已解锁：可随时点击「挑战首领」。";
+    }
+  }
   const isLastInPack = d.packKilled >= d.packSize;
   mob.hp = 0;
+  const intGain = flushRemainderToZhuLing(state);
+  if (intGain > 0 && !mob.isBoss) {
+    d.pendingKillToast = `拾得 ${intGain} 筑灵髓`;
+  }
   if (isLastInPack) {
     grantWaveEssenceToInventory(state);
+    /** 首领前哨：无限刷小兵；达到门槛后可随时挑战首领。 */
+    if (inBossPrep) {
+      d.pendingToast =
+        d.pendingToast ??
+        (d.bossPrepChallengeReady
+          ? "前哨已清 · 可继续清剿，或随时点击「挑战首领」。"
+          : `前哨已清 · 挑战首领进度 ${d.bossPrepKills}/${bossPrepKillRequirement(d.wave)}。`);
+      d.packKilled = 0;
+      spawnMobsForWave(state, now);
+      d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
+      return true;
+    }
     clearWaveAndAdvance(state, now);
     return true;
   }
@@ -1311,134 +1501,123 @@ function randomEl(state: GameState): Element {
   return EL_LIST[Math.floor(nextRand01(state) * EL_LIST.length)]!;
 }
 
-function spawnMobsForWave(state: GameState): void {
+function spawnMobsForWave(state: GameState, now: number = Date.now()): void {
   const d = state.dungeon;
   const ck = d.waveCheckpoint[d.wave];
-  if (ck && ck.mobs.some((m) => m.hp > 0) && ck.walkable.length > 0 && ck.mapW > 0) {
+  if (ck && ck.mobs.some((m) => m.hp > 0) && ck.mapW === 0) {
     restoreWaveFromCheckpoint(state, ck);
-    return;
-  }
-
-  d.playerAttackAccum = 0;
-  d.playerAttackTargetMobId = 0;
-  d.essenceThisWave = 0;
-  const { walkable, px, py, w: mapW, h: mapH } = generateWalkableMap(state, d.wave);
-  d.walkable = walkable;
-  d.mapW = mapW;
-  d.mapH = mapH;
-  d.playerX = (px + 0.5) / d.mapW;
-  d.playerY = (py + 0.5) / d.mapH;
-  d.packSize = packSizeForWave(d.wave);
-  d.packKilled = 0;
-  d.mobs = [];
-
-  const startI = py * d.mapW + px;
-  const startX = startI % d.mapW;
-  const startY = Math.floor(startI / d.mapW);
-  const reach = reachableCellsForFourWaySpawn(
-    d.mapW,
-    d.mapH,
-    d.walkable,
-    bfsReachable(d.mapW, d.mapH, d.walkable, px, py),
-  );
-  const totalHp0 = monsterMaxHpForWave(d.wave);
-  const bossWave = d.wave % 5 === 0;
-
-  if (bossWave) {
-    d.packSize = 1;
-    const forbid = new Set<number>([startI]);
-    let bossReach = reach;
-    const safeBossReach = new Set<number>();
-    for (const i of reach) {
-      const cx = i % d.mapW;
-      const cy = Math.floor(i / d.mapW);
-      if (cellManhattanDist(cx, cy, startX, startY) >= SPAWN_MIN_CELL_DIST + 1) safeBossReach.add(i);
-    }
-    if (safeBossReach.size > 0) bossReach = safeBossReach;
-    let spot = pickRandomWalkableCell(state, d.walkable, d.mapW, d.mapH, bossReach, forbid);
-    if (!spot) {
-      for (const i of bossReach) {
-        if (i === startI) continue;
-        spot = { x: i % d.mapW, y: Math.floor(i / d.mapW) };
-        break;
-      }
-    }
-    if (!spot) return;
-    const mx = (spot.x + 0.5) / d.mapW;
-    const my = (spot.y + 0.5) / d.mapH;
-    const hp = Math.max(1, Math.floor(totalHp0 * 4.2));
-    const bel = randomEl(state);
-    const combat = rollMobCombatStats(state, d.wave, true, "melee");
-    d.mobs.push({
-      id: d.nextMobId++,
-      x: mx,
-      y: my,
-      hp,
-      maxHp: hp,
-      element: bel,
-      isBoss: true,
-      mobKind: Math.floor(nextRand01(state) * 8),
-      bossEpithet: randomBossEpithet(() => nextRand01(state)),
-      ...combat,
-    });
-    d.waveEntrySpawnX = d.playerX;
-    d.waveEntrySpawnY = d.playerY;
     syncBars(state, d);
     return;
   }
-
-  const forbid = new Set<number>([startI]);
-  const safeReach = new Set<number>();
-  for (const i of reach) {
-    const cx = i % d.mapW;
-    const cy = Math.floor(i / d.mapW);
-    if (cellManhattanDist(cx, cy, startX, startY) >= SPAWN_MIN_CELL_DIST) safeReach.add(i);
+  if (ck && ck.mobs.some((m) => m.hp > 0) && ck.mapW > 0) {
+    delete d.waveCheckpoint[d.wave];
   }
-  const spawnReach = safeReach.size > 0 ? safeReach : reach;
-  let anchorCell: { x: number; y: number } | null = null;
-  for (let i = 0; i < d.packSize; i++) {
-    let pickPool = spawnReach;
-    // 非首领波采用“主簇 + 分散”混合刷怪，减少清波末段满图追怪。
-    if (anchorCell) {
-      const clustered = new Set<number>();
-      for (const ci of spawnReach) {
-        const cx = ci % d.mapW;
-        const cy = Math.floor(ci / d.mapW);
-        const dist = Math.abs(cx - anchorCell.x) + Math.abs(cy - anchorCell.y);
-        if (dist <= 4) clustered.add(ci);
-      }
-      if (clustered.size > 0) {
-        const useCluster = nextRand01(state) < 0.72;
-        pickPool = useCluster ? clustered : spawnReach;
-      }
-    }
-    const spot = pickRandomWalkableCell(state, d.walkable, d.mapW, d.mapH, pickPool, forbid);
-    if (!spot) break;
-    if (!anchorCell) anchorCell = { ...spot };
-    forbid.add(spot.y * d.mapW + spot.x);
-    const role: "melee" | "ranged" = nextRand01(state) < 0.5 ? "melee" : "ranged";
-    const hpBase = hpSlice(totalHp0, d.packSize, i);
-    const hpMult = role === "melee" ? MOB_MELEE_HP_MULT : MOB_RANGED_HP_MULT;
-    const maxHp = Math.max(1, Math.floor(hpBase * hpMult));
-    const combat = rollMobCombatStats(state, d.wave, false, role);
+
+  d.playerAttackAccum = 0;
+  d.monsterAttackAccum = 0;
+  d.playerAttackTargetMobId = 0;
+  d.essenceThisWave = 0;
+  d.walkable = [];
+  d.mapW = 0;
+  d.mapH = 0;
+  d.playerX = 0.5;
+  d.playerY = 0.5;
+  d.packKilled = 0;
+  d.mobs = [];
+
+  const hpAffix = dungeonAffixMobHpMult(now);
+  const totalHp0 = Math.max(1, Math.floor(monsterMaxHpForWave(d.wave) * hpAffix));
+  const bossWave = d.wave % 5 === 0;
+  const deferBoss = bossWave && state.dungeonDeferBoss;
+  const isRealBoss = bossWave && !deferBoss;
+  const rawPack = packSizeForWave(d.wave);
+  let packN: number;
+  let totalHp: number;
+  if (isRealBoss) {
+    packN = 1;
+    totalHp = Math.max(1, Math.floor(totalHp0 * 4.2));
+  } else if (deferBoss) {
+    packN = Math.min(8, Math.max(4, 3 + Math.floor(d.wave / 12)));
+    totalHp = Math.max(1, Math.floor(totalHp0 * 4.2));
+  } else {
+    packN = Math.min(10, Math.max(3, Math.floor(rawPack / 4) + 1));
+    totalHp = totalHp0;
+  }
+  d.packSize = packN;
+
+  for (let i = 0; i < packN; i++) {
+    const hp = hpSlice(totalHp, packN, i);
+    const bel = randomEl(state);
+    const isBossMob = isRealBoss && packN === 1;
+    const role: "melee" | "ranged" = i % 3 === 0 ? "ranged" : "melee";
+    const combat = rollMobCombatStats(state, d.wave, isBossMob, role);
+    const xo = 0.38 + (i % 5) * 0.055;
+    const yo = 0.42 + Math.floor(i / 5) * 0.07;
     d.mobs.push({
       id: d.nextMobId++,
-      x: (spot.x + 0.5) / d.mapW,
-      y: (spot.y + 0.5) / d.mapH,
-      hp: maxHp,
-      maxHp,
-      element: randomEl(state),
-      isBoss: false,
+      x: Math.min(0.72, Math.max(0.28, xo)),
+      y: Math.min(0.68, Math.max(0.32, yo)),
+      hp,
+      maxHp: hp,
+      element: bel,
+      isBoss: isBossMob,
       mobKind: Math.floor(nextRand01(state) * 8),
+      bossEpithet: isBossMob ? randomBossEpithet(() => nextRand01(state)) : undefined,
       mobRole: role,
-      wanderHeading: nextRand01(state) * Math.PI * 2,
       ...combat,
     });
   }
   d.packSize = d.mobs.length;
+  if (!deferBoss) {
+    d.bossPrepKills = 0;
+    d.bossPrepChallengeReady = false;
+  }
   d.waveEntrySpawnX = d.playerX;
   d.waveEntrySpawnY = d.playerY;
   syncBars(state, d);
+  initDuelBattleState(state, now);
+}
+
+/** 当前段（每 5 波）起始波：1、6、11… */
+export function dungeonSegmentStartWave(wave: number): number {
+  const w = Math.max(1, Math.floor(wave));
+  return Math.floor((w - 1) / 5) * 5 + 1;
+}
+
+/** 在首领位且当前为小怪群时，切换为真正首领并重生本波 */
+export function requestBossChallenge(state: GameState): { ok: boolean; msg: string } {
+  const d = state.dungeon;
+  const reason = dungeonChallengeBlockReason(state);
+  if (reason === "not_active") return { ok: false, msg: "未进入副本：请先进入首领前哨后再挑战。" };
+  if (reason === "not_boss_wave") return { ok: false, msg: "当前波次不是首领关，无法挑战首领。" };
+  if (reason === "already_boss") return { ok: false, msg: "当前已处于首领战，无需重复挑战。" };
+  if (reason === "threshold_not_met") {
+    const req = bossPrepKillRequirement(d.wave);
+    return { ok: false, msg: `挑战门槛未达成：需击败前哨小兵 ${req}（当前 ${d.bossPrepKills}/${req}）。` };
+  }
+  state.dungeonDeferBoss = false;
+  delete d.waveCheckpoint[d.wave];
+  d.packKilled = 0;
+  d.essenceThisWave = 0;
+  d.essenceRemainder = 0;
+  d.bossPrepKills = 0;
+  d.bossPrepChallengeReady = false;
+  spawnMobsForWave(state, Date.now());
+  return { ok: true, msg: "已切换为首领战：本波将重整为首领。" };
+}
+
+/** 幻域阶段统一口径：普通清剿 / 首领前哨 / 首领战 */
+export type DungeonCombatPhase = "trash" | "boss_prep" | "boss_fight";
+
+/** 供系统与 UI 统一读取，避免「状态已切换但展示仍沿旧口径」 */
+export function dungeonCombatPhase(state: GameState): DungeonCombatPhase {
+  const d = state.dungeon;
+  if (!d.active) return "trash";
+  const isBossWave = d.wave % 5 === 0;
+  if (!isBossWave) return "trash";
+  if (state.dungeonDeferBoss) return "boss_prep";
+  const live = d.mobs.find((m) => m.hp > 0);
+  return live?.isBoss ? "boss_fight" : "trash";
 }
 
 export function canEnterDungeon(state: GameState, now: number): boolean {
@@ -1481,8 +1660,8 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   if (!canEnterAtWave(state, w)) return false;
   d.rewardModeRepeat = computeDungeonRepeatMode(state, w);
   const fee = dungeonEntryFeeEssence(state, w, d.rewardModeRepeat);
-  if (state.summonEssence < fee) return false;
-  state.summonEssence -= fee;
+  if (state.zhuLingEssence < fee) return false;
+  state.zhuLingEssence -= fee;
   d.autoEnterConsumed = true;
   state.dungeonSanctuaryMode = false;
   state.dungeonPortalTargetWave = 0;
@@ -1499,9 +1678,10 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   d.playerAttackTargetMobId = 0;
   d.attackAnimPhase = 0;
   d.attackVisualMode = "none";
+  d.bossPrepKills = 0;
+  d.bossPrepChallengeReady = false;
   d.interWaveCooldownUntil = 0;
   d.pendingToast = null;
-  d.pendingDeathPresentation = false;
   clampCombatHpToMax(state);
   d.playerMax = playerMaxHp(state);
   d.playerHp = Math.min(state.combatHpCurrent, d.playerMax);
@@ -1514,7 +1694,7 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   d.playerLastMoveNy = 0;
   damageFloatQueue.length = 0;
   resetDamageFloatAccum();
-  spawnMobsForWave(state);
+  spawnMobsForWave(state, now);
   d.dodgeIframesUntil = now + WAVE_START_GRACE_MS;
   return true;
 }
@@ -1524,7 +1704,7 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
  * 需在 `tickCombatHpRegen` 之后调用，以便 `combatHpCurrent` 已更新。
  */
 export function tryAutoEnterFromSanctuaryPortal(state: GameState, now: number): boolean {
-  if (!state.dungeonSanctuaryAutoEnter || !state.dungeonSanctuaryMode || state.dungeon.active) return false;
+  if (!state.dungeonSanctuaryMode || state.dungeon.active) return false;
   const w = state.dungeonPortalTargetWave;
   if (w < 1) return false;
   const pmax = playerMaxHp(state);
@@ -1532,7 +1712,7 @@ export function tryAutoEnterFromSanctuaryPortal(state: GameState, now: number): 
   if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) return false;
   const rm = computeDungeonRepeatMode(state, w);
   const fee = dungeonEntryFeeEssence(state, w, rm);
-  if (state.summonEssence < fee) return false;
+  if (state.zhuLingEssence < fee) return false;
   return enterDungeon(state, w);
 }
 
@@ -1543,7 +1723,7 @@ export function leaveDungeon(state: GameState): void {
     clampCombatHpToMax(state);
   }
   let savedCk = false;
-  if (d.active && d.mobs.some((m) => m.hp > 0) && d.mapW > 0) {
+  if (d.active && d.mobs.some((m) => m.hp > 0)) {
     saveWaveCheckpoint(state);
     savedCk = true;
   }
@@ -1551,40 +1731,56 @@ export function leaveDungeon(state: GameState): void {
   d.mobs = [];
   d.walkable = [];
   d.interWaveCooldownUntil = 0;
-  d.pendingToast = savedCk ? "已暂离。再入该波将重新随机地图与魔物。" : null;
-  d.pendingDeathPresentation = false;
+  d.pendingToast = savedCk ? "已暂离。再入该波将接续当前阵线。" : null;
   d.bossDodgeVisual = false;
   d.dodgeQueued = false;
   damageFloatQueue.length = 0;
   resetDamageFloatAccum();
 }
 
-export function tickDungeon(state: GameState, dt: number, now: number): void {
+/**
+ * 幻域·阵线对决：无网格走位，敌我各按攻击间隔结算；期望 DPS ≈ 攻×克制×暴期望/攻击间隔。
+ */
+function runDuelTick(state: GameState, dt: number, now: number): void {
   const d = state.dungeon;
-  if (!d.active || dt <= 0) return;
   d.inMelee = false;
   d.attackVisualMode = "none";
   d.bossDodgeVisual = false;
   d.playerMax = playerMaxHp(state);
   d.playerHp = Math.max(0, Math.min(d.playerMax, state.combatHpCurrent));
   d.stamina = Math.min(DUNGEON_STAMINA_MAX, d.stamina + DUNGEON_STAMINA_REGEN_PER_SEC * dt);
-  snapPlayerToNearestWalkable(d);
 
   if (d.interWaveCooldownUntil > 0 && now >= d.interWaveCooldownUntil && d.mobs.length === 0) {
     d.interWaveCooldownUntil = 0;
-    spawnMobsForWave(state);
+    spawnMobsForWave(state, now);
     d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
   }
 
   const pEl = playerBattleElement(state);
   const skillAtk = dungeonAtkBonusFromSkills(state);
-  const baseAtk = playerAttack(state) * (1 + skillAtk + petDungeonAtkAdditive(state));
+  const baseAtk =
+    playerAttack(state) *
+    (1 + skillAtk + petDungeonAtkAdditive(state)) *
+    dungeonAffixPlayerAtkMult(now) *
+    daoMeridianDungeonAtkMult(state);
   const cc = playerCritChance(state);
   const cm = playerCritMult(state);
   const pDodge = playerDungeonDodgeChance(state);
+  const atkSpd = playerDungeonAttackSpeedMult(state);
+  const playerHitInterval = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
   const pRange = playerEngageRadiusNorm(state);
+
   const target = pickCombatTargetMob(d, pRange);
   if (!target) {
+    // 兜底：若出现“空敌阵且不在波间CD”异常状态，自动重生当前波，避免战斗软锁。
+    if (d.mobs.length === 0 && d.interWaveCooldownUntil <= 0) {
+      spawnMobsForWave(state, now);
+      d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
+      d.pendingToast = d.pendingToast ?? "阵线重整：已恢复当前波敌人。";
+      syncBars(state, d);
+      syncDungeonHpToState(state);
+      return;
+    }
     if (d.mobs.length > 0 && d.mobs.every((m) => m.hp <= 0)) {
       grantWaveEssenceToInventory(state);
       clearWaveAndAdvance(state, now);
@@ -1598,234 +1794,216 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
     return;
   }
 
-  const moveLocked = now < d.playerMoveLockUntil;
-  const distPre = dist(d.playerX, d.playerY, target.x, target.y);
-  const mobArPre = Math.max(
-    Math.max(DUNGEON_ENGAGE_NORM * 1.08, target.attackRange ?? DUNGEON_ENGAGE_NORM),
-    pRange * MOB_ATTACK_RANGE_VS_PLAYER,
-  );
-  const reachToTarget = pRange + mobBodyRadius(target);
-  const inCombat =
-    distPre <= reachToTarget || distPre <= mobArPre + PLAYER_BODY_RADIUS_NORM;
+  // 先走位再结算攻防，避免双方长期停在攻击圈外导致“互相不出手”。
+  const { steps, subDt } = movementIntegrationSteps(dt);
+  for (let i = 0; i < steps; i++) {
+    const stepNow = now + i * subDt * 1000;
+    const holdKite = shouldHoldKiteNoDetour(d, pRange);
+    if (!holdKite && stepNow >= d.playerMoveLockUntil) {
+      const pPos = { x: d.playerX, y: d.playerY };
+      if (target.isBoss) {
+        movePlayerInBossFight(state, d, pPos, target, subDt, stepNow);
+      } else {
+        movePlayerKiteMaxRange(state, d, pPos, target, subDt);
+      }
+      d.playerX = pPos.x;
+      d.playerY = pPos.y;
+    }
+    for (const m of d.mobs) {
+      if (m.hp <= 0) continue;
+      const chaseDist = cellDistApprox(d.playerX, d.playerY, m.x, m.y, d.mapW || 1, d.mapH || 1);
+      const shouldChase = m.id === target.id || chaseDist <= CHASE_CELL_DIST;
+      if (shouldChase) moveMobFourWayChase(d, m, pRange, subDt);
+      else moveMobFourWayWander(state, d, m, subDt);
+    }
+  }
 
   if (d.dodgeQueued) {
-    if (
-      !moveLocked &&
-      d.stamina >= DUNGEON_DODGE_STAMINA_COST &&
-      now >= d.dodgeIframesUntil
-    ) {
+    if (d.stamina >= DUNGEON_DODGE_STAMINA_COST && now >= d.dodgeIframesUntil) {
       d.stamina -= DUNGEON_DODGE_STAMINA_COST;
       d.dodgeIframesUntil = now + DUNGEON_DODGE_IFRAMES_MS;
-      if (inCombat) {
-        applyDodgeSlide(state, d, target);
-      } else {
-        applyDodgeAlongMoveDirection(state, d, target);
-      }
     }
     d.dodgeQueued = false;
   }
 
-  const prePathX = d.playerX;
-  const prePathY = d.playerY;
+  if (d.playerAttackTargetMobId !== 0 && d.playerAttackTargetMobId !== target.id) {
+    d.duelComboStacks = 0;
+    d.duelElemSurgeCounter = 0;
+  }
 
-  const { steps: moveSteps, subDt } = movementIntegrationSteps(dt);
-  for (let step = 0; step < moveSteps; step++) {
-    for (const m of d.mobs) {
-      if (m.hp <= 0) continue;
-      const msm = m.moveSpeedMul > 0 ? m.moveSpeedMul : 1;
-      if (m.isBoss) {
-        const cd = cellDistApprox(m.x, m.y, d.playerX, d.playerY, d.mapW, d.mapH);
-        if (cd <= CHASE_CELL_DIST) {
-          const br = dist(m.x, m.y, d.playerX, d.playerY);
-          const reach = pRange + mobBodyRadius(m);
-          /** 与玩家接战移速同一套：进圈后双方都乘 DUNGEON_MELEE_MOVE_MULT */
-          const meleeSlow = br <= reach ? DUNGEON_MELEE_MOVE_MULT : 1;
-          const pulse = 1 + BOSS_CHASE_PULSE_AMP * Math.sin(now * 0.0028 + m.id * 0.17 + step * 0.04);
-          const bossSpd = playerMoveSpeed(state) * BOSS_CHASE_VS_PLAYER * msm * pulse * meleeSlow;
-          moveEntityGridSeek(d, m, d.playerX, d.playerY, bossSpd, subDt);
-        }
-        continue;
+  if (d.duelWeakUntilMs <= now) {
+    if (d.duelWeakNextAtMs <= 0) {
+      d.duelWeakNextAtMs =
+        now +
+        DUNGEON_DUEL_FEEDBACK.weakTriggerWindowBaseMs +
+        nextRand01(state) * DUNGEON_DUEL_FEEDBACK.weakTriggerWindowRandMs;
+    }
+    if (now >= d.duelWeakNextAtMs) {
+      d.duelWeakNextAtMs =
+        now +
+        DUNGEON_DUEL_FEEDBACK.weakTriggerCooldownBaseMs +
+        nextRand01(state) * DUNGEON_DUEL_FEEDBACK.weakTriggerCooldownRandMs;
+      if (nextRand01(state) < DUNGEON_DUEL_FEEDBACK.weakTriggerChance) {
+        d.duelWeakUntilMs = now + DUEL_WEAK_MS;
+        pushDamageFloat(0.52, 0.35, "破绽", "dmg-special");
       }
-      const cd = cellDistApprox(m.x, m.y, d.playerX, d.playerY, d.mapW, d.mapH);
-      // 非首领怪也按四联通寻路：近处追击，远处游走。
-      if (m.id === target.id || cd <= CHASE_CELL_DIST) {
-        moveMobFourWayChase(d, m, pRange, subDt);
+    }
+  }
+
+  d.playerAttackTargetMobId = target.id;
+  const hitInterval = Math.max(0.35, target.attackInterval ?? DUNGEON_MONSTER_HIT_INTERVAL);
+
+  d.inMelee = true;
+  d.attackVisualMode = "aoe";
+
+  d.playerAttackAccum += dt;
+  while (d.playerAttackAccum >= playerHitInterval) {
+    d.playerAttackAccum -= playerHitInterval;
+    if (target.hp <= 0) break;
+    if (!canEngageMobNow(d, target, pRange)) break;
+    d.attackAnimPhase += Math.PI * 2;
+    const mdMul = elementDamageMultiplier(pEl, target.element);
+    const mobDodge = clamp(target.dodge ?? 0.08, 0, 0.9);
+    const fx = 0.5;
+    const fy = 0.42;
+    if (nextRand01(state) < mobDodge) {
+      pushDamageFloat(fx, fy, "偏斜", "dmg-miss");
+      d.duelComboStacks = 0;
+      d.duelElemSurgeCounter = 0;
+    } else {
+      const critRoll = nextRand01(state) < cc ? cm : 1;
+      const weakMul = now < d.duelWeakUntilMs ? DUEL_WEAK_DMG_MULT : 1;
+      d.duelComboStacks = Math.min(DUEL_COMBO_MAX, d.duelComboStacks + 1);
+      const comboMul = 1 + DUEL_COMBO_PER_STACK * d.duelComboStacks;
+      let fervorMul = 1;
+      if (d.duelFervor >= DUEL_FERVOR_MAX) {
+        d.duelFervor -= DUEL_FERVOR_MAX;
+        fervorMul = DUEL_FERVOR_MULT;
+        pushDamageFloat(0.44, 0.33, "战意", "dmg-special");
+      }
+      let hitDmg = baseAtk * mdMul * critRoll * comboMul * weakMul * fervorMul;
+      if (mdMul >= DUEL_ELEM_ADV) {
+        d.duelElemSurgeCounter += 1;
+        if (d.duelElemSurgeCounter % DUEL_SURGE_EVERY === 0) {
+          hitDmg += baseAtk * mdMul * critRoll * DUEL_SURGE_RATIO;
+          pushDamageFloat(0.46, 0.52, "灵脉", "dmg-special");
+        }
       } else {
-        moveMobFourWayWander(state, d, m, subDt);
+        d.duelElemSurgeCounter = 0;
       }
-    }
-    const pPos = { x: d.playerX, y: d.playerY };
-    if (!moveLocked) {
-      /** 几何进圈且格线无墙挡时站桩；隔墙仍判进圈时不站桩，便于上下绕路 */
-      if (!shouldHoldKiteNoDetour(d, pRange)) {
-        if (target.isBoss) {
-          movePlayerInBossFight(state, d, pPos, target, subDt, now + step * subDt * 1000);
-        } else {
-          movePlayerKiteMaxRange(state, d, pPos, target, subDt);
+      target.hp -= hitDmg;
+      d.duelFervor = Math.min(DUEL_FERVOR_MAX, d.duelFervor + DUEL_FERVOR_PER_HIT);
+      if (critRoll > 1) {
+        d.duelFervor = Math.min(DUEL_FERVOR_MAX, d.duelFervor + 6);
+      }
+      pushDamageFloat(
+        fx,
+        fy,
+        String(Math.max(1, Math.round(hitDmg))),
+        critRoll > 1 ? "dmg-out-crit" : "dmg-out",
+      );
+      if (target.hp <= 0) {
+        if (registerDungeonKill(state, d, target, now)) {
+          syncBars(state, d);
+          syncDungeonHpToState(state);
+          return;
         }
+        break;
       }
     }
-    d.playerX = pPos.x;
-    d.playerY = pPos.y;
-  }
-  resolveDungeonBodyOverlaps(d);
-
-  if (!moveLocked) {
-    const mdx = d.playerX - prePathX;
-    const mdy = d.playerY - prePathY;
-    const mlen = Math.hypot(mdx, mdy);
-    if (mlen > 1e-9) {
-      d.playerLastMoveNx = mdx / mlen;
-      d.playerLastMoveNy = mdy / mlen;
-    }
+    const rootMs = Math.max(120, Math.min(DUNGEON_PLAYER_ATTACK_ROOT_MS, Math.floor(playerHitInterval * 1000 * 0.45)));
+    d.playerMoveLockUntil = Math.max(d.playerMoveLockUntil, now + rootMs);
   }
 
-  const hitTarget = pickCombatTargetMob(d, pRange);
-  if (!hitTarget) {
-    if (d.mobs.length > 0 && d.mobs.every((m) => m.hp <= 0)) {
-      grantWaveEssenceToInventory(state);
-      clearWaveAndAdvance(state, now);
+  if (target.hp > 0) {
+    const canMobTrade = canEngageMobNow(d, target, pRange);
+    if (!canMobTrade) {
+      d.monsterAttackAccum = 0;
+      d.bossDodgeVisual = false;
       syncBars(state, d);
       syncDungeonHpToState(state);
       return;
     }
-    d.playerAttackAccum = 0;
-    d.playerAttackTargetMobId = 0;
-    resetDamageFloatAccum();
-    syncBars(state, d);
-    syncDungeonHpToState(state);
-    return;
-  }
-
-  d.playerAttackTargetMobId = hitTarget.id;
-  const distT = dist(d.playerX, d.playerY, hitTarget.x, hitTarget.y);
-  const mobArFromStat = Math.max(DUNGEON_ENGAGE_NORM * 1.08, hitTarget.attackRange ?? DUNGEON_ENGAGE_NORM);
-  const mobAR = Math.max(mobArFromStat, pRange * MOB_ATTACK_RANGE_VS_PLAYER);
-  const playerCanHit = d.mobs.some((m) => mobInPlayerAttackDisk(d, m, pRange) && hasClearCombatLine(d, m.x, m.y));
-  const mobCanHit = distT <= mobAR + PLAYER_BODY_RADIUS_NORM && hasClearCombatLine(d, hitTarget.x, hitTarget.y);
-  const hitInterval = Math.max(0.35, hitTarget.attackInterval ?? DUNGEON_MONSTER_HIT_INTERVAL);
-  const atkSpd = playerDungeonAttackSpeedMult(state);
-  const playerHitInterval = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
-  const attackersInRange = d.mobs.reduce((n, m) => {
-    if (m.hp <= 0) return n;
-    const mArFromStat = Math.max(DUNGEON_ENGAGE_NORM * 1.08, m.attackRange ?? DUNGEON_ENGAGE_NORM);
-    const mAr = Math.max(mArFromStat, pRange * MOB_ATTACK_RANGE_VS_PLAYER);
-    const canHit =
-      dist(d.playerX, d.playerY, m.x, m.y) <= mAr + PLAYER_BODY_RADIUS_NORM &&
-      hasClearCombatLine(d, m.x, m.y);
-    return canHit ? n + 1 : n;
-  }, 0);
-
-  if (!playerCanHit) {
-    resetDamageFloatAccum();
-    d.playerAttackAccum = 0;
-  }
-
-  d.inMelee = playerCanHit || mobCanHit;
-  if (playerCanHit) {
-    d.playerAttackAccum += dt;
-    d.attackVisualMode = "aoe";
-    /** 圆形 AoE：攻击圈内魔物同一瞬各自判定偏斜/暴击 */
-    while (d.playerAttackAccum >= playerHitInterval) {
-      d.playerAttackAccum -= playerHitInterval;
-      const inSweep = d.mobs.filter((m) => mobInPlayerAttackDisk(d, m, pRange) && hasClearCombatLine(d, m.x, m.y));
-      d.attackAnimPhase += Math.PI * 2;
-      /** 命中后再定身，避免“空挥也锁脚”造成手感发黏 */
-      let landedHit = false;
-      if (inSweep.length === 0) {
-        continue;
-      }
-      for (const mob of inSweep) {
-        if (mob.hp <= 0) continue;
-        const jx = (nextRand01(state) - 0.5) * 0.038;
-        const jy = (nextRand01(state) - 0.5) * 0.022;
-        const fx = clamp(mob.x + jx, 0.05, 0.95);
-        const fy = clamp(mob.y + jy - 0.045, 0.05, 0.92);
-        const mdMul = elementDamageMultiplier(pEl, mob.element);
-        const mobDodge = clamp(mob.dodge ?? 0.08, 0, 0.9);
-        if (nextRand01(state) < mobDodge) {
-          pushDamageFloat(fx, fy, "偏斜", "dmg-miss");
-        } else {
-          const critRoll = nextRand01(state) < cc ? cm : 1;
-          const hitDmg = baseAtk * mdMul * critRoll;
-          landedHit = true;
-          mob.hp -= hitDmg;
-          const v = Math.max(1, Math.round(hitDmg));
-          pushDamageFloat(fx, fy, String(v), "dmg-out");
-          if (mob.hp <= 0) {
-            if (registerDungeonKill(state, d, mob, now)) {
-              syncBars(state, d);
-              syncDungeonHpToState(state);
-              return;
-            }
-          }
-        }
-      }
-      if (landedHit) {
-        const rootMs = Math.max(120, Math.min(DUNGEON_PLAYER_ATTACK_ROOT_MS, Math.floor(playerHitInterval * 1000 * 0.45)));
-        d.playerMoveLockUntil = Math.max(d.playerMoveLockUntil, now + rootMs);
-      }
+    if (now < d.dodgeIframesUntil) {
+      d.monsterAttackAccum = 0;
     }
-  }
-
-  if (mobCanHit && hitTarget.hp > 0) {
     const hitPhase = (d.monsterAttackAccum % hitInterval) / hitInterval;
-    d.bossDodgeVisual = hitTarget.isBoss && hitPhase > 0.72;
-    d.monsterAttackAccum += dt;
-    const mdBase = monsterDamageForWave(d.wave) * (hitTarget.isBoss ? 1.35 : 1);
-    const mdMul = elementDamageMultiplier(hitTarget.element, pEl);
+    d.bossDodgeVisual = target.isBoss && hitPhase > 0.72;
+    if (now >= d.dodgeIframesUntil) {
+      d.monsterAttackAccum = Math.min(d.monsterAttackAccum + dt, hitInterval * 1.25);
+    }
+    const mdBase = monsterDamageForWave(d.wave) * (target.isBoss ? 1.35 : 1);
+    const mdMul = elementDamageMultiplier(target.element, pEl);
     let md = mdBase * mdMul;
-    if (attackersInRange > 1) {
-      // 群怪压迫：随可攻击怪数量缓增并设上限，避免瞬间爆炸伤害。
-      const pressure = Math.min(2.2, 1 + 0.22 * (attackersInRange - 1));
-      md *= pressure;
-    }
-    if (hitTarget.isBoss && d.bossDodgeVisual) {
-      md *= 0.52;
-    }
+    if (target.isBoss && d.bossDodgeVisual) md *= 0.52;
     md *= playerIncomingDamageMult(state, d.wave);
+    md *= dungeonAffixMobDamageMult(now);
     while (d.monsterAttackAccum >= hitInterval) {
       d.monsterAttackAccum -= hitInterval;
-      const pj = (nextRand01(state) - 0.5) * 0.04;
-      const px = clamp(d.playerX + pj, 0.05, 0.95);
-      const py = clamp(d.playerY - 0.06, 0.05, 0.92);
+      const px = 0.5;
+      const py = 0.48;
       if (now < d.dodgeIframesUntil) {
         pushDamageFloat(px, py, "化劲", "dmg-miss");
         continue;
       }
-      /** 原期望：伤害×(1−玩家闪避)；改为单次判定，期望不变 */
       if (nextRand01(state) < pDodge) {
         pushDamageFloat(px, py, "闪避", "dmg-miss");
+      } else if (!target.isBoss) {
+        pushDamageFloat(px, py, "灵护", "dmg-miss");
       } else {
         d.playerHp -= md;
-        const hitRootMs = hitTarget.isBoss ? DUNGEON_BOSS_HITSTUN_ROOT_MS : DUNGEON_HITSTUN_ROOT_MS;
-        d.playerMoveLockUntil = Math.max(d.playerMoveLockUntil, now + hitRootMs);
+        d.playerMoveLockUntil = Math.max(
+          d.playerMoveLockUntil,
+          now + (target.isBoss ? DUNGEON_BOSS_HITSTUN_ROOT_MS : DUNGEON_HITSTUN_ROOT_MS),
+        );
         pushDamageFloat(px, py, `-${Math.max(1, Math.round(md))}`, "dmg-in");
       }
       if (d.playerHp <= 0) {
-        saveWaveCheckpoint(state);
-        d.entryWave = d.wave;
-        state.dungeonSanctuaryMode = true;
-        state.dungeonPortalTargetWave = d.wave;
-        const s = stones(state);
-        let pen = Decimal.max(1, s.mul(0.05).ceil());
-        if (pen.gt(s)) pen = s;
-        if (s.gt(0)) subStones(state, pen);
-        state.combatHpCurrent = 0;
-        d.playerHp = 0;
-        d.active = false;
-        d.mobs = [];
-        d.walkable = [];
-        d.interWaveCooldownUntil = 0;
-        d.pendingToast =
-          s.lte(0) || pen.lte(0)
-            ? "灵力溃散，已回气。再入本关将重新随机地图与魔物。"
-            : `灵力溃散，已回气。损失灵石 ${pen.toFixed(0)}（约当前灵石 5%，至少 1）。再入本关将重新随机地图与魔物。`;
-        d.pendingDeathPresentation = false;
-        d.deathCooldownUntil = now + DUNGEON_DEATH_CD_MS;
-        damageFloatQueue.length = 0;
-        resetDamageFloatAccum();
-        return;
+        if (target.isBoss) {
+          // 首领战失败不回圣所：立即退回本波前哨小怪，保留在副本内缓慢回血节奏。
+          state.dungeonSanctuaryMode = false;
+          state.dungeonPortalTargetWave = 0;
+          state.dungeonDeferBoss = true;
+          d.bossPrepKills = 0;
+          d.bossPrepChallengeReady = false;
+          d.playerHp = Math.max(1, Math.floor(d.playerMax * 0.18));
+          state.combatHpCurrent = d.playerHp;
+          d.interWaveCooldownUntil = 0;
+          d.mobs = [];
+          d.walkable = [];
+          d.pendingToast = "首领击退了你，已退回前哨清剿并重整气息。";
+          spawnMobsForWave(state, now);
+          d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
+          damageFloatQueue.length = 0;
+          resetDamageFloatAccum();
+          syncBars(state, d);
+          syncDungeonHpToState(state);
+          return;
+        } else {
+          saveWaveCheckpoint(state);
+          d.entryWave = d.wave;
+          state.dungeonSanctuaryMode = true;
+          state.dungeonPortalTargetWave = dungeonSegmentStartWave(d.wave);
+          state.dungeonDeferBoss = true;
+          const s = stones(state);
+          let pen = Decimal.max(1, s.mul(0.05).ceil());
+          if (pen.gt(s)) pen = s;
+          if (s.gt(0)) subStones(state, pen);
+          state.combatHpCurrent = 0;
+          d.playerHp = 0;
+          d.active = false;
+          d.mobs = [];
+          d.walkable = [];
+          d.interWaveCooldownUntil = 0;
+          d.pendingToast =
+            s.lte(0) || pen.lte(0)
+              ? "灵力溃散，已回气。再入本关将重整阵势。"
+              : `灵力溃散，已回气。损失灵石 ${pen.toFixed(0)}（约当前灵石 5%，至少 1）。再入本关将重整阵势。`;
+          d.deathCooldownUntil = now + DUNGEON_DEATH_CD_MS;
+          damageFloatQueue.length = 0;
+          resetDamageFloatAccum();
+          return;
+        }
       }
     }
   } else {
@@ -1835,4 +2013,16 @@ export function tickDungeon(state: GameState, dt: number, now: number): void {
 
   syncBars(state, d);
   syncDungeonHpToState(state);
+}
+
+export function tickDungeon(state: GameState, dt: number, now: number): void {
+  const d = state.dungeon;
+  if (!d.active || dt <= 0) return;
+  let left = dt;
+  while (left > 0) {
+    const step = Math.min(left, DUEL_TICK_SLICE_SEC);
+    runDuelTick(state, step, now);
+    if (!d.active) break;
+    left -= step;
+  }
 }

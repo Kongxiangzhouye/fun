@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "template": {
+    "taskId": "UI-XXXX-001",
+    "manifestRef": "hud_bar_icons",
+    "assetId": "stone",
+    "targetFile": "ui-stone.png",
+    "priority": "P0",
+    "status": "todo",
+    "owner": "outsource",
+    "styleTags": ["xianxia", "flat-icon"],
+    "deliverable": {
+      "format": "png",
+      "size": { "w": 128, "h": 128 },
+      "background": "transparent"
+    },
+    "acceptance": ["可读性通过", "与同组风格一致"],
+    "programHook": {
+      "module": "src/data/hudBarUi.ts",
+      "key": "stone"
+    },
+    "dueDate": "2026-04-30",
+    "notes": ""
+  }
+}

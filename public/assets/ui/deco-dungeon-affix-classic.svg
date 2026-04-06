@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 248 48" role="img" aria-label="classic affix banner deco">
+  <defs>
+    <linearGradient id="affix-classic-line" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f8e0a5" stop-opacity="0.05" />
+      <stop offset="46%" stop-color="#f8e0a5" stop-opacity="0.58" />
+      <stop offset="54%" stop-color="#8ecbff" stop-opacity="0.58" />
+      <stop offset="100%" stop-color="#8ecbff" stop-opacity="0.05" />
+    </linearGradient>
+  </defs>
+  <path d="M14 24h220" fill="none" stroke="url(#affix-classic-line)" stroke-width="2.4" stroke-linecap="round" />
+  <path d="M28 24l10-8 10 8-10 8z" fill="#ffecc1" fill-opacity="0.46" />
+  <path d="M220 24l-10-8-10 8 10 8z" fill="#9dd4ff" fill-opacity="0.46" />
+  <circle cx="124" cy="24" r="5.4" fill="#fff2cb" fill-opacity="0.55" />
+  <path d="M118 24h-24M130 24h24" fill="none" stroke="#dcecff" stroke-opacity="0.5" stroke-width="1.4" stroke-linecap="round" />
+</svg>

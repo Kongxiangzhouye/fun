@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="dungeon boss locked badge">
+  <defs>
+    <linearGradient id="bossLockedA" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffe7e2"/>
+      <stop offset="0.55" stop-color="#ffad95"/>
+      <stop offset="1" stop-color="#d56d5d"/>
+    </linearGradient>
+  </defs>
+  <path d="M32 6l10 7 12-1 3 11 8 6-3 11 3 11-8 6-3 11-12-1-10 7-10-7-12 1-3-11-8-6 3-11-3-11 8-6 3-11 12 1z" fill="#2b1818"/>
+  <path d="M32 10l8 6 10-1 2 9 7 5-2 9 2 9-7 5-2 9-10-1-8 6-8-6-10 1-2-9-7-5 2-9-2-9 7-5 2-9 10 1z" fill="url(#bossLockedA)"/>
+  <circle cx="32" cy="34" r="12" fill="#fff2ef" opacity="0.95"/>
+  <rect x="26" y="33" width="12" height="9" rx="2" fill="#a3493d"/>
+  <path d="M28 33v-3a4 4 0 0 1 8 0v3" fill="none" stroke="#a3493d" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

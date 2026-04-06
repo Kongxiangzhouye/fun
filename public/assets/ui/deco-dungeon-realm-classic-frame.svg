@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="classic realm frame">
+  <defs>
+    <linearGradient id="classic-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe6a8" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#7cc7ff" stop-opacity="0.9" />
+    </linearGradient>
+    <radialGradient id="classic-core" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#9bd1ff" stop-opacity="0.04" />
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="48" fill="url(#classic-core)" />
+  <circle cx="64" cy="64" r="50" fill="none" stroke="url(#classic-ring)" stroke-width="4" />
+  <circle cx="64" cy="64" r="39" fill="none" stroke="#f7e0a5" stroke-opacity="0.72" stroke-width="2.5" stroke-dasharray="5 7" />
+  <path d="M64 15l8 10 12 3-8 10 2 13-14-4-14 4 2-13-8-10 12-3z" fill="#fff2c8" fill-opacity="0.36" />
+  <path d="M64 113l-8-10-12-3 8-10-2-13 14 4 14-4-2 13 8 10-12 3z" fill="#8fcfff" fill-opacity="0.26" />
+</svg>

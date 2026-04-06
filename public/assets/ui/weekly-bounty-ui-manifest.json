@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "naming": "Filenames from WEEKLY_BOUNTY_UI_FILES in src/data/weeklyBountyUi.ts; served as public/assets/ui/<file>. 2026-04-06 P1 pass-2 polish: wavesFocusBadge readability.",
+  "assets": [
+    { "id": "forge", "file": "bounty-forge-deco.svg" },
+    { "id": "waves", "file": "bounty-waves-deco.svg" },
+    { "id": "pulls", "file": "bounty-pulls-deco.svg" },
+    { "id": "garden", "file": "bounty-garden-deco.svg" },
+    { "id": "tuna", "file": "bounty-tuna-deco.svg" },
+    { "id": "realm", "file": "bounty-realm-deco.svg" },
+    { "id": "claimAll", "file": "bounty-claim-all-deco.svg" },
+    { "id": "claimBurst", "file": "bounty-claim-burst.svg" },
+    { "id": "claimEchoBadge", "file": "bounty-weekly-claim-echo-badge.svg" },
+    { "id": "streakBadge", "file": "bounty-weekly-streak-badge.svg" },
+    { "id": "completeBadge", "file": "bounty-weekly-complete-badge.svg" },
+    { "id": "pendingBadge", "file": "bounty-weekly-pending-badge.svg" },
+    { "id": "overdueBadge", "file": "bounty-weekly-overdue-badge.svg" },
+    { "id": "lastDayAlertBadge", "file": "bounty-weekly-last-day-alert-badge.svg" },
+    { "id": "wavesFocusBadge", "file": "bounty-weekly-waves-focus-badge.svg" },
+    { "id": "weeklyFocusRibbon", "file": "bounty-weekly-focus-ribbon.svg" },
+    { "id": "nextStepBadge", "file": "bounty-weekly-next-step-badge.svg" },
+    { "id": "surgeBadge", "file": "bounty-weekly-surge-badge.svg" }
+  ]
+}

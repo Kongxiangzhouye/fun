@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="weekly waves focus badge polished">
+  <defs>
+    <linearGradient id="wavesFocusCore" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#b9ecff" />
+      <stop offset="52%" stop-color="#5ab8ff" />
+      <stop offset="100%" stop-color="#5472ff" />
+    </linearGradient>
+    <radialGradient id="wavesFocusGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(32 32) rotate(90) scale(20)">
+      <stop stop-color="#eff9ff" stop-opacity="0.86" />
+      <stop offset="1" stop-color="#eff9ff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <path d="M32 6l9 7 11-1 3 10 9 6-3 10 3 10-9 6-3 10-11-1-9 7-9-7-11 1-3-10-9-6 3-10-3-10 9-6 3-10 11 1z" fill="#0e1c42" />
+  <path d="M32 10l8 6 10-1 2 9 8 5-2 9 2 9-8 5-2 9-10-1-8 6-8-6-10 1-2-9-8-5 2-9-2-9 8-5 2-9 10 1z" fill="url(#wavesFocusCore)" />
+  <circle cx="32" cy="32" r="13" fill="url(#wavesFocusGlow)" />
+  <circle cx="32" cy="32" r="11" fill="#f3fbff" opacity="0.95" />
+  <circle cx="32" cy="32" r="9.2" fill="none" stroke="#d7edff" stroke-width="1.2" opacity="0.82" />
+  <path d="M16 35c4-6 8-6 12 0s8 6 12 0 8-6 12 0 8 6 12 0" stroke="#355ec8" stroke-width="2.6" stroke-linecap="round" fill="none" />
+  <path d="M20 28c3-3.4 6-3.4 9 0s6 3.4 9 0 6-3.4 9 0 6 3.4 9 0" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" opacity="0.9" fill="none" />
+  <path d="M22 41c3.2-2.7 6.2-2.7 9.4 0 3.2 2.7 6.2 2.7 9.4 0" stroke="#e9f6ff" stroke-width="1.4" stroke-linecap="round" opacity="0.8" fill="none" />
+</svg>

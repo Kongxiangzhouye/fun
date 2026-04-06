@@ -2,8 +2,11 @@ import type { GameState, OwnedCard, SkillId } from "./types";
 import { DECK_SIZE, DUNGEON_STAMINA_MAX } from "./types";
 import { initRng, rollNewRngSeed } from "./rng";
 import { playerMaxHp } from "./systems/playerCombat";
+import { emptyGardenPlots } from "./systems/spiritGarden";
+import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
+import { emptyCelestialStash } from "./systems/celestialStash";
 
-export const SAVE_VERSION = 22;
+export const SAVE_VERSION = 43;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -11,7 +14,8 @@ const emptySkills = (): GameState["skills"] => ({
   arcana: { level: 1, xp: 0 },
 });
 
-const emptyDungeon = (): GameState["dungeon"] => ({
+/** 新档 / 轮回等场景复用，避免与 `createInitialState` 漂移 */
+export const emptyDungeon = (): GameState["dungeon"] => ({
   active: false,
   wave: 1,
   monsterHp: 0,
@@ -43,7 +47,7 @@ const emptyDungeon = (): GameState["dungeon"] => ({
   interWaveCooldownUntil: 0,
   essenceThisWave: 0,
   pendingToast: null,
-  pendingDeathPresentation: false,
+  pendingKillToast: null,
   waveCheckpoint: {},
   waveEntrySpawnX: 0.5,
   waveEntrySpawnY: 0.5,
@@ -57,6 +61,13 @@ const emptyDungeon = (): GameState["dungeon"] => ({
   rewardModeRepeat: false,
   autoEnterConsumed: false,
   sessionEnterAtMs: 0,
+  duelComboStacks: 0,
+  duelWeakUntilMs: 0,
+  duelWeakNextAtMs: 0,
+  duelFervor: 0,
+  duelElemSurgeCounter: 0,
+  bossPrepKills: 0,
+  bossPrepChallengeReady: false,
 });
 
 export function createInitialState(): GameState {
@@ -68,12 +79,14 @@ export function createInitialState(): GameState {
     spiritStones: "0",
     peakSpiritStonesThisLife: "0",
     summonEssence: 72,
+    zhuLingEssence: 36,
     daoEssence: 0,
     zaoHuaYu: 0,
     realmLevel: 1,
     totalPulls: 0,
     pityUr: 0,
     pitySsrSoft: 0,
+    gearPityPulls: 0,
     owned: {},
     deck: Array.from({ length: DECK_SIZE }, () => null),
     codexUnlocked: new Set(),
@@ -108,6 +121,12 @@ export function createInitialState(): GameState {
     tutorialStep: 1,
     featureGuideDismissed: [],
     suppressFeatureGuides: false,
+    uiPrefs: {
+      reduceMotion: false,
+      compactNumbers: true,
+      soundMuted: false,
+      masterVolume: 0.85,
+    },
     vein: { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 },
     pullsThisLife: 0,
     lingSha: 0,
@@ -118,19 +137,69 @@ export function createInitialState(): GameState {
     firstOpenTodayMs: now,
     dailyStreak: 1,
     lastLoginCalendarDate: day,
+    dailyLoginTickDay: null,
+    dailyLoginClaimedDate: null,
     lastTunaMs: 0,
     skills: emptySkills(),
     activeSkillId: "combat" as SkillId | null,
     dungeon: emptyDungeon(),
     gearInventory: {},
-    equippedGear: { weapon: null, body: null, ring: null },
+    equippedGear: {
+      weapon: null,
+      body: null,
+      ring: null,
+      slot4: null,
+      slot5: null,
+      slot6: null,
+      slot7: null,
+      slot8: null,
+      slot9: null,
+      slot10: null,
+      slot11: null,
+      slot12: null,
+    },
+    gearSlotEnhance: {
+      weapon: 0,
+      body: 0,
+      ring: 0,
+      slot4: 0,
+      slot5: 0,
+      slot6: 0,
+      slot7: 0,
+      slot8: 0,
+      slot9: 0,
+      slot10: 0,
+      slot11: 0,
+      slot12: 0,
+    },
     nextGearInstanceId: 1,
+    gearInventorySort: "rarity",
     pets: {},
     petPullsTotal: 0,
+    spiritGarden: { plots: emptyGardenPlots(), totalHarvests: 0 },
+    weeklyBounty: emptyWeeklyBounty(currentWeekKey(now)),
+    celestialStash: emptyCelestialStash(currentWeekKey(now)),
+    spiritReservoirStored: "0",
+    dailyFortune: { calendarDay: "", fortuneId: "fd_he" },
+    spiritArrayLevel: 0,
+    daoMeridian: 0,
+    pullChronicle: [],
+    gearPullChronicle: [],
+    lifetimeStats: {
+      dungeonEssenceIntGained: 0,
+      celestialStashBuys: 0,
+      spiritReservoirClaims: 0,
+      dailyFortuneRolls: 0,
+      gearForgesTotal: 0,
+      maxGearRarityRankForged: 0,
+      weeklyBountyFullWeeks: 0,
+      lastWeeklyBountyFullWeekKey: "",
+    },
     combatHpCurrent: 100,
     dungeonSanctuaryMode: false,
     dungeonPortalTargetWave: 0,
     dungeonSanctuaryAutoEnter: false,
+    dungeonDeferBoss: true,
   };
   initRng(st, seed);
   st.combatHpCurrent = playerMaxHp(st);

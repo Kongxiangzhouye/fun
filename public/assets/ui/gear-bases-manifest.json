@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "naming": "Filename pattern: gear-base-<baseId>.svg in this folder (same <baseId> as src/data/gearBases.ts).",
+  "bases": [
+    { "id": "blade_wrought", "slot": "weapon", "file": "gear-base-blade_wrought.svg" },
+    { "id": "robe_scholar", "slot": "body", "file": "gear-base-robe_scholar.svg" },
+    { "id": "ring_moon", "slot": "ring", "file": "gear-base-ring_moon.svg" },
+    { "id": "spear_cloud", "slot": "weapon", "file": "gear-base-spear_cloud.svg" },
+    { "id": "boots_void", "slot": "body", "file": "gear-base-boots_void.svg" },
+    { "id": "helm_guard", "slot": "slot4", "file": "gear-base-helm_guard.svg" },
+    { "id": "pauldron_drake", "slot": "slot5", "file": "gear-base-pauldron_drake.svg" },
+    { "id": "glove_sigil", "slot": "slot6", "file": "gear-base-glove_sigil.svg" },
+    { "id": "belt_jade", "slot": "slot7", "file": "gear-base-belt_jade.svg" },
+    { "id": "greaves_cloud", "slot": "slot8", "file": "gear-base-greaves_cloud.svg" },
+    { "id": "boots_star", "slot": "slot9", "file": "gear-base-boots_star.svg" },
+    { "id": "necklace_spirit", "slot": "slot10", "file": "gear-base-necklace_spirit.svg" },
+    { "id": "bracelet_tide", "slot": "slot11", "file": "gear-base-bracelet_tide.svg" },
+    { "id": "amulet_sun", "slot": "slot12", "file": "gear-base-amulet_sun.svg" }
+  ]
+}

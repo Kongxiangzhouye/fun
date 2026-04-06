@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "naming": "Filenames from PET_DEFS.artFile in src/data/pets.ts; served as public/assets/ui/<file>.",
+  "pets": [
+    { "id": "yuling", "rarity": "N", "file": "pet-yuling.svg" },
+    { "id": "zijing", "rarity": "N", "file": "pet-zijing.svg" },
+    { "id": "chiyan", "rarity": "R", "file": "pet-chiyan.svg" },
+    { "id": "qingluan", "rarity": "SR", "file": "pet-qingluan.svg" },
+    { "id": "xuangui", "rarity": "SR", "file": "pet-xuangui.svg" },
+    { "id": "linghu", "rarity": "SSR", "file": "pet-linghu.svg" },
+    { "id": "qilin", "rarity": "UR", "file": "pet-qilin.svg" }
+  ]
+}

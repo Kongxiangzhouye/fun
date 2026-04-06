@@ -8,6 +8,9 @@ import { computeDeckProdDecimal } from "./deckSynergy";
 import { veinGuYuanDiscount, veinHuiLingMult, veinLingXiMult } from "./systems/veinCultivation";
 import { stoneIncomeBonusFromSkills } from "./systems/battleSkills";
 import { petStoneIncomeMult } from "./systems/pets";
+import { daoMeridianStoneMult } from "./systems/daoMeridian";
+import { dailyFortuneStoneMult } from "./systems/dailyFortune";
+import { spiritArrayStoneMult } from "./systems/spiritArray";
 
 /** 境界基础灵石/秒（指数成长，后期靠轮回与元升级） */
 export function realmBaseIncome(realmLevel: number): Decimal {
@@ -79,7 +82,10 @@ export function incomePerSecond(state: GameState, totalCardsInPool: number): Dec
     .mul(hui)
     .mul(gather)
     .mul(skillsStone)
-    .mul(petStoneIncomeMult(state));
+    .mul(petStoneIncomeMult(state))
+    .mul(daoMeridianStoneMult(state))
+    .mul(dailyFortuneStoneMult(state))
+    .mul(spiritArrayStoneMult(state));
 }
 
 /** 每秒灵石拆成「境界基息」与「灵卡汇流」，便于界面展示成长来源 */
@@ -110,8 +116,11 @@ export function incomeBreakdownForDisplay(
     .mul(gather)
     .mul(skillsStone)
     .mul(petStoneIncomeMult(state));
-  const fromRealm = base.mul(mult);
-  const fromDeck = deckProd.mul(mult);
+  const meridian = daoMeridianStoneMult(state);
+  const fortune = dailyFortuneStoneMult(state);
+  const arr = spiritArrayStoneMult(state);
+  const fromRealm = base.mul(mult).mul(meridian).mul(fortune).mul(arr);
+  const fromDeck = deckProd.mul(mult).mul(meridian).mul(fortune).mul(arr);
   return { total: fromRealm.plus(fromDeck), fromRealm, fromDeck };
 }
 

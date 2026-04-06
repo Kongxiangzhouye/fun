@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="fb" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8E0FF"/>
+      <stop offset="0.45" stop-color="#9888E8"/>
+      <stop offset="1" stop-color="#403090"/>
+    </linearGradient>
+    <radialGradient id="fb2" cx="12" cy="12" r="6" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8F4FF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#6048C0" stop-opacity="0.15"/>
+    </radialGradient>
+  </defs>
+  <circle cx="12" cy="12" r="10.5" fill="none" stroke="url(#fb)" stroke-width="0.65" opacity="0.45"/>
+  <circle cx="12" cy="12" r="9" stroke="url(#fb)" stroke-width="1.25" fill="#0C0818"/>
+  <circle cx="12" cy="12" r="6.5" fill="url(#fb2)"/>
+  <path d="M12 4.2l1.35 4.6h4.4l-3.5 2.7 1.35 4.6-3.6-2.7-3.6 2.7 1.35-4.6-3.5-2.7h4.4L12 4.2z" fill="#F0E8FF" opacity="0.95"/>
+  <circle cx="12" cy="12" r="3" fill="none" stroke="#B0A0E8" stroke-width="0.75" opacity="0.85"/>
+  <path d="M12 2v2M20 12h-2M12 22v-2M4 12h2" stroke="url(#fb)" stroke-width="0.7" stroke-linecap="round" opacity="0.55"/>
+</svg>

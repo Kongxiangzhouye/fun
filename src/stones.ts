@@ -1,6 +1,13 @@
 import Decimal from "decimal.js";
 import type { GameState } from "./types";
 
+let compactNumberPref = true;
+
+/** 与 `GameState.uiPrefs.compactNumbers` 同步；在 `render` / `loop` 等使用 fmtDecimal 前调用 */
+export function syncDecimalFormatFromState(state: GameState): void {
+  compactNumberPref = state.uiPrefs?.compactNumbers !== false;
+}
+
 export function stones(state: GameState): Decimal {
   return new Decimal(state.spiritStones || "0");
 }
@@ -39,6 +46,10 @@ function bumpPeakIfNeeded(state: GameState): void {
 
 export function fmtDecimal(d: Decimal): string {
   if (!d.isFinite()) return "—";
+  if (!compactNumberPref) {
+    if (d.abs().gte("1e30")) return d.toExponential(4);
+    return d.toFixed(0);
+  }
   const n = d.toNumber();
   if (d.abs().gte("1e21")) return d.toExponential(2);
   if (n >= 1e9) return (n / 1e9).toFixed(2) + "B";

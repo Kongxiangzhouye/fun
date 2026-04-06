@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="sb" x1="3" y1="5" x2="21" y2="19" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C0D4FF"/>
+      <stop offset="0.5" stop-color="#5068C8"/>
+      <stop offset="1" stop-color="#283878"/>
+    </linearGradient>
+    <radialGradient id="sb2" cx="12" cy="5.5" r="4" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F0F8FF"/>
+      <stop offset="1" stop-color="#4860D0" stop-opacity="0.35"/>
+    </radialGradient>
+  </defs>
+  <rect x="2.5" y="6" width="19" height="13" rx="3" fill="none" stroke="url(#sb)" stroke-width="0.65" opacity="0.45"/>
+  <rect x="4" y="7" width="16" height="12" rx="2.5" fill="#060A14" stroke="url(#sb)" stroke-width="1.2"/>
+  <rect x="7" y="10" width="10" height="6" rx="1" fill="#141A38" opacity="0.65"/>
+  <path d="M7 13h10M7 15h6.5" stroke="#8AA0E8" stroke-width="0.85" stroke-linecap="round" opacity="0.75"/>
+  <circle cx="12" cy="5.5" r="3.4" fill="url(#sb2)" stroke="url(#sb)" stroke-width="0.5"/>
+  <path d="M12 2.8l1.1 2.4h2.4l-1.9 1.6.7 2.6-2.3-1.5-2.3 1.5.7-2.6-1.9-1.6h2.4L12 2.8z" fill="#F8FAFF" opacity="0.95"/>
+  <circle cx="18.5" cy="11" r="1.2" fill="#7090E8" opacity="0.85"/>
+</svg>

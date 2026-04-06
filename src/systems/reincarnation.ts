@@ -1,7 +1,8 @@
 import Decimal from "decimal.js";
 import type { GameState } from "../types";
-import { REINCARNATION_REALM_REQ, DECK_SIZE, DUNGEON_STAMINA_MAX } from "../types";
+import { REINCARNATION_REALM_REQ, DECK_SIZE } from "../types";
 import { reseedRng } from "../rng";
+import { emptyDungeon } from "../state";
 import { playerMaxHp } from "./playerCombat";
 
 export function canReincarnate(state: GameState): boolean {
@@ -29,10 +30,38 @@ export function performReincarnate(state: GameState): void {
   state.peakSpiritStonesThisLife = "0";
   state.realmLevel = 1;
   state.summonEssence = 80 + state.meta.ticketRegen * 24;
+  state.zhuLingEssence = 28 + state.meta.ticketRegen * 10;
   state.owned = {};
   state.deck = Array.from({ length: DECK_SIZE }, () => null);
   state.gearInventory = {};
-  state.equippedGear = { weapon: null, body: null, ring: null };
+  state.equippedGear = {
+    weapon: null,
+    body: null,
+    ring: null,
+    slot4: null,
+    slot5: null,
+    slot6: null,
+    slot7: null,
+    slot8: null,
+    slot9: null,
+    slot10: null,
+    slot11: null,
+    slot12: null,
+  };
+  state.gearSlotEnhance = {
+    weapon: 0,
+    body: 0,
+    ring: 0,
+    slot4: 0,
+    slot5: 0,
+    slot6: 0,
+    slot7: 0,
+    slot8: 0,
+    slot9: 0,
+    slot10: 0,
+    slot11: 0,
+    slot12: 0,
+  };
   state.nextGearInstanceId = 1;
   state.skills = {
     combat: { level: 1, xp: 0 },
@@ -40,64 +69,20 @@ export function performReincarnate(state: GameState): void {
     arcana: { level: 1, xp: 0 },
   };
   state.activeSkillId = "combat";
-  state.dungeon = {
-    active: false,
-    wave: 1,
-    monsterHp: 0,
-    monsterMax: 0,
-    playerHp: 0,
-    playerMax: 0,
-    deathCooldownUntil: 0,
-    totalWavesCleared: 0,
-    monsterAttackAccum: 0,
-    playerAttackAccum: 0,
-    playerAttackTargetMobId: 0,
-    packSize: 1,
-    packKilled: 0,
-    sessionKills: 0,
-    sessionEssence: 0,
-    essenceRemainder: 0,
-    playerX: 0.5,
-    playerY: 0.5,
-    mobs: [],
-    nextMobId: 1,
-    walkable: [],
-    mapW: 0,
-    mapH: 0,
-    maxWaveRecord: 0,
-    entryWave: 1,
-    attackAnimPhase: 0,
-    inMelee: false,
-    attackVisualMode: "none",
-    interWaveCooldownUntil: 0,
-    essenceThisWave: 0,
-    pendingToast: null,
-    pendingDeathPresentation: false,
-    waveCheckpoint: {},
-    waveEntrySpawnX: 0.5,
-    waveEntrySpawnY: 0.5,
-    bossDodgeVisual: false,
-    stamina: DUNGEON_STAMINA_MAX,
-    dodgeIframesUntil: 0,
-    dodgeQueued: false,
-    playerMoveLockUntil: 0,
-    playerLastMoveNx: 0,
-    playerLastMoveNy: 0,
-    rewardModeRepeat: false,
-    autoEnterConsumed: false,
-    sessionEnterAtMs: 0,
-  };
+  state.dungeon = emptyDungeon();
   state.lingSha = 0;
   state.xuanTie = 0;
   state.battleSkills = {};
   state.lastTunaMs = 0;
   state.pityUr = 0;
   state.pitySsrSoft = 0;
+  state.gearPityPulls = 0;
   state.pullsThisLife = 0;
   state.wishResonance = 0;
   state.combatHpCurrent = playerMaxHp(state);
   state.dungeonSanctuaryMode = false;
   state.dungeonPortalTargetWave = 0;
+  state.dungeonDeferBoss = true;
   reseedRng(state);
 }
 

@@ -93,5 +93,5 @@ export const VEIN_DESC: Record<VeinKind, string> = {
   huiLing: "全局灵石效率乘区。",
   guYuan: "耗道韵强化，降低破境灵石；并微量增厚幻域护体。",
   lingXi: "在汇灵之后再叠灵石乘区（约每级 +2.2%，与汇灵叠乘）。",
-  gongMing: "加快聚灵共鸣累积（与法篆叠乘，满级约 +32%）。",
+  gongMing: "聚灵共鸣速度与幻域唤灵髓结算共用同一乘区（与法篆、装备词条等叠乘，满级约 +32%）。",
 };

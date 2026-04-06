@@ -1,19 +1,90 @@
-import type { GameState, PetId, PetProgress, QoLFlags, SkillId } from "./types";
-
-type VeinSave = GameState["vein"];
-type SkillsSave = GameState["skills"];
-type DungeonSave = GameState["dungeon"];
-type GearInvSave = GameState["gearInventory"];
-type EquippedSave = GameState["equippedGear"];
-import { DECK_SIZE, DUNGEON_STAMINA_MAX } from "./types";
+import type { GameState, PetId, PetProgress, QoLFlags, SkillId, UiPrefs } from "./types";
+import { DECK_SIZE, DUNGEON_STAMINA_MAX, type GearInventorySortMode } from "./types";
 import { SAVE_VERSION, createInitialState } from "./state";
 import { CARDS } from "./data/cards";
 import { initRng, rollNewRngSeed, syncRngFromState } from "./rng";
 import { ALL_PET_IDS } from "./data/pets";
 import { MAX_PET_LEVEL } from "./systems/pets";
 import { clampCombatHpToMax } from "./systems/combatHp";
+import { normalizeSpiritGarden } from "./systems/spiritGarden";
+import {
+  emptyWeeklyBounty,
+  currentWeekKey,
+  normalizeWeeklyBounty,
+  ensureWeeklyBountyWeek,
+} from "./systems/weeklyBounty";
+import { normalizeDaoMeridian } from "./systems/daoMeridian";
+import {
+  normalizeGearPullChronicle,
+  normalizeLifetimeStats,
+  normalizePullChronicle,
+  syncMaxGearRarityFromInventoryAndChronicle,
+} from "./systems/pullChronicle";
+import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
+import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
+import { normalizeGearGrade } from "./systems/gearCraft";
 
-const KEY = "idle-gacha-realm-v1";
+type VeinSave = GameState["vein"];
+type SkillsSave = GameState["skills"];
+type DungeonSave = GameState["dungeon"];
+type GearInvSave = GameState["gearInventory"];
+type EquippedSave = GameState["equippedGear"];
+type GearSlotEnhanceSave = GameState["gearSlotEnhance"];
+
+/** 旧版单键存档（首次启动时迁移到槽位 0） */
+const LEGACY_KEY = "idle-gacha-realm-v1";
+const ACTIVE_SLOT_KEY = "idle-gacha-realm-active-slot";
+/** 各槽位用户备注（仅存本机，不随导出存档字符串迁移） */
+const SLOT_LABELS_KEY = "idle-gacha-realm-slot-labels";
+
+/** 本地存档位数量（0 起算索引） */
+export const SAVE_SLOT_COUNT = 3;
+/** 存档位备注最大字符数 */
+export const SAVE_SLOT_LABEL_MAX = 20;
+
+function storageKeyForSlot(slot: number): string {
+  return `idle-gacha-realm-v1-slot-${slot}`;
+}
+
+let slotsMigrationChecked = false;
+
+/** 将旧单文件存档迁入槽 0，并保证存在激活槽位索引 */
+function ensureSaveSlotsMigrated(): void {
+  if (slotsMigrationChecked) return;
+  slotsMigrationChecked = true;
+  if (typeof localStorage === "undefined") return;
+  try {
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    const hasSlotData = (): boolean => {
+      for (let i = 0; i < SAVE_SLOT_COUNT; i++) {
+        if (localStorage.getItem(storageKeyForSlot(i))) return true;
+      }
+      return false;
+    };
+    if (legacy && !hasSlotData()) {
+      localStorage.setItem(storageKeyForSlot(0), legacy);
+      localStorage.setItem(ACTIVE_SLOT_KEY, "0");
+      localStorage.removeItem(LEGACY_KEY);
+    } else if (legacy) {
+      localStorage.removeItem(LEGACY_KEY);
+    }
+    if (!localStorage.getItem(ACTIVE_SLOT_KEY)) {
+      localStorage.setItem(ACTIVE_SLOT_KEY, "0");
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function normalizeGearInventorySort(raw: unknown): GearInventorySortMode {
+  if (raw === "rarity" || raw === "ilvl" || raw === "slot" || raw === "name") return raw;
+  return "rarity";
+}
+
+function normalizeMasterVolume(raw: unknown): number {
+  if (raw == null || !Number.isFinite(Number(raw))) return 0.85;
+  return Math.max(0, Math.min(1, Number(raw)));
+}
 
 export interface SerializedState {
   version: number;
@@ -22,12 +93,14 @@ export interface SerializedState {
   /** 仅兼容旧存档读取，不再写入 */
   tickets?: number;
   summonEssence?: number;
+  zhuLingEssence?: number;
   daoEssence: number;
   zaoHuaYu?: number;
   realmLevel: number;
   totalPulls: number;
   pityUr: number;
   pitySsrSoft: number;
+  gearPityPulls?: number;
   owned: Record<string, { defId: string; stars: number; level: number }>;
   deck: (string | null)[];
   codexUnlocked: string[];
@@ -54,6 +127,11 @@ export interface SerializedState {
   firstOpenTodayMs?: number;
   dailyStreak?: number;
   lastLoginCalendarDate?: string | null;
+  dailyLoginTickDay?: string | null;
+  dailyLoginClaimedDate?: string | null;
+  spiritReservoirStored?: string;
+  dailyFortune?: GameState["dailyFortune"];
+  spiritArrayLevel?: number;
   lastTunaMs?: number;
   vein?: VeinSave;
   pullsThisLife?: number;
@@ -68,15 +146,26 @@ export interface SerializedState {
   dungeon?: DungeonSave;
   gearInventory?: GearInvSave;
   equippedGear?: EquippedSave;
+  gearSlotEnhance?: Partial<GearSlotEnhanceSave>;
   nextGearInstanceId?: number;
+  gearInventorySort?: GameState["gearInventorySort"];
   featureGuideDismissed?: string[];
   suppressFeatureGuides?: boolean;
+  uiPrefs?: Partial<UiPrefs>;
   pets?: GameState["pets"];
   petPullsTotal?: number;
+  spiritGarden?: GameState["spiritGarden"];
+  weeklyBounty?: GameState["weeklyBounty"];
+  celestialStash?: GameState["celestialStash"];
+  daoMeridian?: number;
+  pullChronicle?: GameState["pullChronicle"];
+  gearPullChronicle?: GameState["gearPullChronicle"];
+  lifetimeStats?: GameState["lifetimeStats"];
   combatHpCurrent?: number;
   dungeonSanctuaryMode?: boolean;
   dungeonPortalTargetWave?: number;
   dungeonSanctuaryAutoEnter?: boolean;
+  dungeonDeferBoss?: boolean;
 }
 
 function normalizeDungeonState(st: GameState): void {
@@ -91,25 +180,6 @@ function normalizeDungeonState(st: GameState): void {
   if (d.playerY == null || !Number.isFinite(d.playerY)) d.playerY = 0.5;
   if (d.nextMobId == null || d.nextMobId < 1) d.nextMobId = 1;
   if (!Array.isArray(d.mobs)) d.mobs = [];
-  /** 旧存档：单怪逻辑 → 单只 mob 接入地图 */
-  if (d.active && d.mobs.length === 0 && d.monsterMax > 0 && d.monsterHp > 0) {
-    d.mobs = [
-      {
-        id: d.nextMobId++,
-        x: 0.62,
-        y: 0.48,
-        hp: d.monsterHp,
-        maxHp: d.monsterMax,
-        element: "metal",
-        isBoss: false,
-        mobKind: 0,
-        dodge: 0.08,
-        attackRange: 0.045,
-        attackInterval: 1.15,
-        moveSpeedMul: 1,
-      },
-    ];
-  }
   for (const m of d.mobs) {
     if (!m.element) m.element = "metal";
     if (m.isBoss == null) m.isBoss = false;
@@ -135,13 +205,13 @@ function normalizeDungeonState(st: GameState): void {
   }
   if (d.attackAnimPhase == null) d.attackAnimPhase = 0;
   if (d.inMelee == null) d.inMelee = false;
-  if (d.attackVisualMode !== "aoe" && d.attackVisualMode !== "single" && d.attackVisualMode !== "none") {
+  if (d.attackVisualMode !== "aoe" && d.attackVisualMode !== "none") {
     d.attackVisualMode = "none";
   }
   if (d.interWaveCooldownUntil == null || !Number.isFinite(d.interWaveCooldownUntil)) d.interWaveCooldownUntil = 0;
   if (d.essenceThisWave == null || !Number.isFinite(d.essenceThisWave)) d.essenceThisWave = 0;
   if (d.pendingToast === undefined) d.pendingToast = null;
-  if (d.pendingDeathPresentation == null) d.pendingDeathPresentation = false;
+  if (d.pendingKillToast === undefined) d.pendingKillToast = null;
   if (d.waveEntrySpawnX == null || !Number.isFinite(d.waveEntrySpawnX)) d.waveEntrySpawnX = 0.5;
   if (d.waveEntrySpawnY == null || !Number.isFinite(d.waveEntrySpawnY)) d.waveEntrySpawnY = 0.5;
   if (d.bossDodgeVisual == null) d.bossDodgeVisual = false;
@@ -157,8 +227,17 @@ function normalizeDungeonState(st: GameState): void {
   if (d.playerAttackAccum == null || !Number.isFinite(d.playerAttackAccum)) d.playerAttackAccum = 0;
   if (d.playerAttackTargetMobId == null || !Number.isFinite(d.playerAttackTargetMobId)) d.playerAttackTargetMobId = 0;
   if (d.sessionEnterAtMs == null || !Number.isFinite(d.sessionEnterAtMs)) d.sessionEnterAtMs = 0;
-  /** 旧存档进本中无计时：从当前时刻起算，避免本局用时为 0 */
-  if (d.active && d.sessionEnterAtMs <= 0) d.sessionEnterAtMs = Date.now();
+  if (d.duelComboStacks == null || !Number.isFinite(d.duelComboStacks)) d.duelComboStacks = 0;
+  d.duelComboStacks = Math.max(0, Math.floor(d.duelComboStacks));
+  if (d.duelWeakUntilMs == null || !Number.isFinite(d.duelWeakUntilMs)) d.duelWeakUntilMs = 0;
+  if (d.duelWeakNextAtMs == null || !Number.isFinite(d.duelWeakNextAtMs)) d.duelWeakNextAtMs = 0;
+  if (d.duelFervor == null || !Number.isFinite(d.duelFervor)) d.duelFervor = 0;
+  d.duelFervor = Math.max(0, Math.min(100, d.duelFervor));
+  if (d.duelElemSurgeCounter == null || !Number.isFinite(d.duelElemSurgeCounter)) d.duelElemSurgeCounter = 0;
+  d.duelElemSurgeCounter = Math.max(0, Math.floor(d.duelElemSurgeCounter));
+  if (d.bossPrepKills == null || !Number.isFinite(d.bossPrepKills)) d.bossPrepKills = 0;
+  d.bossPrepKills = Math.max(0, Math.floor(d.bossPrepKills));
+  if (d.bossPrepChallengeReady == null) d.bossPrepChallengeReady = false;
 }
 
 function normalizePetsState(st: GameState): void {
@@ -203,12 +282,14 @@ export function serialize(state: GameState): string {
     spiritStones: state.spiritStones,
     peakSpiritStonesThisLife: state.peakSpiritStonesThisLife,
     summonEssence: state.summonEssence,
+    zhuLingEssence: state.zhuLingEssence,
     daoEssence: state.daoEssence,
     zaoHuaYu: state.zaoHuaYu,
     realmLevel: state.realmLevel,
     totalPulls: state.totalPulls,
     pityUr: state.pityUr,
     pitySsrSoft: state.pitySsrSoft,
+    gearPityPulls: state.gearPityPulls,
     owned: state.owned,
     deck: state.deck,
     codexUnlocked: [...state.codexUnlocked],
@@ -232,6 +313,11 @@ export function serialize(state: GameState): string {
     firstOpenTodayMs: state.firstOpenTodayMs,
     dailyStreak: state.dailyStreak,
     lastLoginCalendarDate: state.lastLoginCalendarDate,
+    dailyLoginTickDay: state.dailyLoginTickDay,
+    dailyLoginClaimedDate: state.dailyLoginClaimedDate,
+    spiritReservoirStored: state.spiritReservoirStored,
+    dailyFortune: { ...state.dailyFortune },
+    spiritArrayLevel: state.spiritArrayLevel,
     lastTunaMs: state.lastTunaMs,
     vein: { ...state.vein },
     pullsThisLife: state.pullsThisLife,
@@ -245,15 +331,41 @@ export function serialize(state: GameState): string {
     dungeon: state.dungeon,
     gearInventory: state.gearInventory,
     equippedGear: state.equippedGear,
+    gearSlotEnhance: state.gearSlotEnhance,
     nextGearInstanceId: state.nextGearInstanceId,
+    gearInventorySort: state.gearInventorySort,
     featureGuideDismissed: [...state.featureGuideDismissed],
     suppressFeatureGuides: state.suppressFeatureGuides,
+    uiPrefs: { ...state.uiPrefs },
     pets: { ...state.pets },
     petPullsTotal: state.petPullsTotal,
+    spiritGarden: {
+      plots: state.spiritGarden.plots.map((p) => ({ ...p })),
+      totalHarvests: state.spiritGarden.totalHarvests,
+    },
+    weeklyBounty: {
+      weekKey: state.weeklyBounty.weekKey,
+      waves: state.weeklyBounty.waves,
+      cardPulls: state.weeklyBounty.cardPulls,
+      gearForges: state.weeklyBounty.gearForges,
+      gardenHarvests: state.weeklyBounty.gardenHarvests,
+      tuna: state.weeklyBounty.tuna,
+      breakthroughs: state.weeklyBounty.breakthroughs,
+      claimed: [...state.weeklyBounty.claimed],
+    },
+    celestialStash: {
+      weekKey: state.celestialStash.weekKey,
+      purchased: [...state.celestialStash.purchased],
+    },
+    daoMeridian: state.daoMeridian,
+    pullChronicle: state.pullChronicle.map((e) => ({ ...e })),
+    gearPullChronicle: state.gearPullChronicle.map((e) => ({ ...e })),
+    lifetimeStats: { ...state.lifetimeStats },
     combatHpCurrent: state.combatHpCurrent,
     dungeonSanctuaryMode: state.dungeonSanctuaryMode,
     dungeonPortalTargetWave: state.dungeonPortalTargetWave,
     dungeonSanctuaryAutoEnter: state.dungeonSanctuaryAutoEnter,
+    dungeonDeferBoss: state.dungeonDeferBoss,
   };
   return JSON.stringify(s);
 }
@@ -296,12 +408,20 @@ export function deserialize(json: string): GameState {
     data.summonEssence !== undefined && data.summonEssence !== null
       ? data.summonEssence
       : Math.floor((data.tickets ?? 0) * 14) + 48;
+  st.zhuLingEssence =
+    data.zhuLingEssence !== undefined && data.zhuLingEssence !== null && Number.isFinite(data.zhuLingEssence)
+      ? Math.max(0, Math.floor(data.zhuLingEssence))
+      : 0;
   st.daoEssence = data.daoEssence ?? 0;
   st.zaoHuaYu = data.zaoHuaYu ?? 0;
   st.realmLevel = Math.max(1, data.realmLevel ?? 1);
   st.totalPulls = data.totalPulls ?? 0;
   st.pityUr = data.pityUr ?? 0;
   st.pitySsrSoft = data.pitySsrSoft ?? 0;
+  st.gearPityPulls =
+    data.gearPityPulls != null && Number.isFinite(data.gearPityPulls)
+      ? Math.max(0, Math.floor(data.gearPityPulls))
+      : 0;
   st.owned = data.owned ?? {};
   st.deck = data.deck?.length ? [...data.deck] : st.deck;
   while (st.deck.length < DECK_SIZE) st.deck.push(null);
@@ -316,6 +436,22 @@ export function deserialize(json: string): GameState {
   st.firstOpenTodayMs = data.firstOpenTodayMs ?? Date.now();
   st.dailyStreak = data.dailyStreak ?? 1;
   st.lastLoginCalendarDate = data.lastLoginCalendarDate ?? null;
+  st.dailyLoginTickDay = data.dailyLoginTickDay ?? null;
+  st.dailyLoginClaimedDate = data.dailyLoginClaimedDate ?? null;
+  st.spiritReservoirStored =
+    data.spiritReservoirStored !== undefined && data.spiritReservoirStored !== null
+      ? String(data.spiritReservoirStored)
+      : "0";
+  if (data.dailyFortune && typeof data.dailyFortune.fortuneId === "string") {
+    st.dailyFortune = {
+      calendarDay: typeof data.dailyFortune.calendarDay === "string" ? data.dailyFortune.calendarDay : "",
+      fortuneId: data.dailyFortune.fortuneId,
+    };
+  }
+  if (data.spiritArrayLevel != null && Number.isFinite(data.spiritArrayLevel)) {
+    st.spiritArrayLevel = Math.floor(data.spiritArrayLevel);
+  }
+  normalizeSpiritArrayLevel(st);
   st.lastTunaMs = data.lastTunaMs ?? 0;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0, ...(data.vein ?? {}) };
   if (st.vein.gongMing == null || !Number.isFinite(st.vein.gongMing)) st.vein.gongMing = 0;
@@ -367,20 +503,127 @@ export function deserialize(json: string): GameState {
     st.dungeon = { ...st.dungeon, ...data.dungeon };
   }
   st.gearInventory = data.gearInventory && typeof data.gearInventory === "object" ? data.gearInventory : st.gearInventory;
+  for (const g of Object.values(st.gearInventory)) {
+    if (g) normalizeGearGrade(g);
+  }
   if (data.equippedGear) {
     st.equippedGear = { ...st.equippedGear, ...data.equippedGear };
   }
+  if (data.gearSlotEnhance && typeof data.gearSlotEnhance === "object") {
+    st.gearSlotEnhance = { ...st.gearSlotEnhance, ...data.gearSlotEnhance };
+  }
+  // 兼容旧存档：将旧的“装备强化等级”迁移到对应槽位强化。
+  for (const [slot, id] of Object.entries(st.equippedGear)) {
+    if (!id) continue;
+    const g = st.gearInventory[id];
+    if (!g) continue;
+    const legacyLv = Math.max(0, Math.floor(g.enhanceLevel ?? 0));
+    const key = slot as keyof typeof st.gearSlotEnhance;
+    st.gearSlotEnhance[key] = Math.max(st.gearSlotEnhance[key] ?? 0, legacyLv);
+  }
+  for (const slot of Object.keys(st.gearSlotEnhance) as (keyof typeof st.gearSlotEnhance)[]) {
+    const lv = st.gearSlotEnhance[slot];
+    st.gearSlotEnhance[slot] = Math.max(0, Math.floor(Number.isFinite(lv) ? lv : 0));
+  }
+  for (const g of Object.values(st.gearInventory)) {
+    if (!g) continue;
+    g.enhanceLevel = 0;
+  }
   st.nextGearInstanceId = Math.max(st.nextGearInstanceId, data.nextGearInstanceId ?? 1);
+  st.gearInventorySort = normalizeGearInventorySort(data.gearInventorySort);
 
   st.featureGuideDismissed = Array.isArray(data.featureGuideDismissed)
     ? [...data.featureGuideDismissed]
     : [];
   st.suppressFeatureGuides = data.suppressFeatureGuides ?? false;
+  st.uiPrefs = {
+    reduceMotion: !!data.uiPrefs?.reduceMotion,
+    compactNumbers: data.uiPrefs?.compactNumbers !== false,
+    soundMuted: !!data.uiPrefs?.soundMuted,
+    masterVolume: normalizeMasterVolume(data.uiPrefs?.masterVolume),
+  };
 
   if (data.pets && typeof data.pets === "object") {
     st.pets = { ...st.pets, ...data.pets };
   }
   st.petPullsTotal = data.petPullsTotal ?? 0;
+  if (data.spiritGarden && Array.isArray(data.spiritGarden.plots)) {
+    st.spiritGarden = {
+      plots: data.spiritGarden.plots.map((p) => ({
+        crop: p.crop ?? null,
+        plantedAtMs: p.plantedAtMs ?? 0,
+      })),
+      totalHarvests: Math.max(0, Math.floor(data.spiritGarden.totalHarvests ?? 0)),
+    };
+  }
+  normalizeSpiritGarden(st);
+  if (data.weeklyBounty && typeof data.weeklyBounty.weekKey === "string") {
+    st.weeklyBounty = {
+      weekKey: data.weeklyBounty.weekKey,
+      waves: data.weeklyBounty.waves ?? 0,
+      cardPulls: data.weeklyBounty.cardPulls ?? 0,
+      gearForges: data.weeklyBounty.gearForges ?? 0,
+      gardenHarvests: data.weeklyBounty.gardenHarvests ?? 0,
+      tuna: data.weeklyBounty.tuna ?? 0,
+      breakthroughs: data.weeklyBounty.breakthroughs ?? 0,
+      claimed: Array.isArray(data.weeklyBounty.claimed) ? [...data.weeklyBounty.claimed] : [],
+    };
+  } else {
+    st.weeklyBounty = emptyWeeklyBounty(currentWeekKey(st.lastTick));
+  }
+  normalizeWeeklyBounty(st);
+  ensureWeeklyBountyWeek(st, Date.now());
+  if (data.celestialStash && typeof data.celestialStash.weekKey === "string") {
+    st.celestialStash = {
+      weekKey: data.celestialStash.weekKey,
+      purchased: Array.isArray(data.celestialStash.purchased) ? [...data.celestialStash.purchased] : [],
+    };
+  } else {
+    st.celestialStash = emptyCelestialStash(currentWeekKey(st.lastTick));
+  }
+  ensureCelestialStashWeek(st, Date.now());
+  if (data.daoMeridian != null && Number.isFinite(data.daoMeridian)) {
+    st.daoMeridian = Math.floor(data.daoMeridian);
+  }
+  normalizeDaoMeridian(st);
+  if (data.pullChronicle && Array.isArray(data.pullChronicle)) {
+    st.pullChronicle = data.pullChronicle.map((e) => ({
+      atMs: e.atMs ?? 0,
+      defId: e.defId ?? "",
+      rarity: e.rarity ?? "N",
+      isNew: !!e.isNew,
+    }));
+  }
+  normalizePullChronicle(st);
+  if (data.gearPullChronicle && Array.isArray(data.gearPullChronicle)) {
+    st.gearPullChronicle = data.gearPullChronicle.map((e) => ({
+      atMs: e.atMs ?? 0,
+      baseId: e.baseId ?? "",
+      rarity: e.rarity ?? "N",
+      displayName: e.displayName ?? "",
+    }));
+  }
+  normalizeGearPullChronicle(st);
+  if (data.lifetimeStats && typeof data.lifetimeStats === "object") {
+    st.lifetimeStats = {
+      dungeonEssenceIntGained: Math.max(0, Math.floor(data.lifetimeStats.dungeonEssenceIntGained ?? 0)),
+      celestialStashBuys: Math.max(0, Math.floor(data.lifetimeStats.celestialStashBuys ?? 0)),
+      spiritReservoirClaims: Math.max(0, Math.floor(data.lifetimeStats.spiritReservoirClaims ?? 0)),
+      dailyFortuneRolls: Math.max(0, Math.floor(data.lifetimeStats.dailyFortuneRolls ?? 0)),
+      gearForgesTotal: Math.max(0, Math.floor(data.lifetimeStats.gearForgesTotal ?? 0)),
+      maxGearRarityRankForged: Math.max(
+        0,
+        Math.min(4, Math.floor(data.lifetimeStats.maxGearRarityRankForged ?? 0)),
+      ),
+      weeklyBountyFullWeeks: Math.max(0, Math.floor(data.lifetimeStats.weeklyBountyFullWeeks ?? 0)),
+      lastWeeklyBountyFullWeekKey:
+        typeof data.lifetimeStats.lastWeeklyBountyFullWeekKey === "string"
+          ? data.lifetimeStats.lastWeeklyBountyFullWeekKey
+          : "",
+    };
+  }
+  normalizeLifetimeStats(st);
+  syncMaxGearRarityFromInventoryAndChronicle(st);
   st.combatHpCurrent =
     data.combatHpCurrent !== undefined && data.combatHpCurrent !== null && Number.isFinite(data.combatHpCurrent)
       ? data.combatHpCurrent
@@ -395,6 +638,7 @@ export function deserialize(json: string): GameState {
     data.dungeonSanctuaryAutoEnter !== undefined && data.dungeonSanctuaryAutoEnter !== null
       ? !!data.dungeonSanctuaryAutoEnter
       : true;
+  st.dungeonDeferBoss = data.dungeonDeferBoss !== undefined && data.dungeonDeferBoss !== null ? !!data.dungeonDeferBoss : true;
   clampCombatHpToMax(st);
 
   normalizePetsState(st);
@@ -419,6 +663,10 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   st.totalPulls = data.totalPulls ?? 0;
   st.pityUr = data.pityUr ?? 0;
   st.pitySsrSoft = data.pitySsrSoft ?? 0;
+  st.gearPityPulls =
+    data.gearPityPulls != null && Number.isFinite(data.gearPityPulls)
+      ? Math.max(0, Math.floor(data.gearPityPulls))
+      : 0;
   st.owned = data.owned ?? {};
   st.deck = data.deck?.length ? [...data.deck] : st.deck;
   while (st.deck.length < DECK_SIZE) st.deck.push(null);
@@ -466,18 +714,151 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
   return st;
 }
 
+export function getActiveSlotIndex(): number {
+  ensureSaveSlotsMigrated();
+  try {
+    const v = localStorage.getItem(ACTIVE_SLOT_KEY);
+    const n = v != null ? parseInt(v, 10) : 0;
+    if (Number.isFinite(n) && n >= 0 && n < SAVE_SLOT_COUNT) return n;
+  } catch {
+    /* ignore */
+  }
+  return 0;
+}
+
+function setActiveSlotIndex(slot: number): void {
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return;
+  try {
+    localStorage.setItem(ACTIVE_SLOT_KEY, String(slot));
+  } catch {
+    /* ignore */
+  }
+}
+
+function sanitizeSlotLabel(raw: string): string {
+  return raw
+    .replace(/[\x00-\x1f\x7f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, SAVE_SLOT_LABEL_MAX);
+}
+
+/** 读取某槽用户备注（本机 meta，可为空字符串） */
+export function getSlotLabel(slot: number): string {
+  ensureSaveSlotsMigrated();
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return "";
+  try {
+    const raw = localStorage.getItem(SLOT_LABELS_KEY);
+    if (!raw) return "";
+    const o = JSON.parse(raw) as Record<string, unknown>;
+    if (!o || typeof o !== "object") return "";
+    const v = o[String(slot)];
+    return typeof v === "string" ? sanitizeSlotLabel(v) : "";
+  } catch {
+    return "";
+  }
+}
+
+/** 写入某槽备注；空字符串则清除该槽条目 */
+export function setSlotLabel(slot: number, label: string): void {
+  ensureSaveSlotsMigrated();
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return;
+  try {
+    const cleaned = sanitizeSlotLabel(label);
+    const o: Record<string, string> = {};
+    const prev = localStorage.getItem(SLOT_LABELS_KEY);
+    if (prev) {
+      try {
+        const parsed = JSON.parse(prev) as Record<string, unknown>;
+        if (parsed && typeof parsed === "object") {
+          for (let i = 0; i < SAVE_SLOT_COUNT; i++) {
+            const vv = parsed[String(i)];
+            if (typeof vv === "string") {
+              const s = sanitizeSlotLabel(vv);
+              if (s) o[String(i)] = s;
+            }
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    if (cleaned === "") delete o[String(slot)];
+    else o[String(slot)] = cleaned;
+    if (Object.keys(o).length === 0) localStorage.removeItem(SLOT_LABELS_KEY);
+    else localStorage.setItem(SLOT_LABELS_KEY, JSON.stringify(o));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 用于存档页展示：不反序列化完整 GameState */
+export function peekSlotSummary(slot: number): { empty: boolean; realmLevel?: number; playtimeSec?: number } {
+  ensureSaveSlotsMigrated();
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return { empty: true };
+  try {
+    const raw = localStorage.getItem(storageKeyForSlot(slot));
+    if (!raw) return { empty: true };
+    const data = JSON.parse(raw) as { realmLevel?: number; playtimeSec?: number };
+    return {
+      empty: false,
+      realmLevel: Math.max(1, Math.floor(data.realmLevel ?? 1)),
+      playtimeSec: Math.max(0, Math.floor(data.playtimeSec ?? 0)),
+    };
+  } catch {
+    return { empty: true };
+  }
+}
+
+/** 将内存中的进度写入指定槽（用于复制；不切换激活槽） */
+export function copyCurrentToSlot(target: number, current: GameState): void {
+  ensureSaveSlotsMigrated();
+  if (target < 0 || target >= SAVE_SLOT_COUNT) return;
+  try {
+    current.version = SAVE_VERSION;
+    localStorage.setItem(storageKeyForSlot(target), serialize(current));
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * 先刷写当前槽，再切换激活槽并载入目标槽（空槽则新开局）。
+ * 返回新的 GameState，调用方应替换全局 `state` 并重绘。
+ */
+export function switchToSaveSlot(slot: number, current: GameState): GameState {
+  ensureSaveSlotsMigrated();
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return current;
+  const from = getActiveSlotIndex();
+  if (slot === from) return current;
+  try {
+    current.version = SAVE_VERSION;
+    localStorage.setItem(storageKeyForSlot(from), serialize(current));
+    setActiveSlotIndex(slot);
+    const raw = localStorage.getItem(storageKeyForSlot(slot));
+    if (raw) return deserialize(raw);
+    return createInitialState();
+  } catch {
+    return current;
+  }
+}
+
 export function saveGame(state: GameState): void {
   try {
     state.version = SAVE_VERSION;
-    localStorage.setItem(KEY, serialize(state));
+    ensureSaveSlotsMigrated();
+    const slot = getActiveSlotIndex();
+    localStorage.setItem(storageKeyForSlot(slot), serialize(state));
   } catch {
     /* ignore */
   }
 }
 
 export function loadGame(): GameState {
+  ensureSaveSlotsMigrated();
   try {
-    const raw = localStorage.getItem(KEY);
+    const slot = getActiveSlotIndex();
+    const raw = localStorage.getItem(storageKeyForSlot(slot));
     if (raw) return deserialize(raw);
   } catch {
     /* ignore */
@@ -485,16 +866,46 @@ export function loadGame(): GameState {
   return createInitialState();
 }
 
+function encodeUtf8Base64(input: string): string {
+  const bytes = new TextEncoder().encode(input);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+function decodeUtf8Base64(input: string): string {
+  const bin = atob(input);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
+function normalizeBase64Input(input: string): string {
+  let out = input.replace(/-/g, "+").replace(/_/g, "/").replace(/\s+/g, "");
+  const rem = out.length % 4;
+  if (rem !== 0) out += "=".repeat(4 - rem);
+  return out;
+}
+
 export function exportSave(state: GameState): string {
-  return btoa(unescape(encodeURIComponent(serialize(state))));
+  return encodeUtf8Base64(serialize(state));
 }
 
 export function importSave(b64: string): GameState | null {
+  const raw = b64.trim();
+  if (!raw) return null;
+  const normalized = normalizeBase64Input(raw);
   try {
-    const json = decodeURIComponent(escape(atob(b64)));
+    const json = decodeUtf8Base64(normalized);
     return deserialize(json);
   } catch {
-    return null;
+    // Fallback for older exports using escape/unescape based encoding.
+    try {
+      const legacy = decodeURIComponent(escape(atob(normalized)));
+      return deserialize(legacy);
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -504,8 +915,10 @@ export function totalCardsInPool(): number {
 
 /** 删除本地存档并生成全新灵识（立即写回存档位） */
 export function clearSaveAndNewGame(): GameState {
+  ensureSaveSlotsMigrated();
+  const slot = getActiveSlotIndex();
   try {
-    localStorage.removeItem(KEY);
+    localStorage.removeItem(storageKeyForSlot(slot));
   } catch {
     /* ignore */
   }

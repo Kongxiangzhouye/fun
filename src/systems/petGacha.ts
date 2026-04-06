@@ -1,7 +1,9 @@
 import type { GameState, PetId, Rarity } from "../types";
 import { nextRand01 } from "../rng";
+import { rarityRank } from "../data/rarityRank";
 import { PET_DEFS } from "../data/pets";
 import { PET_PULL_COST, addPetXp, petSystemUnlocked } from "./pets";
+import { pickRarityByWeights01 } from "./rarityDraw";
 
 const RARITY_WEIGHT: Record<Rarity, number> = {
   N: 380,
@@ -11,19 +13,32 @@ const RARITY_WEIGHT: Record<Rarity, number> = {
   UR: 40,
 };
 
+const PET_POOL_BY_RARITY: Record<Rarity, typeof PET_DEFS> = {
+  N: PET_DEFS.filter((p) => p.rarity === "N"),
+  R: PET_DEFS.filter((p) => p.rarity === "R"),
+  SR: PET_DEFS.filter((p) => p.rarity === "SR"),
+  SSR: PET_DEFS.filter((p) => p.rarity === "SSR"),
+  UR: PET_DEFS.filter((p) => p.rarity === "UR"),
+};
+
 function pickPetRarity(state: GameState): Rarity {
-  const w = RARITY_WEIGHT;
-  const total = w.N + w.R + w.SR + w.SSR + w.UR;
-  let r = nextRand01(state) * total;
-  const order: Rarity[] = ["N", "R", "SR", "SSR", "UR"];
-  for (const ra of order) {
-    r -= w[ra];
-    if (r < 0) return ra;
-  }
-  return "UR";
+  return pickRarityByWeights01(RARITY_WEIGHT, nextRand01(state));
 }
 
-const RARITY_ORDER: Rarity[] = ["N", "R", "SR", "SSR", "UR"];
+function pickPetDefWithFallback(
+  state: GameState,
+  picked: Rarity,
+): { ok: true; rarity: Rarity; defId: PetId } | { ok: false; msg: string } {
+  const fallbackOrder: Rarity[] =
+    picked === "UR" ? ["UR", "SSR", "SR", "R", "N"] : picked === "SSR" ? ["SSR", "SR", "R", "N"] : picked === "SR" ? ["SR", "R", "N"] : picked === "R" ? ["R", "N"] : ["N"];
+  for (const r of fallbackOrder) {
+    const pool = PET_POOL_BY_RARITY[r];
+    if (pool.length <= 0) continue;
+    const def = pool[Math.floor(nextRand01(state) * pool.length)];
+    if (def) return { ok: true, rarity: r, defId: def.id };
+  }
+  return { ok: false, msg: "唤灵池暂不可用，请检查灵宠配置" };
+}
 
 export function pullPet(state: GameState): {
   ok: boolean;
@@ -34,35 +49,36 @@ export function pullPet(state: GameState): {
   if (!petSystemUnlocked(state)) return { ok: false, msg: "幻域累计击溃 15 波后开放唤灵池" };
   if (state.summonEssence < PET_PULL_COST) return { ok: false, msg: `唤灵髓不足（需 ${PET_PULL_COST}）` };
 
+  const pickedRarity = pickPetRarity(state);
+  const pick = pickPetDefWithFallback(state, pickedRarity);
+  if (!pick.ok) return { ok: false, msg: pick.msg };
+
   state.summonEssence -= PET_PULL_COST;
   state.petPullsTotal += 1;
-
-  let rarity = pickPetRarity(state);
-  let pool = PET_DEFS.filter((p) => p.rarity === rarity);
-  if (pool.length === 0) {
-    rarity = "N";
-    pool = PET_DEFS.filter((p) => p.rarity === "N");
+  const def = PET_DEFS.find((p) => p.id === pick.defId);
+  if (!def) {
+    state.summonEssence += PET_PULL_COST;
+    state.petPullsTotal = Math.max(0, state.petPullsTotal - 1);
+    return { ok: false, msg: "唤灵失败：灵宠配置异常" };
   }
-  const def = pool[Math.floor(nextRand01(state) * pool.length)]!;
-  const had = state.pets[def.id] != null;
+  const had = state.pets[pick.defId] != null;
 
   if (had) {
-    const idx = RARITY_ORDER.indexOf(def.rarity);
-    const bonusXp = 38 + Math.max(0, idx) * 26;
-    addPetXp(state, def.id, bonusXp);
+    const bonusXp = 38 + Math.max(0, rarityRank(def.rarity)) * 26;
+    addPetXp(state, pick.defId, bonusXp);
     return {
       ok: true,
-      msg: `重复邂逅「${def.name}」：灵契 +${bonusXp}（${def.rarity}）`,
-      petId: def.id,
+      msg: `结缘重复：${def.name}（${def.rarity}）· 灵契 +${bonusXp}`,
+      petId: pick.defId,
       duplicate: true,
     };
   }
 
-  state.pets[def.id] = { level: 1, xp: 0 };
+  state.pets[pick.defId] = { level: 1, xp: 0 };
   return {
     ok: true,
     msg: `结缘成功：${def.name}（${def.rarity}）`,
-    petId: def.id,
+    petId: pick.defId,
     duplicate: false,
   };
 }

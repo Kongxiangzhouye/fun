@@ -11,11 +11,31 @@ export function getUiUnlocks(state: GameState): {
   /** 首次唤引后再开放十连，减轻开局信息量 */
   gachaTenUnlocked: boolean;
   tabVein: boolean;
+  /** 灵府·灵田：境界与唤引达一定进度 */
+  tabGarden: boolean;
+  /** 灵府·纳灵阵图 */
+  tabSpiritArray: boolean;
   tabCodex: boolean;
+  /** 养成 → 唤灵通鉴 */
+  tabChronicle: boolean;
   tabMeta: boolean;
   tabAch: boolean;
+  /** 周常悬赏 */
+  tabBounty: boolean;
+  /** 养成 → 灵息日历 */
+  tabDailyLogin: boolean;
+  /** 养成 → 天机匣 */
+  tabCelestialStash: boolean;
+  /** 灵府·灵脉：蓄灵池 */
+  tabSpiritReservoir: boolean;
+  /** 灵府·灵脉：心斋卦象 */
+  tabDailyFortune: boolean;
+  /** 角色 → 道韵灵窍 */
+  tabDaoMeridian: boolean;
   /** 幻域累计通关 ≥15 波 */
   tabPets: boolean;
+  /** 养成 → 心法（与幻域入口同步解锁，需唤灵髓） */
+  tabBattleSkills: boolean;
   topTide: boolean;
   statDao: boolean;
   statZao: boolean;
@@ -27,6 +47,7 @@ export function getUiUnlocks(state: GameState): {
 } {
   const pulls = state.totalPulls;
   const rl = state.realmLevel;
+  const inBattleTutorial = state.tutorialStep >= 2 && state.tutorialStep <= 3;
   const inVeinTutorial = state.tutorialStep >= 6 && state.tutorialStep <= 7;
   const tutDone = state.tutorialStep === 0;
   const gearCount = Object.keys(state.gearInventory).length;
@@ -34,6 +55,7 @@ export function getUiUnlocks(state: GameState): {
   const dungeonUnlocked =
     state.tutorialStep !== 1 &&
     (state.tutorialStep === 0 ||
+      inBattleTutorial ||
       state.totalPulls >= 1 ||
       state.realmLevel >= 2 ||
       state.dungeon.totalWavesCleared >= 1);
@@ -45,10 +67,20 @@ export function getUiUnlocks(state: GameState): {
     gachaTenUnlocked: pulls >= 1 || rl >= 3 || state.qoL.tenPull,
     /** 首次唤引或破境二重即可见；引导步骤 6–7 也必须可见（勿依赖 tutorialStep===0） */
     tabVein: inVeinTutorial || pulls >= 1 || rl >= 2,
+    tabGarden: pulls >= 1 && rl >= 4,
+    tabSpiritArray: rl >= 5 && pulls >= 2,
     tabCodex: pulls >= 5 || rl >= 4,
+    tabChronicle: pulls >= 1,
     tabMeta: rl >= 18 || state.reincarnations >= 1,
     tabAch: rl >= 6 || pulls >= 15,
+    tabBounty: rl >= 5 || pulls >= 5,
+    tabDailyLogin: pulls >= 1 || rl >= 2,
+    tabCelestialStash: rl >= 5 || pulls >= 6,
+    tabSpiritReservoir: rl >= 3 || pulls >= 3,
+    tabDailyFortune: rl >= 4 || pulls >= 5,
+    tabDaoMeridian: state.reincarnations >= 1 || state.daoEssence >= 15 || state.daoMeridian > 0,
     tabPets: state.dungeon.totalWavesCleared >= 15,
+    tabBattleSkills: dungeonUnlocked,
     topTide: tutDone,
     statDao: state.reincarnations >= 1 || state.daoEssence > 0 || rl >= 20,
     statZao: state.zaoHuaYu > 0 || rl >= 24 || state.trueEndingSeen,

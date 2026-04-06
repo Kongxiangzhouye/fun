@@ -259,6 +259,43 @@ body {
   margin: 0 auto;
 }
 
+.hub-inline-subnav--cultivate {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.hub-subnav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hub-subnav-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148, 168, 210, 0.88);
+}
+
+.hub-subnav-flair {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.hub-inline-subnav-row--tight {
+  gap: 6px;
+}
+
 .discoverability-hint {
   max-width: 640px;
   margin: -4px auto 10px;
@@ -307,10 +344,352 @@ body {
   border-radius: 14px;
 }
 
+.dungeon-strip-panel.dungeon-panel--run {
+  position: relative;
+  border: 1px solid rgba(100, 140, 200, 0.28);
+  background: linear-gradient(180deg, rgba(26, 34, 54, 0.42) 0%, transparent 52px);
+  box-shadow:
+    0 0 0 1px rgba(80, 120, 200, 0.12),
+    0 10px 36px rgba(0, 0, 0, 0.28);
+}
+
+.dungeon-strip-panel.dungeon-panel--run::before {
+  content: "";
+  display: block;
+  height: 5px;
+  margin: -2px -12px 10px -12px;
+  border-radius: 14px 14px 0 0;
+  background-image:
+    var(--dungeon-live-strip, none),
+    linear-gradient(90deg, transparent, rgba(130, 170, 255, 0.22), transparent);
+  background-size: 100% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  opacity: 0.92;
+}
+
+.dungeon-strip-panel.dungeon-panel--live-fight {
+  animation: dungeon-panel-live-glow 2.8s ease-in-out infinite;
+}
+
+.dungeon-strip-panel.dungeon-panel--inter-wave {
+  animation: dungeon-panel-inter-glow 3.6s ease-in-out infinite;
+}
+
+@keyframes dungeon-panel-live-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(100, 140, 220, 0.22),
+      0 8px 28px rgba(0, 0, 0, 0.22);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(130, 180, 255, 0.4),
+      0 12px 42px rgba(40, 90, 180, 0.2);
+  }
+}
+
+@keyframes dungeon-panel-inter-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(120, 160, 200, 0.2),
+      0 6px 24px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(160, 195, 235, 0.32),
+      0 10px 34px rgba(60, 100, 160, 0.14);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dungeon-strip-panel.dungeon-panel--live-fight,
+  .dungeon-strip-panel.dungeon-panel--inter-wave {
+    animation: none;
+  }
+}
+
 .dungeon-map-stage {
   position: relative;
   margin: 0 auto;
   max-width: 480px;
+}
+
+/* 历练页：将战斗主体从上方信息区拆成独立模块卡片 */
+.dungeon-combat-module {
+  margin-top: 12px;
+  padding: 12px 12px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(78, 100, 142, 0.38);
+  background: linear-gradient(160deg, rgba(16, 24, 38, 0.76), rgba(8, 12, 22, 0.9));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.dungeon-combat-module .dungeon-map-stage {
+  margin-bottom: 6px;
+}
+
+/* 历练页：战斗区下方 · 三件筑灵装备条（默认仅一行图标，长按展开） */
+.battle-equipped-strip {
+  margin: 14px auto 0;
+  padding: 12px 12px 14px;
+  max-width: 520px;
+  border-radius: 14px;
+  border: 1px solid rgba(90, 110, 160, 0.45);
+  background: linear-gradient(165deg, rgba(16, 20, 36, 0.96), rgba(10, 12, 22, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.battle-equipped-strip--collapsible {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.battle-equipped-strip--collapsible:not(.battle-equipped-strip--expanded) {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.battle-equipped-touch-target {
+  cursor: pointer;
+  padding: 2px 0 4px;
+}
+
+.battle-equipped-mini-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.battle-gear-ico-mini {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(100, 120, 180, 0.35);
+  background: radial-gradient(circle at 50% 30%, rgba(80, 100, 160, 0.2), rgba(12, 14, 22, 0.92));
+}
+
+.battle-gear-ico-mini img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  image-rendering: auto;
+  background: rgba(10, 14, 24, 0.9);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.battle-gear-ico-mini--empty span {
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: rgba(160, 175, 220, 0.42);
+  line-height: 1;
+}
+
+.battle-equipped-longpress-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  color: rgba(160, 180, 220, 0.78);
+  letter-spacing: 0.04em;
+}
+
+.battle-equipped-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.battle-gear-modal.panel,
+.battle-gear-modal .panel {
+  margin-top: 28px;
+  margin-bottom: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.battle-equipped-strip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.battle-equipped-strip-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #c8d4f0;
+}
+
+.battle-equipped-strip-hint {
+  margin: 0;
+}
+
+.battle-gear-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.battle-gear-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 6px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 120, 180, 0.35);
+  background: rgba(8, 10, 18, 0.65);
+  min-height: 0;
+}
+
+.battle-gear-cell--empty {
+  opacity: 0.88;
+  border-style: dashed;
+}
+
+.battle-gear-cell--ext {
+  opacity: 0.7;
+}
+
+.battle-gear-cell-top {
+  min-height: 1.1em;
+  margin-bottom: 4px;
+}
+
+.battle-gear-stars {
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  color: #e8c060;
+  text-shadow: 0 0 8px rgba(232, 192, 96, 0.35);
+}
+
+.battle-gear-stars-dim {
+  opacity: 0.28;
+}
+
+.battle-gear-icon-wrap {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: radial-gradient(circle at 50% 30%, rgba(80, 100, 160, 0.25), rgba(20, 24, 40, 0.9));
+  border: 1px solid rgba(120, 140, 200, 0.25);
+}
+
+.battle-gear-icon-wrap--empty {
+  background: rgba(12, 14, 24, 0.5);
+}
+
+.battle-gear-empty-plus {
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: rgba(160, 175, 220, 0.45);
+  line-height: 1;
+}
+
+.battle-gear-icon {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  image-rendering: auto;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+
+.battle-gear-lv {
+  font-size: 0.72rem;
+  color: #9aa8c8;
+  margin-bottom: 2px;
+}
+
+.battle-gear-pw {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #d0dce8;
+}
+
+.battle-gear-slot-label {
+  margin-top: 6px;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: rgba(180, 195, 230, 0.65);
+}
+
+.battle-gear-cell.rarity-UR {
+  border-color: rgba(255, 200, 120, 0.45);
+  box-shadow: 0 0 16px rgba(255, 200, 100, 0.08);
+}
+
+.battle-gear-cell.rarity-SSR {
+  border-color: rgba(200, 140, 255, 0.42);
+}
+
+.battle-gear-cell.rarity-SR {
+  border-color: rgba(120, 180, 255, 0.38);
+}
+
+/* 战斗中：底栏不再重复「生命」（对阵条与战报已足够） */
+.dungeon-panel--live-fight .dungeon-foot-chip--hp {
+  display: none;
+}
+
+/* 宽屏：战场 + 战报双栏，避免中间一条、两侧空 */
+@media (min-width: 900px) {
+  .dungeon-strip-panel.dungeon-panel--run {
+    max-width: min(980px, 96vw);
+  }
+
+  .dungeon-map-stage {
+    max-width: min(980px, 100%);
+  }
+
+  .dungeon-active-stack--live {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(260px, 360px);
+    gap: 14px 20px;
+    align-items: start;
+  }
+
+  .dungeon-active-stack--live .dungeon-viewport.dungeon-live-combat {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .dungeon-active-stack--live .dungeon-active-meta--detail,
+  .dungeon-active-stack--live .dungeon-active-meta--brief {
+    grid-column: 2;
+    margin-top: 0 !important;
+    max-height: min(72vh, 560px);
+    overflow-y: auto;
+    align-self: stretch;
+  }
 }
 
 /* 战斗中 / 休整：固定视口高度，避免换波时整块区域跳动 */
@@ -342,10 +721,51 @@ body {
 .dungeon-inter-wave-inner {
   flex: 1;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  min-height: 0;
+  padding: 10px 12px 10px 56px;
+}
+
+.dungeon-inter-wave-art {
+  flex: 0 0 auto;
+}
+
+.dungeon-inter-wave-deco {
+  display: block;
+  width: 80px;
+  height: 80px;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 14px rgba(100, 160, 255, 0.35));
+}
+
+.dungeon-inter-wave-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 0;
-  padding: 0 4px 0 52px;
+  gap: 2px;
+}
+
+@media (max-width: 480px) {
+  .dungeon-inter-wave-inner {
+    flex-direction: column;
+    align-items: center;
+    padding-left: 12px;
+    padding-right: 12px;
+    text-align: center;
+  }
+
+  .dungeon-inter-wave-copy {
+    width: 100%;
+    align-items: center;
+  }
+
+  .dungeon-inter-wave-copy .bar-label {
+    width: 100%;
+  }
 }
 
 .dungeon-viewport .dungeon-inter-title {
@@ -367,11 +787,172 @@ body {
   flex-direction: column;
 }
 
+.dungeon-combat-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.dungeon-combat-toolbar .btn-dungeon-challenge-boss {
+  min-height: 44px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+/* 幻域 · 阶段条（清剿 / 首领前哨 / 首领对决） */
+.dungeon-phase-banner {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 130, 200, 0.38);
+  background: linear-gradient(145deg, rgba(14, 18, 32, 0.96), rgba(8, 10, 18, 0.98));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.dungeon-phase-banner--trash {
+  border-color: rgba(110, 150, 220, 0.42);
+}
+
+.dungeon-phase-banner--boss_prep {
+  border-color: rgba(220, 170, 100, 0.5);
+  background: linear-gradient(145deg, rgba(32, 22, 12, 0.96), rgba(12, 10, 8, 0.98));
+}
+
+.dungeon-phase-banner--boss_fight {
+  border-color: rgba(200, 90, 90, 0.45);
+  background: linear-gradient(145deg, rgba(28, 12, 14, 0.96), rgba(10, 8, 10, 0.98));
+}
+
+.dungeon-phase-banner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.dungeon-phase-badge {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #c8d6f8;
+}
+
+.dungeon-phase-badge-wrap {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dungeon-phase-progress-ring {
+  position: absolute;
+  inset: 0;
+  opacity: 0.95;
+}
+
+.dungeon-phase-badge-ico {
+  position: relative;
+  z-index: 1;
+}
+
+.dungeon-phase-banner--boss_prep .dungeon-phase-badge {
+  color: #f0d4a0;
+}
+
+.dungeon-phase-banner--boss_fight .dungeon-phase-badge {
+  color: #ffb0b0;
+}
+
+.dungeon-phase-wave-hint {
+  margin: 0;
+}
+
+.dungeon-phase-banner-guide {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #a8b8d8;
+}
+
+.dungeon-phase-banner--boss_prep .dungeon-phase-banner-guide {
+  color: #d8c8a8;
+}
+
+.dungeon-phase-banner--boss_fight .dungeon-phase-banner-guide {
+  color: #e8b8b8;
+}
+
+.dungeon-phase-banner-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dungeon-phase-cta-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dungeon-boss-progress-badge {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.dungeon-phase-cta-note {
+  margin: 0;
+}
+
+.dungeon-idle-guide-steps {
+  margin: 10px 0 0;
+  padding-left: 1.25em;
+  line-height: 1.55;
+  color: #a8b8d8;
+}
+
+.dungeon-idle-guide-steps li {
+  margin-bottom: 4px;
+}
+
+/* 阵线舞台：按阶段微调氛围（与小兵/Boss 拆分一致） */
+.dungeon-duel-stage--phase-boss-fight {
+  box-shadow:
+    0 0 0 1px rgba(200, 80, 80, 0.15) inset,
+    0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.dungeon-duel-stage--phase-boss-prep {
+  box-shadow:
+    0 0 0 1px rgba(220, 170, 90, 0.12) inset,
+    0 8px 28px rgba(0, 0, 0, 0.3);
+}
+
+.dungeon-boss-intent-row {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 160, 90, 0.35);
+  background: rgba(40, 28, 14, 0.35);
+}
+
 .dungeon-map-leave-btn {
   position: absolute;
   left: 8px;
   top: 8px;
   z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   min-width: 44px;
   min-height: 44px;
   padding: 4px 10px;
@@ -385,18 +966,381 @@ body {
   touch-action: manipulation;
 }
 
-.dungeon-map-hud-bl {
+.dungeon-map-leave-ico {
+  flex-shrink: 0;
+  display: block;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 4px rgba(160, 190, 255, 0.35));
+}
+
+.dungeon-map-leave-btn--outside {
+  position: relative;
+  left: auto;
+  top: auto;
+  flex-shrink: 0;
+}
+
+/* 幻域·阵线对决：左右对阵条（我方 | VS | 敌方），与中央意象、底部读条分层 */
+.dungeon-duel-vs-bar {
   position: absolute;
-  left: 8px;
-  bottom: 8px;
-  z-index: 11;
-  width: min(46%, 168px);
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 8px 4px 8px;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.dungeon-duel-side {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: calc(50% - 28px);
   padding: 6px 8px;
   border-radius: 10px;
-  background: rgba(6, 10, 18, 0.72);
-  border: 1px solid rgba(80, 110, 160, 0.45);
+  background: rgba(6, 10, 18, 0.78);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.dungeon-duel-side--player {
+  text-align: left;
+  border: 1px solid rgba(100, 150, 230, 0.42);
+}
+
+.dungeon-duel-side--enemy {
+  text-align: right;
+  border: 1px solid rgba(200, 110, 90, 0.42);
+}
+
+.dungeon-duel-side-tag {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  color: rgba(180, 195, 220, 0.75);
+  margin-bottom: 4px;
+}
+
+.dungeon-duel-side--enemy .dungeon-duel-side-tag {
+  text-align: right;
+}
+
+.dungeon-duel-vs-mid {
+  flex: 0 0 auto;
+  align-self: center;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: clamp(0.85rem, 3.2vw, 1.05rem);
+  letter-spacing: 0.12em;
+  color: rgba(220, 200, 160, 0.45);
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.85);
+}
+
+.dungeon-duel-elem-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.dungeon-duel-vs-core {
+  font-size: clamp(0.75rem, 2.8vw, 0.95rem);
+  letter-spacing: 0.2em;
+  color: rgba(230, 200, 150, 0.5);
+}
+
+.dungeon-duel-elem-ico {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px rgba(120, 160, 255, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.dungeon-duel-elem-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  max-width: 140px;
+}
+
+.duel-elem-pill {
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(8, 12, 22, 0.78);
+  border: 1px solid rgba(100, 140, 200, 0.3);
+  color: rgba(200, 215, 240, 0.92);
+  white-space: nowrap;
+}
+
+.duel-elem-pill--out {
+  border-color: rgba(120, 200, 255, 0.38);
+}
+
+.duel-elem-pill--in {
+  border-color: rgba(255, 150, 120, 0.42);
+}
+
+.dungeon-duel-fx-core {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  width: 1px;
+  height: 1px;
   pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.dungeon-duel-stage .dungeon-duel-engage-ring {
+  width: 128px;
+  height: 128px;
+  margin: -64px 0 0 -64px;
+  transform-origin: center center;
+}
+
+.dungeon-duel-stage .fx-aoe-ring {
+  width: 108px;
+  height: 108px;
+  margin: -54px 0 0 -54px;
+}
+
+.dungeon-map.dungeon-duel-stage.duel-mood-windup {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 110, 90, 0.42),
+    inset 0 0 60px rgba(255, 70, 50, 0.14);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-mood-iframe {
+  box-shadow:
+    inset 0 0 0 1px rgba(90, 210, 255, 0.45),
+    inset 0 0 52px rgba(40, 160, 255, 0.12);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-mood-fervor {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 210, 120, 0.45),
+    inset 0 0 56px rgba(255, 180, 70, 0.14);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-fx-hit {
+  animation: duel-hit-burst 0.14s ease-out;
+}
+
+@keyframes duel-hit-burst {
+  0% {
+    filter: brightness(1.14) contrast(1.04);
+  }
+  100% {
+    filter: brightness(1) contrast(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dungeon-map.dungeon-duel-stage.duel-fx-hit {
+    animation: none;
+  }
+}
+
+.dungeon-duel-frame-corners {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.duel-corner {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  opacity: 0.55;
+  filter: drop-shadow(0 0 6px rgba(100, 150, 255, 0.25));
+}
+
+.duel-corner--tl {
+  top: 4px;
+  left: 4px;
+}
+
+.duel-corner--tr {
+  top: 4px;
+  right: 4px;
+  transform: scaleX(-1);
+}
+
+.duel-corner--bl {
+  bottom: 4px;
+  left: 4px;
+  transform: scaleY(-1);
+}
+
+.duel-corner--br {
+  bottom: 4px;
+  right: 4px;
+  transform: scale(-1, -1);
+}
+
+.dungeon-duel-top-hud {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  transform: translateX(-50%);
+  z-index: 8;
+  pointer-events: none;
+}
+
+.dungeon-duel-wave-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: rgba(220, 228, 255, 0.92);
+  background: linear-gradient(180deg, rgba(22, 32, 52, 0.92), rgba(10, 14, 24, 0.95));
+  border: 1px solid rgba(120, 160, 255, 0.35);
+  box-shadow:
+    0 0 16px rgba(40, 80, 160, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.dungeon-duel-wave-ico {
+  display: block;
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.dungeon-map.dungeon-duel-stage.duel-hp-low::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: inset 0 0 52px rgba(120, 24, 28, 0.22);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-is-boss .dungeon-boss-strip-bar-fill {
+  overflow: hidden;
+}
+
+.dungeon-map.dungeon-duel-stage.duel-is-boss .dungeon-boss-strip-bar-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.22),
+    transparent
+  );
+  animation: duel-boss-bar-shimmer 1.85s ease-in-out infinite;
+}
+
+@keyframes duel-boss-bar-shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dungeon-map.dungeon-duel-stage.duel-is-boss .dungeon-boss-strip-bar-fill::after {
+    animation: none;
+  }
+}
+
+.dungeon-map.dungeon-duel-stage.duel-boss-telegraph {
+  filter: brightness(1.05) saturate(1.06);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-combo-high .dungeon-duel-engage-ring {
+  border-color: rgba(255, 210, 150, 0.55) !important;
+  box-shadow: 0 0 24px rgba(255, 170, 90, 0.38) !important;
+}
+
+.dungeon-duel-dodge-chip {
+  position: absolute;
+  left: 50%;
+  bottom: 19.5%;
+  transform: translateX(-50%);
+  z-index: 6;
+  margin: 0;
+  max-width: min(92%, 320px);
+  text-align: center;
+  color: rgba(165, 198, 235, 0.9);
+  pointer-events: none;
+  line-height: 1.35;
+}
+
+.duel-mom-pill--tier {
+  border-color: rgba(150, 190, 255, 0.38);
+}
+
+.duel-mom-pill--tier.is-hot {
+  color: #ffd8a8;
+  border-color: rgba(255, 200, 130, 0.55);
+  box-shadow: 0 0 14px rgba(255, 160, 70, 0.22);
+}
+
+.dungeon-boss-strip.dungeon-boss-strip--duel {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.dungeon-duel-side--enemy .dungeon-boss-strip-title {
+  text-align: right;
+  letter-spacing: 0.12em;
+}
+
+.dungeon-boss-strip-title-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.dungeon-boss-strip-title-wrap .dungeon-boss-strip-title {
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dungeon-boss-crown-ico {
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px rgba(255, 200, 120, 0.5));
+}
+
+.dungeon-boss-strip-title-wrap--boss .dungeon-boss-strip-title {
+  color: #ffe8c8;
+}
+
+.dungeon-duel-side--enemy .dungeon-boss-strip-readout {
+  text-align: right;
 }
 
 .dungeon-hud-mini-row {
@@ -418,14 +1362,253 @@ body {
 
 .dungeon-active-meta {
   margin: 8px 0 0;
-  padding: 8px 10px;
+  padding: 10px 12px;
   font-size: 0.78rem;
   line-height: 1.45;
   white-space: pre-line;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px solid rgba(124, 156, 255, 0.15);
-  color: var(--muted);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(20, 28, 44, 0.78), rgba(10, 14, 24, 0.9));
+  border: 1px solid rgba(90, 110, 150, 0.34);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: rgba(198, 210, 236, 0.9);
+}
+
+.dungeon-active-meta--combat {
+  border-left: 1px solid rgba(130, 175, 255, 0.35);
+  background:
+    linear-gradient(90deg, rgba(44, 72, 126, 0.22), rgba(10, 14, 24, 0.55)),
+    linear-gradient(145deg, rgba(20, 28, 44, 0.78), rgba(10, 14, 24, 0.9));
+  border-color: rgba(118, 152, 215, 0.38);
+  color: rgba(212, 224, 245, 0.96);
+}
+
+.dungeon-active-meta--inter {
+  border-left: 3px solid rgba(210, 175, 120, 0.5);
+  padding-left: 12px;
+  background: linear-gradient(90deg, rgba(90, 65, 38, 0.22), rgba(0, 0, 0, 0.2));
+  border-color: rgba(160, 140, 100, 0.22);
+  color: rgba(210, 200, 185, 0.9);
+}
+
+.dungeon-active-meta--brief {
+  display: none;
+}
+
+/* 机制说明在战场外，避免与中央特效/飘字叠在一起 */
+.dungeon-duel-tagline-outside .dungeon-duel-tagline-compact {
+  display: none;
+}
+
+/* 幻域·阵线对决：手机竖屏 — 纵向信息优先级、可读战报、加大触控与条带高度 */
+@media (max-width: 640px) {
+  .hub-page-scroll {
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+  }
+
+  .dungeon-strip-panel {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .dungeon-strip-panel.dungeon-panel--live-fight {
+    --dungeon-viewport-h: min(48vh, 440px);
+  }
+
+  .dungeon-map-stage {
+    max-width: none;
+  }
+
+  .dungeon-map-wrap {
+    padding: 8px;
+  }
+
+  .dungeon-map.dungeon-duel-stage {
+    aspect-ratio: 10 / 15;
+    max-height: min(58vh, 520px);
+    min-height: 280px;
+  }
+
+  .dungeon-duel-vs-bar {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 44px 6px 2px 6px;
+    max-height: none;
+  }
+
+  .dungeon-duel-side {
+    max-width: calc(50% - 28px);
+    padding: 6px 8px;
+  }
+
+  .dungeon-duel-side-tag {
+    font-size: 0.65rem;
+    margin-bottom: 3px;
+  }
+
+  .dungeon-hud-mini-row {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(210, 218, 240, 0.95);
+  }
+
+  .progress-track.hud-mini {
+    height: 7px;
+  }
+
+  .dungeon-duel-vs-mid {
+    margin-top: 8px;
+    align-self: center;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 4px;
+    padding: 0;
+  }
+
+  .dungeon-duel-elem-pills {
+    display: none;
+  }
+
+  .duel-elem-pill {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+  }
+
+  .dungeon-duel-elem-ico {
+    width: 26px;
+    height: 26px;
+  }
+
+  .dungeon-duel-center {
+    top: 58%;
+  }
+
+  .dungeon-duel-fx-core {
+    top: 58%;
+  }
+
+  .dungeon-duel-stage .dungeon-duel-engage-ring {
+    width: 108px;
+    height: 108px;
+    margin: -54px 0 0 -54px;
+  }
+
+  .dungeon-duel-stage .fx-aoe-ring {
+    width: 92px;
+    height: 92px;
+    margin: -46px 0 0 -46px;
+  }
+
+  .dungeon-duel-deco {
+    width: 72px !important;
+    height: auto !important;
+  }
+
+  .dungeon-duel-tagline-outside .dungeon-duel-tagline-full {
+    display: none;
+  }
+
+  .dungeon-duel-tagline-outside .dungeon-duel-tagline-compact {
+    display: block;
+    max-width: none;
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .dungeon-duel-momentum {
+    display: none;
+  }
+
+  .duel-mom-pill {
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    min-height: 36px;
+    box-sizing: border-box;
+    align-items: center;
+    display: inline-flex;
+  }
+
+  .dungeon-duel-dodge-chip {
+    display: none;
+  }
+
+  .dungeon-duel-gauge-row {
+    bottom: 2%;
+    width: 94%;
+    gap: 6px;
+  }
+
+  .dungeon-duel-gauge-lbl {
+    font-size: 0.82rem;
+    min-width: 3em;
+  }
+
+  .progress-track.duel-gauge {
+    height: 12px;
+  }
+
+  .dungeon-map-leave-btn {
+    left: 6px;
+    top: 6px;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 0.82rem;
+    padding: 6px 12px;
+  }
+
+  .dungeon-duel-wave-pill {
+    font-size: 0.78rem;
+    padding: 5px 12px 5px 9px;
+  }
+
+  .dungeon-active-meta--detail.dungeon-active-meta--combat {
+    display: none !important;
+  }
+
+  .dungeon-active-meta--brief.dungeon-active-meta--combat {
+    display: block !important;
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    font-weight: 500;
+    color: rgba(210, 218, 240, 0.95);
+  }
+
+  .dungeon-foot-bar-inner {
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .dungeon-foot-chip {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+
+  .dungeon-affix-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .dungeon-panel-title-cluster {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .dungeon-panel-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .dungeon-battle-readiness {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .dungeon-map-help-btn {
@@ -465,6 +1648,10 @@ body {
 .dungeon-foot-bar {
   margin-top: 12px;
   padding: 0 2px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
 .dungeon-foot-bar-inner {
@@ -473,23 +1660,30 @@ body {
   justify-content: center;
   align-items: stretch;
   gap: 8px;
-  max-width: 520px;
-  margin: 0 auto;
+  width: min(100%, 560px);
+  max-width: 560px;
+  margin: 0;
 }
 
 .dungeon-foot-timer {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: baseline;
   gap: 6px 10px;
-  margin-top: 8px;
   padding: 0 4px;
+  width: min(100%, 560px);
   max-width: 560px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0;
   text-align: center;
   line-height: 1.45;
+}
+
+.dungeon-foot-timer-ico {
+  flex-shrink: 0;
+  display: block;
+  opacity: 0.82;
+  filter: drop-shadow(0 0 4px rgba(130, 170, 255, 0.35));
 }
 
 .dungeon-foot-timer-sep {
@@ -498,9 +1692,10 @@ body {
 }
 
 .dungeon-foot-timer-hint {
-  width: 100%;
+  width: auto;
   opacity: 0.75;
   font-size: 0.72rem;
+  white-space: nowrap;
 }
 
 .dungeon-foot-chip {
@@ -753,6 +1948,28 @@ body {
   opacity: 0.9;
 }
 
+.dungeon-idle-preview-map--mist .dungeon-idle-preview-grid {
+  background-image:
+    radial-gradient(ellipse 72% 58% at 50% 44%, rgba(70, 120, 210, 0.14), transparent 58%),
+    var(--dungeon-idle-mist, none),
+    linear-gradient(180deg, rgba(16, 20, 32, 0.95), rgba(8, 10, 16, 0.98)),
+    repeating-linear-gradient(0deg, transparent, transparent 11px, rgba(50, 70, 100, 0.12) 12px),
+    repeating-linear-gradient(90deg, transparent, transparent 11px, rgba(50, 70, 100, 0.12) 12px);
+  background-size:
+    100% 100%,
+    min(260px, 88%) auto,
+    100% 100%,
+    auto,
+    auto;
+  background-position:
+    center,
+    center 42%,
+    0 0,
+    0 0,
+    0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat;
+}
+
 .dungeon-idle-stats {
   margin: 0 0 8px;
   font-size: 0.9rem;
@@ -835,6 +2052,14 @@ body {
 .app-nav-item:disabled {
   opacity: 0.38;
   cursor: not-allowed;
+}
+
+/* 幻域：主循环入口，在主导航中略作强调（与选中态可叠加） */
+.app-nav-item.app-nav-item--battle.active:not(:disabled) {
+  background: linear-gradient(165deg, rgba(24, 36, 62, 0.35), rgba(12, 16, 26, 0.2));
+  box-shadow:
+    inset 0 0 0 1px rgba(100, 140, 220, 0.22),
+    0 2px 12px rgba(40, 80, 160, 0.12);
 }
 
 .app-nav-item.tutorial-pulse {
@@ -1061,6 +2286,17 @@ h1 {
 
 .res-chip-essence .res-delta-ess {
   color: #b8c8ff;
+}
+
+/* 筑灵髓：历练副本货币（与唤灵髓区分） */
+.res-chip-zhuling {
+  border-color: rgba(80, 200, 190, 0.35);
+  background: linear-gradient(145deg, rgba(18, 42, 48, 0.92), rgba(12, 28, 40, 0.88));
+}
+
+.res-chip-zhuling .res-delta-zhuling {
+  color: #7ee0d4;
+  letter-spacing: 0.04em;
 }
 
 .vein-hint-row {
@@ -2087,6 +3323,12 @@ h1 {
   padding: 0.25rem 0;
 }
 
+.game-lore-summary-icon {
+  vertical-align: -0.22em;
+  margin-right: 6px;
+  opacity: 0.95;
+}
+
 .game-lore-list {
   margin: 0.4rem 0 0.5rem 1.1rem;
   padding: 0;
@@ -2116,6 +3358,12 @@ h1 {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
   margin-top: 8px;
+}
+
+.vein-gm-deco {
+  vertical-align: -0.15em;
+  margin-right: 6px;
+  opacity: 0.92;
 }
 
 .vein-card {
@@ -2201,6 +3449,20 @@ h1 {
   background: var(--bg2);
 }
 
+.ach-item-main {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.ach-deco-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.92;
+}
+
 .ach-item.done {
   opacity: 0.65;
 }
@@ -2235,12 +3497,72 @@ h1 {
   padding: 10px 14px;
 }
 
+.toast.toast-dungeon-victory {
+  border-color: rgba(232, 197, 71, 0.55);
+  background: linear-gradient(165deg, rgba(32, 28, 18, 0.97), rgba(16, 14, 22, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(255, 210, 120, 0.12),
+    0 10px 36px rgba(0, 0, 0, 0.5);
+}
+
+.toast.toast-dungeon-victory .toast-msg {
+  white-space: pre-line;
+  line-height: 1.5;
+  color: #f2e6c8;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.toast.toast-dungeon-victory .toast-progress-bar {
+  background: linear-gradient(90deg, rgba(200, 140, 60, 0.45), rgba(255, 220, 140, 0.95));
+}
+
 .toast.toast-currency-hint .toast-msg {
   white-space: pre-line;
   max-width: min(92vw, 400px);
   line-height: 1.5;
   font-size: 0.86rem;
   color: #d4dcf0;
+}
+
+.toast.toast-offline {
+  border-color: rgba(120, 170, 255, 0.5);
+  background: linear-gradient(160deg, rgba(20, 34, 62, 0.96), rgba(12, 18, 34, 0.98));
+}
+
+.toast-msg-offline {
+  min-width: min(88vw, 300px);
+}
+
+.toast-offline-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e5edff;
+  margin-bottom: 6px;
+}
+
+.toast-offline-badge {
+  opacity: 0.95;
+}
+
+.toast-offline-line {
+  color: #c9d8f8;
+  line-height: 1.45;
+}
+
+.toast-offline-shine {
+  display: block;
+  margin: 7px 0 6px;
+  width: 100%;
+  max-width: 220px;
+  opacity: 0.82;
+}
+
+.toast-offline-gain {
+  color: #f5d28d;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
 .toast-progress {
@@ -2368,6 +3690,510 @@ h1 {
   margin-top: 8px;
 }
 
+.btn-save-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-save-download .btn-save-download-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.save-tools-panel .save-slots-block {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.04);
+}
+
+.save-tools-panel .save-slots-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.save-tools-panel .save-slots-label-head-ico {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.88;
+}
+
+.save-tools-panel .save-slots-head-ico {
+  flex-shrink: 0;
+  opacity: 0.94;
+}
+
+.save-tools-panel .save-slots-heading {
+  margin: 0;
+  font-size: 1rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.save-tools-panel .save-slots-hint {
+  margin: 0 0 10px;
+}
+
+.save-tools-panel .save-slots-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.save-tools-panel .save-slot-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.save-tools-panel .save-slot-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.save-tools-panel .save-slot-main {
+  flex: 1;
+  min-width: min(100%, 200px);
+}
+
+.save-tools-panel .save-slot-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 4px;
+}
+
+.save-tools-panel .save-slot-title {
+  font-size: 0.95rem;
+  margin-right: 0;
+}
+
+.save-tools-panel .save-slot-badge {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: middle;
+  color: var(--bg0);
+  background: linear-gradient(90deg, #6b9cff, #4a78c8);
+}
+
+.save-tools-panel .save-slot-meta {
+  display: block;
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 0.84rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.save-tools-panel .save-slot-label-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.save-tools-panel .save-slot-label-field {
+  font-size: 0.82rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.save-tools-panel .save-slot-label-input {
+  flex: 1;
+  min-width: min(100%, 160px);
+  max-width: 100%;
+  padding: 8px 10px;
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg0);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.save-tools-panel .save-slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.save-tools-panel .save-slot-btn {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+}
+
+.ui-prefs-panel .ui-prefs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ui-prefs-panel .ui-pref-row {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.04);
+}
+
+.ui-prefs-panel .ui-pref-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ui-prefs-panel .ui-pref-input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #6b9cff;
+}
+
+.ui-prefs-panel .ui-pref-title {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.ui-prefs-panel .ui-pref-desc {
+  margin: 6px 0 0 28px;
+}
+
+.ui-prefs-panel .ui-pref-audio-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ui-prefs-panel .ui-pref-inline-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.ui-prefs-panel .ui-pref-section-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.ui-prefs-panel .ui-pref-volume-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 10px 28px;
+}
+
+.ui-prefs-panel .ui-pref-vol-label {
+  min-width: 3.5em;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.ui-prefs-panel .ui-pref-volume-range {
+  flex: 1;
+  min-width: 120px;
+  accent-color: #6b9cff;
+}
+
+.ui-prefs-panel .ui-pref-vol-readout {
+  min-width: 3.2em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.ui-prefs-panel .ui-pref-audio-actions {
+  margin: 0 0 4px 28px;
+}
+
+.ui-prefs-panel .ui-pref-keyboard-cta {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ui-prefs-panel .ui-pref-keyboard-cta .hint {
+  margin: 8px 0 0;
+}
+
+.ui-prefs-panel .ui-pref-about-cta {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ui-prefs-panel .ui-pref-about-cta .hint {
+  margin: 8px 0 0;
+}
+
+.about-game-dialog {
+  width: min(100%, 440px);
+  max-height: min(88vh, 560px);
+}
+
+.about-game-body {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.about-game-lead {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+}
+
+.about-game-meta {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.06);
+  font-size: 0.88rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  align-items: baseline;
+}
+
+.about-game-meta dt {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.about-game-meta dd {
+  margin: 0;
+  font-family: ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-game-tech {
+  margin: 0;
+}
+
+.ui-prefs-panel .kbd-inline {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.82em;
+  font-family: ui-monospace, monospace;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.08);
+}
+
+.keyboard-help-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.keyboard-help-layer .keyboard-help-backdrop {
+  pointer-events: auto;
+}
+
+.keyboard-help-backdrop {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: rgba(6, 10, 22, 0.55);
+}
+
+.keyboard-help-dialog {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+  max-height: min(88vh, 520px);
+  overflow: auto;
+  padding: 16px 18px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg1);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.keyboard-help-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.keyboard-help-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.keyboard-help-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.1rem;
+  font-family: var(--font-display);
+}
+
+.keyboard-help-close {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 10px;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.keyboard-help-list {
+  margin: 0;
+  padding-left: 1.1em;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.keyboard-help-list li {
+  margin-bottom: 8px;
+}
+
+.keyboard-help-note {
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.kbd-pill {
+  display: inline-block;
+  min-width: 1.65em;
+  padding: 2px 6px;
+  margin: 0 2px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.82em;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.12);
+}
+
+html.ui-reduce-motion .app-visual-aurora,
+html.ui-reduce-motion .app-visual-bg {
+  animation: none !important;
+}
+
+html.ui-reduce-motion *,
+html.ui-reduce-motion *::before,
+html.ui-reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+.data-overview-panel .data-overview-export-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.05);
+}
+
+.data-overview-panel .data-overview-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.data-overview-panel .data-overview-copy-btn,
+.data-overview-panel .data-overview-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.data-overview-panel .data-overview-copy-ico,
+.data-overview-panel .data-overview-download-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.data-overview-panel .data-overview-export-hint {
+  flex: 1;
+  min-width: min(100%, 200px);
+  margin: 0;
+}
+
+.data-overview-panel .data-overview-section {
+  margin-bottom: 18px;
+}
+
+.data-overview-panel .data-overview-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.data-overview-panel h3 {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  font-family: var(--font-display);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.data-overview-panel .data-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  gap: 10px;
+}
+
+.data-overview-panel .data-overview-cell {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(124, 156, 255, 0.05);
+}
+
+.data-overview-panel .data-overview-cell .d-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.data-overview-panel .data-overview-cell .d-val {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--text);
+  word-break: break-word;
+}
+
 .vigor-line {
   font-size: 0.86rem;
   color: var(--muted);
@@ -2438,6 +4264,7 @@ h1 {
   bottom: calc(54px + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
+  pointer-events: none;
   z-index: 70;
   padding: 12px 16px;
   text-align: center;
@@ -2838,6 +4665,16 @@ h1 {
   box-shadow: 0 0 10px rgba(80, 200, 140, 0.35);
 }
 
+#dungeon-pl-hp-wrap.duel-bar-low .progress-fill.player {
+  background: linear-gradient(90deg, #4a1820 0%, #b03038 48%, #e09070 100%);
+  box-shadow: 0 0 12px rgba(255, 90, 70, 0.38);
+}
+
+#dungeon-stamina-wrap.duel-stamina-low .progress-fill.stamina {
+  background: linear-gradient(90deg, #4a3820 0%, #8a6020 50%, #c89840 100%);
+  box-shadow: 0 0 10px rgba(200, 130, 50, 0.42);
+}
+
 .dungeon-inter-wave {
   margin-top: 12px;
 }
@@ -2879,6 +4716,62 @@ h1 {
   box-shadow: 0 0 0 1px rgba(124, 156, 255, 0.2);
 }
 
+.gear-inv-sort-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 130, 180, 0.28);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.gear-inv-sort-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.gear-inv-sort-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.gear-inv-sort-pinned {
+  flex-shrink: 0;
+  margin-left: 2px;
+  opacity: 0.88;
+}
+
+.gear-inv-sort-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.gear-inv-sort-btn {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+}
+
+.gear-inv-sort-btn.is-active {
+  border-color: rgba(124, 156, 255, 0.55);
+  background: rgba(80, 100, 160, 0.22);
+}
+
+.gear-inv-sort-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
 .gear-inv {
   display: flex;
   flex-direction: column;
@@ -2904,11 +4797,52 @@ h1 {
   outline: 1px dashed rgba(232, 197, 71, 0.65);
 }
 
+.gear-row.is-locked {
+  border-color: rgba(200, 170, 100, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(180, 150, 80, 0.12);
+}
+
+.gear-locked-tag {
+  color: #e8c878;
+  font-weight: 600;
+}
+
+.gear-lock-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.gear-lock-toggle-btn .gear-lock-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.gear-lock-toggle-btn.is-locked {
+  border-color: rgba(200, 170, 100, 0.45);
+}
+
 .gear-actions {
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: stretch;
+}
+
+.gear-upgrade-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.gear-upgrade-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.gear-upgrade-btn-down .gear-upgrade-ico {
+  opacity: 0.86;
 }
 
 .gear-actions .btn.small {
@@ -3423,6 +5357,24 @@ h1 {
   color: var(--muted);
 }
 
+.gacha-reveal-card-replace-tag {
+  margin-top: 4px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.gacha-reveal-card-replace-tag.is-upgrade {
+  color: #9be7b1;
+}
+
+.gacha-reveal-card-replace-tag.is-even {
+  color: #d1d7e8;
+}
+
+.gacha-reveal-card-replace-tag.is-downgrade {
+  color: #f2b2a2;
+}
+
 .gacha-reveal-bonus {
   font-size: 0.9rem;
   color: #9ed5b8;
@@ -3768,6 +5720,281 @@ h1 {
   -webkit-tap-highlight-color: rgba(124, 156, 255, 0.15);
 }
 
+/* 幻域·阵线对决：无走位，中央意象 + 双读条 */
+.dungeon-map.dungeon-duel-stage {
+  cursor: default;
+  aspect-ratio: 16 / 9;
+  max-height: min(48vh, 420px);
+}
+
+.dungeon-duel-center {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  pointer-events: none;
+  text-align: center;
+}
+
+.dungeon-duel-deco {
+  filter: drop-shadow(0 4px 18px rgba(100, 160, 255, 0.35));
+  opacity: 0.92;
+}
+
+.dungeon-duel-tagline-outside {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(6, 10, 18, 0.92);
+  border: 1px solid rgba(72, 92, 128, 0.5);
+  color: rgba(185, 200, 230, 0.95);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dungeon-duel-momentum {
+  position: absolute;
+  left: 50%;
+  bottom: 27.5%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: min(96%, 420px);
+  pointer-events: none;
+}
+
+.dungeon-duel-counter-window-badge {
+  display: block;
+  height: auto;
+  opacity: 0.46;
+  transform: translateY(1px) scale(0.96);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  filter: drop-shadow(0 0 8px rgba(133, 206, 255, 0.24));
+}
+
+.dungeon-duel-counter-window-badge.is-on {
+  opacity: 0.98;
+  transform: translateY(0) scale(1);
+}
+
+.dungeon-duel-combo-chain-deco {
+  display: block;
+  width: 120px;
+  max-width: 80%;
+  height: auto;
+  opacity: 0;
+  transform: translateY(2px) scale(0.96);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  filter: drop-shadow(0 0 8px rgba(255, 170, 108, 0.35));
+}
+
+.dungeon-duel-combo-chain-deco.is-active {
+  opacity: 0.95;
+  transform: translateY(0) scale(1);
+}
+
+.duel-mom-pill {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(12, 18, 32, 0.72);
+  border: 1px solid rgba(120, 160, 255, 0.28);
+  color: rgba(210, 220, 245, 0.92);
+}
+
+.duel-mom-pill.duel-weak-pill {
+  border-color: rgba(255, 200, 120, 0.55);
+  color: #ffd89a;
+  box-shadow: 0 0 14px rgba(255, 180, 90, 0.22);
+}
+
+.dungeon-map.dungeon-duel-stage.duel-weak-active {
+  outline: 1px solid rgba(255, 190, 120, 0.42);
+  outline-offset: -1px;
+}
+
+.dungeon-duel-gauge-row {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  transform: translateX(-50%);
+  width: min(92%, 440px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dungeon-duel-gauge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dungeon-duel-gauge-lbl {
+  flex: 0 0 auto;
+  min-width: 2.8em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: rgba(200, 210, 230, 0.9);
+  letter-spacing: 0.12em;
+}
+
+.dungeon-duel-gauge-ico {
+  flex-shrink: 0;
+  display: block;
+  opacity: 0.92;
+  filter: drop-shadow(0 0 4px rgba(100, 160, 255, 0.35));
+}
+
+.progress-track.duel-gauge {
+  flex: 1;
+  height: 10px;
+}
+
+.progress-track.duel-gauge.duel-gauge-primed {
+  box-shadow: 0 0 10px rgba(255, 200, 120, 0.35);
+  border-radius: 4px;
+}
+
+.progress-track.duel-gauge.duel-gauge-primed .progress-fill.player {
+  box-shadow: 0 0 12px rgba(255, 210, 140, 0.55);
+}
+
+.progress-track.duel-gauge.duel-gauge-windup {
+  box-shadow: 0 0 10px rgba(255, 120, 90, 0.32);
+  border-radius: 4px;
+}
+
+.progress-track.duel-gauge.duel-gauge-windup .progress-fill.enemy {
+  box-shadow: 0 0 12px rgba(255, 100, 80, 0.48);
+}
+
+.dungeon-map.dungeon-map--vortex {
+  background: radial-gradient(ellipse 88% 78% at 48% 36%, #1a2438 0%, #070910 76%);
+  box-shadow:
+    inset 0 0 52px rgba(40, 70, 140, 0.22),
+    0 0 0 1px rgba(130, 170, 255, 0.12);
+}
+
+.dungeon-vortex-leyline {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  box-sizing: border-box;
+  opacity: 0.9;
+}
+
+.dungeon-vortex-leyline.fury {
+  border: 2px dashed rgba(255, 190, 120, 0.92);
+  box-shadow:
+    0 0 20px rgba(255, 150, 70, 0.38),
+    inset 0 0 22px rgba(255, 110, 40, 0.12);
+}
+
+.dungeon-vortex-leyline.flow {
+  border: 2px dashed rgba(130, 210, 255, 0.9);
+  box-shadow:
+    0 0 20px rgba(80, 170, 255, 0.34),
+    inset 0 0 22px rgba(60, 140, 255, 0.1);
+}
+
+.dungeon-vortex-hud {
+  position: absolute;
+  right: 8px;
+  top: 44px;
+  z-index: 13;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(6, 10, 18, 0.78);
+  border: 1px solid rgba(100, 140, 200, 0.4);
+  font-size: 0.76rem;
+  color: #d0dff5;
+  pointer-events: none;
+  max-width: min(42%, 200px);
+  text-align: right;
+}
+
+.dungeon-vortex-hud-line strong {
+  color: #ffd89a;
+  font-weight: 600;
+}
+
+.dungeon-realm-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  margin: 10px 0 12px;
+}
+
+.dungeon-realm-pick-label {
+  width: 100%;
+  font-size: 0.84rem;
+  color: rgba(200, 210, 230, 0.92);
+}
+
+.dungeon-realm-option {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(70, 90, 120, 0.55);
+  background: rgba(12, 16, 26, 0.62);
+  cursor: pointer;
+  min-width: 128px;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+
+.dungeon-realm-option:has(input:checked) {
+  border-color: rgba(120, 170, 255, 0.68);
+  background: rgba(22, 34, 56, 0.78);
+}
+
+.dungeon-realm-option--classic,
+.dungeon-realm-option--vortex {
+  padding-left: 40px;
+}
+
+.dungeon-realm-option-ico {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.95;
+}
+
+.dungeon-realm-option input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
 .dungeon-map-frame > .dungeon-map-wrap > .dungeon-map {
   flex: 1 1 auto;
   min-height: 0;
@@ -3862,11 +6089,29 @@ h1 {
 }
 
 .dungeon-float-txt.dmg-out {
-  color: #ffd4a8;
+  color: #e8d8c2;
+  opacity: 0.88;
+}
+
+.dungeon-float-txt.dmg-out-crit {
+  color: #ffe8b8;
+  font-size: clamp(0.84rem, 2.35vw, 1.08rem);
+  text-shadow:
+    0 0 10px rgba(255, 210, 120, 0.55),
+    0 0 16px rgba(255, 128, 40, 0.32),
+    0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 .dungeon-float-txt.dmg-in {
   color: #ff6b6b;
+}
+
+.dungeon-float-txt.dmg-special {
+  color: #ffd7a8;
+  text-shadow:
+    0 0 10px rgba(255, 200, 120, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.65);
+  font-weight: 600;
 }
 
 .dungeon-float-txt.dmg-miss {
@@ -3874,6 +6119,48 @@ h1 {
   font-size: clamp(0.68rem, 1.85vw, 0.85rem);
   font-weight: 600;
   opacity: 0.95;
+}
+
+.dungeon-map.dungeon-duel-stage .dungeon-float-txt {
+  font-size: clamp(0.78rem, 2.2vw, 1.02rem);
+}
+
+.dungeon-map.dungeon-duel-stage .dungeon-float-txt.dmg-out {
+  color: #f1e0c9;
+  opacity: 0.84;
+  text-shadow:
+    0 0 6px rgba(255, 200, 120, 0.32),
+    0 0 12px rgba(255, 140, 60, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.92);
+}
+
+.dungeon-map.dungeon-duel-stage .dungeon-float-txt.dmg-out-crit {
+  color: #fff0cc;
+}
+
+.dungeon-map.dungeon-duel-stage .dungeon-float-txt.dmg-in {
+  color: #ff8a8a;
+  text-shadow:
+    0 0 10px rgba(255, 80, 80, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.dungeon-map.dungeon-duel-stage .dungeon-float-txt.dmg-special {
+  font-size: clamp(0.74rem, 2.1vw, 0.98rem);
+  color: #fff0d0;
+  text-shadow:
+    0 0 12px rgba(255, 220, 140, 0.65),
+    0 0 20px rgba(255, 160, 80, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+.dungeon-float-txt[data-float-kind="weak"] {
+  font-size: clamp(0.86rem, 2.4vw, 1.12rem);
+  color: #ffe9b9;
+}
+
+.dungeon-float-txt[data-float-kind="crit"] {
+  font-weight: 800;
 }
 
 @keyframes dungeon-float-rise {
@@ -4221,6 +6508,13 @@ h1 {
   .fx-aoe-ring::after {
     animation-duration: 72s;
   }
+
+  .dungeon-map.duel-fx-hit-deco-on .dungeon-duel-fx-hit-deco,
+  .dungeon-map.duel-fx-crit-deco-on .dungeon-duel-fx-crit-deco,
+  .dungeon-map.duel-fx-guard-deco-on .dungeon-duel-fx-guard-deco,
+  .dungeon-map.duel-fx-weakness-ping-on .dungeon-duel-fx-guard-deco {
+    animation-duration: 0.01ms;
+  }
 }
 
 .fx-aoe-ring {
@@ -4250,6 +6544,50 @@ h1 {
 
 .dungeon-map.is-aoe .fx-aoe-ring {
   opacity: 1;
+}
+
+.dungeon-duel-fx-deco {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.88);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity, transform;
+  filter: drop-shadow(0 0 8px rgba(255, 220, 190, 0.28));
+}
+
+.dungeon-duel-fx-hit-deco {
+  width: 160px;
+  height: 160px;
+}
+
+.dungeon-duel-fx-crit-deco {
+  width: 184px;
+  height: 184px;
+  mix-blend-mode: screen;
+}
+
+.dungeon-duel-fx-guard-deco {
+  width: 168px;
+  height: 168px;
+}
+
+.dungeon-map.duel-fx-hit-deco-on .dungeon-duel-fx-hit-deco {
+  animation: duel-fx-hit-deco 0.18s ease-out;
+}
+
+.dungeon-map.duel-fx-crit-deco-on .dungeon-duel-fx-crit-deco {
+  animation: duel-fx-crit-deco 0.26s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.dungeon-map.duel-fx-guard-deco-on .dungeon-duel-fx-guard-deco {
+  animation: duel-fx-guard-deco 0.32s ease-out;
+}
+
+.dungeon-map.duel-fx-weakness-ping-on .dungeon-duel-fx-guard-deco {
+  animation: duel-fx-guard-deco 0.36s ease-out;
+  filter: drop-shadow(0 0 10px rgba(142, 220, 255, 0.5));
 }
 
 .fx-single-slash {
@@ -4290,6 +6628,51 @@ h1 {
   }
 }
 
+@keyframes duel-fx-hit-deco {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.78);
+  }
+  40% {
+    opacity: 0.82;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+@keyframes duel-fx-crit-deco {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.7) rotate(-8deg);
+  }
+  35% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.06) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.14) rotate(6deg);
+  }
+}
+
+@keyframes duel-fx-guard-deco {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  35% {
+    opacity: 0.86;
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+}
+
 @keyframes dungeon-slash-spin {
   from {
     transform: rotate(0deg);
@@ -4326,6 +6709,25 @@ h1 {
   background: rgba(0, 0, 0, 0.25);
   color: var(--text);
   font-family: var(--font-mono);
+}
+
+.btn-dungeon-enter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-dungeon-enter-ico {
+  flex-shrink: 0;
+  display: block;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 4px rgba(255, 230, 200, 0.35));
+}
+
+.btn-dungeon-enter:disabled .btn-dungeon-enter-ico {
+  opacity: 0.45;
+  filter: none;
 }
 
 .map-legend {
@@ -4876,6 +7278,8 @@ header h1 {
 
 .gear-slot-icon {
   opacity: 0.9;
+  background: transparent;
+  mix-blend-mode: normal;
 }
 
 .gacha-reveal-card.gear-reveal {
@@ -5129,6 +7533,67 @@ header h1 {
   filter: drop-shadow(0 2px 14px rgba(124, 156, 255, 0.25));
 }
 
+/* 历练页底部：聚灵阵紧凑版（抽卡按钮贴近装备区） */
+.gacha-panel-root--battle-embed {
+  margin-top: 10px;
+  padding-top: 10px;
+  padding-bottom: 12px;
+}
+
+.gacha-panel-root--battle-embed::before {
+  animation-duration: 48s;
+  opacity: 0.65;
+}
+
+.gacha-panel-header--embed {
+  margin-bottom: 6px;
+  padding: 6px 0 10px;
+  border-bottom: 1px solid rgba(124, 156, 255, 0.1);
+}
+
+.gacha-panel-header-inner--embed {
+  padding-right: 0;
+}
+
+.gacha-panel-title--embed {
+  font-size: clamp(1.05rem, 3.4vw, 1.25rem);
+}
+
+.gacha-lead--embed {
+  margin-top: 6px !important;
+  margin-bottom: 0 !important;
+  padding: 6px 10px !important;
+  font-size: 0.78rem !important;
+}
+
+.resonance-panel--embed .resonance-head-row .resonance-core-img {
+  width: 36px;
+  height: 36px;
+}
+
+.resonance-panel--embed {
+  padding-bottom: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.resonance-panel--embed .resonance-hint-tight {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pity-info--embed {
+  font-size: 0.78rem !important;
+  line-height: 1.45 !important;
+  margin: 8px 0 !important;
+}
+
+.gacha-hint-embed {
+  font-size: 0.78rem !important;
+  margin: 6px 0 !important;
+}
+
 .gacha-panel-root .gacha-lead {
   margin-top: 12px;
   margin-bottom: 0;
@@ -5314,6 +7779,40 @@ header h1 {
   box-shadow: 0 0 14px rgba(255, 200, 100, 0.35);
 }
 
+.pity-meter-fill--gear {
+  background: linear-gradient(90deg, #1e4a66, #3a8ec2, #a8e6ff);
+  background-size: 200% 100%;
+  animation: pity-fill-flow 3s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(100, 190, 255, 0.35);
+}
+
+.pity-meter-block--gear .pity-meter-track {
+  border-color: rgba(120, 200, 255, 0.2);
+}
+
+.gear-forge-tier-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(22, 48, 68, 0.42);
+  border: 1px solid rgba(120, 200, 255, 0.14);
+}
+
+.gear-forge-tier-deco {
+  flex-shrink: 0;
+  margin-top: 2px;
+  opacity: 0.95;
+}
+
+p.gear-forge-tier-hint {
+  margin: 0;
+  line-height: 1.45;
+  font-size: 0.92rem;
+}
+
 @keyframes pity-fill-flow {
   0%,
   100% {
@@ -5380,7 +7879,8 @@ header h1 {
   .resonance-core-img {
     animation: none;
   }
-  .pity-meter-fill {
+  .pity-meter-fill,
+  .pity-meter-fill--gear {
     animation: none;
   }
   .progress-fill::after {
@@ -5562,4 +8062,871 @@ header h1 {
     transform: none;
     opacity: 1;
   }
+}
+
+/* —— 灵府 · 灵田 —— */
+.spirit-garden-panel .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.spirit-garden-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.spirit-garden-plot {
+  padding: 12px 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(90, 160, 120, 0.35);
+  background: linear-gradient(165deg, rgba(18, 32, 28, 0.92), rgba(10, 16, 14, 0.98));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.spirit-garden-plot-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  margin-bottom: 8px;
+}
+
+.spirit-garden-plot-empty {
+  opacity: 0.85;
+}
+
+.spirit-garden-plot .garden-plot-soil {
+  opacity: 0.55;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+}
+
+.spirit-garden-plot .garden-crop-art {
+  filter: drop-shadow(0 2px 8px rgba(40, 120, 80, 0.35));
+}
+
+.garden-crop-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: #d8f5e4;
+  letter-spacing: 0.06em;
+}
+
+.garden-grow-bar-wrap {
+  margin: 8px 0 6px;
+}
+
+.garden-grow-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid rgba(80, 140, 100, 0.35);
+}
+
+.garden-grow-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3fa87a, #8fe8b8);
+  transition: width 0.35s ease;
+}
+
+.spirit-garden-plant-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.garden-crop-select {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(80, 120, 100, 0.5);
+  background: rgba(8, 14, 12, 0.9);
+  color: #d0e8dc;
+  font-size: 0.82rem;
+}
+
+.spirit-garden-plot .garden-eta-line {
+  margin-bottom: 8px;
+}
+
+/* —— 养成 · 周常悬赏 —— */
+.bounty-panel .bounty-week-line {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bounty-week-focus-ico {
+  flex-shrink: 0;
+  opacity: 0.94;
+}
+
+.bounty-week-focus-ribbon-ico {
+  flex-shrink: 0;
+  opacity: 0.93;
+}
+
+.bounty-last-day-alert-badge {
+  flex-shrink: 0;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 6px rgba(255, 165, 110, 0.36));
+}
+
+.bounty-feedback-row {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bounty-feedback-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 18, 26, 0.7);
+  color: #bfc6d9;
+  font-size: 0.76rem;
+}
+
+.bounty-feedback-pill.is-ready {
+  border-color: rgba(126, 199, 151, 0.65);
+  background: rgba(41, 91, 58, 0.35);
+  color: #d3f7dd;
+}
+
+.bounty-feedback-pill--overdue {
+  border-color: rgba(173, 136, 81, 0.45);
+  background: rgba(48, 33, 18, 0.58);
+}
+
+.bounty-feedback-pill--overdue.is-overdue {
+  border-color: rgba(224, 160, 86, 0.72);
+  background: rgba(85, 52, 22, 0.55);
+  color: #f7d4a3;
+}
+
+.bounty-feedback-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.bounty-feedback-next-step-ico {
+  opacity: 0.9;
+}
+
+.bounty-feedback-surge-ico {
+  opacity: 0.45;
+  transform: scale(0.9);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.bounty-feedback-surge-ico.is-on {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.bounty-claim-all-row {
+  margin-top: 10px;
+}
+
+.bounty-claim-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.bounty-claim-all-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.bounty-claim-all-echo-ico {
+  opacity: 0.86;
+  margin-left: -2px;
+}
+
+.bounty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.bounty-next-target {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(200, 160, 90, 0.35);
+  background: rgba(24, 18, 12, 0.75);
+  display: grid;
+  gap: 6px;
+}
+
+.bounty-next-target-kicker {
+  font-size: 0.74rem;
+  color: #b8c8ea;
+}
+
+.bounty-next-target .btn {
+  justify-self: start;
+}
+
+.bounty-card {
+  padding: 12px 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(200, 160, 90, 0.35);
+  background: linear-gradient(165deg, rgba(28, 22, 16, 0.94), rgba(12, 10, 8, 0.98));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.bounty-card.is-focus {
+  border-color: rgba(124, 156, 255, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(124, 156, 255, 0.25),
+    0 6px 22px rgba(0, 0, 0, 0.32);
+}
+
+.bounty-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.bounty-card-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.bounty-task-deco {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.bounty-card-head h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #f2e6c8;
+  letter-spacing: 0.05em;
+}
+
+.bounty-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.bounty-status.pending,
+.bounty-status.prog {
+  color: #a8b8e0;
+  background: rgba(80, 100, 160, 0.2);
+}
+.bounty-status.claimable,
+.bounty-status.done {
+  color: #b8f0c8;
+  background: rgba(60, 140, 90, 0.25);
+}
+.bounty-status.claimed {
+  color: #c0c0c0;
+  background: rgba(60, 60, 60, 0.35);
+}
+
+.bounty-go-btn {
+  margin-top: 6px;
+}
+
+.bounty-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.bounty-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid rgba(200, 160, 90, 0.25);
+}
+
+.bounty-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b8893a, #e8c88a);
+  transition: width 0.35s ease;
+}
+
+.bounty-bar-lbl {
+  font-size: 0.78rem;
+  color: #c9b898;
+  min-width: 4.5em;
+  text-align: right;
+}
+
+.bounty-reward {
+  margin: 6px 0 10px;
+}
+
+.bounty-claim-burst-fx {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  animation: bounty-claim-burst-fade 0.52s ease-out forwards;
+  filter: drop-shadow(0 0 10px rgba(255, 205, 112, 0.5));
+}
+
+.bounty-claim-burst-fx-echo {
+  animation-duration: 0.56s;
+  filter: drop-shadow(0 0 8px rgba(130, 180, 255, 0.5));
+}
+
+@keyframes bounty-claim-burst-fade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.78);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.26);
+  }
+}
+
+/* —— 幻域 · 周常词缀 —— */
+.dungeon-affix-banner {
+  display: flex;
+  position: relative;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 140, 220, 0.35);
+  background: linear-gradient(125deg, rgba(22, 32, 58, 0.92), rgba(12, 16, 28, 0.96));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+}
+
+.dungeon-panel-title-cluster {
+  align-items: flex-start;
+}
+
+.dungeon-panel-title-text h2 {
+  line-height: 1.15;
+}
+
+.dungeon-panel-subtitle {
+  margin: 2px 0 0;
+  color: #9fb0d8;
+  letter-spacing: 0.02em;
+}
+
+.dungeon-battle-readiness {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(90, 130, 200, 0.38);
+  background: linear-gradient(125deg, rgba(18, 28, 52, 0.88), rgba(10, 14, 24, 0.94));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+}
+
+.dungeon-readiness-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+  filter: drop-shadow(0 2px 8px rgba(80, 120, 255, 0.3));
+}
+
+.dungeon-readiness-body {
+  min-width: 0;
+}
+
+.dungeon-readiness-kicker {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #b8c8f0;
+  margin-bottom: 4px;
+}
+
+.dungeon-readiness-line {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.dungeon-affix-icon {
+  flex-shrink: 0;
+  opacity: 0.92;
+  filter: drop-shadow(0 2px 6px rgba(80, 120, 255, 0.25));
+}
+
+.dungeon-affix-text {
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.dungeon-affix-mode-deco {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  width: 124px;
+  height: 24px;
+  opacity: 0.86;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 4px rgba(32, 44, 90, 0.35));
+}
+
+.dungeon-affix-title {
+  display: block;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  color: #d8e4ff;
+  margin: 0 132px 4px 0;
+}
+
+.dungeon-affix-desc {
+  margin: 0;
+  color: #a8b8d8;
+}
+
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-affix-banner {
+  animation: dungeon-affix-live 2.4s ease-in-out infinite;
+  border-color: rgba(130, 175, 255, 0.48);
+}
+
+/* 战斗进行中：视觉降噪（保留核心读条与反馈，削弱装饰干扰） */
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-map-wrap {
+  padding: 6px;
+  background: rgba(10, 14, 24, 0.86);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
+}
+
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-map {
+  border-color: rgba(76, 92, 126, 0.72);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.42);
+}
+
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-duel-deco,
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-duel-counter-window-badge,
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-duel-combo-chain-deco,
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-duel-fx-deco {
+  display: none;
+}
+
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-duel-tagline-outside {
+  margin-top: 6px;
+  padding: 6px 4px 0;
+  background: transparent;
+  border: none;
+  color: rgba(170, 186, 214, 0.9);
+}
+
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-map.in-combat .dungeon-engage-ring {
+  animation: none;
+  box-shadow: none;
+  border-color: rgba(255, 195, 128, 0.32);
+}
+
+.dungeon-strip-panel.dungeon-panel--live-fight .dungeon-map.is-aoe .fx-aoe-ring {
+  opacity: 0.28;
+}
+
+@keyframes dungeon-affix-live {
+  0%,
+  100% {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+  }
+  50% {
+    box-shadow:
+      0 4px 22px rgba(0, 0, 0, 0.28),
+      0 0 24px rgba(60, 100, 200, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dungeon-strip-panel.dungeon-panel--live-fight .dungeon-affix-banner {
+    animation: none;
+  }
+}
+
+.dungeon-affix-wk {
+  margin-left: 6px;
+  opacity: 0.75;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 560px) {
+  .dungeon-affix-mode-deco {
+    width: 104px;
+    height: 20px;
+    right: 10px;
+    top: 8px;
+    opacity: 0.72;
+  }
+
+  .dungeon-affix-title {
+    margin-right: 110px;
+  }
+}
+
+/* —— 角色 · 道韵灵窍 —— */
+.dao-meridian-panel .dao-meridian-list {
+  margin: 12px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dao-meridian-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 180, 120, 0.28);
+  background: rgba(18, 16, 12, 0.55);
+}
+
+.dao-meridian-row.done {
+  border-color: rgba(100, 180, 130, 0.4);
+  opacity: 0.88;
+}
+
+.dao-meridian-row.current {
+  border-color: rgba(230, 200, 120, 0.55);
+  box-shadow: 0 0 0 1px rgba(230, 200, 120, 0.15);
+}
+
+.dao-meridian-row.locked {
+  opacity: 0.65;
+}
+
+.dao-meridian-badge {
+  flex-shrink: 0;
+  width: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  color: #d4c4a8;
+}
+
+.dao-meridian-row-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dao-meridian-row-body strong {
+  color: #f0e6d4;
+  letter-spacing: 0.04em;
+}
+
+.dao-meridian-cost {
+  margin-top: 4px;
+}
+
+.dao-meridian-actions {
+  margin-top: 4px;
+}
+
+/* —— 养成 · 唤灵通鉴 —— */
+.chronicle-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+
+.chronicle-stat-card {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 130, 200, 0.28);
+  background: rgba(14, 18, 30, 0.65);
+}
+
+.chronicle-stat-lbl {
+  display: block;
+  font-size: 0.76rem;
+  color: #9aa8c8;
+  margin-bottom: 4px;
+}
+
+.chronicle-stat-val {
+  font-size: 0.95rem;
+  color: #e8ecff;
+  letter-spacing: 0.03em;
+}
+
+.chronicle-sub-h {
+  margin-top: 4px;
+}
+
+.chronicle-sub-h--gear {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.chronicle-gear-deco {
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+
+.chronicle-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(60, 80, 120, 0.35);
+}
+
+.chronicle-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.chronicle-table thead {
+  background: rgba(30, 38, 58, 0.85);
+  color: #b8c4e8;
+}
+
+.chronicle-table th,
+.chronicle-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(50, 60, 90, 0.4);
+}
+
+.chronicle-td-time {
+  white-space: nowrap;
+  color: #9aa8c0;
+  font-size: 0.8rem;
+}
+
+.chronicle-new {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(120, 200, 160, 0.2);
+  color: #b8f0d8;
+}
+
+.chronicle-empty {
+  padding: 12px;
+}
+
+.chronicle-empty-cell {
+  padding: 14px 12px;
+  vertical-align: top;
+}
+
+.chronicle-tr.rarity-UR .chronicle-td-r {
+  color: #ffd88a;
+}
+.chronicle-tr.rarity-SSR .chronicle-td-r {
+  color: #e8b8ff;
+}
+.chronicle-tr.rarity-SR .chronicle-td-r {
+  color: #a8d4ff;
+}
+
+/* —— 养成 · 灵息日历 —— */
+.daily-login-panel .daily-login-streak-line {
+  margin-top: 6px;
+}
+
+.daily-login-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin: 12px 0 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(80, 160, 180, 0.35);
+  background: linear-gradient(165deg, rgba(12, 28, 36, 0.92), rgba(8, 16, 22, 0.98));
+}
+
+.daily-login-day {
+  flex: 1;
+  text-align: center;
+  font-size: 0.78rem;
+  padding: 6px 0;
+  border-radius: 8px;
+  color: #7a9aa8;
+  border: 1px solid transparent;
+}
+
+.daily-login-day.today {
+  color: #c8f0ff;
+  border-color: rgba(100, 200, 220, 0.55);
+  background: rgba(30, 80, 100, 0.35);
+  box-shadow: 0 0 12px rgba(80, 200, 220, 0.15);
+}
+
+.daily-login-day.today.claimed {
+  border-color: rgba(120, 220, 180, 0.45);
+  background: rgba(30, 90, 70, 0.35);
+}
+
+.daily-login-reward-card {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(70, 140, 160, 0.4);
+  background: linear-gradient(165deg, rgba(14, 32, 40, 0.94), rgba(8, 18, 24, 0.98));
+}
+
+.daily-login-reward-title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  color: #b8e8f0;
+  letter-spacing: 0.04em;
+}
+
+/* —— 养成 · 天机匣 —— */
+.celestial-stash-panel .celestial-week-line {
+  margin-top: 4px;
+}
+
+.celestial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.celestial-card {
+  padding: 12px 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 140, 200, 0.38);
+  background: linear-gradient(165deg, rgba(18, 22, 40, 0.94), rgba(10, 12, 24, 0.98));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+}
+
+.celestial-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.celestial-card-head h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #d8e4ff;
+  letter-spacing: 0.05em;
+}
+
+.celestial-status.ready {
+  color: #8fd4b8;
+}
+
+.celestial-status.bought {
+  color: #a8b0c8;
+}
+
+.celestial-status.lock {
+  color: #c8a878;
+}
+
+.celestial-cost,
+.celestial-reward {
+  margin: 4px 0 0;
+}
+
+/* —— 灵府 · 蓄灵池 —— */
+.spirit-reservoir-panel {
+  margin-bottom: 12px;
+}
+
+.spirit-reservoir-bar-wrap {
+  margin: 10px 0 8px;
+}
+
+.spirit-reservoir-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid rgba(100, 180, 200, 0.35);
+}
+
+.spirit-reservoir-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4a9ec4, #7ee0d0);
+  transition: width 0.25s ease;
+}
+
+.spirit-reservoir-readout {
+  margin-top: 6px;
+}
+
+/* —— 灵府 · 心斋卦象 —— */
+.daily-fortune-panel {
+  margin-bottom: 12px;
+}
+
+.daily-fortune-name {
+  margin: 6px 0 4px;
+  font-size: 1.05rem;
+  color: #d4e8ff;
+  letter-spacing: 0.06em;
+}
+
+.daily-fortune-bonuses {
+  margin: 8px 0 0;
+  padding-left: 1.1rem;
+  color: #a8c4e0;
+  font-size: 0.88rem;
+}
+
+.daily-fortune-bonuses strong {
+  color: #9fe8c8;
+}
+
+/* —— 灵府 · 纳灵阵图 —— */
+.spirit-array-panel .spirit-array-readout {
+  margin-top: 6px;
+}
+
+.spirit-array-actions {
+  margin-top: 12px;
 }

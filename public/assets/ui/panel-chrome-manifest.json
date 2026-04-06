@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "naming": "Filenames from PANEL_CHROME_UI_FILES in src/data/panelChromeUi.ts; served as public/assets/ui/<file>.",
+  "assets": [
+    { "id": "titleSpirit", "file": "title-spirit.svg" },
+    { "id": "panelCorner", "file": "panel-corner.svg" },
+    { "id": "bgSparkles", "file": "bg-sparkles.svg" },
+    { "id": "offlineSummaryDeco", "file": "offline-summary-deco.svg" },
+    { "id": "panelRunes", "file": "bg-panel-runes.svg" }
+  ]
+}

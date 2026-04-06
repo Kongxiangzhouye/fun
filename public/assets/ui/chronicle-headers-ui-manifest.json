@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "naming": "Filenames from CHRONICLE_HEADERS_UI_FILES in src/data/chronicleHeadersUi.ts; served as public/assets/ui/<file>.",
+  "assets": [
+    { "id": "daoMeridianHead", "file": "deco-dao-meridian.svg" },
+    { "id": "chronicleHead", "file": "deco-chronicle-header.svg" },
+    { "id": "gearChronicleDeco", "file": "deco-chronicle-gear.svg" }
+  ]
+}

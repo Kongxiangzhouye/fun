@@ -1,0 +1,18 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <radialGradient id="iw" cx="50%" cy="45%" r="55%">
+      <stop offset="0" stop-color="#7A9EE8" stop-opacity="0.35"/>
+      <stop offset="0.65" stop-color="#4A6090" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#203050" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="iwRing" x1="12" y1="68" x2="68" y2="12" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A8C8FF"/>
+      <stop offset="1" stop-color="#D4A060"/>
+    </linearGradient>
+  </defs>
+  <circle cx="40" cy="40" r="36" fill="url(#iw)"/>
+  <circle cx="40" cy="40" r="28" stroke="url(#iwRing)" stroke-width="0.9" stroke-dasharray="6 8" opacity="0.45" fill="none"/>
+  <circle cx="40" cy="40" r="18" stroke="rgba(200,220,255,0.2)" stroke-width="0.6" fill="none"/>
+  <path d="M40 22 L44 34 L56 36 L47 44 L49 58 L40 52 L31 58 L33 44 L24 36 L36 34 Z" fill="rgba(220,230,255,0.12)" stroke="url(#iwRing)" stroke-width="1" stroke-linejoin="round" opacity="0.85"/>
+  <circle cx="40" cy="40" r="4" fill="rgba(255,245,220,0.35)"/>
+</svg>

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "naming": "Filenames from PLAYER_PROFILE_UI_FILES in src/data/playerProfileUi.ts; served as public/assets/ui/<file>.",
+  "assets": [
+    { "id": "saveDownloadDeco", "file": "save-download-deco.svg" },
+    { "id": "uiPrefsDeco", "file": "ui-prefs-panel-deco.svg" },
+    { "id": "dataOverviewDeco", "file": "data-overview-deco.svg" },
+    { "id": "soundPrefsDeco", "file": "ui-sound-prefs-deco.svg" },
+    { "id": "saveSlotsDeco", "file": "save-slots-deco.svg" },
+    { "id": "saveSlotLabelDeco", "file": "save-slot-label-deco.svg" },
+    { "id": "keyboardHelpDeco", "file": "keyboard-help-deco.svg" },
+    { "id": "aboutGameDeco", "file": "about-game-deco.svg" },
+    { "id": "dataExportDeco", "file": "data-export-deco.svg" },
+    { "id": "dataStatsDownloadDeco", "file": "data-stats-download-deco.svg" }
+  ]
+}

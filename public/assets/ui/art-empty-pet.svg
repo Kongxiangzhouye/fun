@@ -1,9 +1,9 @@
-<svg width="360" height="180" viewBox="0 0 360 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="180" viewBox="0 0 360 180" fill="none" aria-hidden="true">
   <rect x="1" y="1" width="358" height="178" rx="16" fill="#17142A" stroke="#3C3262" stroke-width="2"/>
   <circle cx="180" cy="80" r="42" fill="#2B2250"/>
   <circle cx="165" cy="66" r="7" fill="#EAD9FF"/>
   <circle cx="195" cy="66" r="7" fill="#EAD9FF"/>
   <circle cx="180" cy="74" r="9" fill="#EAD9FF"/>
   <path d="M166 98C166 90.5 172 84 180 84C188 84 194 90.5 194 98" stroke="#EAD9FF" stroke-width="4" stroke-linecap="round"/>
-  <text x="180" y="144" fill="#BCAFEA" font-size="16" text-anchor="middle" font-family="sans-serif">*�u�</text>
+  <text x="180" y="142" fill="#BCAFEA" font-size="14" text-anchor="middle" font-family="system-ui,Segoe UI,sans-serif">尚无唤灵</text>
 </svg>

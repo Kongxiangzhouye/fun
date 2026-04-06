@@ -9,7 +9,9 @@
     "build": "run-s typecheck bundle",
     "bundle": "vite build",
     "preview": "vite preview",
-    "check": "npm run build"
+    "check": "run-s validate:ui-art build",
+    "verify": "npm run check",
+    "validate:ui-art": "node scripts/validate-ui-art.mjs"
   },
   "dependencies": {
     "decimal.js": "^10.4.3",

@@ -1,0 +1,20 @@
+<svg width="280" height="120" viewBox="0 0 280 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="m0" x1="40" y1="0" x2="240" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6A9AE8" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#6A9AE8" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#4A6AB8" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="m1" cx="50%" cy="45%" r="55%">
+      <stop offset="0" stop-color="#90B8FF" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#90B8FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="280" height="120" fill="url(#m0)"/>
+  <ellipse cx="140" cy="52" rx="100" ry="38" fill="url(#m1)"/>
+  <path d="M30 78 Q90 58 140 72 T250 68" stroke="rgba(130,170,230,0.22)" stroke-width="1.2" fill="none"/>
+  <path d="M48 92 Q120 72 180 88 T262 82" stroke="rgba(100,140,200,0.16)" stroke-width="0.9" fill="none"/>
+  <path d="M70 38 L76 50 L88 44 L82 32 Z M196 36 L202 48 L214 42 L208 30 Z" fill="rgba(160,190,255,0.12)"/>
+  <circle cx="220" cy="58" r="2" fill="rgba(200,220,255,0.2)"/>
+  <circle cx="62" cy="48" r="1.5" fill="rgba(200,220,255,0.15)"/>
+</svg>

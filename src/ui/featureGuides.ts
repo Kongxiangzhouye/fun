@@ -32,7 +32,7 @@ const COPY: Record<
 > = {
   dungeon: {
     title: "幻域已解锁",
-    body: "在「<strong>幻域</strong>」刷怪获取唤灵髓。阵亡后回满生命可再次进本；可勾选自动进本。详细规则见「<strong>养成 → 图鉴·札记</strong>」。",
+    body: "在「<strong>幻域</strong>」刷怪获取唤灵髓；无入场费，阵亡无灵石损失。回满生命后可再次进本；可勾选自动进本。详细规则见「<strong>养成 → 图鉴·札记</strong>」。",
     tabHint: "入口：底部「幻域」。",
   },
   train: {
@@ -42,8 +42,8 @@ const COPY: Record<
   },
   gear: {
     title: "装备已解锁",
-    body: "装备管理在「<strong>角色 → 行囊·装备</strong>」。装备来源在「<strong>抽卡 → 铸灵池</strong>」。可强化，天极可精炼。",
-    tabHint: "入口：角色看装备，抽卡拿装备。",
+    body: "在「<strong>历练·筑灵</strong>」长按<strong>筑灵装备条</strong>展开，再点「管理」强化、锁定或分解。装备来自「<strong>境界铸灵</strong>」（稀有度与装等随铸灵阶成长）；天极可精炼。",
+    tabHint: "入口：历练页筑灵条；铸灵在聚灵阵。",
   },
   vein: {
     title: "洞府已解锁",

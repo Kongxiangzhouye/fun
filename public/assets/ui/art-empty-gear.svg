@@ -1,6 +1,6 @@
-<svg width="360" height="180" viewBox="0 0 360 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="180" viewBox="0 0 360 180" fill="none" aria-hidden="true">
   <rect x="1" y="1" width="358" height="178" rx="16" fill="#111827" stroke="#31415F" stroke-width="2"/>
   <circle cx="180" cy="78" r="44" fill="#1C2A47"/>
   <path d="M180 46L190 56L184 62L198 76L184 90L170 76L164 82L154 72L180 46Z" fill="#CDE0FF"/>
-  <text x="180" y="144" fill="#9EB2D6" font-size="16" text-anchor="middle" font-family="sans-serif">‚àÅ»øu`ÕÕ</text>
+  <text x="180" y="142" fill="#9EB2D6" font-size="14" text-anchor="middle" font-family="system-ui,Segoe UI,sans-serif">è¡Œå›Šç©ºç©º</text>
 </svg>
