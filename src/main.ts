@@ -185,6 +185,7 @@ import {
   UI_VEIN_GONGMING_LINK,
   UI_BOUNTY_CLAIM_BURST,
   UI_BOUNTY_CLAIM_ECHO_BADGE,
+  UI_OFFLINE_IDLE_BADGE,
   UI_OFFLINE_SUMMARY_BADGE,
   UI_OFFLINE_TRANSITION_SHINE,
   UI_DUNGEON_HIT_FLASH_DECO,
@@ -754,14 +755,17 @@ function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
   const away = fmtOfflineDurationSec(summary.rawAwaySec);
   const settled = fmtOfflineDurationSec(summary.settledSec);
   const cap = fmtOfflineDurationSec(capSec);
+  const isIdleSettlement = summary.stoneGain.lte(0.5);
+  const offlineBadgeSrc = isIdleSettlement ? UI_OFFLINE_IDLE_BADGE : UI_OFFLINE_SUMMARY_BADGE;
+  const offlineTitle = isIdleSettlement ? "离线空转结算" : "离线收益结算";
   const el = document.createElement("div");
   el.className = "toast toast-offline";
   const body = document.createElement("div");
   body.className = "toast-msg toast-msg-offline";
   body.innerHTML =
     `<div class="toast-offline-head">` +
-    `<img class="toast-offline-badge" src="${UI_OFFLINE_SUMMARY_BADGE}" alt="" width="18" height="18" loading="lazy" />` +
-    `<strong>离线收益结算</strong>` +
+    `<img class="toast-offline-badge" src="${offlineBadgeSrc}" alt="" width="18" height="18" loading="lazy" />` +
+    `<strong>${offlineTitle}</strong>` +
     `</div>` +
     `<div class="toast-offline-line">离线时长：${away}</div>` +
     `<div class="toast-offline-line">结算时长：${settled} / 上限：${cap}${summary.wasCapped ? "（已触顶）" : ""}</div>` +

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "naming": "Filenames from OFFLINE_SETTLEMENT_UI_FILES in src/data/offlineSettlementUi.ts; served as public/assets/ui/<file>.",
+  "naming": "Filenames from OFFLINE_SETTLEMENT_UI_FILES in src/data/offlineSettlementUi.ts; served as public/assets/ui/<file>, including idle badge for low-yield settlement display.",
   "assets": [
     { "id": "summaryDeco", "file": "offline-summary-deco.svg" },
     { "id": "summaryBadge", "file": "offline-summary-badge.svg" },

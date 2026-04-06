@@ -3,6 +3,15 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Offline settlement idle badge wiring (P1)",
+      "highlights": [
+        "Mapped and exported offline idle badge key for low-yield/idle settlement toast usage.",
+        "Added minimal presentation-layer wiring to switch offline settlement badge/title under low-yield scenarios.",
+        "Synced offline-settlement manifest wording and release log with no unrelated business-logic edits."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Weekly claim-echo + dungeon hit-trace ring closure (P1)",
       "highlights": [
         "Added weekly claim-echo badge SVG for clearer chained-claim confirmation in recurring weekly reward collection loops.",

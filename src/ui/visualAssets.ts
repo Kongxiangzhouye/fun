@@ -112,6 +112,8 @@ export const UI_BG_SPARKLES = asset(PANEL_CHROME_UI_FILES.bgSparkles);
 export const UI_OFFLINE_SUMMARY_DECO = asset(PANEL_CHROME_UI_FILES.offlineSummaryDeco);
 /** 离线结算摘要徽记（用于摘要标题或关键收益行） */
 export const UI_OFFLINE_SUMMARY_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.summaryBadge);
+/** 离线结算低收益/空转状态徽记 */
+export const UI_OFFLINE_IDLE_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.idleBadge);
 /** 离线结算过渡光带（可用于摘要区块分隔） */
 export const UI_OFFLINE_TRANSITION_SHINE = asset(OFFLINE_SETTLEMENT_UI_FILES.transitionShine);
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
