@@ -976,6 +976,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "bountyBloom",
   },
   {
+    id: "weekly_bounty_week_full_48",
+    title: "周天不息",
+    desc: "累计 48 次单周清满周常悬赏",
+    rewardStones: 9600,
+    rewardEssence: 210,
+    listDeco: "bountyBloom",
+  },
+  {
     id: "celestial_stash_1",
     title: "天机初启",
     desc: "在天机匣完成 1 次兑换",
@@ -1000,6 +1008,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "stashBloom",
   },
   {
+    id: "celestial_stash_250",
+    title: "天机千易",
+    desc: "在天机匣累计兑换 250 次",
+    rewardStones: 13200,
+    rewardEssence: 195,
+    listDeco: "stashBloom",
+  },
+  {
     id: "spirit_reservoir_1",
     title: "蓄灵初收",
     desc: "从蓄灵池收取 1 次灵石",
@@ -1021,6 +1037,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "从蓄灵池累计收取 200 次灵石",
     rewardStones: 3200,
     rewardEssence: 88,
+    listDeco: "reservoirBloom",
+  },
+  {
+    id: "spirit_reservoir_500",
+    title: "蓄灵潮极",
+    desc: "从蓄灵池累计收取 500 次灵石",
+    rewardStones: 8800,
+    rewardEssence: 168,
     listDeco: "reservoirBloom",
   },
   {
@@ -1439,18 +1463,24 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 12;
     case "weekly_bounty_week_full_24":
       return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 24;
+    case "weekly_bounty_week_full_48":
+      return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 48;
     case "celestial_stash_1":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
     case "celestial_stash_25":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 25;
     case "celestial_stash_100":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 100;
+    case "celestial_stash_250":
+      return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 250;
     case "spirit_reservoir_1":
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 1;
     case "spirit_reservoir_50":
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 50;
     case "spirit_reservoir_200":
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 200;
+    case "spirit_reservoir_500":
+      return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 500;
     case "daily_fortune_1":
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
     case "daily_fortune_30":

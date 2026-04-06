@@ -177,6 +177,7 @@ import {
   UI_ACH_REALM_DECO,
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
+  UI_DATA_OVERVIEW_ACH_RIBBON,
   UI_SOUND_PREFS_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
@@ -3057,7 +3058,13 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">灵宠唤引累计</span><strong class="d-val" id="data-overview-pet-pulls">${st.petPullsTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">图鉴解锁</span><strong class="d-val" id="data-overview-codex">${codex} / ${pool}</strong></div>
         <div class="data-overview-cell"><span class="d-label">持有不同灵卡</span><strong class="d-val" id="data-overview-owned">${owned}</strong></div>
-        <div class="data-overview-cell"><span class="d-label">成就</span><strong class="d-val" id="data-overview-ach">${st.achievementsDone.size} / ${ACHIEVEMENTS.length}</strong></div>
+        <div class="data-overview-cell data-overview-cell--ach">
+          <img class="data-overview-ach-ribbon" src="${UI_DATA_OVERVIEW_ACH_RIBBON}" alt="" width="22" height="22" loading="lazy" />
+          <div class="data-overview-ach-copy">
+            <span class="d-label">成就</span>
+            <strong class="d-val" id="data-overview-ach">${st.achievementsDone.size} / ${ACHIEVEMENTS.length}</strong>
+          </div>
+        </div>
       </div>
     </div>
 

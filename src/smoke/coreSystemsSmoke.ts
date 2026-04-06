@@ -1009,6 +1009,18 @@ function runPetFeedAndGardenPlantAchievementsSmoke(): void {
   assert.ok(d.some((x) => x.id === "garden_plants_320"), "320 garden plants should unlock");
 }
 
+function runLifetimeMilestoneTierAchievementsSmoke(): void {
+  const st = createInitialState();
+  st.lifetimeStats.weeklyBountyFullWeeks = 48;
+  st.lifetimeStats.celestialStashBuys = 250;
+  st.lifetimeStats.spiritReservoirClaims = 500;
+  const newly = tryCompleteAchievements(st);
+  const ids = new Set(newly.map((x) => x.id));
+  assert.ok(ids.has("weekly_bounty_week_full_48"), "48 weekly bounty full weeks should unlock");
+  assert.ok(ids.has("celestial_stash_250"), "250 celestial stash buys should unlock");
+  assert.ok(ids.has("spirit_reservoir_500"), "500 spirit reservoir claims should unlock");
+}
+
 function runOfflineAdventureAndMetaAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("offline_adventure_35"), "offline 35 should start locked");
@@ -1238,6 +1250,7 @@ function main(): void {
   runBattleSkillAndGearSalvageAchievementsSmoke();
   runCardSalvageAndVeinAchievementsSmoke();
   runOfflineAdventureAndMetaAchievementsSmoke();
+  runLifetimeMilestoneTierAchievementsSmoke();
   runPetFeedAndGardenPlantAchievementsSmoke();
   runSkillLevelAndRealmBreakthroughAchievementsSmoke();
   runGearEnhanceAndUrRefineAchievementsSmoke();

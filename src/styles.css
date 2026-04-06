@@ -5363,6 +5363,24 @@ html.ui-reduce-motion *::after {
   word-break: break-word;
 }
 
+.data-overview-panel .data-overview-cell--ach {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.data-overview-panel .data-overview-cell--ach .data-overview-ach-ribbon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.95;
+}
+
+.data-overview-panel .data-overview-cell--ach .data-overview-ach-copy {
+  flex: 1;
+  min-width: 0;
+}
+
 .vigor-line {
   font-size: 0.86rem;
   color: var(--muted);
