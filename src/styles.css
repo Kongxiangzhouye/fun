@@ -3468,6 +3468,46 @@ h1 {
   color: #d4dcf0;
 }
 
+.toast.toast-offline {
+  border-color: rgba(120, 170, 255, 0.5);
+  background: linear-gradient(160deg, rgba(20, 34, 62, 0.96), rgba(12, 18, 34, 0.98));
+}
+
+.toast-msg-offline {
+  min-width: min(88vw, 300px);
+}
+
+.toast-offline-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e5edff;
+  margin-bottom: 6px;
+}
+
+.toast-offline-badge {
+  opacity: 0.95;
+}
+
+.toast-offline-line {
+  color: #c9d8f8;
+  line-height: 1.45;
+}
+
+.toast-offline-shine {
+  display: block;
+  margin: 7px 0 6px;
+  width: 100%;
+  max-width: 220px;
+  opacity: 0.82;
+}
+
+.toast-offline-gain {
+  color: #f5d28d;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
 .toast-progress {
   height: 3px;
   width: 100%;
@@ -7989,6 +8029,30 @@ p.gear-forge-tier-hint {
 
 .bounty-reward {
   margin: 6px 0 10px;
+}
+
+.bounty-claim-burst-fx {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  animation: bounty-claim-burst-fade 0.52s ease-out forwards;
+  filter: drop-shadow(0 0 10px rgba(255, 205, 112, 0.5));
+}
+
+@keyframes bounty-claim-burst-fade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.78);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.26);
+  }
 }
 
 /* —— 幻域 · 周常词缀 —— */

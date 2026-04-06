@@ -236,19 +236,10 @@ export function claimAllCompletableWeeklyBounties(
   let rewardStones = 0;
   let rewardEssence = 0;
   for (const def of WEEKLY_BOUNTY_TASKS) {
-    if (state.weeklyBounty.claimed.includes(def.id)) continue;
-    if (!isWeeklyBountyComplete(state, def)) continue;
-    state.weeklyBounty.claimed.push(def.id);
-    if (def.rewardStones > 0) {
-      addStones(state, def.rewardStones);
-      rewardStones += def.rewardStones;
-    }
-    if (def.rewardEssence > 0) {
-      state.summonEssence += def.rewardEssence;
-      rewardEssence += def.rewardEssence;
-    }
+    if (!claimWeeklyBountyTask(state, def.id, now)) continue;
+    if (def.rewardStones > 0) rewardStones += def.rewardStones;
+    if (def.rewardEssence > 0) rewardEssence += def.rewardEssence;
     claimed += 1;
   }
-  if (claimed > 0) maybeRecordWeeklyBountyFullWeek(state);
   return { claimed, rewardStones, rewardEssence };
 }

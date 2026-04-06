@@ -41,7 +41,7 @@ import {
   deckRealmBonusSum,
   effectiveDeckSlots,
 } from "./economy";
-import { catchUpOffline, applyTick, fastForward, maxOfflineSec } from "./gameLoop";
+import { catchUpOffline, applyTick, fastForward, maxOfflineSec, type OfflineCatchUpSummary } from "./gameLoop";
 import {
   pullOne,
   pullTen,
@@ -183,6 +183,9 @@ import {
   UI_DATA_EXPORT_DECO,
   UI_DATA_STATS_DOWNLOAD_DECO,
   UI_VEIN_GONGMING_LINK,
+  UI_BOUNTY_CLAIM_BURST,
+  UI_OFFLINE_SUMMARY_BADGE,
+  UI_OFFLINE_TRANSITION_SHINE,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -694,6 +697,49 @@ function toastCurrencyHint(text: string): void {
   appendToastProgress(el, CURRENCY_HINT_TOAST_MS);
   w.appendChild(el);
   window.setTimeout(() => el.remove(), CURRENCY_HINT_TOAST_MS);
+}
+
+function playBountyClaimBurstFx(anchor: HTMLElement | null): void {
+  if (!anchor) return;
+  const rect = anchor.getBoundingClientRect();
+  const fx = document.createElement("img");
+  fx.className = "bounty-claim-burst-fx";
+  fx.src = UI_BOUNTY_CLAIM_BURST;
+  fx.alt = "";
+  fx.width = 68;
+  fx.height = 68;
+  fx.loading = "eager";
+  fx.decoding = "async";
+  fx.style.left = `${rect.left + rect.width * 0.5}px`;
+  fx.style.top = `${rect.top + rect.height * 0.5}px`;
+  document.body.appendChild(fx);
+  window.setTimeout(() => fx.remove(), 520);
+}
+
+function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
+  const w = document.getElementById("toast-wrap");
+  if (!w) return;
+  const capSec = maxOfflineSec(state);
+  const away = fmtOfflineDurationSec(summary.rawAwaySec);
+  const settled = fmtOfflineDurationSec(summary.settledSec);
+  const cap = fmtOfflineDurationSec(capSec);
+  const el = document.createElement("div");
+  el.className = "toast toast-offline";
+  const body = document.createElement("div");
+  body.className = "toast-msg toast-msg-offline";
+  body.innerHTML =
+    `<div class="toast-offline-head">` +
+    `<img class="toast-offline-badge" src="${UI_OFFLINE_SUMMARY_BADGE}" alt="" width="18" height="18" loading="lazy" />` +
+    `<strong>离线收益结算</strong>` +
+    `</div>` +
+    `<div class="toast-offline-line">离线时长：${away}</div>` +
+    `<div class="toast-offline-line">结算时长：${settled}${summary.wasCapped ? `（上限 ${cap}）` : ""}</div>` +
+    `<img class="toast-offline-shine" src="${UI_OFFLINE_TRANSITION_SHINE}" alt="" width="180" height="8" loading="lazy" />` +
+    `<div class="toast-offline-gain">灵石 +${fmtDecimal(summary.stoneGain)}</div>`;
+  el.appendChild(body);
+  appendToastProgress(el, TOAST_DURATION_MS);
+  w.appendChild(el);
+  window.setTimeout(() => el.remove(), TOAST_DURATION_MS);
 }
 
 function showCurrencyHintById(id: string): void {
@@ -3945,6 +3991,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       if (!id) return;
       const t = nowMs();
       if (claimWeeklyBountyTask(state, id, t)) {
+        playBountyClaimBurstFx(el as HTMLElement);
         tryCompleteAchievements(state);
         saveGame(state);
         toast("悬赏奖励已领取");
@@ -3958,11 +4005,13 @@ function bindEvents(rb: Decimal, _slots: number): void {
 
   document.getElementById("btn-bounty-claim-all")?.addEventListener("click", () => {
     const t = nowMs();
+    const trigger = document.getElementById("btn-bounty-claim-all");
     const r = claimAllCompletableWeeklyBounties(state, t);
     if (r.claimed <= 0) {
       toast("当前没有可领取的悬赏。");
       return;
     }
+    playBountyClaimBurstFx(trigger);
     tryCompleteAchievements(state);
     saveGame(state);
     toast(
@@ -5099,10 +5148,7 @@ function init(): void {
   tickDailyFortune(state, t);
   const offline = catchUpOffline(state, t);
   if (offline.stoneGain.gt(0.01)) {
-    const dur = fmtOfflineDurationSec(offline.settledSec);
-    const capSec = maxOfflineSec(state);
-    const capLine = offline.wasCapped ? `\n已超过离线收益上限，按 ${fmtOfflineDurationSec(capSec)} 结算` : "";
-    tryToast(`离线收益已结算\n时长约 ${dur}${capLine}\n灵石 +${fmtDecimal(offline.stoneGain)}`);
+    toastOfflineSettlement(offline);
     saveGame(state);
   }
   tryCompleteAchievements(state);
