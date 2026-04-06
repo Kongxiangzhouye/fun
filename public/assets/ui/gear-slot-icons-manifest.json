@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "naming": "Filenames from GEAR_SLOT_UI_FILES in src/data/gearSlotUi.ts; served as public/assets/ui/<file>.",
+  "slots": [
+    { "id": "weapon", "file": "gear-weapon.png" },
+    { "id": "body", "file": "gear-body.png" },
+    { "id": "ring", "file": "gear-ring.png" }
+  ]
+}
