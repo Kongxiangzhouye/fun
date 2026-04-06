@@ -251,3 +251,26 @@ export function claimAllCompletableWeeklyBounties(
   }
   return { claimed, rewardStones, rewardEssence };
 }
+
+export interface WeeklyBountyFeedbackState {
+  total: number;
+  completed: number;
+  claimed: number;
+  claimable: number;
+}
+
+/** UI 反馈闭环：统一“进度→可领→已领”数量口径。 */
+export function weeklyBountyFeedbackState(state: GameState, now: number): WeeklyBountyFeedbackState {
+  ensureWeeklyBountyWeek(state, now);
+  let completed = 0;
+  let claimed = 0;
+  for (const def of WEEKLY_BOUNTY_TASKS) {
+    const done = isWeeklyBountyComplete(state, def);
+    const got = isWeeklyBountyClaimed(state, def.id);
+    if (done) completed += 1;
+    if (got) claimed += 1;
+  }
+  const total = WEEKLY_BOUNTY_TASKS.length;
+  const claimable = Math.max(0, completed - claimed);
+  return { total, completed, claimed, claimable };
+}

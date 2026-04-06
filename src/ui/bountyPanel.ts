@@ -6,7 +6,7 @@ import {
   isWeeklyBountyClaimed,
   currentWeekKey,
   ensureWeeklyBountyWeek,
-  countClaimableWeeklyBounties,
+  weeklyBountyFeedbackState,
   type WeeklyBountyCardDeco,
 } from "../systems/weeklyBounty";
 import {
@@ -17,6 +17,8 @@ import {
   UI_BOUNTY_GARDEN_DECO,
   UI_BOUNTY_TUNA_DECO,
   UI_BOUNTY_REALM_DECO,
+  UI_BOUNTY_STREAK_BADGE,
+  UI_BOUNTY_COMPLETE_BADGE,
   UI_HEAD_BOUNTY,
 } from "./visualAssets";
 
@@ -32,7 +34,8 @@ const BOUNTY_CARD_DECO_SRC: Record<WeeklyBountyCardDeco, string> = {
 export function renderBountyPanel(state: GameState, now: number): string {
   ensureWeeklyBountyWeek(state, now);
   const wk = currentWeekKey(now);
-  const claimableN = countClaimableWeeklyBounties(state, now);
+  const fb = weeklyBountyFeedbackState(state, now);
+  const claimableN = fb.claimable;
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
     const prog = weeklyBountyProgress(state, t);
     const done = isWeeklyBountyComplete(state, t);
@@ -67,6 +70,16 @@ export function renderBountyPanel(state: GameState, now: number): string {
       </div>
       <p class="hint">每周一（本地时间）刷新进度与领取状态。完成条目可领取灵石与唤灵髓。</p>
       <p class="hint sm bounty-week-line">当前周次：<strong>${wk}</strong></p>
+      <div class="bounty-feedback-row">
+        <span class="bounty-feedback-pill">
+          <img class="bounty-feedback-ico" src="${UI_BOUNTY_STREAK_BADGE}" alt="" width="18" height="18" loading="lazy" />
+          <span id="bounty-feedback-complete">达成 ${fb.completed} / ${fb.total}</span>
+        </span>
+        <span class="bounty-feedback-pill ${fb.claimed >= fb.total ? "is-ready" : ""}">
+          <img class="bounty-feedback-ico" src="${UI_BOUNTY_COMPLETE_BADGE}" alt="" width="18" height="18" loading="lazy" />
+          <span id="bounty-feedback-claimed">已领 ${fb.claimed} / ${fb.total}</span>
+        </span>
+      </div>
       <div class="bounty-claim-all-row">
         <button type="button" class="btn btn-primary bounty-claim-all-btn" id="btn-bounty-claim-all" ${claimableN > 0 ? "" : "disabled"}>
           <img class="bounty-claim-all-ico" src="${UI_BOUNTY_CLAIM_ALL_DECO}" alt="" width="20" height="20" loading="lazy" />
@@ -84,9 +97,16 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   if (wkEl) wkEl.textContent = currentWeekKey(now);
   const claimAllBtn = document.getElementById("btn-bounty-claim-all") as HTMLButtonElement | null;
   const claimAllLbl = document.getElementById("bounty-claim-all-lbl");
-  const cn = countClaimableWeeklyBounties(state, now);
+  const fb = weeklyBountyFeedbackState(state, now);
+  const cn = fb.claimable;
   if (claimAllBtn) claimAllBtn.disabled = cn <= 0;
   if (claimAllLbl) claimAllLbl.textContent = `一键领取可领悬赏（${cn}）`;
+  const completeLbl = document.getElementById("bounty-feedback-complete");
+  if (completeLbl) completeLbl.textContent = `达成 ${fb.completed} / ${fb.total}`;
+  const claimedLbl = document.getElementById("bounty-feedback-claimed");
+  if (claimedLbl) claimedLbl.textContent = `已领 ${fb.claimed} / ${fb.total}`;
+  const claimPill = claimedLbl?.closest(".bounty-feedback-pill");
+  if (claimPill) claimPill.classList.toggle("is-ready", fb.claimed >= fb.total);
   for (const t of WEEKLY_BOUNTY_TASKS) {
     const prog = weeklyBountyProgress(state, t);
     const done = isWeeklyBountyComplete(state, t);

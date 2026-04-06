@@ -8006,6 +8006,36 @@ p.gear-forge-tier-hint {
   margin-top: 4px;
 }
 
+.bounty-feedback-row {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bounty-feedback-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 18, 26, 0.7);
+  color: #bfc6d9;
+  font-size: 0.76rem;
+}
+
+.bounty-feedback-pill.is-ready {
+  border-color: rgba(126, 199, 151, 0.65);
+  background: rgba(41, 91, 58, 0.35);
+  color: #d3f7dd;
+}
+
+.bounty-feedback-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .bounty-claim-all-row {
   margin-top: 10px;
 }

@@ -120,6 +120,11 @@ function hasClearCombatLine(d: DungeonState, tx: number, ty: number): boolean {
   return gridLineInteriorWalkClear(w, h, d.walkable, px, py, mx, my);
 }
 
+/** 接战判定：距离命中圈内且战斗连线未被墙阻断。 */
+function canEngageMobNow(d: DungeonState, m: DungeonMob, pRange: number): boolean {
+  return mobInPlayerAttackDisk(d, m, pRange) && hasClearCombatLine(d, m.x, m.y);
+}
+
 /** 与 tick 内 inCombat 一致：锁定目标在「接战/被怪摸」带内则不因更近怪而切换 */
 function mobInStickyFocusRange(d: DungeonState, m: DungeonMob, pRange: number): boolean {
   if (m.hp <= 0) return false;
@@ -1201,7 +1206,7 @@ function aliveMobs(d: DungeonState): DungeonMob[] {
 export function countMobsInEngageRange(d: DungeonState, playerRangeNorm: number): number {
   let n = 0;
   for (const m of d.mobs) {
-    if (mobInPlayerAttackDisk(d, m, playerRangeNorm)) n += 1;
+    if (canEngageMobNow(d, m, playerRangeNorm)) n += 1;
   }
   return n;
 }
@@ -1403,6 +1408,7 @@ function spawnMobsForWave(state: GameState): void {
   }
 
   d.playerAttackAccum = 0;
+  d.monsterAttackAccum = 0;
   d.playerAttackTargetMobId = 0;
   d.essenceThisWave = 0;
   d.walkable = [];
@@ -1628,6 +1634,7 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
   const pDodge = playerDungeonDodgeChance(state);
   const atkSpd = playerDungeonAttackSpeedMult(state);
   const playerHitInterval = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
+  const pRange = playerEngageRadiusNorm(state);
 
   const target = d.mobs.find((m) => m.hp > 0) ?? null;
   if (!target) {
@@ -1678,6 +1685,7 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
   while (d.playerAttackAccum >= playerHitInterval) {
     d.playerAttackAccum -= playerHitInterval;
     if (target.hp <= 0) break;
+    if (!canEngageMobNow(d, target, pRange)) break;
     d.attackAnimPhase += Math.PI * 2;
     const mdMul = elementDamageMultiplier(pEl, target.element);
     const mobDodge = clamp(target.dodge ?? 0.08, 0, 0.9);
@@ -1729,9 +1737,20 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
   }
 
   if (target.hp > 0) {
+    const canMobTrade = canEngageMobNow(d, target, pRange);
+    if (!canMobTrade) {
+      d.monsterAttackAccum = 0;
+      d.bossDodgeVisual = false;
+      syncBars(state, d);
+      syncDungeonHpToState(state);
+      return;
+    }
+    if (now < d.dodgeIframesUntil) {
+      d.monsterAttackAccum = 0;
+    }
     const hitPhase = (d.monsterAttackAccum % hitInterval) / hitInterval;
     d.bossDodgeVisual = target.isBoss && hitPhase > 0.72;
-    d.monsterAttackAccum += dt;
+    if (now >= d.dodgeIframesUntil) d.monsterAttackAccum += dt;
     const mdBase = monsterDamageForWave(d.wave) * (target.isBoss ? 1.35 : 1);
     const mdMul = elementDamageMultiplier(target.element, pEl);
     let md = mdBase * mdMul;

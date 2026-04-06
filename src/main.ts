@@ -213,6 +213,7 @@ import {
   claimAllCompletableWeeklyBounties,
   claimWeeklyBountyTask,
   noteWeeklyBountyBreakthrough,
+  weeklyBountyFeedbackState,
 } from "./systems/weeklyBounty";
 import {
   plantCrop,
@@ -4002,7 +4003,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
         playBountyClaimBurstFx(el as HTMLElement);
         tryCompleteAchievements(state);
         saveGame(state);
-        toast("悬赏奖励已领取");
+        const fb = weeklyBountyFeedbackState(state, t);
+        toast(`悬赏奖励已领取（已领 ${fb.claimed}/${fb.total}，可领 ${fb.claimable}）`);
         updateTopResourcePillsAndVigor(totalCardsInPool());
         render();
       } else {
@@ -4022,8 +4024,9 @@ function bindEvents(rb: Decimal, _slots: number): void {
     playBountyClaimBurstFx(trigger);
     tryCompleteAchievements(state);
     saveGame(state);
+    const fb = weeklyBountyFeedbackState(state, t);
     toast(
-      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}`,
+      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（已领 ${fb.claimed}/${fb.total}）`,
     );
     updateTopResourcePillsAndVigor(totalCardsInPool());
     render();
