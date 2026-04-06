@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "naming": "Filenames from EMPTY_STATE_UI_FILES in src/data/emptyStateUi.ts; served as public/assets/ui/<file>.",
+  "states": [
+    { "id": "gear", "file": "art-empty-gear.svg" },
+    { "id": "pet", "file": "art-empty-pet.svg" },
+    { "id": "unlock", "file": "art-empty-unlock.svg" }
+  ]
+}

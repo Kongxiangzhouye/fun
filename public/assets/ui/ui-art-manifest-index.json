@@ -1,7 +1,9 @@
 {
   "version": 1,
-  "description": "Entry points for static UI art manifests (gear, pets, garden, elements, gear slots, rarity badges). Not loaded at runtime.",
+  "description": "Entry points for static UI art manifests (HUD, empty states, gear, pets, garden, elements, rarity). Not loaded at runtime.",
   "manifests": [
+    { "id": "hud_bar_icons", "file": "hud-bar-icons-manifest.json" },
+    { "id": "empty_state_art", "file": "empty-state-art-manifest.json" },
     { "id": "gear_bases", "file": "gear-bases-manifest.json" },
     { "id": "gear_slot_icons", "file": "gear-slot-icons-manifest.json" },
     { "id": "pet_portraits", "file": "pet-portraits-manifest.json" },

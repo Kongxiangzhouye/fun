@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "naming": "Filenames from HUD_BAR_UI_FILES in src/data/hudBarUi.ts; served as public/assets/ui/<file>.",
+  "icons": [
+    { "id": "stone", "file": "ui-stone.png" },
+    { "id": "essence", "file": "ui-essence.png" },
+    { "id": "zhuling", "file": "ui-zhuling.svg" },
+    { "id": "realm", "file": "ui-realm.png" },
+    { "id": "dao", "file": "ui-dao.svg" },
+    { "id": "zao", "file": "ui-zao.svg" },
+    { "id": "power", "file": "ui-power.svg" },
+    { "id": "lingSha", "file": "ui-ling-sha.svg" },
+    { "id": "xuanTie", "file": "ui-xuan-tie.svg" }
+  ]
+}
