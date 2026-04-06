@@ -32,6 +32,21 @@ const BOUNTY_CARD_DECO_SRC: Record<WeeklyBountyCardDeco, string> = {
   realm: UI_BOUNTY_REALM_DECO,
 };
 
+function bountyTaskView(taskState: ReturnType<typeof weeklyBountyTaskState>): {
+  statusClass: string;
+  statusText: string;
+  canClaim: boolean;
+  buttonText: string;
+} {
+  if (taskState === "claimed") {
+    return { statusClass: "claimed", statusText: "已领", canClaim: false, buttonText: "本周已领" };
+  }
+  if (taskState === "claimable") {
+    return { statusClass: "claimable", statusText: "可领", canClaim: true, buttonText: "领取" };
+  }
+  return { statusClass: "pending", statusText: "待完成", canClaim: false, buttonText: "未达成" };
+}
+
 export function renderBountyPanel(state: GameState, now: number): string {
   ensureWeeklyBountyWeek(state, now);
   const wk = currentWeekKey(now);
@@ -40,10 +55,8 @@ export function renderBountyPanel(state: GameState, now: number): string {
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
     const prog = weeklyBountyProgress(state, t);
     const taskState = weeklyBountyTaskState(state, t);
-    const done = taskState !== "pending";
-    const claimed = taskState === "claimed";
+    const view = bountyTaskView(taskState);
     const pct = Math.min(100, (100 * prog) / t.target);
-    const canClaim = taskState === "claimable";
     const deco = `<img class="bounty-task-deco" src="${BOUNTY_CARD_DECO_SRC[t.cardDeco]}" alt="" width="22" height="22" loading="lazy" />`;
     return `
       <div class="bounty-card" data-bounty-task="${t.id}">
@@ -52,14 +65,14 @@ export function renderBountyPanel(state: GameState, now: number): string {
             ${deco}
             <h3>${t.title}</h3>
           </div>
-          <span class="bounty-status ${claimed ? "claimed" : done ? "done" : "pending"}">${claimed ? "已领" : done ? "可领" : "待完成"}</span>
+          <span class="bounty-status ${view.statusClass}">${view.statusText}</span>
         </div>
         <p class="hint sm">${t.desc}</p>
         <div class="bounty-bar-wrap"><div class="bounty-bar"><div class="bounty-bar-fill" style="width:${pct}%"></div></div>
         <span class="bounty-bar-lbl">${prog} / ${t.target}</span></div>
         <p class="hint sm bounty-reward">奖励：灵石 <strong>${t.rewardStones}</strong> · 唤灵髓 <strong>${t.rewardEssence}</strong></p>
-        <button type="button" class="btn ${canClaim ? "btn-primary" : ""}" data-bounty-claim="${t.id}" ${canClaim ? "" : "disabled"}>
-          ${claimed ? "本周已领" : canClaim ? "领取" : "未达成"}
+        <button type="button" class="btn ${view.canClaim ? "btn-primary" : ""}" data-bounty-claim="${t.id}" ${view.canClaim ? "" : "disabled"}>
+          ${view.buttonText}
         </button>
       </div>`;
   }).join("");
@@ -118,10 +131,8 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   for (const t of WEEKLY_BOUNTY_TASKS) {
     const prog = weeklyBountyProgress(state, t);
     const taskState = weeklyBountyTaskState(state, t);
-    const done = taskState !== "pending";
-    const claimed = taskState === "claimed";
+    const view = bountyTaskView(taskState);
     const pct = Math.min(100, (100 * prog) / t.target);
-    const canClaim = taskState === "claimable";
     const card = document.querySelector(`[data-bounty-task="${t.id}"]`);
     if (!card) continue;
     const fill = card.querySelector(".bounty-bar-fill") as HTMLElement | null;
@@ -130,14 +141,14 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
     if (lbl) lbl.textContent = `${prog} / ${t.target}`;
     const status = card.querySelector(".bounty-status");
     if (status) {
-      status.className = `bounty-status ${claimed ? "claimed" : done ? "done" : "pending"}`;
-      status.textContent = claimed ? "已领" : done ? "可领" : "待完成";
+      status.className = `bounty-status ${view.statusClass}`;
+      status.textContent = view.statusText;
     }
     const btn = card.querySelector("[data-bounty-claim]") as HTMLButtonElement | null;
     if (btn) {
-      btn.disabled = !canClaim;
-      btn.className = `btn ${canClaim ? "btn-primary" : ""}`;
-      btn.textContent = claimed ? "本周已领" : canClaim ? "领取" : "未达成";
+      btn.disabled = !view.canClaim;
+      btn.className = `btn ${view.canClaim ? "btn-primary" : ""}`;
+      btn.textContent = view.buttonText;
     }
   }
 }

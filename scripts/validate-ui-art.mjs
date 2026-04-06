@@ -6,6 +6,7 @@ const uiDir = path.resolve(repoRoot, "public/assets/ui");
 const indexFile = path.join(uiDir, "ui-art-manifest-index.json");
 const allowedAssetExt = new Set([".svg", ".png", ".jpg", ".jpeg", ".webp"]);
 const nameRegex = /^[a-z0-9]+(?:[-_][a-z0-9]+)*\.(svg|png|jpg|jpeg|webp)$/;
+const preferredAssetArrayKeys = ["assets", "items", "entries", "icons", "files", "list"];
 
 /** @param {string} p */
 function readJson(p) {
@@ -22,82 +23,125 @@ function fail(errs) {
   process.exit(1);
 }
 
+/**
+ * @param {string} targetPath
+ */
+function rel(targetPath) {
+  return path.relative(repoRoot, targetPath).replaceAll("\\", "/");
+}
+
+/**
+ * @param {unknown} asset
+ */
+function getAssetId(asset) {
+  if (typeof asset?.id === "string") return asset.id;
+  if (typeof asset?.rarity === "string") return asset.rarity;
+  if (typeof asset?.name === "string") return asset.name;
+  if (typeof asset?.key === "string") return asset.key;
+  return null;
+}
+
+/**
+ * @param {unknown} manifest
+ * @returns {{ key: string; assets: unknown[] } | null}
+ */
+function selectAssetArray(manifest) {
+  if (!manifest || typeof manifest !== "object") return null;
+  const entries = Object.entries(manifest).filter(([, v]) => Array.isArray(v));
+  if (entries.length === 0) return null;
+
+  for (const key of preferredAssetArrayKeys) {
+    const hit = entries.find(([k]) => k === key);
+    if (!hit) continue;
+    return { key: hit[0], assets: /** @type {unknown[]} */ (hit[1]) };
+  }
+
+  const fileArray = entries.find(([, v]) =>
+    /** @type {unknown[]} */ (v).some((item) => item && typeof item === "object" && typeof item.file === "string"),
+  );
+  if (fileArray) return { key: fileArray[0], assets: /** @type {unknown[]} */ (fileArray[1]) };
+  if (entries.length === 1) return { key: entries[0][0], assets: /** @type {unknown[]} */ (entries[0][1]) };
+  return null;
+}
+
 if (!fs.existsSync(indexFile)) {
-  fail([`Missing index file: ${path.relative(repoRoot, indexFile)}`]);
+  fail([`Missing index file: ${rel(indexFile)}`]);
 }
 
 const errors = [];
 const indexJson = readJson(indexFile);
 if (!Array.isArray(indexJson.manifests)) {
-  fail([`Invalid index format: "manifests" must be an array in ${path.relative(repoRoot, indexFile)}`]);
+  fail([`Invalid index format: "manifests" must be an array in ${rel(indexFile)}`]);
 }
 
 const indexManifestFiles = new Set();
+const indexManifestIds = new Set();
 for (const entry of indexJson.manifests) {
   if (!entry || typeof entry.file !== "string" || typeof entry.id !== "string") {
-    errors.push(`Invalid manifest entry in index: ${JSON.stringify(entry)}`);
+    errors.push(`Invalid index entry in ${rel(indexFile)}: ${JSON.stringify(entry)}`);
     continue;
   }
   if (indexManifestFiles.has(entry.file)) {
-    errors.push(`Duplicate manifest file in index: ${entry.file}`);
+    errors.push(`Duplicate manifest file in ${rel(indexFile)}: ${entry.file}`);
   }
+  if (indexManifestIds.has(entry.id)) {
+    errors.push(`Duplicate manifest id in ${rel(indexFile)}: ${entry.id}`);
+  }
+  indexManifestIds.add(entry.id);
   indexManifestFiles.add(entry.file);
 }
 
 for (const manifestName of indexManifestFiles) {
   const manifestPath = path.join(uiDir, manifestName);
   if (!fs.existsSync(manifestPath)) {
-    errors.push(`Manifest listed in index but missing on disk: ${manifestName}`);
+    errors.push(`Manifest listed in index but missing on disk: ${rel(manifestPath)}`);
     continue;
   }
   let manifest;
   try {
     manifest = readJson(manifestPath);
   } catch (e) {
-    errors.push(`Manifest JSON parse failed: ${manifestName} (${/** @type {Error} */ (e).message})`);
+    errors.push(`Manifest JSON parse failed: ${rel(manifestPath)} (${/** @type {Error} */ (e).message})`);
     continue;
   }
-  const assetsEntry = Object.entries(manifest).find(([, v]) => Array.isArray(v));
-  const assets = assetsEntry?.[1];
-  const assetsKey = assetsEntry?.[0];
-  if (!Array.isArray(assets)) {
-    errors.push(`Manifest ${manifestName} missing asset array`);
+  const selected = selectAssetArray(manifest);
+  if (!selected || !Array.isArray(selected.assets)) {
+    errors.push(
+      `Manifest ${rel(manifestPath)} must contain one identifiable asset array (${preferredAssetArrayKeys.join(", ")})`,
+    );
     continue;
   }
+  const assets = selected.assets;
+  const assetsKey = selected.key;
   const ids = new Set();
   const files = new Set();
-  for (const asset of assets) {
-    const assetId =
-      typeof asset?.id === "string"
-        ? asset.id
-        : typeof asset?.rarity === "string"
-          ? asset.rarity
-          : typeof asset?.name === "string"
-            ? asset.name
-            : typeof asset?.key === "string"
-              ? asset.key
-              : null;
+  for (let idx = 0; idx < assets.length; idx += 1) {
+    const asset = assets[idx];
+    const assetId = getAssetId(asset);
     if (!asset || typeof asset.file !== "string" || !assetId) {
       errors.push(
-        `Manifest ${manifestName} has invalid asset entry in "${assetsKey ?? "unknown"}": ${JSON.stringify(asset)}`,
+        `Invalid asset entry at ${rel(manifestPath)} -> ${assetsKey}[${idx}]: ${JSON.stringify(asset)}`,
       );
       continue;
     }
-    if (ids.has(assetId)) errors.push(`Manifest ${manifestName} has duplicated asset id: ${assetId}`);
+    if (ids.has(assetId)) errors.push(`Duplicated asset id in ${rel(manifestPath)} -> ${assetsKey}: ${assetId}`);
     ids.add(assetId);
-    if (files.has(asset.file)) errors.push(`Manifest ${manifestName} has duplicated asset file: ${asset.file}`);
+    if (files.has(asset.file))
+      errors.push(`Duplicated asset file in ${rel(manifestPath)} -> ${assetsKey}: ${asset.file}`);
     files.add(asset.file);
 
     if (!nameRegex.test(asset.file)) {
-      errors.push(`Asset filename violates naming convention in ${manifestName}: ${asset.file}`);
+      errors.push(
+        `Asset filename violates naming convention at ${rel(manifestPath)} -> ${assetsKey}[${idx}].file: ${asset.file}`,
+      );
     }
     const ext = path.extname(asset.file).toLowerCase();
     if (!allowedAssetExt.has(ext)) {
-      errors.push(`Asset filename has unsupported extension in ${manifestName}: ${asset.file}`);
+      errors.push(`Unsupported asset extension at ${rel(manifestPath)} -> ${assetsKey}[${idx}].file: ${asset.file}`);
     }
     const assetPath = path.join(uiDir, asset.file);
     if (!fs.existsSync(assetPath)) {
-      errors.push(`Asset missing on disk (${manifestName}): ${asset.file}`);
+      errors.push(`Asset missing on disk referenced by ${rel(manifestPath)} -> ${assetsKey}[${idx}]: ${rel(assetPath)}`);
     }
   }
 }

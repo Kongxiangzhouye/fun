@@ -4017,6 +4017,11 @@ function bindEvents(rb: Decimal, _slots: number): void {
         }
       } else {
         toast("无法领取：未达成或本周已领过。");
+        if (activeHub === "cultivate" && cultivateSub === "bounty") {
+          updateBountyPanelReadouts(state, t);
+        } else {
+          render();
+        }
       }
     });
   });
@@ -4027,6 +4032,11 @@ function bindEvents(rb: Decimal, _slots: number): void {
     const r = claimAllCompletableWeeklyBounties(state, t);
     if (r.claimed <= 0) {
       toast("当前没有可领取的悬赏。");
+      if (activeHub === "cultivate" && cultivateSub === "bounty") {
+        updateBountyPanelReadouts(state, t);
+      } else {
+        render();
+      }
       return;
     }
     playBountyClaimBurstFx(trigger);

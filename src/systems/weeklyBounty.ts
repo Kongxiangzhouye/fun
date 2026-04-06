@@ -268,6 +268,7 @@ export interface WeeklyBountyFeedbackState {
 export function weeklyBountyFeedbackState(state: GameState, now: number): WeeklyBountyFeedbackState {
   ensureWeeklyBountyWeek(state, now);
   let completed = 0;
+  let pending = 0;
   let claimed = 0;
   let claimable = 0;
   for (const def of WEEKLY_BOUNTY_TASKS) {
@@ -278,9 +279,10 @@ export function weeklyBountyFeedbackState(state: GameState, now: number): Weekly
     } else if (taskState === "claimable") {
       completed += 1;
       claimable += 1;
+    } else {
+      pending += 1;
     }
   }
   const total = WEEKLY_BOUNTY_TASKS.length;
-  const pending = Math.max(0, total - completed);
   return { total, completed, pending, claimed, claimable };
 }

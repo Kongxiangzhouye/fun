@@ -8133,6 +8133,7 @@ p.gear-forge-tier-hint {
   color: #a8b8e0;
   background: rgba(80, 100, 160, 0.2);
 }
+.bounty-status.claimable,
 .bounty-status.done {
   color: #b8f0c8;
   background: rgba(60, 140, 90, 0.25);
