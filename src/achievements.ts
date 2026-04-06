@@ -336,6 +336,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "dungeonWavesSurge",
   },
   {
+    id: "dungeon_waves_8000",
+    title: "澜卷八荒",
+    desc: "在幻域累计击溃 8000 波",
+    rewardStones: 28000,
+    rewardEssence: 420,
+    listDeco: "dungeonWavesSurge",
+  },
+  {
     id: "dungeon_boss_kills_8",
     title: "阵眼初破",
     desc: "在幻域累计击败首领 8 次",
@@ -1200,6 +1208,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "gacha",
   },
   {
+    id: "resonance_payouts_2000",
+    title: "髓潮千回",
+    desc: "聚灵共鸣累计发放唤灵髓 2000 次",
+    rewardStones: 5200,
+    rewardEssence: 120,
+    listDeco: "gacha",
+  },
+  {
     id: "dao_meridian_3",
     title: "灵窍三明",
     desc: "道韵灵窍达到 3 重",
@@ -1337,6 +1353,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dungeon.totalWavesCleared >= 500;
     case "dungeon_waves_2000":
       return state.dungeon.totalWavesCleared >= 2000;
+    case "dungeon_waves_8000":
+      return state.dungeon.totalWavesCleared >= 8000;
     case "dungeon_boss_kills_8":
       return (state.lifetimeStats?.dungeonBossKills ?? 0) >= 8;
     case "dungeon_boss_kills_40":
@@ -1561,6 +1579,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.resonanceEssencePayouts ?? 0) >= 50;
     case "resonance_payouts_500":
       return (state.lifetimeStats?.resonanceEssencePayouts ?? 0) >= 500;
+    case "resonance_payouts_2000":
+      return (state.lifetimeStats?.resonanceEssencePayouts ?? 0) >= 2000;
     case "dao_meridian_3":
       return state.daoMeridian >= 3;
     case "dao_meridian_5":

@@ -10593,6 +10593,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--spirit-reservoir-claims {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(80, 150, 190, 0.42);
+  background: linear-gradient(145deg, rgba(16, 38, 52, 0.72), rgba(10, 18, 28, 0.78));
+}
+
+.chronicle-stat-card--spirit-reservoir-claims .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--spirit-reservoir-claims .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--spirit-array-upgrade {
   display: flex;
   align-items: center;

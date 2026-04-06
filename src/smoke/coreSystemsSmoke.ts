@@ -714,6 +714,14 @@ function runDungeonRollDodgeAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "dungeon_roll_dodges_400"));
 }
 
+function runDungeonWaves8000AchievementSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("dungeon_waves_8000"), "dungeon 8000 waves should start locked");
+  st.dungeon.totalWavesCleared = 8000;
+  const newly = tryCompleteAchievements(st);
+  assert.ok(newly.some((x) => x.id === "dungeon_waves_8000"), "8000 dungeon waves should unlock");
+}
+
 function runDaoEssenceSpentAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("dao_essence_spent_600"));
@@ -1111,6 +1119,9 @@ function runResonancePayoutAchievementsSmoke(): void {
   st.lifetimeStats.resonanceEssencePayouts = 500;
   const b = tryCompleteAchievements(st);
   assert.ok(b.some((x) => x.id === "resonance_payouts_500"), "500 resonance payouts should unlock");
+  st.lifetimeStats.resonanceEssencePayouts = 2000;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "resonance_payouts_2000"), "2000 resonance payouts should unlock");
 }
 
 function runCumulativePlaytime24hAchievementSmoke(): void {
@@ -1201,6 +1212,7 @@ function main(): void {
   runBiGuanAchievementsSmoke();
   runDungeonBossKillAchievementsSmoke();
   runDungeonRollDodgeAchievementsSmoke();
+  runDungeonWaves8000AchievementSmoke();
   runDaoEssenceSpentAchievementsSmoke();
   runSummonEssenceSpentAchievementsSmoke();
   runZhuLingEssenceSpentAchievementsSmoke();
