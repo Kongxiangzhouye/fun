@@ -461,6 +461,8 @@ export interface UiPrefs {
   autoClaimDailyLogin: boolean;
   /** 周常悬赏：有可领任务或里程时自动一键领取（需已解锁周常） */
   autoClaimWeeklyBounty: boolean;
+  /** 洞府委托：活动委托到期可结算时自动领奖（不要求开启托管连签） */
+  autoSettleEstateCommission: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

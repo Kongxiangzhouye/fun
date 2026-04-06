@@ -275,6 +275,24 @@ function runEstateCommissionDueSettleSmoke(): void {
   assert.ok(settled, "completed commission should be settleable");
 }
 
+function runEstateCommissionAutoSettlePrefSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.lastTick = now;
+  assert.equal(acceptEstateCommission(st, now), true);
+  if (!st.estateCommission.active) return;
+  st.estateCommission.active.dueAtMs = now + 500;
+  applyTick(st, now + 500);
+  assert.ok(st.estateCommission.active?.completedAtMs != null);
+  st.estateCommission.autoQueueEnabled = false;
+  st.uiPrefs.autoSettleEstateCommission = false;
+  assert.equal(tryAutoSettleEstateCommission(st, now + 500), null);
+  st.uiPrefs.autoSettleEstateCommission = true;
+  const r = tryAutoSettleEstateCommission(st, now + 500);
+  assert.ok(r, "autoSettleEstateCommission pref should settle without auto queue");
+  assert.equal(st.estateCommission.active, null);
+}
+
 function runOfflineAdventureQueueNoOverwriteSmoke(): void {
   const st = createInitialState();
   const now = Date.now();
@@ -541,6 +559,7 @@ function main(): void {
   runAutoSalvageAccumulatorRemainderSmoke();
   runFastForwardCrossWeekSyncSmoke();
   runEstateCommissionDueSettleSmoke();
+  runEstateCommissionAutoSettlePrefSmoke();
   runOfflineAdventureQueueNoOverwriteSmoke();
   runOfflineAdventureAutoPolicySmoke();
   runOfflineAdventureAutoReceiptSmoke();

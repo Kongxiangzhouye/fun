@@ -59,6 +59,16 @@ export function renderDailyLoginPanel(state: GameState, now: number): string {
             : `满签额外：灵石 ${wb.stones} · 唤灵髓 ${wb.summonEssence} · 筑灵髓 ${wb.zhuLingEssence}`
         }</span>
       </div>
+      <div
+        class="daily-login-week-meter"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="7"
+        aria-valuenow="${wk}"
+        aria-label="本周灵息礼已领天数"
+      >
+        <div class="daily-login-week-meter-fill" id="daily-login-week-meter-fill" style="width: ${Math.min(100, (wk / 7) * 100)}%"></div>
+      </div>
       <div class="daily-login-strip" aria-hidden="true">${weekCells}</div>
       <p class="hint sm daily-login-streak-line">当前连签：<strong id="daily-login-streak-val">${state.dailyStreak}</strong> 日 · 今日 <strong>${today}</strong></p>
       <div class="daily-login-reward-card">
@@ -92,6 +102,12 @@ export function updateDailyLoginPanelReadouts(state: GameState, now: number): vo
   if (re) re.textContent = String(prev.essence);
   const wc = document.getElementById("daily-login-week-count");
   if (wc) wc.textContent = String(wk);
+  const wkMeter = document.getElementById("daily-login-week-meter-fill");
+  if (wkMeter) wkMeter.style.width = `${Math.min(100, (wk / 7) * 100)}%`;
+  const wkMeterHost = document.querySelector(".daily-login-week-meter");
+  if (wkMeterHost) {
+    wkMeterHost.setAttribute("aria-valuenow", String(wk));
+  }
   const bonusLine = document.getElementById("daily-login-week-bonus-line");
   if (bonusLine) {
     bonusLine.textContent = state.loginCalendarWeeklyBonusClaimed

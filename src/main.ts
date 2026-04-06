@@ -4212,6 +4212,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoHarvestSpiritGarden") state.uiPrefs.autoHarvestSpiritGarden = checked;
       else if (t === "autoClaimDailyLogin") state.uiPrefs.autoClaimDailyLogin = checked;
       else if (t === "autoClaimWeeklyBounty") state.uiPrefs.autoClaimWeeklyBounty = checked;
+      else if (t === "autoSettleEstateCommission") state.uiPrefs.autoSettleEstateCommission = checked;
       else return;
       saveGame(state);
       render();

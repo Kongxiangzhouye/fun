@@ -251,9 +251,11 @@ export function settleEstateCommission(state: GameState, now: number): EstateCom
 }
 
 export function tryAutoSettleEstateCommission(state: GameState, now: number): EstateCommissionSettleResult | null {
-  if (!state.estateCommission?.autoQueueEnabled) return null;
-  const active = state.estateCommission.active;
+  const ec = state.estateCommission;
+  const active = ec?.active;
   if (!active || active.completedAtMs == null) return null;
+  const allow = !!ec?.autoQueueEnabled || !!state.uiPrefs.autoSettleEstateCommission;
+  if (!allow) return null;
   return settleEstateCommission(state, now);
 }
 

@@ -564,6 +564,8 @@ export const UI_ESTATE_COMMISSION_COMBAT = asset("icon-estate-commission-combat.
 export const UI_ESTATE_COMMISSION_CULTIVATION = asset("icon-estate-commission-cultivation.svg");
 /** 洞府委托 · 连携徽记 */
 export const UI_ESTATE_COMMISSION_STREAK = asset("icon-estate-commission-streak.svg");
+/** 洞府委托 · 到期自动结算（偏好开关旁） */
+export const UI_ESTATE_COMMISSION_AUTO_SETTLE = asset("estate-auto-settle.svg");
 /** 洞府委托 · 刷新冷却 */
 export const UI_ESTATE_COMMISSION_REFRESH_COOLDOWN = asset("icon-estate-commission-refresh-cooldown.svg");
 /** 洞府委托 · 刷新受限/不足 */
