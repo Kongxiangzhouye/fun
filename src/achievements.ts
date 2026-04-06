@@ -576,6 +576,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "rarity",
   },
   {
+    id: "spirit_tide_hours_24",
+    title: "潮信初闻",
+    desc: "累计进入灵潮时辰 24 次",
+    rewardStones: 420,
+    rewardEssence: 22,
+    listDeco: "fortune",
+  },
+  {
+    id: "spirit_tide_hours_120",
+    title: "子时驻形",
+    desc: "累计进入灵潮时辰 120 次",
+    rewardStones: 2400,
+    rewardEssence: 55,
+    listDeco: "fortune",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -1081,6 +1097,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.cardStarUps ?? 0) >= 40;
     case "card_star_ups_180":
       return (state.lifetimeStats?.cardStarUps ?? 0) >= 180;
+    case "spirit_tide_hours_24":
+      return (state.lifetimeStats?.spiritTideHours ?? 0) >= 24;
+    case "spirit_tide_hours_120":
+      return (state.lifetimeStats?.spiritTideHours ?? 0) >= 120;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

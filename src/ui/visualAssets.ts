@@ -79,6 +79,8 @@ export const UI_CHRONICLE_CARD_SALVAGE_STAT = asset("chronicle-card-salvage-stat
 export const UI_CHRONICLE_CARD_LEVEL_STAT = asset("chronicle-card-level-stat.svg");
 /** 唤灵通鉴 · 灵卡叠星累计小标 */
 export const UI_CHRONICLE_CARD_STAR_STAT = asset("chronicle-card-star-stat.svg");
+/** 唤灵通鉴 · 灵潮时辰累计小标；修炼页灵潮提示条共用 */
+export const UI_CHRONICLE_SPIRIT_TIDE_STAT = asset("chronicle-spirit-tide-stat.svg");
 /** 唤灵通鉴 · 灵脉升级累计小标 */
 export const UI_CHRONICLE_VEIN_UPGRADE_STAT = asset("chronicle-vein-upgrade-stat.svg");
 /** 唤灵通鉴 · 离线奇遇结算累计小标 */

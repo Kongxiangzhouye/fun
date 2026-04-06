@@ -11,6 +11,7 @@ import { petStoneIncomeMult } from "./systems/pets";
 import { daoMeridianStoneMult } from "./systems/daoMeridian";
 import { dailyFortuneStoneMult } from "./systems/dailyFortune";
 import { spiritArrayStoneMult } from "./systems/spiritArray";
+import { spiritTideStoneMult } from "./systems/spiritTide";
 import { offlineAdventureBoostMult } from "./systems/offlineAdventure";
 
 /** 境界基础灵石/秒（指数成长，后期靠轮回与元升级） */
@@ -88,6 +89,7 @@ export function incomePerSecondAt(state: GameState, totalCardsInPool: number, no
     .mul(daoMeridianStoneMult(state))
     .mul(dailyFortuneStoneMult(state))
     .mul(spiritArrayStoneMult(state))
+    .mul(spiritTideStoneMult(state))
     .mul(offlineAdventureBoostMult(state, now));
 }
 
@@ -129,8 +131,9 @@ export function incomeBreakdownForDisplay(
   const meridian = daoMeridianStoneMult(state);
   const fortune = dailyFortuneStoneMult(state);
   const arr = spiritArrayStoneMult(state);
-  const fromRealm = base.mul(mult).mul(meridian).mul(fortune).mul(arr);
-  const fromDeck = deckProd.mul(mult).mul(meridian).mul(fortune).mul(arr);
+  const tide = spiritTideStoneMult(state);
+  const fromRealm = base.mul(mult).mul(meridian).mul(fortune).mul(arr).mul(tide);
+  const fromDeck = deckProd.mul(mult).mul(meridian).mul(fortune).mul(arr).mul(tide);
   const boosted = fromRealm.plus(fromDeck).mul(offlineAdventureBoostMult(state, now));
   const boostMul = offlineAdventureBoostMult(state, now);
   if (boostMul <= 1) return { total: boosted, fromRealm, fromDeck };

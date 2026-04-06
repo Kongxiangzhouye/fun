@@ -202,6 +202,7 @@ import {
   UI_INCOME_SOURCE_ICON_REALM,
   UI_INCOME_SOURCE_ICON_DECK,
   UI_INCOME_SOURCE_ICON_UPGRADE,
+  UI_CHRONICLE_SPIRIT_TIDE_STAT,
   UI_ESTATE_COMMISSION_RESOURCE,
   UI_ESTATE_COMMISSION_COMBAT,
   UI_ESTATE_COMMISSION_CULTIVATION,
@@ -247,6 +248,7 @@ import {
   formatSpiritReservoirEtaLine,
   tryAutoClaimSpiritReservoirIfFull,
 } from "./systems/spiritReservoir";
+import { spiritTideActive, SPIRIT_TIDE_STONE_MULT } from "./systems/spiritTide";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
 import { renderSaveToolsPanel } from "./ui/saveToolsView";
@@ -2950,6 +2952,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `天机匣兑换次数: ${lt.celestialStashBuys}`,
     `蓄灵池收取次数: ${lt.spiritReservoirClaims}`,
     `心斋卦象刷新次数: ${lt.dailyFortuneRolls}`,
+    `灵潮时辰进入次数: ${lt.spiritTideHours}`,
     `铸灵累计次数: ${lt.gearForgesTotal}`,
     `历史最高铸灵稀有度: ${rarityPeak}`,
     `周常悬赏单周清满次数: ${lt.weeklyBountyFullWeeks}`,
@@ -3034,6 +3037,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">天机匣兑换次数</span><strong class="d-val" id="data-overview-lt-stash">${lt.celestialStashBuys}</strong></div>
         <div class="data-overview-cell"><span class="d-label">蓄灵池收取次数</span><strong class="d-val" id="data-overview-lt-reservoir">${lt.spiritReservoirClaims}</strong></div>
         <div class="data-overview-cell"><span class="d-label">心斋卦象刷新次数</span><strong class="d-val" id="data-overview-lt-fortune">${lt.dailyFortuneRolls}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵潮时辰进入次数</span><strong class="d-val" id="data-overview-lt-spirit-tide">${lt.spiritTideHours}</strong></div>
         <div class="data-overview-cell"><span class="d-label">铸灵累计次数</span><strong class="d-val" id="data-overview-lt-forge">${lt.gearForgesTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历史最高铸灵稀有度</span><strong class="d-val" id="data-overview-lt-rarity">${rarityPeak}</strong></div>
         <div class="data-overview-cell"><span class="d-label">周常悬赏单周清满次数</span><strong class="d-val" id="data-overview-lt-bounty-weeks">${lt.weeklyBountyFullWeeks}</strong></div>
@@ -3079,6 +3083,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-stash", String(lt.celestialStashBuys));
   set("data-overview-lt-reservoir", String(lt.spiritReservoirClaims));
   set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
+  set("data-overview-lt-spirit-tide", String(lt.spiritTideHours));
   set("data-overview-lt-forge", String(lt.gearForgesTotal));
   const rarityPeak =
     lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length
@@ -3354,6 +3359,13 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       ? `<div class="explore-block"><strong class="explore-title">下一探索</strong><ul class="explore-list">${nextExplore.map((h) => `<li>${h}</li>`).join("")}</ul></div>`
       : "";
 
+  const tideOn = spiritTideActive(state);
+  const tideBonusPct = Math.round((SPIRIT_TIDE_STONE_MULT - 1) * 100);
+  const spiritTideRow = `<div class="spirit-tide-row${tideOn ? " spirit-tide-row--active" : ""}" id="spirit-tide-row" role="status">
+      <img class="spirit-tide-ico" src="${UI_CHRONICLE_SPIRIT_TIDE_STAT}" alt="" width="28" height="28" loading="lazy" />
+      <p class="hint sm spirit-tide-copy" id="spirit-tide-copy">${tideOn ? `灵潮涌动 · 灵石收益 +${tideBonusPct}%` : `灵潮未启 · 每游戏日内前三时辰（内部刻度 0～2）灵石 +${tideBonusPct}%`}</p>
+    </div>`;
+
   const rs = reservoirStored(state);
   const rc = reservoirCap(state);
   const rPct = reservoirFillRatio(state) * 100;
@@ -3452,6 +3464,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const core = `
     <section class="panel">
       <h2>灵脉汇聚</h2>
+      ${spiritTideRow}
       <div class="income-hero">
         <div class="income-hero-label">每秒灵石</div>
         <div class="income-hero-value"><strong id="income-total-live">${fmtDecimal(ips)}</strong></div>
@@ -5454,6 +5467,16 @@ function updateEstateIdleLiveReadouts(now: number): void {
     realmPreviewEl.textContent = dIps.gt(1e-9)
       ? `破境后每秒约 +${fmtDecimal(dIps)}，预计回本约 ${fmtOfflineDurationSec(paybackSec)}。`
       : "破境后收益提升极小，建议优先补强灵卡或洞府。";
+  }
+  const tideRow = document.getElementById("spirit-tide-row");
+  const tideCopy = document.getElementById("spirit-tide-copy");
+  if (tideRow && tideCopy) {
+    const on = spiritTideActive(state);
+    const p = Math.round((SPIRIT_TIDE_STONE_MULT - 1) * 100);
+    tideRow.classList.toggle("spirit-tide-row--active", on);
+    tideCopy.textContent = on
+      ? `灵潮涌动 · 灵石收益 +${p}%`
+      : `灵潮未启 · 每游戏日内前三时辰（内部刻度 0～2）灵石 +${p}%`;
   }
   const huiSpan = document.getElementById("idle-vein-hui");
   const lingSpan = document.getElementById("idle-vein-ling");

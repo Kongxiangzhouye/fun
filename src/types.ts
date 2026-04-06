@@ -120,6 +120,8 @@ export interface LifetimeStatsState {
   cardLevelUps: number;
   /** 灵卡叠星成功次数（唤引重复卡升星计 1） */
   cardStarUps: number;
+  /** 进入「灵潮」内部时辰累计次数（刻度推进至 0～2 时各计 1，含离线/闭关推进） */
+  spiritTideHours: number;
 }
 
 /** 灵田作物 id */

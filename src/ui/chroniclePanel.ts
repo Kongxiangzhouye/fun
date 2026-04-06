@@ -12,6 +12,7 @@ import {
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
   UI_CHRONICLE_FORTUNE_STAT,
+  UI_CHRONICLE_SPIRIT_TIDE_STAT,
   UI_CHRONICLE_GEAR_ENHANCE_STAT,
   UI_CHRONICLE_GARDEN_HARVEST_STAT,
   UI_CHRONICLE_GARDEN_PLANT_STAT,
@@ -182,6 +183,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">心斋卦象刷新</span>
             <strong class="chronicle-stat-val">${ls.dailyFortuneRolls} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--spirit-tide">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_SPIRIT_TIDE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵潮时辰</span>
+            <strong class="chronicle-stat-val">${ls.spiritTideHours} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--offline-adventure">

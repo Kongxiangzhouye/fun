@@ -48,6 +48,10 @@ import {
 import { canClaimDailyLoginReward, claimDailyLoginReward } from "../systems/dailyLoginCalendar";
 import { getUiUnlocks } from "../uiUnlocks";
 import { tryCompleteAchievements } from "../achievements";
+import { incomePerSecondAt } from "../economy";
+import { advanceInGameHour } from "../inGameClock";
+import { spiritTideActive, spiritTideStoneMult } from "../systems/spiritTide";
+import { totalCardsInPool } from "../storage";
 
 type MemoryStorage = {
   getItem: (key: string) => string | null;
@@ -673,6 +677,38 @@ function runCardLevelAndStarAchievementsSmoke(): void {
   assert.ok(d.some((x) => x.id === "card_star_ups_180"), "180 card star ups should unlock");
 }
 
+function runSpiritTideSmoke(): void {
+  const st = createInitialState();
+  const pool = totalCardsInPool();
+  st.inGameHour = 5;
+  const baseIps = incomePerSecondAt(st, pool, Date.now());
+  assert.equal(spiritTideActive(st), false);
+  assert.ok(spiritTideStoneMult(st).eq(1));
+  st.inGameHour = 1;
+  assert.equal(spiritTideActive(st), true);
+  assert.ok(spiritTideStoneMult(st).eq(1.08));
+  const tideIps = incomePerSecondAt(st, pool, Date.now());
+  assert.ok(tideIps.eq(baseIps.mul(1.08)), "tide should multiply ips by 1.08");
+  assert.equal(st.lifetimeStats.spiritTideHours, 0);
+  advanceInGameHour(st, 1);
+  assert.equal(st.inGameHour, 2);
+  assert.equal(st.lifetimeStats.spiritTideHours, 1);
+  advanceInGameHour(st, 1);
+  assert.equal(st.inGameHour, 3);
+  assert.equal(st.lifetimeStats.spiritTideHours, 1);
+}
+
+function runSpiritTideAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("spirit_tide_hours_24"));
+  st.lifetimeStats.spiritTideHours = 24;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "spirit_tide_hours_24"));
+  st.lifetimeStats.spiritTideHours = 120;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "spirit_tide_hours_120"));
+}
+
 function runGearEnhanceAndUrRefineAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("gear_enhances_40"), "gear enhance 40 should start locked");
@@ -890,6 +926,8 @@ function main(): void {
   runSkillLevelAndRealmBreakthroughAchievementsSmoke();
   runGearEnhanceAndUrRefineAchievementsSmoke();
   runCardLevelAndStarAchievementsSmoke();
+  runSpiritTideSmoke();
+  runSpiritTideAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

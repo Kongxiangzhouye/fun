@@ -61,6 +61,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       urGearRefines: 0,
       cardLevelUps: 0,
       cardStarUps: 0,
+      spiritTideHours: 0,
     };
     return;
   }
@@ -153,6 +154,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   const cstar = st.lifetimeStats.cardStarUps;
   if (cstar == null || !Number.isFinite(cstar)) st.lifetimeStats.cardStarUps = 0;
   else st.lifetimeStats.cardStarUps = Math.max(0, Math.floor(cstar));
+  const sth = st.lifetimeStats.spiritTideHours;
+  if (sth == null || !Number.isFinite(sth)) st.lifetimeStats.spiritTideHours = 0;
+  else st.lifetimeStats.spiritTideHours = Math.max(0, Math.floor(sth));
 }
 
 /** 灵卡升阶（等级 +1）成功后累加 */

@@ -3,6 +3,7 @@
  */
 import type { GameState } from "./types";
 import { GAME_HOUR_REAL_SEC } from "./types";
+import { recordSpiritTideLifetimeIfActive } from "./systems/spiritTide";
 
 /** 主动行为（共鸣、余泽等）不再随刻度波动，恒为 1 */
 export function lingXiActiveFactor(_state: GameState): number {
@@ -36,6 +37,7 @@ export function advanceInGameHour(state: GameState, steps: number): void {
       state.inGameDay += 1;
       resetInGameCycleRewards(state);
     }
+    recordSpiritTideLifetimeIfActive(state);
   }
 }
 
