@@ -145,10 +145,10 @@ export function renderGameLoreHtml(): string {
       <details class="game-lore-block">
         <summary><img src="${UI_LORE_TUNA_MEDITATION}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 吐纳与闭关</summary>
         <ul class="game-lore-list">
-          <li><strong>入口</strong>：养成→灵府→<strong>灵脉</strong>子页（吐纳与闭关按钮位于此）。</li>
-          <li><strong>吐纳</strong>：冷却约 <strong>24</strong> 秒，就绪后点击获得灵石（数额随境界成长）；可造化玉解锁<strong>自动吐纳</strong>。计入周常「吐纳」条目。</li>
-          <li><strong>闭关</strong>：境界≥<strong>六重</strong>后可见；瞬间按约 <strong>1 小时</strong>的挂机收益规则预演结算灵石（与离线同乘区，仍受离线时长上限等约束）。</li>
-          <li>闭关有独立冷却（约 <strong>70</strong> 秒），预演同样会推进聚灵共鸣等随时间累积的系统。</li>
+          <li><strong>吐纳</strong>：修炼页「灵脉汇聚」区域（与破境、焚天同区）；冷却约 <strong>24</strong> 秒，就绪后点击获得灵石（数额随境界成长）。可造化玉解锁<strong>自动吐纳</strong>。计入周常「吐纳」条目。</li>
+          <li><strong>闭关</strong>：需先解锁修炼页下方「<strong>便利功能</strong>」区块（境界≥<strong>八重</strong>或已获得造化玉）；其后若境界≥<strong>六重</strong>，可见「闭关一纪」按钮。</li>
+          <li>闭关瞬间按约 <strong>1 小时</strong>的挂机收益规则预演结算灵石（与离线同乘区，仍受离线时长上限等约束）；冷却约 <strong>70</strong> 秒。</li>
+          <li>闭关预演同样会推进聚灵共鸣等随时间累积的系统。</li>
         </ul>
       </details>
 
