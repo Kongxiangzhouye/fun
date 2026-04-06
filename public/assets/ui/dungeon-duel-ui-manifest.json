@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "naming": "Filenames from DUNGEON_DUEL_UI_FILES in src/data/dungeonDuelUi.ts; served as public/assets/ui/<file>. 2026-04-06 refresh: hitConfirmRingDeco + critEchoDeco.",
+  "naming": "Filenames from DUNGEON_DUEL_UI_FILES in src/data/dungeonDuelUi.ts; served as public/assets/ui/<file>. 2026-04-06 refresh: hitConfirmRingDeco + critEchoDeco + parrySparkDeco.",
   "assets": [
     { "id": "readinessDeco", "file": "deco-dungeon-readiness-ribbon.svg" },
     { "id": "affixDeco", "file": "deco-dungeon-affix.svg" },
@@ -11,6 +11,7 @@
     { "id": "guardBreakDeco", "file": "deco-dungeon-guard-break.svg" },
     { "id": "hitConfirmRingDeco", "file": "deco-dungeon-hit-confirm-ring.svg" },
     { "id": "comboChainDeco", "file": "deco-dungeon-combo-chain.svg" },
+    { "id": "parrySparkDeco", "file": "deco-dungeon-parry-spark.svg" },
     { "id": "staggerPulseDeco", "file": "deco-dungeon-stagger-pulse.svg" },
     { "id": "finisherSealDeco", "file": "deco-dungeon-finisher-seal.svg" },
     { "id": "gaugeSword", "file": "deco-duel-gauge-sword.svg" },

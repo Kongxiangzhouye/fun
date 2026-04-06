@@ -3,6 +3,15 @@
   "notes": [
     {
       "date": "2026-04-06",
+      "title": "Dungeon parry + weekly overdue feedback fill (P1)",
+      "highlights": [
+        "Added dungeon parry spark SVG decal to improve high-frequency defensive confirmation readability.",
+        "Added weekly overdue status badge SVG to complete weekly status-state visual coverage.",
+        "Synced dungeon/weekly source maps, visual asset exports, and manifest entries without business-logic changes."
+      ]
+    },
+    {
+      "date": "2026-04-06",
       "title": "Dungeon duel hit/crit/combo readability refresh (P1)",
       "highlights": [
         "Refined hit-confirm ring SVG to strengthen center-lock clarity in rapid hit confirmation moments.",

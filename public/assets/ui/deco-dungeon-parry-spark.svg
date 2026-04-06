@@ -1,0 +1,20 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="dungeon parry spark feedback">
+  <defs>
+    <linearGradient id="parrySparkA" x1="18" y1="14" x2="78" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="0.5" stop-color="#88B8FF"/>
+      <stop offset="1" stop-color="#63F2DE"/>
+    </linearGradient>
+    <radialGradient id="parrySparkB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(48 48) rotate(90) scale(28)">
+      <stop stop-color="#EDF6FF" stop-opacity="0.76"/>
+      <stop offset="1" stop-color="#EDF6FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="48" cy="48" r="36" fill="#0B1426" stroke="url(#parrySparkA)" stroke-width="2.2" opacity="0.94"/>
+  <circle cx="48" cy="48" r="28" fill="none" stroke="url(#parrySparkA)" stroke-width="1.6" opacity="0.45" stroke-dasharray="2.8 3.6"/>
+  <circle cx="48" cy="48" r="20" fill="url(#parrySparkB)" opacity="0.72"/>
+  <path d="M48 22 L54 38 L72 38 L58 49 L63 67 L48 56 L33 67 L38 49 L24 38 L42 38 Z" fill="#EAF4FF" opacity="0.9"/>
+  <path d="M48 26 L52 38 L65 38 L55 46 L59 58 L48 51 L37 58 L41 46 L31 38 L44 38 Z" fill="url(#parrySparkA)" opacity="0.92"/>
+  <path d="M26 48 H34 M62 48 H70 M48 26 V34 M48 62 V70" stroke="#CFE4FF" stroke-width="2.2" stroke-linecap="round" opacity="0.82"/>
+  <circle cx="48" cy="48" r="4" fill="#F7FCFF" opacity="0.98"/>
+</svg>

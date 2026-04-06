@@ -13,6 +13,7 @@
     { "id": "streakBadge", "file": "bounty-weekly-streak-badge.svg" },
     { "id": "completeBadge", "file": "bounty-weekly-complete-badge.svg" },
     { "id": "pendingBadge", "file": "bounty-weekly-pending-badge.svg" },
+    { "id": "overdueBadge", "file": "bounty-weekly-overdue-badge.svg" },
     { "id": "wavesFocusBadge", "file": "bounty-weekly-waves-focus-badge.svg" }
   ]
 }
