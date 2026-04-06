@@ -862,16 +862,38 @@ export function loadGame(): GameState {
   return createInitialState();
 }
 
+function encodeUtf8Base64(input: string): string {
+  const bytes = new TextEncoder().encode(input);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+function decodeUtf8Base64(input: string): string {
+  const bin = atob(input);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
 export function exportSave(state: GameState): string {
-  return btoa(unescape(encodeURIComponent(serialize(state))));
+  return encodeUtf8Base64(serialize(state));
 }
 
 export function importSave(b64: string): GameState | null {
+  const raw = b64.trim();
+  if (!raw) return null;
   try {
-    const json = decodeURIComponent(escape(atob(b64)));
+    const json = decodeUtf8Base64(raw);
     return deserialize(json);
   } catch {
-    return null;
+    // Fallback for older exports using escape/unescape based encoding.
+    try {
+      const legacy = decodeURIComponent(escape(atob(raw)));
+      return deserialize(legacy);
+    } catch {
+      return null;
+    }
   }
 }
 
