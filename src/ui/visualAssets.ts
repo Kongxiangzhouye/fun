@@ -227,12 +227,16 @@ export const UI_OFFLINE_IDLE_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.idleBadge
 export const UI_OFFLINE_TRANSITION_SHINE = asset(OFFLINE_SETTLEMENT_UI_FILES.transitionShine);
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
 
-/** 离线奇遇二选一 · 选项图标（内联 SVG） */
+/** 离线奇遇三选一 · 选项图标（内联 SVG） */
 export const UI_OFFLINE_EVENT_OPTION_SAFE = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.2l6.3 2.5v4.7c0 3.6-2.2 6.7-6.3 8.4-4.1-1.7-6.3-4.8-6.3-8.4V4.7L10 2.2z" stroke="#9db8ff" stroke-width="1.3"/><path d="M10 6.1v6.2M7.2 9.1h5.6" stroke="#e7efff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
 );
 export const UI_OFFLINE_EVENT_OPTION_RISK = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 1.9l7 12.2c.4.8-.1 1.8-1 1.8H4c-.9 0-1.4-1-1-1.8L10 1.9z" stroke="#f2b879" stroke-width="1.3"/><path d="M10 6.2v4.8" stroke="#fff2e0" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="13.8" r=".9" fill="#fff2e0"/></svg>`,
+);
+/** 离线奇遇三选一 · 髓潮选项图标（内联 SVG） */
+export const UI_OFFLINE_EVENT_OPTION_ESSENCE = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.4c2.1 2.8 4.2 5.6 4.2 8.6a4.2 4.2 0 11-8.4 0c0-3 2.1-5.8 4.2-8.6z" stroke="#7ee0d8" stroke-width="1.25"/><path d="M6.8 12.1c.9 1.1 2.1 1.7 3.2 1.7s2.3-.6 3.2-1.7" stroke="#b8fff6" stroke-width="1.2" stroke-linecap="round"/><ellipse cx="10" cy="9.2" rx="2.1" ry="1.1" fill="rgba(120,230,216,0.35)"/></svg>`,
 );
 
 /** 收益来源拆分与升级引导 · 图标（内联 SVG） */

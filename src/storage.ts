@@ -22,6 +22,7 @@ import {
 } from "./systems/pullChronicle";
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
+import { buildEssenceOptionForSettledSec } from "./systems/offlineAdventure";
 import { normalizeGearGrade } from "./systems/gearCraft";
 import { legacyGearRank5ToRank9 } from "./ui/gearVisualTier";
 
@@ -340,6 +341,7 @@ export function serialize(state: GameState): string {
                 options: state.offlineAdventure.pending.options.map((op) => ({ ...op })) as [
                   OfflineAdventureOptionState,
                   OfflineAdventureOptionState,
+                  OfflineAdventureOptionState,
                 ],
               }
             : null,
@@ -489,21 +491,31 @@ export function deserialize(json: string): GameState {
       Number.isFinite(oa.activeBoostMult) && oa.activeBoostMult >= 1 ? Math.max(1, Number(oa.activeBoostMult)) : 1;
     let pending: GameState["offlineAdventure"]["pending"] = null;
     if (oa.pending && typeof oa.pending === "object" && Array.isArray(oa.pending.options) && oa.pending.options.length >= 2) {
-      const picked = oa.pending.options
-        .slice(0, 2)
-        .map((op) => ({
-          id: op.id === "boost" ? "boost" : "instant",
+      const rawOpts = oa.pending.options.slice(0, 3);
+      const picked = rawOpts.map((op) => {
+        const idRaw = op.id === "boost" ? "boost" : op.id === "essence" ? "essence" : "instant";
+        const zl = (op as { zhuLingBonus?: unknown }).zhuLingBonus;
+        const zhuLingBonus =
+          idRaw === "essence" && Number.isFinite(zl) ? Math.max(0, Math.floor(Number(zl))) : undefined;
+        return {
+          id: idRaw,
           title: typeof op.title === "string" ? op.title : "",
           desc: typeof op.desc === "string" ? op.desc : "",
           instantStones: op.instantStones != null ? String(op.instantStones) : "0",
           instantEssence: Number.isFinite(op.instantEssence) ? Math.max(0, Math.floor(Number(op.instantEssence))) : 0,
           boostMult: Number.isFinite(op.boostMult) ? Math.max(1, Number(op.boostMult)) : 1,
           boostDurationSec: Number.isFinite(op.boostDurationSec) ? Math.max(0, Math.floor(Number(op.boostDurationSec))) : 0,
-        })) as OfflineAdventureOptionState[];
+          ...(zhuLingBonus !== undefined ? { zhuLingBonus } : {}),
+        } as OfflineAdventureOptionState;
+      });
+      const settledSec = Number.isFinite(oa.pending.settledSec) ? Math.max(0, Number(oa.pending.settledSec)) : 0;
+      while (picked.length < 3) {
+        picked.push(buildEssenceOptionForSettledSec(settledSec));
+      }
       pending = {
         triggeredAtMs: Number.isFinite(oa.pending.triggeredAtMs) ? Math.max(0, Math.floor(oa.pending.triggeredAtMs)) : 0,
-        settledSec: Number.isFinite(oa.pending.settledSec) ? Math.max(0, Number(oa.pending.settledSec)) : 0,
-        options: [picked[0]!, picked[1]!],
+        settledSec,
+        options: [picked[0]!, picked[1]!, picked[2]!],
       };
     }
     st.offlineAdventure = {
@@ -704,6 +716,7 @@ export function deserialize(json: string): GameState {
         typeof data.lifetimeStats.lastWeeklyBountyFullWeekKey === "string"
           ? data.lifetimeStats.lastWeeklyBountyFullWeekKey
           : "",
+      offlineAdventureBoostPicks: Math.max(0, Math.floor(data.lifetimeStats.offlineAdventureBoostPicks ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

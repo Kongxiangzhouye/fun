@@ -400,6 +400,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "fortuneBloom",
   },
   {
+    id: "offline_boost_5",
+    title: "静修成习",
+    desc: "累计 5 次选择离线奇遇「静修余韵」增益",
+    rewardStones: 120,
+    rewardEssence: 12,
+    listDeco: "reservoir",
+  },
+  {
     id: "spirit_array_10",
     title: "阵图小成",
     desc: "纳灵阵图达到 10 重",
@@ -665,6 +673,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 30;
     case "daily_fortune_100":
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 100;
+    case "offline_boost_5":
+      return (state.lifetimeStats?.offlineAdventureBoostPicks ?? 0) >= 5;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

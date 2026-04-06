@@ -182,6 +182,7 @@ import {
   UI_OFFLINE_TRANSITION_SHINE,
   UI_OFFLINE_EVENT_OPTION_SAFE,
   UI_OFFLINE_EVENT_OPTION_RISK,
+  UI_OFFLINE_EVENT_OPTION_ESSENCE,
   UI_INCOME_SOURCE_ICON_REALM,
   UI_INCOME_SOURCE_ICON_DECK,
   UI_INCOME_SOURCE_ICON_UPGRADE,
@@ -3154,9 +3155,9 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
     ? `<section class="panel offline-event-panel">
       <div class="panel-title-art-row panel-title-art-row--sub">
         <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_BADGE}" alt="" width="24" height="24" loading="lazy" />
-        <h2>离线奇遇二选一</h2>
+        <h2>离线奇遇三选一</h2>
       </div>
-      <p class="hint sm">离线达阈值会生成二选一；资源选项立即到账，增益选项会在持续时间后自动失效。${oaBoostTag}</p>
+      <p class="hint sm">离线达阈值会生成三选一；灵脉/髓潮奖励立即到账，静修增益在持续时间后自动失效。${oaBoostTag}</p>
       <div class="offline-choice-tabs" role="tablist" aria-label="离线奇遇选项">
         <button type="button" class="offline-choice-tab is-active" aria-selected="true">${oaPending ? "可结算" : "待触发"}</button>
         <button type="button" class="offline-choice-tab" aria-selected="false">${oaBoostLeftMs > 0 ? "增益生效中" : "增益未激活"}</button>
@@ -3193,6 +3194,21 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
               : "离线达到阈值后可选择限时挂机增益。"
           }</p>
           <button class="btn" type="button" data-offline-choice="boost" ${oaPending ? "" : "disabled"}>选择本项</button>
+        </article>
+        <article class="offline-choice-card">
+          <div class="offline-choice-head">
+            <span class="status-badge status-badge--ready">
+              <img src="${UI_OFFLINE_EVENT_OPTION_ESSENCE}" alt="" width="14" height="14" loading="lazy" />
+              ${oaPending ? oaPending.options[2].title : "髓潮归元"}
+            </span>
+            <span class="recommend-tag">髓潮</span>
+          </div>
+          <p class="hint sm">${
+            oaPending
+              ? `唤灵髓 +${oaPending.options[2].instantEssence}，筑灵髓 +${oaPending.options[2].zhuLingBonus ?? 0}（无灵石、无挂机增益）。`
+              : "离线达到阈值后可选择双髓补给。"
+          }</p>
+          <button class="btn" type="button" data-offline-choice="essence" ${oaPending ? "" : "disabled"}>选择本项</button>
         </article>
       </div>
     </section>`
@@ -4515,7 +4531,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.querySelectorAll("[data-offline-choice]").forEach((el) => {
     el.addEventListener("click", () => {
       const id = (el as HTMLElement).dataset.offlineChoice;
-      if (id !== "instant" && id !== "boost") return;
+      if (id !== "instant" && id !== "boost" && id !== "essence") return;
       const t = nowMs();
       if (!chooseOfflineAdventureOption(state, id, t)) {
         toast("当前没有可结算的离线奇遇。");
@@ -4525,6 +4541,8 @@ function bindEvents(rb: Decimal, _slots: number): void {
       saveGame(state);
       if (id === "instant") {
         toast("已选择灵脉馈赠：奖励已到账。");
+      } else if (id === "essence") {
+        toast("已选择髓潮归元：唤灵髓与筑灵髓已到账。");
       } else {
         const leftMin = Math.ceil(offlineAdventureBoostLeftMs(state, t) / 60000);
         toast(`已选择静修余韵：挂机增益已生效（约 ${leftMin} 分）。`);
@@ -5071,11 +5089,14 @@ function updateEstateIdleLiveReadouts(now: number): void {
   if (tabs[1]) tabs[1].textContent = oaBoostLeftMs > 0 ? "增益生效中" : "增益未激活";
   const btnInstant = document.querySelector("[data-offline-choice='instant']") as HTMLButtonElement | null;
   const btnBoost = document.querySelector("[data-offline-choice='boost']") as HTMLButtonElement | null;
+  const btnEssence = document.querySelector("[data-offline-choice='essence']") as HTMLButtonElement | null;
   if (btnInstant) btnInstant.disabled = !oaPending;
   if (btnBoost) btnBoost.disabled = !oaPending;
+  if (btnEssence) btnEssence.disabled = !oaPending;
   const cards = document.querySelectorAll(".offline-choice-card");
   const card1Desc = cards[0]?.querySelector(".hint.sm");
   const card2Desc = cards[1]?.querySelector(".hint.sm");
+  const card3Desc = cards[2]?.querySelector(".hint.sm");
   if (card1Desc) {
     card1Desc.textContent = oaPending
       ? `即时获得 ${fmtDecimal(new Decimal(oaPending.options[0].instantStones))} 灵石 + ${oaPending.options[0].instantEssence} 唤灵髓。`
@@ -5086,10 +5107,15 @@ function updateEstateIdleLiveReadouts(now: number): void {
       ? `挂机收益 ×${oaPending.options[1].boostMult.toFixed(2)}，持续 ${Math.ceil(oaPending.options[1].boostDurationSec / 60)} 分钟。`
       : "离线达到阈值后可选择限时挂机增益。";
   }
+  if (card3Desc) {
+    card3Desc.textContent = oaPending
+      ? `唤灵髓 +${oaPending.options[2].instantEssence}，筑灵髓 +${oaPending.options[2].zhuLingBonus ?? 0}（无灵石、无挂机增益）。`
+      : "离线达到阈值后可选择双髓补给。";
+  }
   const panelHint = document.querySelector(".offline-event-panel .hint.sm");
   if (panelHint) {
     panelHint.textContent =
-      `离线达阈值会生成二选一；资源选项立即到账，增益选项会在持续时间后自动失效。` +
+      `离线达阈值会生成三选一；灵脉/髓潮奖励立即到账，静修增益在持续时间后自动失效。` +
       (oaBoostLeftMs > 0
         ? `当前增益 ×${oaBoostMul.toFixed(2)}（剩余约 ${Math.ceil(oaBoostLeftMs / 60000)} 分）`
         : "当前无挂机增益");

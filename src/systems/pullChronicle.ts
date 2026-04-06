@@ -40,6 +40,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       maxGearRarityRankForged: 0,
       weeklyBountyFullWeeks: 0,
       lastWeeklyBountyFullWeekKey: "",
+      offlineAdventureBoostPicks: 0,
     };
     return;
   }
@@ -70,6 +71,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   else st.lifetimeStats.weeklyBountyFullWeeks = Math.max(0, Math.floor(wb));
   const wbk = st.lifetimeStats.lastWeeklyBountyFullWeekKey;
   st.lifetimeStats.lastWeeklyBountyFullWeekKey = typeof wbk === "string" ? wbk : "";
+  const oab = st.lifetimeStats.offlineAdventureBoostPicks;
+  if (oab == null || !Number.isFinite(oab)) st.lifetimeStats.offlineAdventureBoostPicks = 0;
+  else st.lifetimeStats.offlineAdventureBoostPicks = Math.max(0, Math.floor(oab));
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */

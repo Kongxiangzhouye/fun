@@ -47,4 +47,11 @@ export const DAILY_FORTUNES: DailyFortuneDef[] = [
     stoneMult: 1.055,
     dungeonMult: 1.055,
   },
+  {
+    id: "fd_chao",
+    title: "潮涌星渊",
+    desc: "渊回潮生，资粮与战意同涨。",
+    stoneMult: 1.072,
+    dungeonMult: 1.062,
+  },
 ];

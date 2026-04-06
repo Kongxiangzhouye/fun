@@ -1,11 +1,33 @@
 import Decimal from "decimal.js";
 import type { GameState, OfflineAdventureOptionState } from "../types";
 import { addStones } from "../stones";
+import { normalizeLifetimeStats } from "./pullChronicle";
 
 export const OFFLINE_ADVENTURE_TRIGGER_SEC = 45 * 60;
 const BOOST_DURATION_SEC = 2 * 3600;
 
-function mkOptions(state: GameState, settledSec: number): [OfflineAdventureOptionState, OfflineAdventureOptionState] {
+/** 供旧档二选一 pending 迁移为第三项「髓潮归元」 */
+export function buildEssenceOptionForSettledSec(settledSec: number): OfflineAdventureOptionState {
+  const hrs = Math.max(0.5, settledSec / 3600);
+  const instantEssence = Math.max(28, Math.floor(18 + settledSec / 95 + hrs * 6));
+  const zhuLingBonus = Math.max(10, Math.floor(7 + settledSec / 220 + hrs * 4));
+  return {
+    id: "essence",
+    title: "髓潮归元",
+    desc: "唤灵髓与筑灵髓一并涌至，适合冲刺唤引与铸灵。",
+    instantStones: "0",
+    instantEssence,
+    boostMult: 1,
+    boostDurationSec: 0,
+    zhuLingBonus,
+  };
+}
+
+function mkOptions(state: GameState, settledSec: number): [
+  OfflineAdventureOptionState,
+  OfflineAdventureOptionState,
+  OfflineAdventureOptionState,
+] {
   const hrs = Math.max(0.5, settledSec / 3600);
   const stoneBase = new Decimal(state.spiritStones || "0");
   const instantStones = Decimal.max(
@@ -32,7 +54,8 @@ function mkOptions(state: GameState, settledSec: number): [OfflineAdventureOptio
     boostMult,
     boostDurationSec: BOOST_DURATION_SEC,
   };
-  return [instant, boost];
+  const essence = buildEssenceOptionForSettledSec(settledSec);
+  return [instant, boost, essence];
 }
 
 export function maybeQueueOfflineAdventure(state: GameState, settledSec: number, now: number): boolean {
@@ -46,17 +69,27 @@ export function maybeQueueOfflineAdventure(state: GameState, settledSec: number,
   return true;
 }
 
-export function chooseOfflineAdventureOption(state: GameState, optionId: "instant" | "boost", now: number): boolean {
+export function chooseOfflineAdventureOption(
+  state: GameState,
+  optionId: "instant" | "boost" | "essence",
+  now: number,
+): boolean {
   const pending = state.offlineAdventure.pending;
   if (!pending) return false;
   const picked = pending.options.find((op) => op.id === optionId);
   if (!picked) return false;
   if (picked.instantStones !== "0") addStones(state, new Decimal(picked.instantStones));
   if (picked.instantEssence > 0) state.summonEssence += picked.instantEssence;
+  const zl = picked.zhuLingBonus ?? 0;
+  if (zl > 0) state.zhuLingEssence += zl;
   if (picked.boostDurationSec > 0 && picked.boostMult > 1) {
     const base = Math.max(now, state.offlineAdventure.activeBoostUntilMs);
     state.offlineAdventure.activeBoostUntilMs = base + picked.boostDurationSec * 1000;
     state.offlineAdventure.activeBoostMult = Math.max(state.offlineAdventure.activeBoostMult, picked.boostMult);
+  }
+  if (picked.id === "boost") {
+    normalizeLifetimeStats(state);
+    state.lifetimeStats.offlineAdventureBoostPicks += 1;
   }
   state.offlineAdventure.pending = null;
   return true;
@@ -73,4 +106,3 @@ export function offlineAdventureBoostLeftMs(state: GameState, now: number): numb
   if (!oa) return 0;
   return Math.max(0, oa.activeBoostUntilMs - now);
 }
-

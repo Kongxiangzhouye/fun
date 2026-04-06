@@ -78,6 +78,8 @@ export interface LifetimeStatsState {
   weeklyBountyFullWeeks: number;
   /** 最近一次计入 `weeklyBountyFullWeeks` 的周 key（与 `weeklyBounty.weekKey` 同源），防同周重复累加 */
   lastWeeklyBountyFullWeekKey: string;
+  /** 累计选择离线奇遇「静修余韵」次数（成就） */
+  offlineAdventureBoostPicks: number;
 }
 
 /** 灵田作物 id */
@@ -117,22 +119,24 @@ export interface DailyFortuneState {
   fortuneId: string;
 }
 
-/** 离线奇遇：二选一中的单个方案 */
+/** 离线奇遇：三选一中的单个方案 */
 export interface OfflineAdventureOptionState {
-  id: "instant" | "boost";
+  id: "instant" | "boost" | "essence";
   title: string;
   desc: string;
   instantStones: string;
   instantEssence: number;
   boostMult: number;
   boostDurationSec: number;
+  /** 髓潮选项：额外发放的筑灵髓 */
+  zhuLingBonus?: number;
 }
 
 /** 离线奇遇：等待玩家选择的结算快照 */
 export interface OfflineAdventurePendingState {
   triggeredAtMs: number;
   settledSec: number;
-  options: [OfflineAdventureOptionState, OfflineAdventureOptionState];
+  options: [OfflineAdventureOptionState, OfflineAdventureOptionState, OfflineAdventureOptionState];
 }
 
 /** 离线奇遇系统持久状态 */
