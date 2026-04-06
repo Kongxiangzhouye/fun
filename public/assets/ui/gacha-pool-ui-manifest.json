@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "naming": "Filenames from GACHA_POOL_UI_FILES in src/data/gachaPoolUi.ts; served as public/assets/ui/<file>.",
+  "assets": [
+    { "id": "gachaDecor", "file": "gacha-decor.svg" },
+    { "id": "resonanceCore", "file": "resonance-core.svg" },
+    { "id": "pitySigil", "file": "pity-sigil.svg" },
+    { "id": "gearPitySigil", "file": "gear-pity-sigil.svg" },
+    { "id": "gearForgeTierDeco", "file": "gear-forge-tier-deco.svg" }
+  ]
+}
