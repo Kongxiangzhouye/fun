@@ -59,6 +59,8 @@ export const UI_DAO_BREAKDOWN_DECO = asset("dao-essence-breakdown-deco.svg");
 export const UI_RESONANCE_PAYOUT_STAT = asset("resonance-payout-milestone.svg");
 /** 唤灵通鉴 · 吐纳累计次数小标 */
 export const UI_CHRONICLE_TUNA_STAT = asset("chronicle-tuna-stat.svg");
+/** 唤灵通鉴 · 焚天累计次数小标 */
+export const UI_CHRONICLE_FENTIAN_STAT = asset("chronicle-fentian-stat.svg");
 /** 偏好设置 · 轮回确认框开关旁 */
 export const UI_PREF_CONFIRM_REINCARNATION = asset("ui-pref-confirm-reincarnation.svg");
 /** 偏好设置 · 动态标签标题开关旁 */

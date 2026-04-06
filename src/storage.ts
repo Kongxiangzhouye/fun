@@ -943,6 +943,7 @@ export function deserialize(json: string): GameState {
           : "",
       resonanceEssencePayouts: Math.max(0, Math.floor(data.lifetimeStats.resonanceEssencePayouts ?? 0)),
       tunaCompletions: Math.max(0, Math.floor(data.lifetimeStats.tunaCompletions ?? 0)),
+      fenTianBursts: Math.max(0, Math.floor(data.lifetimeStats.fenTianBursts ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

@@ -45,6 +45,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       lastLoginCalendarFullWeekKey: "",
       resonanceEssencePayouts: 0,
       tunaCompletions: 0,
+      fenTianBursts: 0,
     };
     return;
   }
@@ -89,6 +90,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   const tc = st.lifetimeStats.tunaCompletions;
   if (tc == null || !Number.isFinite(tc)) st.lifetimeStats.tunaCompletions = 0;
   else st.lifetimeStats.tunaCompletions = Math.max(0, Math.floor(tc));
+  const ft = st.lifetimeStats.fenTianBursts;
+  if (ft == null || !Number.isFinite(ft)) st.lifetimeStats.fenTianBursts = 0;
+  else st.lifetimeStats.fenTianBursts = Math.max(0, Math.floor(ft));
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */

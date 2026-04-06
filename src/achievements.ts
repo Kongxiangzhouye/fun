@@ -304,6 +304,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "train",
   },
   {
+    id: "fen_tian_bursts_15",
+    title: "焚天初焰",
+    desc: "焚天成功累计 15 次",
+    rewardStones: 200,
+    rewardEssence: 15,
+    listDeco: "realm",
+  },
+  {
+    id: "fen_tian_bursts_150",
+    title: "燎原千里",
+    desc: "焚天成功累计 150 次",
+    rewardStones: 2200,
+    rewardEssence: 55,
+    listDeco: "realm",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -741,6 +757,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.tunaCompletions ?? 0) >= 30;
     case "tuna_completions_300":
       return (state.lifetimeStats?.tunaCompletions ?? 0) >= 300;
+    case "fen_tian_bursts_15":
+      return (state.lifetimeStats?.fenTianBursts ?? 0) >= 15;
+    case "fen_tian_bursts_150":
+      return (state.lifetimeStats?.fenTianBursts ?? 0) >= 150;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

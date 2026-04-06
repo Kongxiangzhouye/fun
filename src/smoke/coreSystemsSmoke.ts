@@ -645,6 +645,17 @@ function runLifePlaytimeHourAchievementSmoke(): void {
   assert.ok(st.achievementsDone.has("life_playtime_3600"), "achievement should be marked done");
 }
 
+function runFenTianBurstAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("fen_tian_bursts_15"), "fen tian 15 should start locked");
+  st.lifetimeStats.fenTianBursts = 15;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "fen_tian_bursts_15"), "15 fen tian should unlock");
+  st.lifetimeStats.fenTianBursts = 150;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
+}
+
 function runTunaCompletionAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("tuna_completions_30"), "tuna 30 should start locked");
@@ -728,6 +739,7 @@ function main(): void {
   runCumulativePlaytime24hAchievementSmoke();
   runResonancePayoutAchievementsSmoke();
   runTunaCompletionAchievementsSmoke();
+  runFenTianBurstAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();
