@@ -2,25 +2,9 @@ import type { GameState, GearAffixRoll, GearItem, GearStatKey, Rarity } from "..
 import { xuanTieFromGearPiece } from "./salvage";
 import { GEAR_GRADE_MAX } from "../types";
 import { nextRand01 } from "../rng";
+import { rarityRank } from "../data/rarityRank";
 import { GEAR_BASES, getGearBase, maxAffixCount, maxEnhanceLevel } from "../data/gearBases";
 import { gearForgeAscensionLevel, gearForgeIlvlBonus, rollGearRarityForForge } from "./gearGachaTier";
-
-function rarityRank(r: Rarity): number {
-  switch (r) {
-    case "N":
-      return 0;
-    case "R":
-      return 1;
-    case "SR":
-      return 2;
-    case "SSR":
-      return 3;
-    case "UR":
-      return 4;
-    default:
-      return 0;
-  }
-}
 
 /** 单件装备战力（与顶栏综合战力不同：仅用于同部位替换比对） */
 export function gearItemPower(g: GearItem): number {

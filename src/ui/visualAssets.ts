@@ -3,6 +3,7 @@
  * 图标来源：Twemoji（CC-BY 4.0）https://github.com/twitter/twemoji
  */
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
+import { GEAR_BASES } from "../data/gearBases";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -41,14 +42,10 @@ export const GEAR_SLOT_ICON: Record<"weapon" | "body" | "ring", string> = {
   ring: asset("gear-ring.png"),
 };
 
-/** 各装备基底立绘（`public/assets/ui/gear-base-<baseId>.png`）；有映射则用立绘，否则回退槽位图标 */
-export const GEAR_BASE_PORTRAIT: Record<string, string> = {
-  blade_wrought: asset("gear-base-blade_wrought.png"),
-  robe_scholar: asset("gear-base-robe_scholar.png"),
-  ring_moon: asset("gear-base-ring_moon.png"),
-  spear_cloud: asset("gear-base-spear_cloud.png"),
-  boots_void: asset("gear-base-boots_void.png"),
-};
+/** 各装备基底立绘（`public/assets/ui/gear-base-<baseId>.png`）；与 `GEAR_BASES` 同步，否则回退槽位图标 */
+export const GEAR_BASE_PORTRAIT: Record<string, string> = Object.fromEntries(
+  GEAR_BASES.map((b) => [b.id, asset(`gear-base-${b.id}.png`)]),
+);
 
 export function gearPortraitSrc(
   baseId: string,

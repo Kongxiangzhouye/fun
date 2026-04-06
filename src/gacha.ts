@@ -1,4 +1,5 @@
 import type { CardDef, GameState, GearItem, Rarity } from "./types";
+import { rarityRank } from "./data/rarityRank";
 import { CARDS } from "./data/cards";
 import { ensureOwned } from "./state";
 import { nextRand01 } from "./rng";
@@ -74,23 +75,6 @@ function randomCardOfRarity(state: GameState, rarity: Rarity): CardDef {
   return pool[Math.min(idx, pool.length - 1)]!;
 }
 
-function rarityRank(rarity: Rarity): number {
-  switch (rarity) {
-    case "N":
-      return 0;
-    case "R":
-      return 1;
-    case "SR":
-      return 2;
-    case "SSR":
-      return 3;
-    case "UR":
-      return 4;
-    default:
-      return 0;
-  }
-}
-
 function compensationLingShaForMaxStarDup(rarity: Rarity): number {
   switch (rarity) {
     case "SR":
@@ -112,10 +96,14 @@ export interface PullResult {
 
 /** 用于抽卡演出：取本批最高稀有度 */
 export function highestRarityInPulls(results: PullResult[]): Rarity {
-  const order: Rarity[] = ["N", "R", "SR", "SSR", "UR"];
   let best: Rarity = "N";
+  let bestRank = rarityRank(best);
   for (const r of results) {
-    if (order.indexOf(r.card.rarity) > order.indexOf(best)) best = r.card.rarity;
+    const rr = rarityRank(r.card.rarity);
+    if (rr > bestRank) {
+      best = r.card.rarity;
+      bestRank = rr;
+    }
   }
   return best;
 }
