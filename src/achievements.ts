@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "petPullBloom" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "reservoir" | "reservoirBloom" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
+  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "petPullBloom" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "reservoir" | "reservoirBloom" | "fortune" | "fortuneBloom" | "vein" | "realm" | "gacha" | "codex" | "rarity";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -376,6 +376,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "fortune",
   },
   {
+    id: "daily_fortune_100",
+    title: "心斋万象",
+    desc: "心斋卦象累计刷新 100 次",
+    rewardStones: 2800,
+    rewardEssence: 78,
+    listDeco: "fortuneBloom",
+  },
+  {
     id: "spirit_array_10",
     title: "阵图小成",
     desc: "纳灵阵图达到 10 重",
@@ -635,6 +643,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
     case "daily_fortune_30":
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 30;
+    case "daily_fortune_100":
+      return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 100;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

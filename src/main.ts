@@ -164,6 +164,7 @@ import {
   UI_ACH_RESERVOIR_DECO,
   UI_ACH_RESERVOIR_BLOOM_DECO,
   UI_ACH_FORTUNE_DECO,
+  UI_ACH_FORTUNE_BLOOM_DECO,
   UI_ACH_VEIN_DECO,
   UI_ACH_REALM_DECO,
   UI_SAVE_DOWNLOAD_DECO,
@@ -3240,6 +3241,8 @@ function renderAch(): string {
                                   ? `<img class="ach-deco-icon" src="${UI_ACH_RESERVOIR_BLOOM_DECO}" alt="" width="22" height="22" loading="lazy" />`
                                 : a.listDeco === "fortune"
                                   ? `<img class="ach-deco-icon" src="${UI_ACH_FORTUNE_DECO}" alt="" width="22" height="22" loading="lazy" />`
+                                  : a.listDeco === "fortuneBloom"
+                                    ? `<img class="ach-deco-icon" src="${UI_ACH_FORTUNE_BLOOM_DECO}" alt="" width="22" height="22" loading="lazy" />`
                                   : a.listDeco === "vein"
                                     ? `<img class="ach-deco-icon" src="${UI_ACH_VEIN_DECO}" alt="" width="22" height="22" loading="lazy" />`
                                     : a.listDeco === "realm"
