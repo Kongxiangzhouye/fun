@@ -139,6 +139,10 @@ export interface OfflineAdventurePendingState {
   triggeredAtMs: number;
   settledSec: number;
   options: [OfflineAdventureOptionState, OfflineAdventureOptionState, OfflineAdventureOptionState];
+  /** 本轮奇遇是否已重掷过一次 */
+  rerolled: boolean;
+  /** 本轮重掷消耗灵石 */
+  rerollCostStones: string;
 }
 
 /** 离线奇遇系统持久状态 */

@@ -347,6 +347,8 @@ export function serialize(state: GameState): string {
                   OfflineAdventureOptionState,
                   OfflineAdventureOptionState,
                 ],
+                rerolled: !!state.offlineAdventure.pending.rerolled,
+                rerollCostStones: state.offlineAdventure.pending.rerollCostStones,
               }
             : null,
           activeBoostUntilMs: state.offlineAdventure.activeBoostUntilMs,
@@ -539,6 +541,12 @@ export function deserialize(json: string): GameState {
         triggeredAtMs: Number.isFinite(oa.pending.triggeredAtMs) ? Math.max(0, Math.floor(oa.pending.triggeredAtMs)) : 0,
         settledSec,
         options: [picked[0]!, picked[1]!, picked[2]!],
+        rerolled: !!(oa.pending as { rerolled?: unknown }).rerolled,
+        rerollCostStones:
+          typeof (oa.pending as { rerollCostStones?: unknown }).rerollCostStones === "string" &&
+          (oa.pending as { rerollCostStones?: string }).rerollCostStones
+            ? (oa.pending as { rerollCostStones?: string }).rerollCostStones!
+            : "0",
       };
     }
     st.offlineAdventure = {

@@ -171,6 +171,8 @@ function runOfflineBoostRenewRuleSmoke(): void {
       { id: "boost", title: "B", desc: "", instantStones: "0", instantEssence: 0, boostMult: 1.24, boostDurationSec: 7200 },
       { id: "essence", title: "E", desc: "", instantStones: "0", instantEssence: 3, boostMult: 1, boostDurationSec: 0, zhuLingBonus: 2 },
     ],
+    rerolled: false,
+    rerollCostStones: "180",
   };
   const oldUntil = st.offlineAdventure.activeBoostUntilMs;
   assert.equal(chooseOfflineAdventureOption(st, "boost", now), true, "boost option should be selectable");
@@ -190,6 +192,19 @@ function runApplyTickSegmentedCatchUpSmoke(): void {
   assert.ok(st.playtimeSec >= prevPlaytime + 120 - 1e-6, "playtime should include full capped dt");
 }
 
+function runAutoSalvageAccumulatorRemainderSmoke(): void {
+  const st = createInitialState();
+  const now = Date.now();
+  st.lastTick = now - 9_900;
+  st.autoSalvageAccumSec = 0;
+  applyTick(st, now);
+  // 9.9 秒应触发 3 次并保留 2.4 秒余量（允许极小浮点误差）
+  assert.ok(
+    st.autoSalvageAccumSec >= 2.39 && st.autoSalvageAccumSec <= 2.41,
+    `auto salvage accumulator remainder mismatch: ${st.autoSalvageAccumSec}`,
+  );
+}
+
 function main(): void {
   runOfflineCapSmoke();
   runWeeklySyncSmoke();
@@ -199,6 +214,7 @@ function main(): void {
   runDefaultMigrationSmoke();
   runOfflineBoostRenewRuleSmoke();
   runApplyTickSegmentedCatchUpSmoke();
+  runAutoSalvageAccumulatorRemainderSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");
 }

@@ -6,6 +6,19 @@ import { normalizeLifetimeStats } from "./pullChronicle";
 export const OFFLINE_ADVENTURE_TRIGGER_SEC = 45 * 60;
 const BOOST_DURATION_SEC = 2 * 3600;
 const RESONANCE_STACK_CAP = 6;
+const REROLL_STONE_COST_BASE = 160;
+const REROLL_STONE_COST_PER_HOUR = 48;
+
+function calcRerollStoneCost(settledSec: number): string {
+  const hours = Math.max(0, settledSec / 3600);
+  const cost = Math.max(120, Math.floor(REROLL_STONE_COST_BASE + hours * REROLL_STONE_COST_PER_HOUR));
+  return String(cost);
+}
+
+function optionRollJitter(seed: number): number {
+  const x = Math.abs(Math.floor(seed)) % 17;
+  return (x - 8) / 100;
+}
 
 export interface OfflineAdventureResonancePreview {
   type: "instant" | "boost" | "essence";
@@ -120,6 +133,26 @@ function mkOptions(state: GameState, settledSec: number): [
   return [instant, boost, essence];
 }
 
+function rerolledOptions(state: GameState, settledSec: number, seed: number): [
+  OfflineAdventureOptionState,
+  OfflineAdventureOptionState,
+  OfflineAdventureOptionState,
+] {
+  const [instant, boost, essence] = mkOptions(state, settledSec);
+  const jitter = optionRollJitter(seed);
+  instant.instantStones = new Decimal(instant.instantStones)
+    .mul(1 + jitter)
+    .toDecimalPlaces(0, Decimal.ROUND_FLOOR)
+    .toFixed(0);
+  instant.instantStones = Decimal.max(new Decimal(instant.instantStones), 60).toFixed(0);
+  instant.instantEssence = Math.max(1, Math.floor(instant.instantEssence * (1 + jitter * 0.6)));
+  boost.boostMult = Math.max(1.02, Number((boost.boostMult + jitter * 0.18).toFixed(2)));
+  boost.boostDurationSec = Math.max(20 * 60, boost.boostDurationSec + Math.floor(jitter * 22 * 60));
+  essence.instantEssence = Math.max(8, Math.floor(essence.instantEssence * (1 - jitter * 0.55)));
+  essence.zhuLingBonus = Math.max(6, Math.floor((essence.zhuLingBonus ?? 0) * (1 - jitter * 0.55)));
+  return [instant, boost, essence];
+}
+
 export function maybeQueueOfflineAdventure(state: GameState, settledSec: number, now: number): boolean {
   if (settledSec < OFFLINE_ADVENTURE_TRIGGER_SEC) return false;
   if (state.offlineAdventure.pending) return false;
@@ -127,8 +160,29 @@ export function maybeQueueOfflineAdventure(state: GameState, settledSec: number,
     triggeredAtMs: now,
     settledSec,
     options: mkOptions(state, settledSec),
+    rerolled: false,
+    rerollCostStones: calcRerollStoneCost(settledSec),
   };
   return true;
+}
+
+export type OfflineAdventureRerollResult =
+  | { ok: true; costStones: string }
+  | { ok: false; reason: "no_pending" | "already_rerolled" | "insufficient_stones"; costStones: string };
+
+export function rerollOfflineAdventureOptions(state: GameState, now: number): OfflineAdventureRerollResult {
+  const pending = state.offlineAdventure.pending;
+  if (!pending) return { ok: false, reason: "no_pending", costStones: "0" };
+  const costStones = pending.rerollCostStones || calcRerollStoneCost(pending.settledSec);
+  if (pending.rerolled) return { ok: false, reason: "already_rerolled", costStones };
+  if (new Decimal(state.spiritStones).lt(costStones)) {
+    return { ok: false, reason: "insufficient_stones", costStones };
+  }
+  state.spiritStones = Decimal.max(0, new Decimal(state.spiritStones).sub(costStones)).toFixed(0);
+  pending.options = rerolledOptions(state, pending.settledSec, now);
+  pending.rerolled = true;
+  pending.rerollCostStones = costStones;
+  return { ok: true, costStones };
 }
 
 export function chooseOfflineAdventureOption(
@@ -223,5 +277,9 @@ export function normalizeOfflineAdventureState(state: GameState, now: number): v
   if (!Number.isFinite(p.triggeredAtMs) || !Number.isFinite(p.settledSec) || !Array.isArray(p.options) || p.options.length !== 3) {
     oa.pending = null;
     return;
+  }
+  p.rerolled = !!p.rerolled;
+  if (typeof p.rerollCostStones !== "string" || !p.rerollCostStones) {
+    p.rerollCostStones = calcRerollStoneCost(p.settledSec);
   }
 }

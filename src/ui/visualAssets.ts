@@ -234,6 +234,14 @@ export const UI_OFFLINE_RESONANCE_INSTANT = asset(OFFLINE_SETTLEMENT_UI_FILES.re
 export const UI_OFFLINE_RESONANCE_BOOST = asset(OFFLINE_SETTLEMENT_UI_FILES.resonanceBoost);
 /** 离线奇遇：髓潮归元共鸣图标 */
 export const UI_OFFLINE_RESONANCE_ESSENCE = asset(OFFLINE_SETTLEMENT_UI_FILES.resonanceEssence);
+/** 离线奇遇：重掷按钮图标 */
+export const UI_OFFLINE_REROLL = asset(OFFLINE_SETTLEMENT_UI_FILES.reroll);
+/** 离线奇遇：可重掷状态图标 */
+export const UI_OFFLINE_REROLL_READY = asset(OFFLINE_SETTLEMENT_UI_FILES.rerollReady);
+/** 离线奇遇：重掷不可用状态图标 */
+export const UI_OFFLINE_REROLL_LOCKED = asset(OFFLINE_SETTLEMENT_UI_FILES.rerollLocked);
+/** 离线奇遇：重掷成本图标 */
+export const UI_OFFLINE_REROLL_COST = asset(OFFLINE_SETTLEMENT_UI_FILES.rerollCost);
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
 
 /** 离线奇遇三选一 · 选项图标（内联 SVG） */

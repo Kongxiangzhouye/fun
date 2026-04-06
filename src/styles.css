@@ -3696,6 +3696,20 @@ h1 {
   flex-wrap: wrap;
 }
 
+.offline-reroll-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.offline-reroll-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .offline-choice-tab {
   border: 1px solid rgba(124, 156, 255, 0.28);
   background: rgba(78, 104, 166, 0.18);

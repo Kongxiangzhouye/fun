@@ -26,6 +26,7 @@ const TICK_MAX_DT = 120;
 const TICK_SEGMENT_SEC = 1;
 const TICK_MAX_SEGMENTS = 240;
 const OFFLINE_RESONANCE_GAIN_MULT = 0.28;
+const AUTO_SALVAGE_INTERVAL_SEC = 2.5;
 
 /** 当前存档离线收益秒上限（土系等可抬高） */
 export function maxOfflineSec(state: GameState): number {
@@ -143,9 +144,13 @@ export function applyTick(state: GameState, now: number): void {
     addStones(state, ips.mul(dt));
     if (state.autoSalvageAccumSec == null || !Number.isFinite(state.autoSalvageAccumSec)) state.autoSalvageAccumSec = 0;
     state.autoSalvageAccumSec += dt;
-    if (state.autoSalvageAccumSec >= 2.5) {
-      state.autoSalvageAccumSec = 0;
+    const autoSalvageRuns = Math.floor(state.autoSalvageAccumSec / AUTO_SALVAGE_INTERVAL_SEC);
+    if (autoSalvageRuns > 0) {
+      state.autoSalvageAccumSec -= autoSalvageRuns * AUTO_SALVAGE_INTERVAL_SEC;
+      if (state.autoSalvageAccumSec < 1e-9) state.autoSalvageAccumSec = 0;
+      for (let i = 0; i < autoSalvageRuns; i++) {
       tryAutoSalvageInventory(state);
+      }
     }
     remainSec -= dt;
     segments += 1;

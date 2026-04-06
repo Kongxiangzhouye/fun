@@ -8,4 +8,8 @@ export const OFFLINE_SETTLEMENT_UI_FILES = {
   resonanceInstant: "offline-resonance-instant.svg",
   resonanceBoost: "offline-resonance-boost.svg",
   resonanceEssence: "offline-resonance-essence.svg",
+  reroll: "offline-reroll.svg",
+  rerollReady: "offline-reroll-ready.svg",
+  rerollLocked: "offline-reroll-locked.svg",
+  rerollCost: "offline-reroll-cost.svg",
 } as const;
