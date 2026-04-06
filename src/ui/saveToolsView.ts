@@ -1,5 +1,8 @@
 import { SAVE_SLOT_COUNT, SAVE_SLOT_LABEL_MAX, getActiveSlotIndex, getSlotLabel, peekSlotSummary } from "../storage";
 import {
+  UI_FEEDBACK_CHIP_ERROR,
+  UI_FEEDBACK_CHIP_SUCCESS,
+  UI_FEEDBACK_CHIP_WARN,
   UI_FLOW_ACTION_ROW_DECO,
   UI_FLOW_PANEL_HEADER_DECO,
   UI_FLOW_SECTION_TAG_DECO,
@@ -10,6 +13,8 @@ import {
   UI_SAVE_SAVING_ICON,
   UI_SAVE_SLOT_LABEL_DECO,
   UI_SAVE_SLOTS_DECO,
+  UI_WEEKLY_SYNC_BADGE,
+  UI_WEEKLY_SYNC_HINT,
 } from "./visualAssets";
 
 function escapeHtmlAttr(s: string): string {
@@ -63,6 +68,30 @@ export function renderSaveToolsPanel(fmtPlaytimeSec: (sec: number) => string): s
       <h2>存档管理</h2>
     </div>
     <p class="hint">保存/导出/导入与重置都集中在这里。重置前建议先导出备份。</p>
+    <div class="weekly-sync-hint weekly-sync-hint--compact" role="status" aria-live="polite">
+      <span class="status-badge status-badge--info">
+        <img src="${UI_WEEKLY_SYNC_BADGE}" alt="" width="13" height="13" loading="lazy" />
+        周更同步
+      </span>
+      <span class="hint sm weekly-sync-hint-text">
+        <img src="${UI_WEEKLY_SYNC_HINT}" alt="" width="13" height="13" loading="lazy" />
+        每周轮换状态以当前周次为准，跨周导入后将自动按新周次刷新可见状态。
+      </span>
+    </div>
+    <div class="save-feedback-chip-row" aria-label="存档链路反馈类型">
+      <span class="feedback-chip feedback-chip--success">
+        <img src="${UI_FEEDBACK_CHIP_SUCCESS}" alt="" width="12" height="12" loading="lazy" />
+        success
+      </span>
+      <span class="feedback-chip feedback-chip--warn">
+        <img src="${UI_FEEDBACK_CHIP_WARN}" alt="" width="12" height="12" loading="lazy" />
+        warn
+      </span>
+      <span class="feedback-chip feedback-chip--error">
+        <img src="${UI_FEEDBACK_CHIP_ERROR}" alt="" width="12" height="12" loading="lazy" />
+        error
+      </span>
+    </div>
     <div class="save-import-tipbar" role="note" aria-label="导入提示">
       <img class="save-import-tipbar-ico" src="${UI_SAVE_IMPORT_TIP_DECO}" alt="" width="16" height="16" loading="lazy" />
       <span>导入前建议先导出；仅接受完整存档字符串，导入会先校验，校验通过后才覆盖当前进度。</span>

@@ -116,6 +116,26 @@ export const UI_SAVE_IMPORT_BADGE_FAIL = inlineSvg(
 export const UI_SAVE_IMPORT_TIP_DECO = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.2" y="3.4" width="13.6" height="13.2" rx="3.2" stroke="#8cb4ff" stroke-width="1.3"/><path d="M10 5.8v4.7M10 13.2h.01" stroke="#dce8ff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
 );
+/** 存档反馈统一样式 · 成功 chip 图标 */
+export const UI_FEEDBACK_CHIP_SUCCESS = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.4" stroke="#6dd5a7" stroke-width="1.4"/><path d="M6.5 10.2l2.1 2.2 4.8-4.9" stroke="#d6ffe8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+);
+/** 存档反馈统一样式 · 警告 chip 图标 */
+export const UI_FEEDBACK_CHIP_WARN = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.4l6.9 11.9c.4.8-.1 1.7-1 1.7H4.1c-.9 0-1.4-.9-1-1.7L10 2.4z" stroke="#f3c27d" stroke-width="1.4"/><path d="M10 7.1v4.4" stroke="#fff1da" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="13.8" r=".9" fill="#fff1da"/></svg>`,
+);
+/** 存档反馈统一样式 · 错误 chip 图标 */
+export const UI_FEEDBACK_CHIP_ERROR = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.4" stroke="#f18989" stroke-width="1.4"/><path d="M7.1 7.1l5.8 5.8M12.9 7.1l-5.8 5.8" stroke="#ffe4e4" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+);
+/** 周更状态同步 · 轻量 badge 图标 */
+export const UI_WEEKLY_SYNC_BADGE = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="12.4" rx="2.8" stroke="#8eb7ff" stroke-width="1.3"/><path d="M6.3 8.1h7.4M6.3 10.9h4.6" stroke="#dce8ff" stroke-width="1.4" stroke-linecap="round"/><path d="M12.6 5.2v-1.5M7.4 5.2v-1.5" stroke="#8eb7ff" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+);
+/** 周更状态同步 · 提示图标 */
+export const UI_WEEKLY_SYNC_HINT = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="#8fb5ff" stroke-width="1.3"/><path d="M10 6.4v3.8M10 13h.01" stroke="#dce8ff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+);
 /** 主流程模块拆分 · panel header 图标 */
 export const UI_FLOW_PANEL_HEADER_DECO = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.8" y="4.1" width="14.4" height="11.8" rx="2.6" stroke="#9db8ff" stroke-width="1.3"/><path d="M5.9 8.1h8.2M5.9 11h5.2" stroke="#e2ebff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
@@ -159,6 +179,14 @@ export const UI_SAVE_SAVED_ICON = inlineSvg(
 /** smoke 开发信息区 · 标签图标 */
 export const UI_SMOKE_DEV_BADGE = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.9" y="3.3" width="14.2" height="13.4" rx="2.9" stroke="#c4b5ff" stroke-width="1.3"/><path d="M6.1 8.1h7.8M6.1 11h5.3" stroke="#ece4ff" stroke-width="1.4" stroke-linecap="round"/><circle cx="13.9" cy="13.2" r="1.1" fill="#d8c8ff"/></svg>`,
+);
+/** smoke 信息板 · 回归检查卡图标占位 */
+export const UI_SMOKE_DEV_REGRESSION_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.2" y="3.3" width="13.6" height="13.4" rx="2.8" stroke="#c4b5ff" stroke-width="1.3"/><path d="M6.4 7.4h7.2M6.4 10h5.2M6.4 12.6h3.2" stroke="#ece4ff" stroke-width="1.35" stroke-linecap="round"/></svg>`,
+);
+/** smoke 信息板 · 指标观测卡图标占位 */
+export const UI_SMOKE_DEV_METRIC_ICON = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M4.1 15.6h11.8" stroke="#bca9ff" stroke-width="1.3" stroke-linecap="round"/><rect x="5.1" y="10.2" width="2.2" height="4.4" rx=".9" fill="#dfd1ff"/><rect x="8.9" y="7.8" width="2.2" height="6.8" rx=".9" fill="#cfbdff"/><rect x="12.7" y="5.4" width="2.2" height="9.2" rx=".9" fill="#c0abff"/></svg>`,
 );
 /** 拆分反馈模块统一外观 · toast 图标 */
 export const UI_FEEDBACK_TOAST_ICON = inlineSvg(

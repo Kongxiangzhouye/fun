@@ -79,6 +79,8 @@ import {
   UI_ASYNC_HINT_DECO,
   UI_AUTO_RECYCLE_TIMER_ICON,
   UI_FEEDBACK_PANEL_ICON,
+  UI_WEEKLY_SYNC_BADGE,
+  UI_WEEKLY_SYNC_HINT,
   ELEMENT_ICON,
   UI_GEAR_LOCK_DECO,
   UI_GEAR_UPGRADE_UP,
@@ -430,6 +432,8 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
   const edps = playerExpectedDpsDungeonAffix(state, now);
   const weekLine = state.weeklyBounty?.weekKey || currentWeekKey(now);
   const affix = getDungeonAffixForWeekKey(weekLine);
+  const weekNow = currentWeekKey(now);
+  const weeklySyncOk = weekLine === weekNow;
   const isVortexAffix = affix.id === "storm_sigil" || affix.id === "iron_march";
   const affixModeDecoSrc = isVortexAffix
     ? UI_DUNGEON_AFFIX_VORTEX_DECO
@@ -518,6 +522,16 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
           <strong class="dungeon-affix-title" id="dungeon-affix-title">本周词缀 · ${affix.title}</strong>
           <p class="hint sm dungeon-affix-desc" id="dungeon-affix-desc">${affix.desc}<span class="dungeon-affix-wk" id="dungeon-affix-week">（周次 ${weekLine}）</span></p>
         </div>
+      </div>
+      <div class="weekly-sync-hint" role="status" aria-live="polite">
+        <span class="status-badge ${weeklySyncOk ? "status-badge--ready" : "status-badge--risk"}">
+          <img src="${UI_WEEKLY_SYNC_BADGE}" alt="" width="14" height="14" loading="lazy" />
+          周更同步 ${weeklySyncOk ? "已对齐" : "待同步"}
+        </span>
+        <span class="hint sm weekly-sync-hint-text">
+          <img src="${UI_WEEKLY_SYNC_HINT}" alt="" width="14" height="14" loading="lazy" />
+          状态周次 ${weekLine} · 当前周次 ${weekNow}${weeklySyncOk ? "，无需额外操作。" : "，建议进行一次刷新或存档重载。"}
+        </span>
       </div>
       ${
         !d.active && !sanctuaryIdle

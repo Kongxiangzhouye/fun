@@ -191,6 +191,8 @@ import {
   UI_DUNGEON_STAGGER_PULSE_DECO,
   UI_FEEDBACK_TOAST_ICON,
   UI_SMOKE_DEV_BADGE,
+  UI_SMOKE_DEV_METRIC_ICON,
+  UI_SMOKE_DEV_REGRESSION_ICON,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -211,7 +213,7 @@ import {
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
 import { renderSaveToolsPanel } from "./ui/saveToolsView";
-import { bindSaveToolsEvents } from "./ui/saveToolsEvents";
+import { setupSaveToolsBridge } from "./ui/saveToolsBridge";
 import { bindDungeonInteractions } from "./ui/dungeonInteractions";
 import { showHtmlFeedbackToast, showPlainFeedbackToast } from "./ui/feedbackToasts";
 import { tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
@@ -2949,11 +2951,19 @@ function renderSmokeDevInfoPanel(): string {
     <p class="hint sm smoke-dev-note">用于展示 smoke 相关调试结论、回归检查口径与短期观测项；不影响线上业务逻辑。</p>
     <div class="smoke-dev-grid" aria-label="smoke 信息占位">
       <article class="smoke-dev-card">
-        <strong>回归检查</strong>
+        <div class="smoke-dev-card-head">
+          <img class="smoke-dev-card-ico" src="${UI_SMOKE_DEV_REGRESSION_ICON}" alt="" width="16" height="16" loading="lazy" />
+          <strong>回归检查</strong>
+        </div>
+        <p class="smoke-dev-card-tag">progression smoke</p>
         <p class="hint sm">建议填入：核心循环、存档写入、战斗入口、离线结算。</p>
       </article>
       <article class="smoke-dev-card">
-        <strong>观测指标</strong>
+        <div class="smoke-dev-card-head">
+          <img class="smoke-dev-card-ico" src="${UI_SMOKE_DEV_METRIC_ICON}" alt="" width="16" height="16" loading="lazy" />
+          <strong>观测指标</strong>
+        </div>
+        <p class="smoke-dev-card-tag">开发态信息板</p>
         <p class="hint sm">建议填入：耗时阈值、异常次数、触发路径标签。</p>
       </article>
     </div>
@@ -4713,7 +4723,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   }
 
-  bindSaveToolsEvents({
+  setupSaveToolsBridge({
     getState: () => state,
     setState: (next) => {
       state = next;
@@ -4722,7 +4732,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     toast,
     render,
     triggerDownloadSaveBackup,
-    afterStateReplaced: () => {
+    resetTransientUiState: () => {
       selectedInvId = null;
       refineTargetId = null;
       autoEnterPromptHandled = false;

@@ -12,7 +12,8 @@
     "check": "run-s validate:ui-art build",
     "verify": "npm run check",
     "validate:ui-art": "node scripts/validate-ui-art.mjs",
-    "smoke:core": "tsx src/smoke/coreSystemsSmoke.ts"
+    "smoke:core": "tsx src/smoke/coreSystemsSmoke.ts",
+    "smoke:progression": "tsx src/smoke/progressionSmoke.ts"
   },
   "dependencies": {
     "decimal.js": "^10.4.3",

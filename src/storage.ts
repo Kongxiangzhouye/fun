@@ -48,6 +48,10 @@ function storageKeyForSlot(slot: number): string {
   return `idle-gacha-realm-v1-slot-${slot}`;
 }
 
+function isValidSaveSlot(slot: number): boolean {
+  return Number.isInteger(slot) && slot >= 0 && slot < SAVE_SLOT_COUNT;
+}
+
 let slotsMigrationChecked = false;
 
 /** 将旧单文件存档迁入槽 0，并保证存在激活槽位索引 */
@@ -625,7 +629,8 @@ export function deserialize(json: string): GameState {
     st.weeklyBounty = emptyWeeklyBounty(currentWeekKey(st.lastTick));
   }
   normalizeWeeklyBounty(st);
-  ensureWeeklyBountyWeek(st, Date.now());
+  const syncNow = Date.now();
+  ensureWeeklyBountyWeek(st, syncNow);
   if (data.celestialStash && typeof data.celestialStash.weekKey === "string") {
     st.celestialStash = {
       weekKey: data.celestialStash.weekKey,
@@ -634,7 +639,7 @@ export function deserialize(json: string): GameState {
   } else {
     st.celestialStash = emptyCelestialStash(currentWeekKey(st.lastTick));
   }
-  ensureCelestialStashWeek(st, Date.now());
+  ensureCelestialStashWeek(st, syncNow);
   if (data.daoMeridian != null && Number.isFinite(data.daoMeridian)) {
     st.daoMeridian = Math.floor(data.daoMeridian);
   }
@@ -890,9 +895,8 @@ export function peekSlotSummary(slot: number): { empty: boolean; realmLevel?: nu
 /** 将内存中的进度写入指定槽（用于复制；不切换激活槽） */
 export function copyCurrentToSlot(target: number, current: GameState): void {
   ensureSaveSlotsMigrated();
-  if (target < 0 || target >= SAVE_SLOT_COUNT) return;
+  if (!isValidSaveSlot(target)) return;
   try {
-    current.version = SAVE_VERSION;
     localStorage.setItem(storageKeyForSlot(target), serialize(current));
   } catch {
     /* ignore */
@@ -905,11 +909,10 @@ export function copyCurrentToSlot(target: number, current: GameState): void {
  */
 export function switchToSaveSlot(slot: number, current: GameState): SaveLoadResult<GameState> {
   ensureSaveSlotsMigrated();
-  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return { ok: false, error: "目标存档位不存在。" };
+  if (!isValidSaveSlot(slot)) return { ok: false, error: "目标存档位不存在或索引非法。" };
   const from = getActiveSlotIndex();
   if (slot === from) return { ok: true, value: current };
   try {
-    current.version = SAVE_VERSION;
     const raw = localStorage.getItem(storageKeyForSlot(slot));
     let nextState: GameState;
     if (raw) {
@@ -931,7 +934,6 @@ export function switchToSaveSlot(slot: number, current: GameState): SaveLoadResu
 
 export function saveGame(state: GameState): void {
   try {
-    state.version = SAVE_VERSION;
     ensureSaveSlotsMigrated();
     const slot = getActiveSlotIndex();
     localStorage.setItem(storageKeyForSlot(slot), serialize(state));
