@@ -16,7 +16,11 @@ import { tryTuna, tunaCooldownLeftMs } from "./systems/tuna";
 import { checkTrueEnding } from "./trueEnding";
 import { tryAutoSalvageInventory } from "./systems/salvage";
 import { ensureWeeklyBountyWeek, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
-import { recordBiGuanFastForwardLifetime, recordRealmBreakthroughLifetime } from "./systems/pullChronicle";
+import {
+  recordBiGuanFastForwardLifetime,
+  recordOfflineStoneSettlementLifetime,
+  recordRealmBreakthroughLifetime,
+} from "./systems/pullChronicle";
 import { ensureCelestialStashWeek } from "./systems/celestialStash";
 import { tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
 import { tickDailyFortune } from "./systems/dailyFortune";
@@ -280,6 +284,9 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
   const advanced = advanceOfflineLikeTimeline(state, state.lastTick, dt, now);
   state.lastTick = now;
   tickEstateCommission(state, now);
+  if (advanced.settledSec > 1e-6 && advanced.gained.gt(0.01)) {
+    recordOfflineStoneSettlementLifetime(state);
+  }
   return {
     stoneGain: advanced.gained,
     settledSec: advanced.settledSec,

@@ -109,6 +109,26 @@ function runOfflineCapSmoke(): void {
   assert.ok(nearOut.settledSec <= cap, "near-boundary settledSec should not exceed cap");
 }
 
+function runOfflineStoneSettlementLifetimeSmoke(): void {
+  const st = createInitialState();
+  assert.equal(st.lifetimeStats.offlineStoneSettlements, 0);
+  const now = Date.now();
+  st.lastTick = now - 7200 * 1000;
+  catchUpOffline(st, now);
+  assert.ok(
+    st.lifetimeStats.offlineStoneSettlements >= 1,
+    "catchUpOffline with stone gain should increment offlineStoneSettlements",
+  );
+  const st2 = createInitialState();
+  assert.ok(!st2.achievementsDone.has("offline_stone_settlements_12"));
+  st2.lifetimeStats.offlineStoneSettlements = 12;
+  const a = tryCompleteAchievements(st2);
+  assert.ok(a.some((x) => x.id === "offline_stone_settlements_12"));
+  st2.lifetimeStats.offlineStoneSettlements = 60;
+  const b = tryCompleteAchievements(st2);
+  assert.ok(b.some((x) => x.id === "offline_stone_settlements_60"));
+}
+
 function runWeeklySyncSmoke(): void {
   const st = createInitialState();
   st.weeklyBounty.weekKey = "1999-01-04";
@@ -966,6 +986,7 @@ function runEstateCommissionAutoSettleLoopSmoke(): void {
 
 function main(): void {
   runOfflineCapSmoke();
+  runOfflineStoneSettlementLifetimeSmoke();
   runWeeklySyncSmoke();
   runWeeklyEstateCrossWeekResetSmoke();
   runSerializeRoundtripSmoke();

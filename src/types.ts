@@ -132,6 +132,8 @@ export interface LifetimeStatsState {
   gearTenPullSessions: number;
   /** 灵息日历「当日灵息礼」成功领取次数（每领取一个本地日计 1） */
   dailyLoginDayClaims: number;
+  /** 离线挂机回补灵石成功结算次数（每次 `catchUpOffline` 实际产出灵石计 1） */
+  offlineStoneSettlements: number;
 }
 
 /** 灵田作物 id */

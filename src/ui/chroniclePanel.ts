@@ -23,6 +23,7 @@ import {
   UI_CHRONICLE_GEAR_SALVAGE_STAT,
   UI_CHRONICLE_META_UPGRADE_STAT,
   UI_CHRONICLE_OFFLINE_ADVENTURE_STAT,
+  UI_CHRONICLE_OFFLINE_STONE_SETTLEMENT_STAT,
   UI_CHRONICLE_PET_FEED_STAT,
   UI_CHRONICLE_PET_PULL_STAT,
   UI_CHRONICLE_REALM_BREAKTHROUGH_STAT,
@@ -230,6 +231,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">离线奇遇结算</span>
             <strong class="chronicle-stat-val">${ls.offlineAdventureCompletions} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--offline-stone-settlement">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_OFFLINE_STONE_SETTLEMENT_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">离线灵石回补</span>
+            <strong class="chronicle-stat-val">${ls.offlineStoneSettlements} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card">

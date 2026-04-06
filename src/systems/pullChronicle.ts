@@ -67,6 +67,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       cardTenPullSessions: 0,
       gearTenPullSessions: 0,
       dailyLoginDayClaims: 0,
+      offlineStoneSettlements: 0,
     };
     return;
   }
@@ -177,6 +178,15 @@ export function normalizeLifetimeStats(st: GameState): void {
   const dlc = st.lifetimeStats.dailyLoginDayClaims;
   if (dlc == null || !Number.isFinite(dlc)) st.lifetimeStats.dailyLoginDayClaims = 0;
   else st.lifetimeStats.dailyLoginDayClaims = Math.max(0, Math.floor(dlc));
+  const oss = st.lifetimeStats.offlineStoneSettlements;
+  if (oss == null || !Number.isFinite(oss)) st.lifetimeStats.offlineStoneSettlements = 0;
+  else st.lifetimeStats.offlineStoneSettlements = Math.max(0, Math.floor(oss));
+}
+
+/** 离线回补结算产生灵石时累加（与闭关快进 `fastForward` 区分） */
+export function recordOfflineStoneSettlementLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.offlineStoneSettlements += 1;
 }
 
 /** 灵卡池十连唤引完整结算一次后累加 */

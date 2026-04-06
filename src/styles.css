@@ -10695,6 +10695,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--offline-stone-settlement {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(120, 150, 110, 0.38);
+  background: linear-gradient(145deg, rgba(22, 36, 28, 0.66), rgba(10, 16, 12, 0.76));
+}
+
+.chronicle-stat-card--offline-stone-settlement .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--offline-stone-settlement .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--meta-upgrade {
   display: flex;
   align-items: center;

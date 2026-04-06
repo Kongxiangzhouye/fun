@@ -95,6 +95,8 @@ export const UI_CHRONICLE_SPIRIT_ARRAY_UPGRADE_STAT = asset("chronicle-spirit-ar
 export const UI_CHRONICLE_VEIN_UPGRADE_STAT = asset("chronicle-vein-upgrade-stat.svg");
 /** 唤灵通鉴 · 离线奇遇结算累计小标 */
 export const UI_CHRONICLE_OFFLINE_ADVENTURE_STAT = asset("chronicle-offline-adventure-stat.svg");
+/** 唤灵通鉴 · 离线灵石回补结算累计小标 */
+export const UI_CHRONICLE_OFFLINE_STONE_SETTLEMENT_STAT = asset("chronicle-offline-stone-settlement-stat.svg");
 /** 唤灵通鉴 · 轮回元强化累计小标 */
 export const UI_CHRONICLE_META_UPGRADE_STAT = asset("chronicle-meta-upgrade-stat.svg");
 /** 唤灵通鉴 · 灵宠喂养累计小标 */

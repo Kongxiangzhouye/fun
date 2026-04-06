@@ -480,6 +480,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "reservoirBloom",
   },
   {
+    id: "offline_stone_settlements_12",
+    title: "归山拾息",
+    desc: "离线挂机回补灵石累计结算 12 次",
+    rewardStones: 520,
+    rewardEssence: 18,
+    listDeco: "train",
+  },
+  {
+    id: "offline_stone_settlements_60",
+    title: "久别重逢",
+    desc: "离线挂机回补灵石累计结算 60 次",
+    rewardStones: 2400,
+    rewardEssence: 62,
+    listDeco: "realm",
+  },
+  {
     id: "meta_upgrades_30",
     title: "元窍初铸",
     desc: "轮回元强化成功购买累计 30 次",
@@ -1157,6 +1173,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.offlineAdventureCompletions ?? 0) >= 35;
     case "offline_adventure_140":
       return (state.lifetimeStats?.offlineAdventureCompletions ?? 0) >= 140;
+    case "offline_stone_settlements_12":
+      return (state.lifetimeStats?.offlineStoneSettlements ?? 0) >= 12;
+    case "offline_stone_settlements_60":
+      return (state.lifetimeStats?.offlineStoneSettlements ?? 0) >= 60;
     case "meta_upgrades_30":
       return (state.lifetimeStats?.metaUpgrades ?? 0) >= 30;
     case "meta_upgrades_120":

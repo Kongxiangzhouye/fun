@@ -2968,6 +2968,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `蓄灵池收取次数: ${lt.spiritReservoirClaims}`,
     `心斋卦象刷新次数: ${lt.dailyFortuneRolls}`,
     `灵息日历当日礼领取累计: ${lt.dailyLoginDayClaims}`,
+    `离线灵石回补结算累计: ${lt.offlineStoneSettlements}`,
     `灵潮时辰进入次数: ${lt.spiritTideHours}`,
     `纳灵阵图绘阵累计: ${lt.spiritArrayUpgrades}`,
     `闭关时间推进累计: ${lt.biGuanCompletions}`,
@@ -3058,6 +3059,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">蓄灵池收取次数</span><strong class="d-val" id="data-overview-lt-reservoir">${lt.spiritReservoirClaims}</strong></div>
         <div class="data-overview-cell"><span class="d-label">心斋卦象刷新次数</span><strong class="d-val" id="data-overview-lt-fortune">${lt.dailyFortuneRolls}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵息日历当日礼领取累计</span><strong class="d-val" id="data-overview-lt-daily-login">${lt.dailyLoginDayClaims}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">离线灵石回补结算累计</span><strong class="d-val" id="data-overview-lt-offline-settle">${lt.offlineStoneSettlements}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵潮时辰进入次数</span><strong class="d-val" id="data-overview-lt-spirit-tide">${lt.spiritTideHours}</strong></div>
         <div class="data-overview-cell"><span class="d-label">纳灵阵图绘阵累计</span><strong class="d-val" id="data-overview-lt-spirit-array">${lt.spiritArrayUpgrades}</strong></div>
         <div class="data-overview-cell"><span class="d-label">闭关时间推进累计</span><strong class="d-val" id="data-overview-lt-bi-guan">${lt.biGuanCompletions}</strong></div>
@@ -3109,6 +3111,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-reservoir", String(lt.spiritReservoirClaims));
   set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
   set("data-overview-lt-daily-login", String(lt.dailyLoginDayClaims));
+  set("data-overview-lt-offline-settle", String(lt.offlineStoneSettlements));
   set("data-overview-lt-spirit-tide", String(lt.spiritTideHours));
   set("data-overview-lt-spirit-array", String(lt.spiritArrayUpgrades));
   set("data-overview-lt-bi-guan", String(lt.biGuanCompletions));
