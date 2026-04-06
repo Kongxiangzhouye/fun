@@ -212,7 +212,7 @@ import {
 } from "./systems/spiritReservoir";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
-import { tryBuyDaoMeridian } from "./systems/daoMeridian";
+import { tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
 import {
   claimAllCompletableWeeklyBounties,
   claimWeeklyBountyTask,
@@ -277,7 +277,14 @@ import { playerBattleElement } from "./systems/playerElement";
 import { pullPet } from "./systems/petGacha";
 import { secondsToNextLevel, skillXpPerSecond, xpToNextLevel } from "./systems/skillTraining";
 import { enhanceGear, equipGear, tryRefineUr, unequipGear } from "./systems/gearCraft";
-import { describeGearForgeTierLine } from "./systems/gearGachaTier";
+import {
+  describeGearForgeTierLine,
+  gearForgeAscensionLevel,
+  gearForgeIlvlBonus,
+  GEAR_FORGE_TIER_MAX,
+} from "./systems/gearGachaTier";
+import { PULL_CHRONICLE_MAX } from "./systems/pullChronicle";
+import { GEAR_BASES } from "./data/gearBases";
 import { isSlotTopPowerGear, salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
 import { pullBattleSkill, battleSkillPullCost, describeBattleSkillLevels } from "./systems/battleSkills";
 const EL_ZH: Record<string, string> = {
@@ -309,6 +316,14 @@ function fmtNumZh(n: number): string {
   if (n >= 100) return n.toFixed(0);
   if (n >= 10) return n.toFixed(1);
   return n.toFixed(2);
+}
+
+function fmtSignedPowerDelta(n: number): string {
+  if (!Number.isFinite(n)) return "0";
+  const abs = Math.abs(n);
+  if (abs < 1e-6) return "0";
+  const normalized = Number(abs.toFixed(2)).toString();
+  return n > 0 ? `+${normalized}` : `-${normalized}`;
 }
 
 /** 幻域本局用时 / 预计清怪剩余（秒 → 展示） */
@@ -1089,7 +1104,7 @@ function showGearRevealOverlay(
                   : "is-even"
             }">替换预期：${
               replaceExpectation === "upgrade" ? "提升" : replaceExpectation === "downgrade" ? "降级" : "持平"
-            }（${powerDelta > 0 ? `+${powerDelta}` : powerDelta}）</span>`
+            }（${fmtSignedPowerDelta(powerDelta)}）</span>`
           : "";
       return `<div class="gacha-reveal-card ${liteFx ? "card-fx-lite" : `card-fx-${cardFx}`} gear-reveal rarity-${g.rarity} tier-${g.rarity}" style="--stagger:${liteFx ? 0 : i}">
         ${gearRarityCorner(g.rarity)}
@@ -3078,6 +3093,157 @@ function renderGacha(
   embedBattle?: boolean,
   poolMode: "both" | "cardsOnly" | "gearOnly" = "both",
 ): string {
+  const fmtChronicleTime = (atMs: number): string => {
+    const d = new Date(atMs);
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  };
+  const cardChronicleBlock =
+    state.pullChronicle.length === 0
+      ? `<p class="hint chronicle-empty">暂无灵卡唤引记录。进行灵卡唤引后，会在此显示最近 ${PULL_CHRONICLE_MAX} 条。</p>`
+      : `<div class="chronicle-table-wrap">
+          <table class="chronicle-table" aria-label="灵卡池抽卡记录">
+            <thead><tr><th>时间</th><th>灵卡</th><th>稀有度</th></tr></thead>
+            <tbody>${state.pullChronicle
+              .map((e) => {
+                const c = getCard(e.defId);
+                const name = c?.name ?? e.defId;
+                const firstTag = e.isNew ? '<span class="chronicle-new">首遇</span>' : "";
+                return `<tr class="chronicle-tr rarity-${e.rarity}">
+                  <td class="chronicle-td-time">${fmtChronicleTime(e.atMs)}</td>
+                  <td class="chronicle-td-name">${name} ${firstTag}</td>
+                  <td class="chronicle-td-r">${rarityZh(e.rarity)}</td>
+                </tr>`;
+              })
+              .join("")}</tbody>
+          </table>
+        </div>`;
+  const gearChronicleBlock =
+    state.gearPullChronicle.length === 0
+      ? `<p class="hint chronicle-empty">暂无境界铸灵记录。进行境界铸灵后，会在此显示最近 ${PULL_CHRONICLE_MAX} 条。</p>`
+      : `<div class="chronicle-table-wrap">
+          <table class="chronicle-table chronicle-table--gear" aria-label="境界铸灵记录">
+            <thead><tr><th>时间</th><th>装备</th><th>稀有度</th></tr></thead>
+            <tbody>${state.gearPullChronicle
+              .map(
+                (e) => `<tr class="chronicle-tr rarity-${e.rarity}">
+                  <td class="chronicle-td-time">${fmtChronicleTime(e.atMs)}</td>
+                  <td class="chronicle-td-name">${e.displayName}</td>
+                  <td class="chronicle-td-r">${rarityZh(e.rarity)}</td>
+                </tr>`,
+              )
+              .join("")}</tbody>
+          </table>
+        </div>`;
+  const pct = (n: number): string => `${(n * 100).toFixed(2)}%`;
+  const rankVal: Record<Rarity, number> = { N: 0, R: 1, SR: 2, SSR: 3, UR: 4 };
+  const normalizeRarityWeights = (w: Record<Rarity, number>): Record<Rarity, number> => {
+    const total = Math.max(1e-9, w.N + w.R + w.SR + w.SSR + w.UR);
+    return {
+      N: w.N / total,
+      R: w.R / total,
+      SR: w.SR / total,
+      SSR: w.SSR / total,
+      UR: w.UR / total,
+    };
+  };
+  const cardLuck = 1 + state.meta.gachaLuck * 0.02 + daoMeridianLuckFlat(state);
+  const cardWeightsRaw: Record<Rarity, number> = {
+    N: 520 / cardLuck,
+    R: 280 / Math.pow(cardLuck, 0.3),
+    SR: 120 * Math.pow(cardLuck, 0.5),
+    SSR: 68 * Math.pow(cardLuck, 0.7),
+    UR: 12 * Math.pow(cardLuck, 0.9),
+  };
+  if (state.pitySsrSoft >= 65) {
+    const bump = 1 + (state.pitySsrSoft - 65 + 1) * 0.08;
+    cardWeightsRaw.SSR *= bump;
+    cardWeightsRaw.UR *= 1 + (state.pitySsrSoft - 65) * 0.03;
+  }
+  const cardForcedUr = state.pityUr >= UR_PITY_MAX - 1;
+  const cardProbs = cardForcedUr
+    ? { N: 0, R: 0, SR: 0, SSR: 0, UR: 1 }
+    : normalizeRarityWeights(cardWeightsRaw);
+  const cardExpectedRank =
+    cardProbs.N * rankVal.N +
+    cardProbs.R * rankVal.R +
+    cardProbs.SR * rankVal.SR +
+    cardProbs.SSR * rankVal.SSR +
+    cardProbs.UR * rankVal.UR;
+  const cardSrPlus = cardProbs.SR + cardProbs.SSR + cardProbs.UR;
+  const cardDetailBlock = `<details class="gacha-detail-block">
+      <summary class="gacha-detail-summary">查看详情：灵卡池当前概率与综合期望</summary>
+      <div class="gacha-detail-content">
+        <p class="hint sm">当前计数：UR 保底 ${state.pityUr}/${UR_PITY_MAX} · SSR 软保底计数 ${state.pitySsrSoft} · 运势系数 ×${cardLuck.toFixed(3)}。</p>
+        <p class="hint sm">单抽概率：凡品 ${pct(cardProbs.N)} · 灵品 ${pct(cardProbs.R)} · 珍品 ${pct(cardProbs.SR)} · 绝品 ${pct(cardProbs.SSR)} · 天极 ${pct(cardProbs.UR)}</p>
+        <p class="hint sm">综合期望：单抽稀有度期望 ${cardExpectedRank.toFixed(3)} / 4 · 珍品+ 概率 ${pct(cardSrPlus)}（约每百抽 ${Math.round(cardSrPlus * 100)} 次）· 天极约每百抽 ${Math.round(cardProbs.UR * 100)} 次。</p>
+      </div>
+    </details>`;
+  const avgGearBaseIlvl =
+    GEAR_BASES.length > 0
+      ? GEAR_BASES.reduce((acc, g) => acc + g.baseItemLevel, 0) / GEAR_BASES.length
+      : 12;
+  const gearLuck = 1 + state.meta.gachaLuck * 0.02 + daoMeridianLuckFlat(state);
+  const gearDistAtTier = (tier: number, forcedSrPlus: boolean): {
+    probs: Record<Rarity, number>;
+    ilvlAvg: number;
+    gradeExpected: number;
+    pityCap: number;
+  } => {
+    let probs: Record<Rarity, number>;
+    if (forcedSrPlus) {
+      probs = normalizeRarityWeights({ N: 0, R: 0, SR: 120, SSR: 68, UR: 12 });
+    } else {
+      const uTier =
+        GEAR_FORGE_TIER_MAX <= 1 ? 0 : Math.min(1, Math.max(0, (tier - 1) / (GEAR_FORGE_TIER_MAX - 1)));
+      const n0 = 0.38;
+      const r0 = 0.3;
+      const sr0 = 0.2;
+      const ssr0 = 0.09;
+      const ur0 = 0.03;
+      const n1 = 0.1;
+      const r1 = 0.22;
+      const sr1 = 0.3;
+      const ssr1 = 0.25;
+      const ur1 = 0.13;
+      const wN = (n0 + (n1 - n0) * uTier) / gearLuck;
+      const wR = (r0 + (r1 - r0) * uTier) / Math.pow(gearLuck, 0.28);
+      const wSr = (sr0 + (sr1 - sr0) * uTier) * Math.pow(gearLuck, 0.48);
+      const wSsr = (ssr0 + (ssr1 - ssr0) * uTier) * Math.pow(gearLuck, 0.62);
+      const wUr = (ur0 + (ur1 - ur0) * uTier) * Math.pow(gearLuck, 0.78);
+      probs = normalizeRarityWeights({ N: wN, R: wR, SR: wSr, SSR: wSsr, UR: wUr });
+    }
+    const ilvlAvg = Math.floor(
+      avgGearBaseIlvl + state.realmLevel * 0.9 + state.skills.combat.level * 0.4 + gearForgeIlvlBonus(tier),
+    );
+    const randAvg = 4.5;
+    const gradeShared = 1 + randAvg + Math.floor(ilvlAvg / 28) + Math.floor(tier * 0.35);
+    const gradeExpected = Math.min(
+      48,
+      probs.N * (rankVal.N * 9 + gradeShared) +
+        probs.R * (rankVal.R * 9 + gradeShared) +
+        probs.SR * (rankVal.SR * 9 + gradeShared) +
+        probs.SSR * (rankVal.SSR * 9 + gradeShared) +
+        probs.UR * (rankVal.UR * 9 + gradeShared),
+    );
+    const pityCap = Math.max(22, 36 - (tier - 1));
+    return { probs, ilvlAvg, gradeExpected, pityCap };
+  };
+  const currentForgeTier = gearForgeAscensionLevel(state);
+  const nextForgeTier = Math.min(GEAR_FORGE_TIER_MAX, currentForgeTier + 1);
+  const gearForcedSrPlusNow = state.gearPityPulls >= effectiveGearSrPityMax(state) - 1;
+  const gearNow = gearDistAtTier(currentForgeTier, gearForcedSrPlusNow);
+  const gearNext = gearDistAtTier(nextForgeTier, false);
+  const gearSrPlusNow = gearNow.probs.SR + gearNow.probs.SSR + gearNow.probs.UR;
+  const gearSrPlusNext = gearNext.probs.SR + gearNext.probs.SSR + gearNext.probs.UR;
+  const gearDetailBlock = `<details class="gacha-detail-block">
+      <summary class="gacha-detail-summary">查看详情：铸灵池当前概率、综合期望与下一阶预告</summary>
+      <div class="gacha-detail-content">
+        <p class="hint sm">当前：铸灵阶 ${currentForgeTier}/${GEAR_FORGE_TIER_MAX} · 珍品+保底上限 ${gearNow.pityCap} 唤 · 保底计数 ${state.gearPityPulls}/${gearNow.pityCap} · 运势系数 ×${gearLuck.toFixed(3)}。</p>
+        <p class="hint sm">当前单铸概率：凡品 ${pct(gearNow.probs.N)} · 灵品 ${pct(gearNow.probs.R)} · 珍品 ${pct(gearNow.probs.SR)} · 绝品 ${pct(gearNow.probs.SSR)} · 天极 ${pct(gearNow.probs.UR)} · 珍品+ 合计 ${pct(gearSrPlusNow)}。</p>
+        <p class="hint sm">当前综合期望：平均 ilvl 约 ${gearNow.ilvlAvg} · 平均筑灵阶约 ${gearNow.gradeExpected.toFixed(2)} / 48。</p>
+        <p class="hint sm">下一阶（${nextForgeTier}）预估：珍品+ ${pct(gearSrPlusNext)}（当前 ${pct(gearSrPlusNow)}）· 天极 ${pct(gearNext.probs.UR)}（当前 ${pct(gearNow.probs.UR)}）· 平均 ilvl 约 ${gearNext.ilvlAvg} · 平均筑灵阶约 ${gearNext.gradeExpected.toFixed(2)} / 48 · 保底上限 ${gearNext.pityCap} 唤。</p>
+      </div>
+    </details>`;
   const resFrac = ((state.wishResonance % 100) + 100) % 100;
   const pityProgressPct = Math.min(100, Math.max(0, ((UR_PITY_MAX - pityUr) / UR_PITY_MAX) * 100));
   const gearPityRem = gearSrPityRemaining(state);
@@ -3174,7 +3340,10 @@ function renderGacha(
         <label class="chk-inline"><input type="checkbox" id="chk-salvage-auto-r" ${state.salvageAuto.r ? "checked" : ""} /> 灵卡·灵品</label>
       </div>
       ${ratesBlock}
+      ${cardDetailBlock}
       <div id="pull-output" class="pull-result"></div>
+      <h3 class="sub-h chronicle-sub-h">最近灵卡唤引</h3>
+      ${cardChronicleBlock}
     </div>`
     : "";
 
@@ -3203,10 +3372,13 @@ function renderGacha(
       </div>
       <p class="pity-info${embedBattle ? " pity-info--embed" : ""}">${gearPityBlurb}</p>
       <p class="hint${embedBattle ? " gacha-hint-embed" : ""}">${embedBattle ? "词条与强化：历练页长按筑灵条 →「管理」。" : "词条与强化请在「历练·筑灵」筑灵条长按展开后点「管理」；筑灵阶 1–48 与稀有度共同决定词条池。"}</p>
+      ${gearDetailBlock}
       <div class="gacha-actions">
         <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 筑灵髓）</button>
       </div>
       <div id="pull-output-gear" class="pull-result pull-result-gear"></div>
+      <h3 class="sub-h chronicle-sub-h chronicle-sub-h--gear">最近境界铸灵</h3>
+      ${gearChronicleBlock}
     </div>`
     : "";
 
@@ -5021,8 +5193,16 @@ function loop(): void {
   }
   if (getUiUnlocks(state).tabDungeon && state.dungeon.active) {
     const d = state.dungeon;
-    /** 仅当正在查看「幻域」页时才补挂载地图；否则地图本就不在 DOM，会误判为缺失而每帧 render */
-    if (activeHub === "battle" && d.mobs.length > 0 && !document.getElementById("dungeon-map")) {
+    /**
+     * 仅当正在查看「幻域·战斗」子页时才补挂载地图；
+     * 若停留在「境界·铸灵」等其它子页，地图不在 DOM 是正常状态，不能触发整页重绘。
+     */
+    if (
+      activeHub === "battle" &&
+      battleSub === "dungeon" &&
+      d.mobs.length > 0 &&
+      !document.getElementById("dungeon-map")
+    ) {
       render();
     }
     if (

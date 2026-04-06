@@ -103,6 +103,14 @@ export interface PullResult {
 
 export type GearReplaceExpectation = "upgrade" | "even" | "downgrade";
 
+const POWER_COMPARE_EPSILON = 1e-6;
+
+function stablePowerDelta(nextPower: number, currentPower: number): number {
+  const delta = nextPower - currentPower;
+  if (Math.abs(delta) < POWER_COMPARE_EPSILON) return 0;
+  return Math.round(delta * 10000) / 10000;
+}
+
 /** 用于抽卡演出：取本批最高稀有度 */
 export function highestRarityInPulls(results: PullResult[]): Rarity {
   let best: Rarity = "N";
@@ -153,14 +161,14 @@ function finalizeGearPull(state: GameState, g: GearItem): {
       const slotLv = slotEnhanceLevel(state, slot);
       const np = gearItemPower(g, slotLv);
       const cp = gearItemPower(cur, slotLv);
-      const powerDelta = np - cp;
+      const powerDelta = stablePowerDelta(np, cp);
       const replaceExpectation: GearReplaceExpectation =
         powerDelta > 0 ? "upgrade" : powerDelta < 0 ? "downgrade" : "even";
       if (cur.locked) {
         const gain = Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
         state.xuanTie += gain;
         return commitGearPullMeta(state, g, { equipped: false, salvagedXuanTie: gain, replaceExpectation, powerDelta });
-      } else if (np > cp) {
+      } else if (np > cp + POWER_COMPARE_EPSILON) {
         const gain = xuanTieFromGearPiece(cur);
         state.xuanTie += gain;
         delete state.gearInventory[curId];
