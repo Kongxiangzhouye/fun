@@ -7,7 +7,8 @@
     },
     {
       "id": "battle_and_dungeon",
-      "manifests": ["dungeon_duel_ui", "weekly_bounty_ui", "gacha_pool_ui"]
+      "manifests": ["dungeon_duel_ui", "weekly_bounty_ui", "gacha_pool_ui"],
+      "focus": "Dungeon duel includes P0 battle feedback decals and combat readability marks."
     },
     {
       "id": "progression_and_collections",
