@@ -7,8 +7,27 @@ import {
   currentWeekKey,
   ensureWeeklyBountyWeek,
   countClaimableWeeklyBounties,
+  type WeeklyBountyCardDeco,
 } from "../systems/weeklyBounty";
-import { UI_BOUNTY_CLAIM_ALL_DECO, UI_BOUNTY_FORGE_DECO, UI_HEAD_BOUNTY } from "./visualAssets";
+import {
+  UI_BOUNTY_CLAIM_ALL_DECO,
+  UI_BOUNTY_FORGE_DECO,
+  UI_BOUNTY_WAVES_DECO,
+  UI_BOUNTY_PULLS_DECO,
+  UI_BOUNTY_GARDEN_DECO,
+  UI_BOUNTY_TUNA_DECO,
+  UI_BOUNTY_REALM_DECO,
+  UI_HEAD_BOUNTY,
+} from "./visualAssets";
+
+const BOUNTY_CARD_DECO_SRC: Record<WeeklyBountyCardDeco, string> = {
+  waves: UI_BOUNTY_WAVES_DECO,
+  pulls: UI_BOUNTY_PULLS_DECO,
+  forge: UI_BOUNTY_FORGE_DECO,
+  garden: UI_BOUNTY_GARDEN_DECO,
+  tuna: UI_BOUNTY_TUNA_DECO,
+  realm: UI_BOUNTY_REALM_DECO,
+};
 
 export function renderBountyPanel(state: GameState, now: number): string {
   ensureWeeklyBountyWeek(state, now);
@@ -20,10 +39,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
     const claimed = isWeeklyBountyClaimed(state, t.id);
     const pct = Math.min(100, (100 * prog) / t.target);
     const canClaim = done && !claimed;
-    const deco =
-      t.cardDeco === "forge"
-        ? `<img class="bounty-task-deco" src="${UI_BOUNTY_FORGE_DECO}" alt="" width="22" height="22" loading="lazy" />`
-        : "";
+    const deco = `<img class="bounty-task-deco" src="${BOUNTY_CARD_DECO_SRC[t.cardDeco]}" alt="" width="22" height="22" loading="lazy" />`;
     return `
       <div class="bounty-card" data-bounty-task="${t.id}">
         <div class="bounty-card-head">

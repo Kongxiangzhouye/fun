@@ -93,6 +93,16 @@ export const UI_HEAD_GARDEN = asset("deco-garden-header.svg");
 export const UI_HEAD_BOUNTY = asset("deco-bounty-header.svg");
 /** 周常悬赏 · 铸灵功课卡片标题旁 */
 export const UI_BOUNTY_FORGE_DECO = asset("bounty-forge-deco.svg");
+/** 周常悬赏 · 幻域清剿 */
+export const UI_BOUNTY_WAVES_DECO = asset("bounty-waves-deco.svg");
+/** 周常悬赏 · 唤引修行 */
+export const UI_BOUNTY_PULLS_DECO = asset("bounty-pulls-deco.svg");
+/** 周常悬赏 · 灵田收成 */
+export const UI_BOUNTY_GARDEN_DECO = asset("bounty-garden-deco.svg");
+/** 周常悬赏 · 吐纳功课 */
+export const UI_BOUNTY_TUNA_DECO = asset("bounty-tuna-deco.svg");
+/** 周常悬赏 · 破境精进 */
+export const UI_BOUNTY_REALM_DECO = asset("bounty-realm-deco.svg");
 /** 周常悬赏 · 一键领取按钮内图标 */
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset("bounty-claim-all-deco.svg");
 /** 养成二级导航 · 分组标题前小徽记 */

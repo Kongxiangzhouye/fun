@@ -12,6 +12,9 @@ export function currentWeekKey(now: number): string {
 
 export type WeeklyBountyKind = "waves" | "cardPulls" | "gearForges" | "gardenHarvests" | "tuna" | "breakthroughs";
 
+/** 周常悬赏卡片角标（与 `bountyPanel` / `public/assets/ui/bounty-*-deco.svg` 对应） */
+export type WeeklyBountyCardDeco = "waves" | "pulls" | "forge" | "garden" | "tuna" | "realm";
+
 export interface WeeklyBountyTaskDef {
   id: string;
   title: string;
@@ -21,7 +24,7 @@ export interface WeeklyBountyTaskDef {
   rewardStones: number;
   rewardEssence: number;
   /** 悬赏卡片标题旁小图标 */
-  cardDeco?: "forge";
+  cardDeco: WeeklyBountyCardDeco;
 }
 
 export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
@@ -33,6 +36,7 @@ export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
     kind: "waves",
     rewardStones: 420,
     rewardEssence: 16,
+    cardDeco: "waves",
   },
   {
     id: "wb_pulls",
@@ -42,6 +46,7 @@ export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
     kind: "cardPulls",
     rewardStones: 220,
     rewardEssence: 12,
+    cardDeco: "pulls",
   },
   {
     id: "wb_forge",
@@ -61,6 +66,7 @@ export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
     kind: "gardenHarvests",
     rewardStones: 160,
     rewardEssence: 10,
+    cardDeco: "garden",
   },
   {
     id: "wb_tuna",
@@ -70,6 +76,7 @@ export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
     kind: "tuna",
     rewardStones: 130,
     rewardEssence: 8,
+    cardDeco: "tuna",
   },
   {
     id: "wb_realm",
@@ -79,6 +86,7 @@ export const WEEKLY_BOUNTY_TASKS: WeeklyBountyTaskDef[] = [
     kind: "breakthroughs",
     rewardStones: 320,
     rewardEssence: 18,
+    cardDeco: "realm",
   },
 ];
 
