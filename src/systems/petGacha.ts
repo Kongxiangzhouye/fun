@@ -12,6 +12,14 @@ const RARITY_WEIGHT: Record<Rarity, number> = {
   UR: 40,
 };
 
+const PET_POOL_BY_RARITY: Record<Rarity, typeof PET_DEFS> = {
+  N: PET_DEFS.filter((p) => p.rarity === "N"),
+  R: PET_DEFS.filter((p) => p.rarity === "R"),
+  SR: PET_DEFS.filter((p) => p.rarity === "SR"),
+  SSR: PET_DEFS.filter((p) => p.rarity === "SSR"),
+  UR: PET_DEFS.filter((p) => p.rarity === "UR"),
+};
+
 function pickPetRarity(state: GameState): Rarity {
   const w = RARITY_WEIGHT;
   const total = w.N + w.R + w.SR + w.SSR + w.UR;
@@ -36,10 +44,10 @@ export function pullPet(state: GameState): {
   state.petPullsTotal += 1;
 
   let rarity = pickPetRarity(state);
-  let pool = PET_DEFS.filter((p) => p.rarity === rarity);
+  let pool = PET_POOL_BY_RARITY[rarity];
   if (pool.length === 0) {
     rarity = "N";
-    pool = PET_DEFS.filter((p) => p.rarity === "N");
+    pool = PET_POOL_BY_RARITY.N;
   }
   const def = pool[Math.floor(nextRand01(state) * pool.length)]!;
   const had = state.pets[def.id] != null;
