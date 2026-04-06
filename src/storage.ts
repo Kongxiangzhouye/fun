@@ -372,6 +372,8 @@ export function serialize(state: GameState): string {
       streak: state.estateCommission.streak,
       lastSuccessType: state.estateCommission.lastSuccessType,
       refreshCooldownUntilMs: state.estateCommission.refreshCooldownUntilMs,
+      autoQueueEnabled: state.estateCommission.autoQueueEnabled,
+      autoQueueStrategy: state.estateCommission.autoQueueStrategy,
     },
     spiritArrayLevel: state.spiritArrayLevel,
     lastTunaMs: state.lastTunaMs,
@@ -591,6 +593,9 @@ export function deserialize(json: string): GameState {
         Number.isFinite((data.estateCommission as { refreshCooldownUntilMs?: number }).refreshCooldownUntilMs)
           ? Math.max(0, Math.floor((data.estateCommission as { refreshCooldownUntilMs?: number }).refreshCooldownUntilMs ?? 0))
           : 0,
+      autoQueueEnabled: !!(data.estateCommission as { autoQueueEnabled?: unknown }).autoQueueEnabled,
+      autoQueueStrategy:
+        (data.estateCommission as { autoQueueStrategy?: unknown }).autoQueueStrategy === "any-type" ? "any-type" : "same-type",
     };
   }
   normalizeEstateCommissionState(st, Date.now());
@@ -901,6 +906,8 @@ function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameSt
     streak: 0,
     lastSuccessType: null,
     refreshCooldownUntilMs: 0,
+    autoQueueEnabled: false,
+    autoQueueStrategy: "same-type",
   };
   st.trueEndingSeen = false;
   st.vein = { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 };

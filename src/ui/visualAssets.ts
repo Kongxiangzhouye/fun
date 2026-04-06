@@ -322,6 +322,10 @@ export const UI_BOUNTY_WEEKLY_FOCUS_RIBBON = asset(WEEKLY_BOUNTY_UI_FILES.weekly
 export const UI_BOUNTY_WEEKLY_NEXT_STEP_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.nextStepBadge);
 /** 周常悬赏 · 周节奏冲刺反馈徽记（周循环末段强化提示） */
 export const UI_BOUNTY_SURGE_BADGE = asset(WEEKLY_BOUNTY_UI_FILES.surgeBadge);
+/** 周常悬赏 · 去执行按钮图标 */
+export const UI_BOUNTY_GO_ACTION = asset(WEEKLY_BOUNTY_UI_FILES.goAction);
+/** 周常悬赏 · 去执行聚焦图标 */
+export const UI_BOUNTY_GO_FOCUS = asset(WEEKLY_BOUNTY_UI_FILES.goFocus);
 /** 周常悬赏 · 里程奖励条目标题图标 */
 export const UI_BOUNTY_MILESTONE_DECO = asset(WEEKLY_BOUNTY_UI_FILES.milestoneDeco);
 /** 灵田 · 一键收获 */
@@ -536,6 +540,14 @@ export const UI_ESTATE_COMMISSION_STREAK = asset("icon-estate-commission-streak.
 export const UI_ESTATE_COMMISSION_REFRESH_COOLDOWN = asset("icon-estate-commission-refresh-cooldown.svg");
 /** 洞府委托 · 刷新受限/不足 */
 export const UI_ESTATE_COMMISSION_REFRESH_BLOCKED = asset("icon-estate-commission-refresh-blocked.svg");
+/** 洞府委托 · 托管开启 */
+export const UI_ESTATE_COMMISSION_AUTO_QUEUE_ON = asset("icon-estate-commission-auto-on.svg");
+/** 洞府委托 · 托管关闭 */
+export const UI_ESTATE_COMMISSION_AUTO_QUEUE_OFF = asset("icon-estate-commission-auto-off.svg");
+/** 洞府委托 · 托管同类型策略 */
+export const UI_ESTATE_COMMISSION_AUTO_STRATEGY_SAME = asset("icon-estate-commission-auto-same-type.svg");
+/** 洞府委托 · 托管任意类型策略 */
+export const UI_ESTATE_COMMISSION_AUTO_STRATEGY_ANY = asset("icon-estate-commission-auto-any-type.svg");
 /** 周常悬赏 · 状态快照徽记 */
 export const UI_WEEKLY_BOUNTY_STATE_SYNC = asset("icon-weekly-bounty-state-sync.svg");
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */

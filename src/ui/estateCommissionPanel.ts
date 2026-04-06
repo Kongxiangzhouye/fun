@@ -10,6 +10,10 @@ import {
   UI_ESTATE_COMMISSION_RESOURCE,
   UI_ESTATE_COMMISSION_COMBAT,
   UI_ESTATE_COMMISSION_CULTIVATION,
+  UI_ESTATE_COMMISSION_AUTO_QUEUE_ON,
+  UI_ESTATE_COMMISSION_AUTO_QUEUE_OFF,
+  UI_ESTATE_COMMISSION_AUTO_STRATEGY_ANY,
+  UI_ESTATE_COMMISSION_AUTO_STRATEGY_SAME,
   UI_ESTATE_COMMISSION_STREAK,
   UI_ESTATE_COMMISSION_REFRESH_COOLDOWN,
   UI_ESTATE_COMMISSION_REFRESH_BLOCKED,
@@ -74,6 +78,43 @@ export function renderEstateCommissionPanel(
           ? `专精路径：${ecTypeZh(ecStreak.specializationType)}（同类型额外 +${(ecStreak.specializationRate * 100).toFixed(0)}%）`
           : "专精路径：未锁定（连续完成同类型委托可建立专精）"
       }</p>
+      <div class="estate-commission-auto-row">
+        <button
+          class="btn estate-commission-auto-toggle ${ec.autoQueueEnabled ? "btn-primary" : ""}"
+          type="button"
+          data-estate-commission-auto-toggle="${ec.autoQueueEnabled ? "0" : "1"}"
+        >
+          <img src="${ec.autoQueueEnabled ? UI_ESTATE_COMMISSION_AUTO_QUEUE_ON : UI_ESTATE_COMMISSION_AUTO_QUEUE_OFF}" alt="" width="14" height="14" loading="lazy" />
+          托管连签：${ec.autoQueueEnabled ? "已开启" : "已关闭"}
+        </button>
+        <div class="estate-commission-auto-strategy">
+          <button
+            class="btn estate-commission-auto-strategy-btn ${ec.autoQueueStrategy === "same-type" ? "btn-primary" : ""}"
+            type="button"
+            data-estate-commission-auto-strategy="same-type"
+            ${ec.autoQueueEnabled ? "" : "disabled"}
+          >
+            <img src="${UI_ESTATE_COMMISSION_AUTO_STRATEGY_SAME}" alt="" width="14" height="14" loading="lazy" />
+            同类型
+          </button>
+          <button
+            class="btn estate-commission-auto-strategy-btn ${ec.autoQueueStrategy === "any-type" ? "btn-primary" : ""}"
+            type="button"
+            data-estate-commission-auto-strategy="any-type"
+            ${ec.autoQueueEnabled ? "" : "disabled"}
+          >
+            <img src="${UI_ESTATE_COMMISSION_AUTO_STRATEGY_ANY}" alt="" width="14" height="14" loading="lazy" />
+            任意类型
+          </button>
+        </div>
+      </div>
+      <p class="hint sm estate-commission-auto-tip" id="estate-commission-auto-tip">${
+        ec.autoQueueEnabled
+          ? ec.autoQueueStrategy === "same-type"
+            ? "托管已开启：仅在下一单与本次完成类型一致时自动接取。"
+            : "托管已开启：结算后将自动接取下一单（不限类型）。"
+          : "托管已关闭：结算后需手动接取下一单。"
+      }</p>
       ${
         ecActive
           ? `<div class="estate-commission-card ${ecReady ? "is-ready" : ""}">
@@ -127,6 +168,7 @@ export function updateEstateCommissionPanelReadouts(
   const specLineEl = document.getElementById("estate-commission-spec-line");
   const refreshLineEl = document.getElementById("estate-commission-refresh-line");
   const settleBtn = document.getElementById("btn-estate-commission-settle") as HTMLButtonElement | null;
+  const autoTipEl = document.getElementById("estate-commission-auto-tip");
   const streak = getEstateCommissionStreakPreview(state);
   if (specLineEl) {
     specLineEl.textContent = streak.specializationType
@@ -155,5 +197,13 @@ export function updateEstateCommissionPanelReadouts(
     const leftSec = Math.ceil(estateCommissionTimeLeftMs(state, now) / 1000);
     timerEl.textContent = `类型：${ecTypeZh(ecActive.offer.type)} · ${ready ? "可立即结算" : `剩余约 ${fmtOfflineDurationSec(leftSec)}`}`;
     if (settleBtn) settleBtn.disabled = !ready;
+  }
+  if (autoTipEl) {
+    const ec = state.estateCommission;
+    autoTipEl.textContent = ec.autoQueueEnabled
+      ? ec.autoQueueStrategy === "same-type"
+        ? "托管已开启：仅在下一单与本次完成类型一致时自动接取。"
+        : "托管已开启：结算后将自动接取下一单（不限类型）。"
+      : "托管已关闭：结算后需手动接取下一单。";
   }
 }

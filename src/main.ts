@@ -315,6 +315,8 @@ import {
   getEstateCommissionRefreshStatus,
   getEstateCommissionStreakPreview,
   refreshEstateCommissionOffer,
+  setEstateCommissionAutoQueueEnabled,
+  setEstateCommissionAutoQueueStrategy,
   settleEstateCommission,
   tickEstateCommission,
 } from "./systems/estateCommission";
@@ -2185,40 +2187,40 @@ function mainContentViewKey(): string {
 
 function goByBountyAction(action: string | null | undefined): boolean {
   if (!action) return false;
-  if (action === "dungeon") {
+  const route = BOUNTY_ACTION_ROUTES[action];
+  if (!route) return false;
+  route();
+  return true;
+}
+
+const BOUNTY_ACTION_ROUTES: Record<string, () => void> = {
+  dungeon: () => {
     activeHub = "battle";
     battleSub = "dungeon";
-    return true;
-  }
-  if (action === "card_pull") {
+  },
+  card_pull: () => {
     activeHub = "battle";
     battleSub = "forge";
     gachaPool = "cards";
-    return true;
-  }
-  if (action === "gear_forge") {
+  },
+  gear_forge: () => {
     activeHub = "battle";
     battleSub = "forge";
     gachaPool = "gear";
-    return true;
-  }
-  if (action === "garden") {
+  },
+  garden: () => {
     activeHub = "estate";
     estateSub = "garden";
-    return true;
-  }
-  if (action === "tuna") {
+  },
+  tuna: () => {
     activeHub = "estate";
     estateSub = "idle";
-    return true;
-  }
-  if (action === "breakthrough") {
+  },
+  breakthrough: () => {
     activeHub = "estate";
     estateSub = "vein";
-    return true;
-  }
-  return false;
-}
+  },
+};
 
 function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
   if (activeHub === "estate" && estateSub === "vein" && !u.tabVein) estateSub = "idle";
@@ -4585,8 +4587,28 @@ function bindEvents(rb: Decimal, _slots: number): void {
       tryCompleteAchievements(state);
       saveGame(state);
       const streak = state.estateCommission.streak;
-      toast(`委托结算完成，奖励已到账（连携 ${streak}）。`);
+      const autoAccepted = !!state.estateCommission.active;
+      toast(`委托结算完成，奖励已到账（连携 ${streak}）。${autoAccepted ? " 托管已自动接取下一单。" : ""}`);
       updateTopResourcePillsAndVigor(totalCardsInPool());
+      render();
+    });
+  });
+  document.querySelectorAll("[data-estate-commission-auto-toggle]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const enabled = (el as HTMLElement).dataset.estateCommissionAutoToggle === "1";
+      setEstateCommissionAutoQueueEnabled(state, enabled);
+      saveGame(state);
+      toast(enabled ? "洞府委托托管已开启。" : "洞府委托托管已关闭。");
+      render();
+    });
+  });
+  document.querySelectorAll("[data-estate-commission-auto-strategy]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const strategy = (el as HTMLElement).dataset.estateCommissionAutoStrategy;
+      if (strategy !== "same-type" && strategy !== "any-type") return;
+      setEstateCommissionAutoQueueStrategy(state, strategy);
+      saveGame(state);
+      toast(strategy === "same-type" ? "托管策略已切换为：同类型续签。" : "托管策略已切换为：任意类型续签。");
       render();
     });
   });
@@ -4754,16 +4776,16 @@ function bindEvents(rb: Decimal, _slots: number): void {
     }
   });
 
-  document.querySelectorAll("[data-bounty-go]").forEach((el) => {
-    el.addEventListener("click", () => {
-      const action = (el as HTMLElement).dataset.bountyGo;
-      if (!goByBountyAction(action)) return;
-      render();
-    });
-  });
-
   if (!delegatedPanelClickListenersBound) {
     delegatedPanelClickListenersBound = true;
+    document.body.addEventListener("click", (ev) => {
+    const go = (ev.target as HTMLElement | null)?.closest?.("[data-bounty-go]") as HTMLElement | null;
+    if (!go) return;
+    const action = go.dataset.bountyGo;
+    if (!goByBountyAction(action)) return;
+    render();
+    });
+
     document.body.addEventListener("click", (ev) => {
     const t0 = (ev.target as HTMLElement | null)?.closest?.("#btn-daily-login-claim") as HTMLElement | null;
     if (!t0) return;

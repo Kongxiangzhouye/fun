@@ -3991,6 +3991,31 @@ h1 {
   gap: 6px;
 }
 
+.estate-commission-auto-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 6px;
+}
+
+.estate-commission-auto-toggle,
+.estate-commission-auto-strategy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.estate-commission-auto-strategy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.estate-commission-auto-tip {
+  margin: 0 0 8px;
+}
+
 @media (max-width: 768px) {
   .offline-choice-grid,
   .income-guide-cards,
@@ -9287,6 +9312,11 @@ p.gear-forge-tier-hint {
 
 .bounty-go-btn {
   margin-top: 6px;
+}
+
+.bounty-go-ico {
+  flex-shrink: 0;
+  opacity: 0.92;
 }
 
 .bounty-bar-wrap {

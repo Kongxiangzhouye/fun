@@ -157,6 +157,7 @@ export interface OfflineAdventureState {
 }
 
 export type EstateCommissionType = "resource" | "combat" | "cultivation";
+export type EstateCommissionAutoStrategy = "same-type" | "any-type";
 
 export interface EstateCommissionReward {
   spiritStones: string;
@@ -189,6 +190,10 @@ export interface EstateCommissionState {
   /** 连续成功类型（用于专精加成）；中断时清空 */
   lastSuccessType: EstateCommissionType | null;
   refreshCooldownUntilMs: number;
+  /** 托管：结算后自动接取下一单 */
+  autoQueueEnabled: boolean;
+  /** 托管策略：同类型优先 / 任意类型 */
+  autoQueueStrategy: EstateCommissionAutoStrategy;
 }
 
 /** 装备词条属性键（类 PoE：前缀/后缀分组互斥由生成器保证） */

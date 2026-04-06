@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import type {
   EstateCommissionActive,
+  EstateCommissionAutoStrategy,
   EstateCommissionOffer,
   EstateCommissionReward,
   EstateCommissionState,
@@ -64,6 +65,8 @@ export function createEmptyEstateCommissionState(): EstateCommissionState {
     streak: 0,
     lastSuccessType: null,
     refreshCooldownUntilMs: 0,
+    autoQueueEnabled: false,
+    autoQueueStrategy: "same-type",
   };
 }
 
@@ -182,10 +185,11 @@ export function estateCommissionTimeLeftMs(state: GameState, now: number): numbe
 export function settleEstateCommission(state: GameState): boolean {
   const active = state.estateCommission?.active;
   if (!active || active.completedAtMs == null) return false;
+  const completedType = active.offer.type;
   const nextStreak = Math.max(0, Math.floor(state.estateCommission.streak)) + 1;
   const reward = applyEstateRewardBonus(
     active.offer.reward,
-    active.offer.type,
+    completedType,
     nextStreak,
     state.estateCommission.lastSuccessType,
   );
@@ -193,10 +197,18 @@ export function settleEstateCommission(state: GameState): boolean {
   state.summonEssence += Math.max(0, Math.floor(reward.summonEssence));
   state.zhuLingEssence += Math.max(0, Math.floor(reward.zhuLingEssence));
   state.estateCommission.streak = nextStreak;
-  state.estateCommission.lastSuccessType = active.offer.type;
+  state.estateCommission.lastSuccessType = completedType;
   state.estateCommission.refreshCount = 0;
   state.estateCommission.refreshCooldownUntilMs = 0;
   state.estateCommission.active = null;
+  if (state.estateCommission.autoQueueEnabled) {
+    const now = Date.now();
+    ensureEstateCommissionOffer(state, now);
+    const offer = state.estateCommission.offer;
+    const strategy = state.estateCommission.autoQueueStrategy;
+    const canAutoAccept = !!offer && (strategy === "any-type" || offer.type === completedType);
+    if (canAutoAccept) acceptEstateCommission(state, now);
+  }
   return true;
 }
 
@@ -256,6 +268,11 @@ export function normalizeEstateCommissionState(state: GameState, now: number): v
   ) {
     state.estateCommission.refreshCooldownUntilMs = 0;
   }
+  state.estateCommission.autoQueueEnabled = !!state.estateCommission.autoQueueEnabled;
+  const autoQueueStrategy = (state.estateCommission as { autoQueueStrategy?: unknown }).autoQueueStrategy;
+  if (autoQueueStrategy !== "same-type" && autoQueueStrategy !== "any-type") {
+    state.estateCommission.autoQueueStrategy = "same-type";
+  }
   const active = state.estateCommission.active;
   if (active) {
     if (!active.offer || !Number.isFinite(active.acceptedAtMs) || !Number.isFinite(active.dueAtMs)) {
@@ -265,5 +282,15 @@ export function normalizeEstateCommissionState(state: GameState, now: number): v
     }
   }
   tickEstateCommission(state, now);
+}
+
+export function setEstateCommissionAutoQueueEnabled(state: GameState, enabled: boolean): void {
+  if (!state.estateCommission) state.estateCommission = createEmptyEstateCommissionState();
+  state.estateCommission.autoQueueEnabled = enabled;
+}
+
+export function setEstateCommissionAutoQueueStrategy(state: GameState, strategy: EstateCommissionAutoStrategy): void {
+  if (!state.estateCommission) state.estateCommission = createEmptyEstateCommissionState();
+  state.estateCommission.autoQueueStrategy = strategy;
 }
 
