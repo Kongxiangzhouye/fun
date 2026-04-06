@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "forgeEmber" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
+  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha" | "codex" | "rarity";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -432,6 +432,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "forgeEmber",
   },
   {
+    id: "forge_1000",
+    title: "万锻归一",
+    desc: "累计铸灵 1000 次",
+    rewardStones: 12000,
+    rewardEssence: 320,
+    listDeco: "forgeNova",
+  },
+  {
     id: "forge_treasure",
     title: "珍品显形",
     desc: "铸灵曾达到珍品及以上稀有度",
@@ -617,6 +625,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 200;
     case "forge_500":
       return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 500;
+    case "forge_1000":
+      return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 1000;
     case "forge_treasure":
       return (state.lifetimeStats?.maxGearRarityRankForged ?? 0) >= 2;
     case "forge_celestial":

@@ -186,7 +186,7 @@ export function renderGameLoreHtml(): string {
         <summary><img src="${UI_LORE_GEAR}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 行囊与铸灵</summary>
         <ul class="game-lore-list">
           <li><strong>行囊</strong>：武器 / 衣甲 / 戒指三槽可装备；可<strong>锁定</strong>以防分解与自动分解误吞。</li>
-          <li><strong>铸灵池</strong>：消耗<strong>唤灵髓</strong>铸灵，随机基底与稀有度；连续未出珍品以上会累积珍品保底计数。累计铸灵达 <strong>1 / 50 / 200 / 500</strong> 次等可在<strong>成就</strong>领奖（另有珍品、天极稀有度里程碑）。</li>
+          <li><strong>铸灵池</strong>：消耗<strong>唤灵髓</strong>铸灵，随机基底与稀有度；连续未出珍品以上会累积珍品保底计数。累计铸灵达 <strong>1 / 50 / 200 / 500 / 1000</strong> 次等可在<strong>成就</strong>领奖（另有珍品、天极稀有度里程碑）。</li>
           <li><strong>强化 / 精炼</strong>：消耗<strong>玄铁</strong>提升强化等级；UR 可继续精炼（细则见背包页）。</li>
           <li><strong>分解</strong>：多余装备可分解为玄铁；可在行囊内勾选自动分解的品阶。</li>
         </ul>

@@ -151,6 +151,7 @@ export const UI_GEAR_CHRONICLE_DECO = asset("deco-chronicle-gear.svg");
 export const UI_ACH_FORGE_DECO = asset("ach-forge-deco.svg");
 /** 成就列表 · 高阶铸灵次数里程碑（余烬） */
 export const UI_ACH_FORGE_EMBER_DECO = asset("ach-forge-ember-deco.svg");
+export const UI_ACH_FORGE_NOVA_DECO = asset("ach-forge-nova-deco.svg");
 /** 成就列表 · 灵卡池累计唤引系条目左侧小徽 */
 export const UI_ACH_GACHA_DECO = asset("ach-gacha-deco.svg");
 /** 成就列表 · 图鉴进度系条目左侧小徽 */
