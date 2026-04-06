@@ -141,6 +141,7 @@ import {
   UI_HEAD_SPIRIT_RESERVOIR,
   UI_HEAD_DAILY_FORTUNE,
   UI_ACH_FORGE_DECO,
+  UI_ACH_TRAIN_DECO,
   UI_SAVE_DOWNLOAD_DECO,
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
@@ -3166,7 +3167,9 @@ function renderAch(): string {
     const deco =
       a.listDeco === "forge"
         ? `<img class="ach-deco-icon" src="${UI_ACH_FORGE_DECO}" alt="" width="22" height="22" loading="lazy" />`
-        : "";
+        : a.listDeco === "train"
+          ? `<img class="ach-deco-icon" src="${UI_ACH_TRAIN_DECO}" alt="" width="22" height="22" loading="lazy" />`
+          : "";
     html += `
       <div class="ach-item ${done ? "done" : ""} ${a.listDeco ? `ach-item--${a.listDeco}` : ""}">
         <div class="ach-item-main">

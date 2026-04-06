@@ -139,6 +139,8 @@ export const UI_HEAD_CHRONICLE = asset("deco-chronicle-header.svg");
 export const UI_GEAR_CHRONICLE_DECO = asset("deco-chronicle-gear.svg");
 /** 成就列表 · 铸灵系条目左侧小标 */
 export const UI_ACH_FORGE_DECO = asset("ach-forge-deco.svg");
+/** 成就列表 · 训练（三艺）系条目左侧小标 */
+export const UI_ACH_TRAIN_DECO = asset("ach-train-deco.svg");
 /** 灵息日历（每日签到）页标题 */
 export const UI_HEAD_DAILY_LOGIN = asset("deco-daily-login.svg");
 /** 天机匣（周轮换商店）页标题 */

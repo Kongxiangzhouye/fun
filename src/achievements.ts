@@ -10,8 +10,8 @@ export interface AchievementDef {
   rewardStones: number;
   /** 唤灵髓 */
   rewardEssence: number;
-  /** 成就列表左侧小装饰（铸灵系等） */
-  listDeco?: "forge";
+  /** 成就列表左侧小装饰（铸灵系 / 训练系等） */
+  listDeco?: "forge" | "train";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -198,6 +198,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     rewardEssence: 35,
   },
   {
+    id: "skills_triple_25",
+    title: "三艺并济",
+    desc: "战艺、采灵、法篆均达到 25 级",
+    rewardStones: 420,
+    rewardEssence: 28,
+    listDeco: "train",
+  },
+  {
+    id: "skills_triple_50",
+    title: "三艺纯青",
+    desc: "战艺、采灵、法篆均达到 50 级",
+    rewardStones: 2400,
+    rewardEssence: 72,
+    listDeco: "train",
+  },
+  {
     id: "forge_1",
     title: "铸灵初鸣",
     desc: "完成第 1 次铸灵",
@@ -318,6 +334,18 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.spiritArrayLevel >= 10;
     case "vein_gongming_40":
       return state.vein.gongMing >= 40;
+    case "skills_triple_25":
+      return (
+        state.skills.combat.level >= 25 &&
+        state.skills.gathering.level >= 25 &&
+        state.skills.arcana.level >= 25
+      );
+    case "skills_triple_50":
+      return (
+        state.skills.combat.level >= 50 &&
+        state.skills.gathering.level >= 50 &&
+        state.skills.arcana.level >= 50
+      );
     case "forge_1":
       return (state.lifetimeStats?.gearForgesTotal ?? 0) >= 1;
     case "forge_50":
