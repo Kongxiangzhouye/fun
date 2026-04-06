@@ -58,6 +58,7 @@ import {
   daoEssenceGainBreakdown,
   performReincarnate,
   buyMeta,
+  tryAutoBuyMetaIfPref,
   metaUpgradeCost,
 } from "./systems/reincarnation";
 import { describeInGameUi, onGachaPulls, essenceIncomePerSecondFromResonance } from "./dailyRewards";
@@ -177,6 +178,7 @@ import {
   UI_SOUND_PREFS_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
+  UI_META_AUTO_BUY,
   UI_DATA_EXPORT_DECO,
   UI_DATA_STATS_DOWNLOAD_DECO,
   UI_VEIN_GONGMING_LINK,
@@ -900,6 +902,8 @@ const DAO_MERIDIAN_AUTO_TOAST_GAP_MS = 5500;
 let lastDaoMeridianAutoToastAtMs = 0;
 const VEIN_AUTO_TOAST_GAP_MS = 5500;
 let lastVeinAutoToastAtMs = 0;
+const META_AUTO_TOAST_GAP_MS = 5500;
+let lastMetaAutoToastAtMs = 0;
 let lastCombatPower = 0;
 const COMBAT_POWER_POPUP_DURATION_MS = 1000;
 const COMBAT_POWER_POPUP_HOLD_MS = 520;
@@ -4000,6 +4004,11 @@ function renderMeta(): string {
     </section>
     <section class="panel">
       <h2>元强化</h2>
+      <label class="meta-auto-buy-row">
+        <input type="checkbox" id="chk-meta-auto-buy" data-ui-pref="autoBuyMeta" ${state.uiPrefs.autoBuyMeta ? "checked" : ""} />
+        <img class="meta-auto-buy-ico" src="${UI_META_AUTO_BUY}" alt="" width="18" height="18" loading="lazy" />
+        <span class="meta-auto-buy-text">道韵足够时按顺序自动强化五条（多轮直至买不起或满级）</span>
+      </label>
       <div class="meta-grid">${grid}</div>
     </section>
   `;
@@ -4243,6 +4252,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoPullBattleSkill") state.uiPrefs.autoPullBattleSkill = checked;
       else if (t === "autoBuyDaoMeridian") state.uiPrefs.autoBuyDaoMeridian = checked;
       else if (t === "autoUpgradeVein") state.uiPrefs.autoUpgradeVein = checked;
+      else if (t === "autoBuyMeta") state.uiPrefs.autoBuyMeta = checked;
       else return;
       saveGame(state);
       render();
@@ -5641,6 +5651,23 @@ function loop(): void {
         toast(`洞府蕴灵已自动强化 ${veinUps} 次（资源不足或已满级则停）`);
       }
       if (activeHub === "estate" && estateSub === "vein") {
+        render();
+      }
+    }
+  }
+  if (typeof document !== "undefined" && state.uiPrefs.autoBuyMeta && uLoop.tabMeta) {
+    const metaUps = tryAutoBuyMetaIfPref(state);
+    if (metaUps > 0) {
+      tryCompleteAchievements(state);
+      requestSave("元强化自动购买", true);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      if (now - lastMetaAutoToastAtMs >= META_AUTO_TOAST_GAP_MS) {
+        lastMetaAutoToastAtMs = now;
+        toast(`元强化已自动购买 ${metaUps} 次（道韵不足或已满级则停）`);
+      }
+      if (activeHub === "cultivate" && cultivateSub === "meta") {
         render();
       }
     }

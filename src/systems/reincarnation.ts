@@ -138,3 +138,23 @@ export function buyMeta(state: GameState, kind: keyof GameState["meta"]): boolea
   state.meta[kind] = cur + 1;
   return true;
 }
+
+const META_AUTO_ORDER: (keyof GameState["meta"])[] = ["idleMult", "gachaLuck", "deckSlots", "ticketRegen", "stoneMult"];
+
+/** 主循环：`uiPrefs.autoBuyMeta` 时多轮按顺序尝试 `buyMeta`，返回本轮成功次数 */
+export function tryAutoBuyMetaIfPref(state: GameState): number {
+  if (!state.uiPrefs.autoBuyMeta) return 0;
+  let total = 0;
+  let roundGuard = 0;
+  while (roundGuard++ < 400) {
+    let progressed = false;
+    for (const k of META_AUTO_ORDER) {
+      if (buyMeta(state, k)) {
+        total += 1;
+        progressed = true;
+      }
+    }
+    if (!progressed) break;
+  }
+  return total;
+}

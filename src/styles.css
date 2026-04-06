@@ -3496,6 +3496,36 @@ h1 {
   opacity: 0.95;
 }
 
+.meta-auto-buy-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(140, 110, 180, 0.4);
+  background: rgba(22, 14, 36, 0.5);
+  cursor: pointer;
+  user-select: none;
+}
+
+.meta-auto-buy-row input {
+  margin-top: 3px;
+  accent-color: #b898e0;
+}
+
+.meta-auto-buy-ico {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.92;
+}
+
+.meta-auto-buy-text {
+  font-size: 0.82rem;
+  color: #d4c4e8;
+  line-height: 1.45;
+}
+
 .meta-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

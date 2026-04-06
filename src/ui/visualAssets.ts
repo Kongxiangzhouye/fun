@@ -55,6 +55,8 @@ export const UI_XUAN_TIE = asset(HUD_BAR_UI_FILES.xuanTie);
 export const UI_SESSION_STONE_GAIN = asset("session-stone-gain.svg");
 /** 轮回面板：道韵分解说明装饰 */
 export const UI_DAO_BREAKDOWN_DECO = asset("dao-essence-breakdown-deco.svg");
+/** 轮回 · 元强化自动购买开关旁 */
+export const UI_META_AUTO_BUY = asset("meta-auto-buy.svg");
 
 /** SSR / UR 灵卡角标（与五行底图分离）；与 `RARITY_BADGE_UI_FILES` 同源 */
 export const RARITY_BADGE_SSR = asset(RARITY_BADGE_UI_FILES.SSR);

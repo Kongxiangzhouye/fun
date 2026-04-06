@@ -18,6 +18,7 @@ import { tryAutoUpgradeSpiritArrayIfPref } from "../systems/spiritArray";
 import { tryAutoPullBattleSkillsIfPref } from "../systems/battleSkills";
 import { tryAutoBuyDaoMeridianIfPref } from "../systems/daoMeridian";
 import { tryAutoUpgradeVeinsIfPref } from "../systems/veinCultivation";
+import { tryAutoBuyMetaIfPref } from "../systems/reincarnation";
 import {
   chooseOfflineAdventureOption,
   commitOfflineAdventureAutoReceipt,
@@ -509,6 +510,16 @@ function runVeinAutoUpgradeSmoke(): void {
   assert.ok(n >= 1, "auto vein upgrade should succeed at least once when resourced");
 }
 
+function runMetaAutoBuySmoke(): void {
+  const st = createInitialState();
+  st.daoEssence = 99999;
+  st.uiPrefs.autoBuyMeta = false;
+  assert.equal(tryAutoBuyMetaIfPref(st), 0);
+  st.uiPrefs.autoBuyMeta = true;
+  const n = tryAutoBuyMetaIfPref(st);
+  assert.ok(n >= 1, "auto meta buy should purchase at least once when dao essence allows");
+}
+
 function runDaoMeridianAutoBuySmoke(): void {
   const st = createInitialState();
   st.daoEssence = 300;
@@ -662,6 +673,7 @@ function main(): void {
   runBattleSkillAutoPullSmoke();
   runDaoMeridianAutoBuySmoke();
   runVeinAutoUpgradeSmoke();
+  runMetaAutoBuySmoke();
   runWeeklyBountyAutoClaimSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console

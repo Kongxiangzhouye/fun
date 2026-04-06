@@ -475,6 +475,8 @@ export interface UiPrefs {
   autoBuyDaoMeridian: boolean;
   /** 洞府蕴灵：按汇灵→灵息→共鸣→固元顺序轮询，能升则升直至本轮无进展（需已解锁灵脉页） */
   autoUpgradeVein: boolean;
+  /** 元强化：按固定顺序轮询五条元强化，道韵足够则买直至本轮无进展（需已解锁轮回·永久强化页） */
+  autoBuyMeta: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

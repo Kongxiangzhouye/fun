@@ -824,6 +824,7 @@ export function deserialize(json: string): GameState {
     autoPullBattleSkill: !!data.uiPrefs?.autoPullBattleSkill,
     autoBuyDaoMeridian: !!data.uiPrefs?.autoBuyDaoMeridian,
     autoUpgradeVein: !!data.uiPrefs?.autoUpgradeVein,
+    autoBuyMeta: !!data.uiPrefs?.autoBuyMeta,
   };
 
   if (data.pets && typeof data.pets === "object") {
