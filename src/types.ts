@@ -108,6 +108,10 @@ export interface LifetimeStatsState {
   petFeeds: number;
   /** 灵田种植成功次数（每次播种计 1，含自动续种） */
   gardenPlants: number;
+  /** 战艺/采灵/法篆挂机技能等级提升次数（每次升 1 级计 1） */
+  skillLevelUps: number;
+  /** 境界突破成功次数（每次破境计 1，含自动破境） */
+  realmBreakthroughs: number;
 }
 
 /** 灵田作物 id */

@@ -354,7 +354,7 @@ import {
   gearForgeIlvlBonus,
   GEAR_FORGE_TIER_MAX,
 } from "./systems/gearGachaTier";
-import { PULL_CHRONICLE_MAX } from "./systems/pullChronicle";
+import { PULL_CHRONICLE_MAX, recordRealmBreakthroughLifetime } from "./systems/pullChronicle";
 import { GEAR_BASES } from "./data/gearBases";
 import { isSlotTopPowerGear, salvageCard, salvageGear, toggleGearLock } from "./systems/salvage";
 import {
@@ -4396,6 +4396,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     if (canAfford(state, rb) && subStones(state, rb)) {
       state.realmLevel += 1;
       noteWeeklyBountyBreakthrough(state, nowMs());
+      recordRealmBreakthroughLifetime(state);
       if (state.tutorialStep === 7) {
         state.tutorialStep = 0;
         toast("破境成功。新手引导已完成。");

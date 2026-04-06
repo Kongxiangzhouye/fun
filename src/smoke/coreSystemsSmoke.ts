@@ -656,6 +656,23 @@ function runFenTianBurstAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
 }
 
+function runSkillLevelAndRealmBreakthroughAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("skill_level_ups_50"), "skill 50 should start locked");
+  st.lifetimeStats.skillLevelUps = 50;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "skill_level_ups_50"), "50 skill level ups should unlock");
+  st.lifetimeStats.skillLevelUps = 200;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "skill_level_ups_200"), "200 skill level ups should unlock");
+  st.lifetimeStats.realmBreakthroughs = 15;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "realm_breakthroughs_15"), "15 realm breakthroughs should unlock");
+  st.lifetimeStats.realmBreakthroughs = 45;
+  const d = tryCompleteAchievements(st);
+  assert.ok(d.some((x) => x.id === "realm_breakthroughs_45"), "45 realm breakthroughs should unlock");
+}
+
 function runPetFeedAndGardenPlantAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("pet_feeds_100"), "pet feeds 100 should start locked");
@@ -836,6 +853,7 @@ function main(): void {
   runCardSalvageAndVeinAchievementsSmoke();
   runOfflineAdventureAndMetaAchievementsSmoke();
   runPetFeedAndGardenPlantAchievementsSmoke();
+  runSkillLevelAndRealmBreakthroughAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

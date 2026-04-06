@@ -1,4 +1,5 @@
 import type { GameState, SkillId } from "../types";
+import { normalizeLifetimeStats } from "./pullChronicle";
 
 export function xpToNextLevel(level: number): number {
   return Math.max(30, Math.floor(48 * Math.pow(1.13, level)));
@@ -30,6 +31,8 @@ export function tickSkillTraining(state: GameState, dt: number): void {
     guard++;
     sk.xp -= xpToNextLevel(sk.level);
     sk.level += 1;
+    normalizeLifetimeStats(state);
+    state.lifetimeStats.skillLevelUps += 1;
   }
 }
 

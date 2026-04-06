@@ -55,6 +55,8 @@ export function normalizeLifetimeStats(st: GameState): void {
       metaUpgrades: 0,
       petFeeds: 0,
       gardenPlants: 0,
+      skillLevelUps: 0,
+      realmBreakthroughs: 0,
     };
     return;
   }
@@ -129,6 +131,18 @@ export function normalizeLifetimeStats(st: GameState): void {
   const gp = st.lifetimeStats.gardenPlants;
   if (gp == null || !Number.isFinite(gp)) st.lifetimeStats.gardenPlants = 0;
   else st.lifetimeStats.gardenPlants = Math.max(0, Math.floor(gp));
+  const sl = st.lifetimeStats.skillLevelUps;
+  if (sl == null || !Number.isFinite(sl)) st.lifetimeStats.skillLevelUps = 0;
+  else st.lifetimeStats.skillLevelUps = Math.max(0, Math.floor(sl));
+  const rb = st.lifetimeStats.realmBreakthroughs;
+  if (rb == null || !Number.isFinite(rb)) st.lifetimeStats.realmBreakthroughs = 0;
+  else st.lifetimeStats.realmBreakthroughs = Math.max(0, Math.floor(rb));
+}
+
+/** 境界突破成功后累加终身统计（与周常悬赏分开调用） */
+export function recordRealmBreakthroughLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.realmBreakthroughs += 1;
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */

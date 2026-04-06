@@ -480,6 +480,38 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "gardenBloom",
   },
   {
+    id: "skill_level_ups_50",
+    title: "勤修不辍",
+    desc: "战艺/采灵/法篆挂机累计升级 50 次",
+    rewardStones: 1200,
+    rewardEssence: 42,
+    listDeco: "train",
+  },
+  {
+    id: "skill_level_ups_200",
+    title: "三艺通明",
+    desc: "战艺/采灵/法篆挂机累计升级 200 次",
+    rewardStones: 5200,
+    rewardEssence: 98,
+    listDeco: "train",
+  },
+  {
+    id: "realm_breakthroughs_15",
+    title: "破境十五",
+    desc: "境界突破成功累计 15 次",
+    rewardStones: 1800,
+    rewardEssence: 55,
+    listDeco: "realm",
+  },
+  {
+    id: "realm_breakthroughs_45",
+    title: "天梯四十五",
+    desc: "境界突破成功累计 45 次",
+    rewardStones: 7200,
+    rewardEssence: 135,
+    listDeco: "realm",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -961,6 +993,14 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.gardenPlants ?? 0) >= 80;
     case "garden_plants_320":
       return (state.lifetimeStats?.gardenPlants ?? 0) >= 320;
+    case "skill_level_ups_50":
+      return (state.lifetimeStats?.skillLevelUps ?? 0) >= 50;
+    case "skill_level_ups_200":
+      return (state.lifetimeStats?.skillLevelUps ?? 0) >= 200;
+    case "realm_breakthroughs_15":
+      return (state.lifetimeStats?.realmBreakthroughs ?? 0) >= 15;
+    case "realm_breakthroughs_45":
+      return (state.lifetimeStats?.realmBreakthroughs ?? 0) >= 45;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

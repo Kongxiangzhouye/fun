@@ -17,6 +17,8 @@ import {
   UI_CHRONICLE_OFFLINE_ADVENTURE_STAT,
   UI_CHRONICLE_PET_FEED_STAT,
   UI_CHRONICLE_PET_PULL_STAT,
+  UI_CHRONICLE_REALM_BREAKTHROUGH_STAT,
+  UI_CHRONICLE_SKILL_LEVEL_STAT,
   UI_CHRONICLE_TUNA_STAT,
   UI_CHRONICLE_VEIN_UPGRADE_STAT,
   UI_GEAR_CHRONICLE_DECO,
@@ -78,6 +80,13 @@ export function renderChroniclePanel(state: GameState): string {
           <span class="chronicle-stat-lbl">累计在线</span>
           <strong class="chronicle-stat-val">${h} 时 ${m} 分</strong>
         </div>
+        <div class="chronicle-stat-card chronicle-stat-card--realm-breakthrough">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_REALM_BREAKTHROUGH_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">境界突破</span>
+            <strong class="chronicle-stat-val">${ls.realmBreakthroughs} 次</strong>
+          </div>
+        </div>
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">灵卡累计唤引</span>
           <strong class="chronicle-stat-val">${state.totalPulls} 次</strong>
@@ -123,6 +132,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">心法领悟</span>
             <strong class="chronicle-stat-val">${ls.battleSkillPulls} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--skill-level">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_SKILL_LEVEL_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">三系挂机升级</span>
+            <strong class="chronicle-stat-val">${ls.skillLevelUps} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card">

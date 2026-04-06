@@ -16,6 +16,7 @@ import { tryTuna, tunaCooldownLeftMs } from "./systems/tuna";
 import { checkTrueEnding } from "./trueEnding";
 import { tryAutoSalvageInventory } from "./systems/salvage";
 import { ensureWeeklyBountyWeek, noteWeeklyBountyBreakthrough } from "./systems/weeklyBounty";
+import { recordRealmBreakthroughLifetime } from "./systems/pullChronicle";
 import { ensureCelestialStashWeek } from "./systems/celestialStash";
 import { tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
 import { tickDailyFortune } from "./systems/dailyFortune";
@@ -52,6 +53,7 @@ function tryAutoRealm(state: GameState, now: number): void {
   if (!subStones(state, rb)) return;
   state.realmLevel += 1;
   noteWeeklyBountyBreakthrough(state, now);
+  recordRealmBreakthroughLifetime(state);
 }
 
 function tryAutoTuna(state: GameState, now: number): void {
