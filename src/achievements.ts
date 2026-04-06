@@ -176,6 +176,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "reincarnation",
   },
   {
+    id: "rein_25",
+    title: "廿五劫火",
+    desc: "累计完成 25 次轮回",
+    rewardStones: 22000,
+    rewardEssence: 320,
+    listDeco: "reincarnation",
+  },
+  {
+    id: "rein_50",
+    title: "半百尘缘",
+    desc: "累计完成 50 次轮回",
+    rewardStones: 52000,
+    rewardEssence: 520,
+    listDeco: "reincarnation",
+  },
+  {
     id: "streak_7",
     title: "副本深耕",
     desc: "在幻域副本中累计击溃 40 波",
@@ -705,6 +721,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.reincarnations >= 5;
     case "rein_10":
       return state.reincarnations >= 10;
+    case "rein_25":
+      return state.reincarnations >= 25;
+    case "rein_50":
+      return state.reincarnations >= 50;
     case "streak_7":
       return state.dungeon.totalWavesCleared >= 40;
     case "dungeon_waves_100":

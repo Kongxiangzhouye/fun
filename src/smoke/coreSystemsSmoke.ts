@@ -656,6 +656,17 @@ function runFenTianBurstAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
 }
 
+function runReincarnationTierAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("rein_25"), "rein 25 should start locked");
+  st.reincarnations = 25;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "rein_25"), "25 reincarnations should unlock");
+  st.reincarnations = 50;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "rein_50"), "50 reincarnations should unlock");
+}
+
 function runEstateCommissionAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("estate_commissions_20"), "estate 20 should start locked");
@@ -752,6 +763,7 @@ function main(): void {
   runTunaCompletionAchievementsSmoke();
   runFenTianBurstAchievementsSmoke();
   runEstateCommissionAchievementsSmoke();
+  runReincarnationTierAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

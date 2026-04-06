@@ -63,6 +63,12 @@ export const UI_CHRONICLE_TUNA_STAT = asset("chronicle-tuna-stat.svg");
 export const UI_CHRONICLE_FENTIAN_STAT = asset("chronicle-fentian-stat.svg");
 /** 唤灵通鉴 · 洞府委托累计次数小标 */
 export const UI_CHRONICLE_ESTATE_STAT = asset("chronicle-estate-stat.svg");
+/** 唤灵通鉴 · 灵宠唤引累计小标 */
+export const UI_CHRONICLE_PET_PULL_STAT = asset("chronicle-pet-pull-stat.svg");
+/** 唤灵通鉴 · 心斋卦象刷新累计小标 */
+export const UI_CHRONICLE_FORTUNE_STAT = asset("chronicle-fortune-stat.svg");
+/** 唤灵通鉴 · 灵田收获累计小标 */
+export const UI_CHRONICLE_GARDEN_HARVEST_STAT = asset("chronicle-garden-harvest-stat.svg");
 /** 偏好设置 · 轮回确认框开关旁 */
 export const UI_PREF_CONFIRM_REINCARNATION = asset("ui-pref-confirm-reincarnation.svg");
 /** 偏好设置 · 动态标签标题开关旁 */

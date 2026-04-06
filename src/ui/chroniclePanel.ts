@@ -7,6 +7,9 @@ import { gearTierClass, gearTierLabel } from "./gearVisualTier";
 import {
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
+  UI_CHRONICLE_FORTUNE_STAT,
+  UI_CHRONICLE_GARDEN_HARVEST_STAT,
+  UI_CHRONICLE_PET_PULL_STAT,
   UI_CHRONICLE_TUNA_STAT,
   UI_GEAR_CHRONICLE_DECO,
   UI_HEAD_CHRONICLE,
@@ -71,6 +74,13 @@ export function renderChroniclePanel(state: GameState): string {
           <span class="chronicle-stat-lbl">灵卡累计唤引</span>
           <strong class="chronicle-stat-val">${state.totalPulls} 次</strong>
         </div>
+        <div class="chronicle-stat-card chronicle-stat-card--pet-pull">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_PET_PULL_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵宠唤引</span>
+            <strong class="chronicle-stat-val">${state.petPullsTotal} 次</strong>
+          </div>
+        </div>
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">累计铸灵</span>
           <strong class="chronicle-stat-val">${ls.gearForgesTotal} 次</strong>
@@ -83,6 +93,13 @@ export function renderChroniclePanel(state: GameState): string {
           <span class="chronicle-stat-lbl">天机匣兑换</span>
           <strong class="chronicle-stat-val">${ls.celestialStashBuys} 次</strong>
         </div>
+        <div class="chronicle-stat-card chronicle-stat-card--fortune">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_FORTUNE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">心斋卦象刷新</span>
+            <strong class="chronicle-stat-val">${ls.dailyFortuneRolls} 次</strong>
+          </div>
+        </div>
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">蓄灵池收取</span>
           <strong class="chronicle-stat-val">${ls.spiritReservoirClaims} 次</strong>
@@ -92,6 +109,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">洞府委托完成</span>
             <strong class="chronicle-stat-val">${ls.estateCommissionCompletions} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--garden-harvest">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_GARDEN_HARVEST_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵田收获</span>
+            <strong class="chronicle-stat-val">${state.spiritGarden.totalHarvests} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--resonance">
