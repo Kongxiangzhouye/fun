@@ -2965,6 +2965,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `历史最高波次: ${d.maxWaveRecord}`,
     `累计清波次数: ${d.totalWavesCleared}`,
     `首领击败累计: ${lt.dungeonBossKills}`,
+    `翻滚闪避累计: ${lt.dungeonRollDodges}`,
     "",
     "[终身累计]",
     `历练副本累计获得筑灵髓（整数）: ${lt.dungeonEssenceIntGained}`,
@@ -3056,6 +3057,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">历史最高波次</span><strong class="d-val" id="data-overview-max-wave">${d.maxWaveRecord}</strong></div>
         <div class="data-overview-cell"><span class="d-label">累计清波次数</span><strong class="d-val" id="data-overview-waves-cleared">${d.totalWavesCleared}</strong></div>
         <div class="data-overview-cell"><span class="d-label">首领击败累计</span><strong class="d-val" id="data-overview-lt-dungeon-boss">${lt.dungeonBossKills}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">翻滚闪避累计</span><strong class="d-val" id="data-overview-lt-dungeon-roll">${lt.dungeonRollDodges}</strong></div>
       </div>
     </div>
 
@@ -3118,6 +3120,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-max-wave", String(d.maxWaveRecord));
   set("data-overview-waves-cleared", String(d.totalWavesCleared));
   set("data-overview-lt-dungeon-boss", String(lt.dungeonBossKills));
+  set("data-overview-lt-dungeon-roll", String(lt.dungeonRollDodges));
   set("data-overview-lt-dungeon-ess", String(lt.dungeonEssenceIntGained));
   set("data-overview-lt-stash", String(lt.celestialStashBuys));
   set("data-overview-lt-reservoir", String(lt.spiritReservoirClaims));

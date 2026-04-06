@@ -45,7 +45,11 @@ import {
 } from "./dungeonAffix";
 import { daoMeridianDungeonAtkMult, daoMeridianDungeonEssenceMult } from "./daoMeridian";
 import { veinGongMingResonanceMult } from "./veinCultivation";
-import { noteDungeonEssenceIntGained, recordDungeonBossKillLifetime } from "./pullChronicle";
+import {
+  noteDungeonEssenceIntGained,
+  recordDungeonBossKillLifetime,
+  recordDungeonRollDodgeLifetime,
+} from "./pullChronicle";
 import {
   DUNGEON_MAP_H,
   DUNGEON_MAP_W,
@@ -1820,6 +1824,7 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
     if (d.stamina >= DUNGEON_DODGE_STAMINA_COST && now >= d.dodgeIframesUntil) {
       d.stamina -= DUNGEON_DODGE_STAMINA_COST;
       d.dodgeIframesUntil = now + DUNGEON_DODGE_IFRAMES_MS;
+      recordDungeonRollDodgeLifetime(state);
     }
     d.dodgeQueued = false;
   }

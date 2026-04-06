@@ -304,6 +304,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "dungeonWaves",
   },
   {
+    id: "dungeon_roll_dodges_80",
+    title: "闪身百式",
+    desc: "在幻域累计成功翻滚闪避 80 次",
+    rewardStones: 620,
+    rewardEssence: 28,
+    listDeco: "dungeon",
+  },
+  {
+    id: "dungeon_roll_dodges_400",
+    title: "无痕千影",
+    desc: "在幻域累计成功翻滚闪避 400 次",
+    rewardStones: 2800,
+    rewardEssence: 72,
+    listDeco: "dungeonWavesSurge",
+  },
+  {
     id: "pet_first_feed",
     title: "灵契初结",
     desc: "在唤灵池结缘任意灵宠",
@@ -1153,6 +1169,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dungeonBossKills ?? 0) >= 8;
     case "dungeon_boss_kills_40":
       return (state.lifetimeStats?.dungeonBossKills ?? 0) >= 40;
+    case "dungeon_roll_dodges_80":
+      return (state.lifetimeStats?.dungeonRollDodges ?? 0) >= 80;
+    case "dungeon_roll_dodges_400":
+      return (state.lifetimeStats?.dungeonRollDodges ?? 0) >= 400;
     case "pet_first_feed":
       return anyPetOwned(state);
     case "pet_level_30":

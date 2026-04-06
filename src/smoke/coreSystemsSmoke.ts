@@ -703,6 +703,17 @@ function runDungeonBossKillAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "dungeon_boss_kills_40"));
 }
 
+function runDungeonRollDodgeAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("dungeon_roll_dodges_80"));
+  st.lifetimeStats.dungeonRollDodges = 80;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "dungeon_roll_dodges_80"));
+  st.lifetimeStats.dungeonRollDodges = 400;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "dungeon_roll_dodges_400"));
+}
+
 function runCardTenPullSessionAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("card_ten_sessions_5"));
@@ -1088,6 +1099,7 @@ function main(): void {
   runFenTianBurstAchievementsSmoke();
   runBiGuanAchievementsSmoke();
   runDungeonBossKillAchievementsSmoke();
+  runDungeonRollDodgeAchievementsSmoke();
   runCardTenPullSessionAchievementsSmoke();
   runPullTenLifetimeStatSmoke();
   runCardSinglePullLifetimeSmoke();

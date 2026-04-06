@@ -77,6 +77,8 @@ export const UI_CHRONICLE_GARDEN_HARVEST_STAT = asset("chronicle-garden-harvest-
 export const UI_CHRONICLE_BATTLE_SKILL_STAT = asset("chronicle-battle-skill-stat.svg");
 /** 唤灵通鉴 · 幻域首领击败累计小标 */
 export const UI_CHRONICLE_DUNGEON_BOSS_KILL_STAT = asset("chronicle-dungeon-boss-kill-stat.svg");
+/** 唤灵通鉴 · 幻域翻滚闪避累计小标 */
+export const UI_CHRONICLE_DUNGEON_ROLL_DODGE_STAT = asset("chronicle-dungeon-roll-dodge-stat.svg");
 /** 唤灵通鉴 · 装备分解累计小标 */
 export const UI_CHRONICLE_GEAR_SALVAGE_STAT = asset("chronicle-gear-salvage-stat.svg");
 /** 唤灵通鉴 · 灵卡分解累计小标 */

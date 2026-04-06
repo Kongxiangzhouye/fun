@@ -7,6 +7,7 @@ import { gearTierClass, gearTierLabel } from "./gearVisualTier";
 import {
   UI_CHRONICLE_BATTLE_SKILL_STAT,
   UI_CHRONICLE_DUNGEON_BOSS_KILL_STAT,
+  UI_CHRONICLE_DUNGEON_ROLL_DODGE_STAT,
   UI_CHRONICLE_CARD_LEVEL_STAT,
   UI_CHRONICLE_CARD_SALVAGE_STAT,
   UI_CHRONICLE_CARD_STAR_STAT,
@@ -210,6 +211,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">首领击败</span>
             <strong class="chronicle-stat-val">${ls.dungeonBossKills} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--dungeon-roll-dodge">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_DUNGEON_ROLL_DODGE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">翻滚闪避</span>
+            <strong class="chronicle-stat-val">${ls.dungeonRollDodges} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--battle-skill">
