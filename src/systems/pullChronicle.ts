@@ -46,6 +46,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       resonanceEssencePayouts: 0,
       tunaCompletions: 0,
       fenTianBursts: 0,
+      estateCommissionCompletions: 0,
     };
     return;
   }
@@ -93,6 +94,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   const ft = st.lifetimeStats.fenTianBursts;
   if (ft == null || !Number.isFinite(ft)) st.lifetimeStats.fenTianBursts = 0;
   else st.lifetimeStats.fenTianBursts = Math.max(0, Math.floor(ft));
+  const ec = st.lifetimeStats.estateCommissionCompletions;
+  if (ec == null || !Number.isFinite(ec)) st.lifetimeStats.estateCommissionCompletions = 0;
+  else st.lifetimeStats.estateCommissionCompletions = Math.max(0, Math.floor(ec));
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */

@@ -5,6 +5,7 @@ import { PULL_CHRONICLE_MAX } from "../systems/pullChronicle";
 import { rarityZh } from "./rarityZh";
 import { gearTierClass, gearTierLabel } from "./gearVisualTier";
 import {
+  UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
   UI_CHRONICLE_TUNA_STAT,
   UI_GEAR_CHRONICLE_DECO,
@@ -85,6 +86,13 @@ export function renderChroniclePanel(state: GameState): string {
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">蓄灵池收取</span>
           <strong class="chronicle-stat-val">${ls.spiritReservoirClaims} 次</strong>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--estate">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_ESTATE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">洞府委托完成</span>
+            <strong class="chronicle-stat-val">${ls.estateCommissionCompletions} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--resonance">
           <img class="chronicle-stat-ico" src="${UI_RESONANCE_PAYOUT_STAT}" alt="" width="32" height="32" loading="lazy" />

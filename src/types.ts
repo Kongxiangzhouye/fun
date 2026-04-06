@@ -90,6 +90,8 @@ export interface LifetimeStatsState {
   tunaCompletions: number;
   /** 焚天成功触发累计次数（终身） */
   fenTianBursts: number;
+  /** 洞府委托成功结算累计次数（终身） */
+  estateCommissionCompletions: number;
 }
 
 /** 灵田作物 id */

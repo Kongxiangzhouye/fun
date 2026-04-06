@@ -9,6 +9,7 @@ import type {
   GameState,
 } from "../types";
 import { addStones } from "../stones";
+import { normalizeLifetimeStats } from "./pullChronicle";
 import { noteWeeklyBountyEstateCompletion } from "./weeklyBounty";
 
 const COMMISSION_TYPES: EstateCommissionType[] = ["resource", "combat", "cultivation"];
@@ -214,6 +215,8 @@ export function settleEstateCommission(state: GameState, now: number): EstateCom
   state.estateCommission.refreshCooldownUntilMs = 0;
   state.estateCommission.active = null;
   noteWeeklyBountyEstateCompletion(state, now);
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.estateCommissionCompletions += 1;
   let autoQueueReason: EstateCommissionSettleResult["autoQueueReason"] = "disabled";
   let autoQueued = false;
   let nextOfferType: EstateCommissionType | null = null;

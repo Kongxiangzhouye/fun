@@ -320,6 +320,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "realm",
   },
   {
+    id: "estate_commissions_20",
+    title: "洞府初务",
+    desc: "洞府委托成功结算累计 20 次",
+    rewardStones: 260,
+    rewardEssence: 18,
+    listDeco: "garden",
+  },
+  {
+    id: "estate_commissions_120",
+    title: "千务成章",
+    desc: "洞府委托成功结算累计 120 次",
+    rewardStones: 2400,
+    rewardEssence: 62,
+    listDeco: "gardenBloom",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -761,6 +777,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.fenTianBursts ?? 0) >= 15;
     case "fen_tian_bursts_150":
       return (state.lifetimeStats?.fenTianBursts ?? 0) >= 150;
+    case "estate_commissions_20":
+      return (state.lifetimeStats?.estateCommissionCompletions ?? 0) >= 20;
+    case "estate_commissions_120":
+      return (state.lifetimeStats?.estateCommissionCompletions ?? 0) >= 120;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

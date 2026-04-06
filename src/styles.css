@@ -10311,6 +10311,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--estate {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(110, 170, 150, 0.38);
+  background: linear-gradient(145deg, rgba(18, 36, 32, 0.62), rgba(12, 14, 22, 0.74));
+}
+
+.chronicle-stat-card--estate .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--estate .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-sub-h {
   margin-top: 4px;
 }
