@@ -656,6 +656,23 @@ function runFenTianBurstAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
 }
 
+function runGearEnhanceAndUrRefineAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("gear_enhances_40"), "gear enhance 40 should start locked");
+  st.lifetimeStats.gearEnhances = 40;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "gear_enhances_40"), "40 gear enhances should unlock");
+  st.lifetimeStats.gearEnhances = 160;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "gear_enhances_160"), "160 gear enhances should unlock");
+  st.lifetimeStats.urGearRefines = 3;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "ur_refines_3"), "3 ur refines should unlock");
+  st.lifetimeStats.urGearRefines = 12;
+  const d = tryCompleteAchievements(st);
+  assert.ok(d.some((x) => x.id === "ur_refines_12"), "12 ur refines should unlock");
+}
+
 function runSkillLevelAndRealmBreakthroughAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("skill_level_ups_50"), "skill 50 should start locked");
@@ -854,6 +871,7 @@ function main(): void {
   runOfflineAdventureAndMetaAchievementsSmoke();
   runPetFeedAndGardenPlantAchievementsSmoke();
   runSkillLevelAndRealmBreakthroughAchievementsSmoke();
+  runGearEnhanceAndUrRefineAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

@@ -512,6 +512,38 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "realm",
   },
   {
+    id: "gear_enhances_40",
+    title: "玄铁淬锋",
+    desc: "行囊槽位强化成功累计 40 次",
+    rewardStones: 1100,
+    rewardEssence: 38,
+    listDeco: "forge",
+  },
+  {
+    id: "gear_enhances_160",
+    title: "千锤成罡",
+    desc: "行囊槽位强化成功累计 160 次",
+    rewardStones: 4600,
+    rewardEssence: 92,
+    listDeco: "forgeEmber",
+  },
+  {
+    id: "ur_refines_3",
+    title: "天工三炼",
+    desc: "天极装备精炼成功累计 3 次",
+    rewardStones: 2800,
+    rewardEssence: 72,
+    listDeco: "forgeNova",
+  },
+  {
+    id: "ur_refines_12",
+    title: "极质十二转",
+    desc: "天极装备精炼成功累计 12 次",
+    rewardStones: 12000,
+    rewardEssence: 165,
+    listDeco: "forgeNova",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -1001,6 +1033,14 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.realmBreakthroughs ?? 0) >= 15;
     case "realm_breakthroughs_45":
       return (state.lifetimeStats?.realmBreakthroughs ?? 0) >= 45;
+    case "gear_enhances_40":
+      return (state.lifetimeStats?.gearEnhances ?? 0) >= 40;
+    case "gear_enhances_160":
+      return (state.lifetimeStats?.gearEnhances ?? 0) >= 160;
+    case "ur_refines_3":
+      return (state.lifetimeStats?.urGearRefines ?? 0) >= 3;
+    case "ur_refines_12":
+      return (state.lifetimeStats?.urGearRefines ?? 0) >= 12;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

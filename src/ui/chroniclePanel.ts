@@ -10,6 +10,7 @@ import {
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
   UI_CHRONICLE_FORTUNE_STAT,
+  UI_CHRONICLE_GEAR_ENHANCE_STAT,
   UI_CHRONICLE_GARDEN_HARVEST_STAT,
   UI_CHRONICLE_GARDEN_PLANT_STAT,
   UI_CHRONICLE_GEAR_SALVAGE_STAT,
@@ -20,6 +21,7 @@ import {
   UI_CHRONICLE_REALM_BREAKTHROUGH_STAT,
   UI_CHRONICLE_SKILL_LEVEL_STAT,
   UI_CHRONICLE_TUNA_STAT,
+  UI_CHRONICLE_UR_REFINE_STAT,
   UI_CHRONICLE_VEIN_UPGRADE_STAT,
   UI_GEAR_CHRONICLE_DECO,
   UI_HEAD_CHRONICLE,
@@ -108,6 +110,20 @@ export function renderChroniclePanel(state: GameState): string {
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">累计铸灵</span>
           <strong class="chronicle-stat-val">${ls.gearForgesTotal} 次</strong>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--gear-enhance">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_GEAR_ENHANCE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">槽位强化</span>
+            <strong class="chronicle-stat-val">${ls.gearEnhances} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--ur-refine">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_UR_REFINE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">天极精炼</span>
+            <strong class="chronicle-stat-val">${ls.urGearRefines} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--gear-salvage">
           <img class="chronicle-stat-ico" src="${UI_CHRONICLE_GEAR_SALVAGE_STAT}" alt="" width="32" height="32" loading="lazy" />

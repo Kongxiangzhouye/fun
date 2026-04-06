@@ -57,6 +57,8 @@ export function normalizeLifetimeStats(st: GameState): void {
       gardenPlants: 0,
       skillLevelUps: 0,
       realmBreakthroughs: 0,
+      gearEnhances: 0,
+      urGearRefines: 0,
     };
     return;
   }
@@ -137,6 +139,12 @@ export function normalizeLifetimeStats(st: GameState): void {
   const rb = st.lifetimeStats.realmBreakthroughs;
   if (rb == null || !Number.isFinite(rb)) st.lifetimeStats.realmBreakthroughs = 0;
   else st.lifetimeStats.realmBreakthroughs = Math.max(0, Math.floor(rb));
+  const ge = st.lifetimeStats.gearEnhances;
+  if (ge == null || !Number.isFinite(ge)) st.lifetimeStats.gearEnhances = 0;
+  else st.lifetimeStats.gearEnhances = Math.max(0, Math.floor(ge));
+  const ur = st.lifetimeStats.urGearRefines;
+  if (ur == null || !Number.isFinite(ur)) st.lifetimeStats.urGearRefines = 0;
+  else st.lifetimeStats.urGearRefines = Math.max(0, Math.floor(ur));
 }
 
 /** 境界突破成功后累加终身统计（与周常悬赏分开调用） */

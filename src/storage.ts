@@ -955,6 +955,8 @@ export function deserialize(json: string): GameState {
       gardenPlants: Math.max(0, Math.floor(data.lifetimeStats.gardenPlants ?? 0)),
       skillLevelUps: Math.max(0, Math.floor(data.lifetimeStats.skillLevelUps ?? 0)),
       realmBreakthroughs: Math.max(0, Math.floor(data.lifetimeStats.realmBreakthroughs ?? 0)),
+      gearEnhances: Math.max(0, Math.floor(data.lifetimeStats.gearEnhances ?? 0)),
+      urGearRefines: Math.max(0, Math.floor(data.lifetimeStats.urGearRefines ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

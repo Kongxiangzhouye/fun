@@ -112,6 +112,10 @@ export interface LifetimeStatsState {
   skillLevelUps: number;
   /** 境界突破成功次数（每次破境计 1，含自动破境） */
   realmBreakthroughs: number;
+  /** 行囊部位槽位强化（玄铁强化）成功次数 */
+  gearEnhances: number;
+  /** 天极（UR）装备精炼成功次数 */
+  urGearRefines: number;
 }
 
 /** 灵田作物 id */

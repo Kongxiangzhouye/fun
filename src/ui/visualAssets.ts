@@ -89,6 +89,10 @@ export const UI_CHRONICLE_GARDEN_PLANT_STAT = asset("chronicle-garden-plant-stat
 export const UI_CHRONICLE_SKILL_LEVEL_STAT = asset("chronicle-skill-level-stat.svg");
 /** 唤灵通鉴 · 境界突破累计小标 */
 export const UI_CHRONICLE_REALM_BREAKTHROUGH_STAT = asset("chronicle-realm-breakthrough-stat.svg");
+/** 唤灵通鉴 · 槽位强化累计小标 */
+export const UI_CHRONICLE_GEAR_ENHANCE_STAT = asset("chronicle-gear-enhance-stat.svg");
+/** 唤灵通鉴 · 天极精炼累计小标 */
+export const UI_CHRONICLE_UR_REFINE_STAT = asset("chronicle-ur-refine-stat.svg");
 /** 偏好设置 · 轮回确认框开关旁 */
 export const UI_PREF_CONFIRM_REINCARNATION = asset("ui-pref-confirm-reincarnation.svg");
 /** 偏好设置 · 动态标签标题开关旁 */

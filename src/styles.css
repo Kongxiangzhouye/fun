@@ -10430,6 +10430,40 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--gear-enhance {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(180, 160, 110, 0.4);
+  background: linear-gradient(145deg, rgba(44, 36, 22, 0.58), rgba(16, 14, 10, 0.72));
+}
+
+.chronicle-stat-card--gear-enhance .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--gear-enhance .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.chronicle-stat-card--ur-refine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(160, 120, 220, 0.38);
+  background: linear-gradient(145deg, rgba(36, 24, 48, 0.58), rgba(12, 10, 18, 0.72));
+}
+
+.chronicle-stat-card--ur-refine .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--ur-refine .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--gear-salvage {
   display: flex;
   align-items: center;

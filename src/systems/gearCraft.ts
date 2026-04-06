@@ -1,4 +1,5 @@
 import type { GameState, GearAffixRoll, GearItem, GearSlot, GearStatKey, Rarity } from "../types";
+import { normalizeLifetimeStats } from "./pullChronicle";
 import { xuanTieFromGearPiece } from "./salvage";
 import { GEAR_GRADE_MAX } from "../types";
 import { nextRand01 } from "../rng";
@@ -216,6 +217,8 @@ export function tryRefineUr(
   if (isEquipped(consumeId)) return { ok: false, msg: "请先卸下消耗件" };
   delete state.gearInventory[consumeId];
   a.refineLevel += 1;
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.urGearRefines += 1;
   return { ok: true, msg: "精炼成功" };
 }
 
@@ -238,6 +241,8 @@ export function enhanceGear(state: GameState, id: string): { ok: boolean; msg: s
     const tpl = findAffixTemplate(m.groupId, m.stat);
     if (tpl) m.text = tpl.text(m.value);
   }
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.gearEnhances += 1;
   return { ok: true, msg: "强化成功" };
 }
 
