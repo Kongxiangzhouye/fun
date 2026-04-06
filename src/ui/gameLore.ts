@@ -47,6 +47,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>灵石</strong>：破境、洞府蕴灵、灵卡升阶等主要消耗。</li>
           <li><strong>唤灵髓</strong>：幻域产出为主，用于聚灵阵唤引与境界铸灵；不可用灵石直接购买。</li>
           <li><strong>灵砂 / 玄铁</strong>：分解灵卡 / 装备获得，用于升阶与强化。</li>
+          <li>灵卡池<strong>累计唤引</strong>达特定次数可在<strong>成就</strong>领奖（如 <strong>1 / 50 / 100 / 200 / 500 / 1000</strong> 次等）。</li>
           <li>身法、装备与统计汇总在右下角<strong>角色</strong>面板。</li>
         </ul>
       </details>

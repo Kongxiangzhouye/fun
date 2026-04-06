@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm";
+  listDeco?: "forge" | "train" | "dungeon" | "dungeonWaves" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "reincarnation" | "garden" | "stash" | "reservoir" | "fortune" | "vein" | "realm" | "gacha";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -21,6 +21,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "完成第 1 次唤引",
     rewardStones: 50,
     rewardEssence: 0,
+    listDeco: "gacha",
   },
   {
     id: "pulls_50",
@@ -28,6 +29,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "累计唤引 50 次",
     rewardStones: 200,
     rewardEssence: 18,
+    listDeco: "gacha",
   },
   {
     id: "pulls_200",
@@ -35,6 +37,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "累计唤引 200 次",
     rewardStones: 800,
     rewardEssence: 50,
+    listDeco: "gacha",
   },
   {
     id: "realm_10",
@@ -80,6 +83,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "累计祈愿 100 次",
     rewardStones: 400,
     rewardEssence: 35,
+    listDeco: "gacha",
   },
   {
     id: "pulls_500",
@@ -87,6 +91,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "累计祈愿 500 次",
     rewardStones: 2200,
     rewardEssence: 120,
+    listDeco: "gacha",
+  },
+  {
+    id: "pulls_1000",
+    title: "万愿归一",
+    desc: "累计灵卡唤引 1000 次",
+    rewardStones: 12000,
+    rewardEssence: 200,
+    listDeco: "gacha",
   },
   {
     id: "realm_20",
@@ -500,6 +513,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.totalPulls >= 100;
     case "pulls_500":
       return state.totalPulls >= 500;
+    case "pulls_1000":
+      return state.totalPulls >= 1000;
     case "realm_20":
       return state.realmLevel >= 20;
     case "realm_50":
