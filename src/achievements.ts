@@ -712,6 +712,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "realm",
   },
   {
+    id: "offline_stone_settlements_180",
+    title: "山海长离",
+    desc: "离线挂机回补灵石累计结算 180 次",
+    rewardStones: 6800,
+    rewardEssence: 108,
+    listDeco: "realm",
+  },
+  {
     id: "meta_upgrades_30",
     title: "元窍初铸",
     desc: "轮回元强化成功购买累计 30 次",
@@ -952,6 +960,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "login",
   },
   {
+    id: "daily_login_claims_300",
+    title: "灵息万笺",
+    desc: "累计领取 300 次当日灵息礼",
+    rewardStones: 4200,
+    rewardEssence: 88,
+    listDeco: "login",
+  },
+  {
     id: "weekly_bounty_week_full_1",
     title: "悬赏初满",
     desc: "任意一周完成并领取全部周常悬赏条目",
@@ -1069,6 +1085,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "心斋卦象累计刷新 100 次",
     rewardStones: 2800,
     rewardEssence: 78,
+    listDeco: "fortuneBloom",
+  },
+  {
+    id: "daily_fortune_250",
+    title: "心斋千转",
+    desc: "心斋卦象累计刷新 250 次",
+    rewardStones: 6200,
+    rewardEssence: 115,
     listDeco: "fortuneBloom",
   },
   {
@@ -1457,6 +1481,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dailyLoginDayClaims ?? 0) >= 25;
     case "daily_login_claims_100":
       return (state.lifetimeStats?.dailyLoginDayClaims ?? 0) >= 100;
+    case "daily_login_claims_300":
+      return (state.lifetimeStats?.dailyLoginDayClaims ?? 0) >= 300;
     case "weekly_bounty_week_full_1":
       return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 1;
     case "weekly_bounty_week_full_12":
@@ -1487,6 +1513,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 30;
     case "daily_fortune_100":
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 100;
+    case "daily_fortune_250":
+      return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 250;
     case "offline_boost_5":
       return (state.lifetimeStats?.offlineAdventureBoostPicks ?? 0) >= 5;
     case "tuna_completions_30":
@@ -1529,6 +1557,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.offlineStoneSettlements ?? 0) >= 12;
     case "offline_stone_settlements_60":
       return (state.lifetimeStats?.offlineStoneSettlements ?? 0) >= 60;
+    case "offline_stone_settlements_180":
+      return (state.lifetimeStats?.offlineStoneSettlements ?? 0) >= 180;
     case "meta_upgrades_30":
       return (state.lifetimeStats?.metaUpgrades ?? 0) >= 30;
     case "meta_upgrades_120":

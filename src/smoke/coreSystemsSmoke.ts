@@ -1009,6 +1009,18 @@ function runPetFeedAndGardenPlantAchievementsSmoke(): void {
   assert.ok(d.some((x) => x.id === "garden_plants_320"), "320 garden plants should unlock");
 }
 
+function runHabitLoopMilestoneAchievementsSmoke(): void {
+  const st = createInitialState();
+  st.lifetimeStats.dailyLoginDayClaims = 300;
+  st.lifetimeStats.dailyFortuneRolls = 250;
+  st.lifetimeStats.offlineStoneSettlements = 180;
+  const newly = tryCompleteAchievements(st);
+  const ids = new Set(newly.map((x) => x.id));
+  assert.ok(ids.has("daily_login_claims_300"), "300 daily login claims should unlock");
+  assert.ok(ids.has("daily_fortune_250"), "250 fortune rolls should unlock");
+  assert.ok(ids.has("offline_stone_settlements_180"), "180 offline stone settlements should unlock");
+}
+
 function runLifetimeMilestoneTierAchievementsSmoke(): void {
   const st = createInitialState();
   st.lifetimeStats.weeklyBountyFullWeeks = 48;
@@ -1251,6 +1263,7 @@ function main(): void {
   runCardSalvageAndVeinAchievementsSmoke();
   runOfflineAdventureAndMetaAchievementsSmoke();
   runLifetimeMilestoneTierAchievementsSmoke();
+  runHabitLoopMilestoneAchievementsSmoke();
   runPetFeedAndGardenPlantAchievementsSmoke();
   runSkillLevelAndRealmBreakthroughAchievementsSmoke();
   runGearEnhanceAndUrRefineAchievementsSmoke();

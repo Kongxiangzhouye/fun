@@ -71,6 +71,8 @@ export const UI_CHRONICLE_PET_PULL_STAT = asset("chronicle-pet-pull-stat.svg");
 export const UI_CHRONICLE_FORTUNE_STAT = asset("chronicle-fortune-stat.svg");
 /** 唤灵通鉴 · 灵息日历当日礼领取累计小标 */
 export const UI_CHRONICLE_DAILY_LOGIN_STAT = asset("chronicle-daily-login-claim-stat.svg");
+/** 灵息日历面板 · 终身领取次数行左侧小标 */
+export const UI_DAILY_LOGIN_LIFETIME_RIBBON = asset("daily-login-lifetime-ribbon.svg");
 /** 唤灵通鉴 · 灵田收获累计小标 */
 export const UI_CHRONICLE_GARDEN_HARVEST_STAT = asset("chronicle-garden-harvest-stat.svg");
 /** 唤灵通鉴 · 幻域心法领悟累计小标 */

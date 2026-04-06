@@ -9,6 +9,7 @@ import {
 } from "../systems/dailyLoginCalendar";
 import {
   UI_DAILY_LOGIN_AUTO,
+  UI_DAILY_LOGIN_LIFETIME_RIBBON,
   UI_DAILY_LOGIN_WEEK_BONUS,
   UI_DAILY_LOGIN_WEEK_CHECK,
   UI_HEAD_DAILY_LOGIN,
@@ -71,6 +72,10 @@ export function renderDailyLoginPanel(state: GameState, now: number): string {
       </div>
       <div class="daily-login-strip" aria-hidden="true">${weekCells}</div>
       <p class="hint sm daily-login-streak-line">当前连签：<strong id="daily-login-streak-val">${state.dailyStreak}</strong> 日 · 今日 <strong>${today}</strong></p>
+      <p class="hint sm daily-login-lifetime-line">
+        <img class="daily-login-lifetime-ico" src="${UI_DAILY_LOGIN_LIFETIME_RIBBON}" alt="" width="20" height="20" loading="lazy" />
+        <span>终身领取累计：<strong id="daily-login-lt-claims">${state.lifetimeStats.dailyLoginDayClaims}</strong> 次</span>
+      </p>
       <div class="daily-login-reward-card">
         <p class="daily-login-reward-title">今日灵息礼（随连签提升）</p>
         <p class="hint sm">灵石 <strong id="daily-login-reward-stones">${prev.stones}</strong> · 唤灵髓 <strong id="daily-login-reward-essence">${prev.essence}</strong></p>
@@ -96,6 +101,8 @@ export function updateDailyLoginPanelReadouts(state: GameState, now: number): vo
   const wk = weeklyLoginClaimCount(state);
   const streakEl = document.getElementById("daily-login-streak-val");
   if (streakEl) streakEl.textContent = String(state.dailyStreak);
+  const ltClaims = document.getElementById("daily-login-lt-claims");
+  if (ltClaims) ltClaims.textContent = String(state.lifetimeStats.dailyLoginDayClaims);
   const rs = document.getElementById("daily-login-reward-stones");
   if (rs) rs.textContent = String(prev.stones);
   const re = document.getElementById("daily-login-reward-essence");
