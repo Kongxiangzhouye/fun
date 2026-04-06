@@ -142,7 +142,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>纳灵阵图</strong>：消耗灵石与灵砂提升重数，增加全局灵石效率（与其它乘区叠乘）；最高 <strong>30</strong> 重，<strong>10 / 25 / 30</strong> 重可在<strong>成就</strong>领奖。</li>
           <li><strong>蓄灵池</strong>：随当前灵石产出缓慢蓄存，可一次性收取进背包；有上限，随境界与轮回略放大。累计收取 <strong>1 / 50 / 200</strong> 次可在<strong>成就</strong>领奖。</li>
           <li><strong>心斋卦象</strong>：按<strong>本地日历日</strong>刷新一条运势，影响灵石等乘区；跨日自动更替。卦象累计刷新 <strong>1 / 30 / 100</strong> 次可在<strong>成就</strong>领奖。</li>
-          <li><strong>天机匣</strong>：每周轮换限购兑换，周次与<strong>周常悬赏</strong>同源（每周一本地 0:00）；用灵石 / 灵砂 / 玄铁 / 唤灵髓等按条目支付。累计成功兑换 <strong>1 / 25</strong> 次可在<strong>成就</strong>领奖。</li>
+          <li><strong>天机匣</strong>：每周轮换限购兑换，周次与<strong>周常悬赏</strong>同源（每周一本地 0:00）；用灵石 / 灵砂 / 玄铁 / 唤灵髓等按条目支付。累计成功兑换 <strong>1 / 25 / 100</strong> 次可在<strong>成就</strong>领奖。</li>
         </ul>
       </details>
 

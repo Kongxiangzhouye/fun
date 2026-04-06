@@ -11,7 +11,7 @@ export interface AchievementDef {
   /** 唤灵髓 */
   rewardEssence: number;
   /** 成就列表左侧小装饰（铸灵系 / 训练系 / 连签等） */
-  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "petPullBloom" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "reservoir" | "reservoirBloom" | "fortune" | "fortuneBloom" | "vein" | "realm" | "gacha" | "codex" | "rarity";
+  listDeco?: "forge" | "forgeEmber" | "forgeNova" | "train" | "dungeon" | "dungeonWaves" | "dungeonWavesSurge" | "login" | "bounty" | "meridian" | "pet" | "array" | "petPull" | "petPullBloom" | "reincarnation" | "garden" | "gardenBloom" | "stash" | "stashBloom" | "reservoir" | "reservoirBloom" | "fortune" | "fortuneBloom" | "vein" | "realm" | "gacha" | "codex" | "rarity";
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
@@ -336,6 +336,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "stash",
   },
   {
+    id: "celestial_stash_100",
+    title: "天机渊市",
+    desc: "在天机匣累计兑换 100 次",
+    rewardStones: 5200,
+    rewardEssence: 115,
+    listDeco: "stashBloom",
+  },
+  {
     id: "spirit_reservoir_1",
     title: "蓄灵初收",
     desc: "从蓄灵池收取 1 次灵石",
@@ -633,6 +641,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 1;
     case "celestial_stash_25":
       return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 25;
+    case "celestial_stash_100":
+      return (state.lifetimeStats?.celestialStashBuys ?? 0) >= 100;
     case "spirit_reservoir_1":
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 1;
     case "spirit_reservoir_50":

@@ -188,6 +188,8 @@ export const UI_ACH_GARDEN_DECO = asset("ach-garden-deco.svg");
 export const UI_ACH_GARDEN_BLOOM_DECO = asset("ach-garden-bloom-deco.svg");
 /** 成就列表 · 天机匣系条目左侧小徽 */
 export const UI_ACH_STASH_DECO = asset("ach-stash-deco.svg");
+/** 成就列表 · 天机匣超高累计兑换里程碑（渊匣） */
+export const UI_ACH_STASH_BLOOM_DECO = asset("ach-stash-bloom-deco.svg");
 /** 成就列表 · 蓄灵池系条目左侧小徽 */
 export const UI_ACH_RESERVOIR_DECO = asset("ach-reservoir-deco.svg");
 /** 成就列表 · 蓄灵池超高累计收取里程碑（渊涌） */
