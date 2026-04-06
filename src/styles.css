@@ -10362,6 +10362,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--card-single-pull {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(150, 170, 210, 0.38);
+  background: linear-gradient(145deg, rgba(24, 28, 44, 0.66), rgba(10, 12, 20, 0.76));
+}
+
+.chronicle-stat-card--card-single-pull .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--card-single-pull .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--gear-ten-pull {
   display: flex;
   align-items: center;

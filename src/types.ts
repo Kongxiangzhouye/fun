@@ -136,6 +136,8 @@ export interface LifetimeStatsState {
   offlineStoneSettlements: number;
   /** 入世以来游戏内日序达到过的最大值（与轮回无关，跨周目累计峰值） */
   maxInGameDayReached: number;
+  /** 灵卡单抽结算次数（每次单抽入口计 1；十连内部的逐抽不计入） */
+  cardSinglePullActions: number;
 }
 
 /** 灵田作物 id */

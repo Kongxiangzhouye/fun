@@ -972,6 +972,7 @@ export function deserialize(json: string): GameState {
         Math.floor(data.lifetimeStats.maxInGameDayReached ?? 0),
         Math.floor(data.inGameDay ?? 1),
       ),
+      cardSinglePullActions: Math.max(0, Math.floor(data.lifetimeStats.cardSinglePullActions ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

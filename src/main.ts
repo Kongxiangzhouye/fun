@@ -2952,6 +2952,7 @@ function buildDataOverviewExportText(st: GameState): string {
     "[唤引与图鉴]",
     `灵卡唤引总次数: ${st.totalPulls}`,
     `灵卡十连完成次数: ${lt.cardTenPullSessions}`,
+    `灵卡单抽累计次数: ${lt.cardSinglePullActions}`,
     `境界铸灵十铸完成次数: ${lt.gearTenPullSessions}`,
     `本轮唤引次数: ${st.pullsThisLife ?? 0}`,
     `灵宠唤引累计: ${st.petPullsTotal}`,
@@ -3036,6 +3037,7 @@ function renderDataOverviewPanel(): string {
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">灵卡唤引总次数</span><strong class="d-val" id="data-overview-total-pulls">${st.totalPulls}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵卡十连完成次数</span><strong class="d-val" id="data-overview-lt-card-ten">${lt.cardTenPullSessions}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵卡单抽累计次数</span><strong class="d-val" id="data-overview-lt-card-single">${lt.cardSinglePullActions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">境界十铸完成次数</span><strong class="d-val" id="data-overview-lt-gear-ten">${lt.gearTenPullSessions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">本轮唤引次数</span><strong class="d-val" id="data-overview-pulls-life">${st.pullsThisLife ?? 0}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵宠唤引累计</span><strong class="d-val" id="data-overview-pet-pulls">${st.petPullsTotal}</strong></div>
@@ -3101,6 +3103,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-streak", String(st.dailyStreak));
   set("data-overview-total-pulls", String(st.totalPulls));
   set("data-overview-lt-card-ten", String(lt.cardTenPullSessions));
+  set("data-overview-lt-card-single", String(lt.cardSinglePullActions));
   set("data-overview-lt-gear-ten", String(lt.gearTenPullSessions));
   set("data-overview-pulls-life", String(st.pullsThisLife ?? 0));
   set("data-overview-pet-pulls", String(st.petPullsTotal));

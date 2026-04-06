@@ -48,7 +48,7 @@ import {
 import { canClaimDailyLoginReward, claimDailyLoginReward } from "../systems/dailyLoginCalendar";
 import { getUiUnlocks } from "../uiUnlocks";
 import { tryCompleteAchievements } from "../achievements";
-import { pullTen, pullGearTen } from "../gacha";
+import { pullOne, pullTen, pullGearTen } from "../gacha";
 import { incomePerSecondAt } from "../economy";
 import { advanceInGameHour } from "../inGameClock";
 import { spiritTideActive, spiritTideStoneMult } from "../systems/spiritTide";
@@ -709,6 +709,26 @@ function runPullTenLifetimeStatSmoke(): void {
   assert.equal(st.lifetimeStats.cardTenPullSessions, 0);
   pullTen(st);
   assert.equal(st.lifetimeStats.cardTenPullSessions, 1);
+  assert.equal(st.lifetimeStats.cardSinglePullActions, 0, "ten-pull should not increment single-pull action count");
+}
+
+function runCardSinglePullLifetimeSmoke(): void {
+  const st = createInitialState();
+  st.summonEssence = 999999;
+  assert.equal(st.lifetimeStats.cardSinglePullActions, 0);
+  pullOne(st);
+  assert.equal(st.lifetimeStats.cardSinglePullActions, 1);
+}
+
+function runCardSinglePullAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("card_single_pulls_100"));
+  st.lifetimeStats.cardSinglePullActions = 100;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "card_single_pulls_100"));
+  st.lifetimeStats.cardSinglePullActions = 500;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "card_single_pulls_500"));
 }
 
 function runGearTenPullSessionAchievementsSmoke(): void {
@@ -1036,6 +1056,8 @@ function main(): void {
   runBiGuanAchievementsSmoke();
   runCardTenPullSessionAchievementsSmoke();
   runPullTenLifetimeStatSmoke();
+  runCardSinglePullLifetimeSmoke();
+  runCardSinglePullAchievementsSmoke();
   runGearTenPullSessionAchievementsSmoke();
   runDailyLoginClaimAchievementsSmoke();
   runPullGearTenLifetimeStatSmoke();

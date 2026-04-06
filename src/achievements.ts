@@ -128,6 +128,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "gacha",
   },
   {
+    id: "card_single_pulls_100",
+    title: "一签百念",
+    desc: "灵卡单抽累计 100 次",
+    rewardStones: 900,
+    rewardEssence: 36,
+    listDeco: "gacha",
+  },
+  {
+    id: "card_single_pulls_500",
+    title: "单签如故",
+    desc: "灵卡单抽累计 500 次",
+    rewardStones: 4200,
+    rewardEssence: 95,
+    listDeco: "rarity",
+  },
+  {
     id: "gear_ten_sessions_3",
     title: "十铸初形",
     desc: "境界铸灵十铸完成累计 3 次",
@@ -1061,6 +1077,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.cardTenPullSessions ?? 0) >= 5;
     case "card_ten_sessions_30":
       return (state.lifetimeStats?.cardTenPullSessions ?? 0) >= 30;
+    case "card_single_pulls_100":
+      return (state.lifetimeStats?.cardSinglePullActions ?? 0) >= 100;
+    case "card_single_pulls_500":
+      return (state.lifetimeStats?.cardSinglePullActions ?? 0) >= 500;
     case "gear_ten_sessions_3":
       return (state.lifetimeStats?.gearTenPullSessions ?? 0) >= 3;
     case "gear_ten_sessions_15":

@@ -14,6 +14,7 @@ import {
   noteGearForgePull,
   recordCardStarUpLifetime,
   recordCardTenPullSessionLifetime,
+  recordCardSinglePullLifetime,
   recordGearTenPullSessionLifetime,
   recordMaxGearForgedRarity,
 } from "./systems/pullChronicle";
@@ -245,10 +246,15 @@ function applyPullToState(state: GameState, card: CardDef): PullResult {
   return { card, isNew: !had, duplicateStars };
 }
 
-export function pullOne(state: GameState): PullResult {
+/** @param opts.countAsSinglePullAction 为 false 时不计「单抽次数」（供十连内部逐抽使用） */
+export function pullOne(state: GameState, opts?: { countAsSinglePullAction?: boolean }): PullResult {
   const rarity = pickRarity(state);
   const card = randomCardOfRarity(state, rarity);
-  return applyPullToState(state, card);
+  const result = applyPullToState(state, card);
+  if (opts?.countAsSinglePullAction !== false) {
+    recordCardSinglePullLifetime(state);
+  }
+  return result;
 }
 
 /** 境界铸灵单抽：仅装备，不占灵卡 UR/SSR 保底计数；另有珍品+独立保底（随铸灵阶缩短） */
@@ -300,13 +306,14 @@ export function pullGearTen(state: GameState): GearItem[] {
 }
 
 export function pullTen(state: GameState): PullResult[] {
+  const tenOpts = { countAsSinglePullAction: false as const };
   const out: PullResult[] = [];
   for (let i = 0; i < 9; i++) {
-    out.push(pullOne(state));
+    out.push(pullOne(state, tenOpts));
   }
   const hasSrOrBetter = out.some((r) => rarityRank(r.card.rarity) >= rarityRank("SR"));
   if (hasSrOrBetter) {
-    out.push(pullOne(state));
+    out.push(pullOne(state, tenOpts));
   } else {
     const rarity = pickRarity(state);
     const finalRarity: Rarity = rarityRank(rarity) >= rarityRank("SR") ? rarity : "SR";

@@ -69,6 +69,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       dailyLoginDayClaims: 0,
       offlineStoneSettlements: 0,
       maxInGameDayReached: 1,
+      cardSinglePullActions: 0,
     };
     return;
   }
@@ -189,6 +190,15 @@ export function normalizeLifetimeStats(st: GameState): void {
     st.lifetimeStats.maxInGameDayReached,
     Math.max(1, Math.floor(st.inGameDay)),
   );
+  const cspa = st.lifetimeStats.cardSinglePullActions;
+  if (cspa == null || !Number.isFinite(cspa)) st.lifetimeStats.cardSinglePullActions = 0;
+  else st.lifetimeStats.cardSinglePullActions = Math.max(0, Math.floor(cspa));
+}
+
+/** 灵卡池单抽（非十连内部逐抽）成功结算一次后累加 */
+export function recordCardSinglePullLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.cardSinglePullActions += 1;
 }
 
 /** 离线回补结算产生灵石时累加（与闭关快进 `fastForward` 区分） */

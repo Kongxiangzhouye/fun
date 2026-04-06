@@ -10,6 +10,7 @@ import {
   UI_CHRONICLE_CARD_SALVAGE_STAT,
   UI_CHRONICLE_CARD_STAR_STAT,
   UI_CHRONICLE_CARD_TEN_PULL_STAT,
+  UI_CHRONICLE_CARD_SINGLE_PULL_STAT,
   UI_CHRONICLE_GEAR_TEN_PULL_STAT,
   UI_CHRONICLE_ESTATE_STAT,
   UI_CHRONICLE_FENTIAN_STAT,
@@ -115,6 +116,13 @@ export function renderChroniclePanel(state: GameState): string {
           <div>
             <span class="chronicle-stat-lbl">灵卡十连</span>
             <strong class="chronicle-stat-val">${ls.cardTenPullSessions} 次</strong>
+          </div>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--card-single-pull">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_CARD_SINGLE_PULL_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">灵卡单抽</span>
+            <strong class="chronicle-stat-val">${ls.cardSinglePullActions} 次</strong>
           </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--card-star">
