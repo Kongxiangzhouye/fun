@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Entry points for static UI art manifests (HUD, empty states, gacha pool, panel chrome, player profile, hub headers, gear, pets, garden, elements, rarity). Not loaded at runtime.",
+  "description": "Entry points for static UI art manifests (HUD, empty states, gacha pool, panel chrome, player profile, hub headers, gear inventory, weekly bounty, gear, pets, garden, elements, rarity). Not loaded at runtime.",
   "manifests": [
     { "id": "hud_bar_icons", "file": "hud-bar-icons-manifest.json" },
     { "id": "empty_state_art", "file": "empty-state-art-manifest.json" },
@@ -8,6 +8,8 @@
     { "id": "panel_chrome", "file": "panel-chrome-manifest.json" },
     { "id": "player_profile_ui", "file": "player-profile-ui-manifest.json" },
     { "id": "hub_section_headers", "file": "hub-section-headers-manifest.json" },
+    { "id": "gear_inventory_ui", "file": "gear-inventory-ui-manifest.json" },
+    { "id": "weekly_bounty_ui", "file": "weekly-bounty-ui-manifest.json" },
     { "id": "gear_bases", "file": "gear-bases-manifest.json" },
     { "id": "gear_slot_icons", "file": "gear-slot-icons-manifest.json" },
     { "id": "pet_portraits", "file": "pet-portraits-manifest.json" },

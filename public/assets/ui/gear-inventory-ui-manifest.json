@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "naming": "Filenames from GEAR_INVENTORY_UI_FILES in src/data/gearInventoryUi.ts; served as public/assets/ui/<file>.",
+  "assets": [
+    { "id": "sortDeco", "file": "gear-sort-deco.svg" },
+    { "id": "sortPinnedDeco", "file": "gear-sort-pinned-deco.svg" },
+    { "id": "lockDeco", "file": "gear-lock-deco.svg" }
+  ]
+}
