@@ -30,6 +30,7 @@
   "handoffManifest": "ui-art-handoff-manifest.json",
   "importProfiles": "ui-art-import-profiles.json",
   "qualityChecklist": "ui-art-qc-checklist.json",
+  "versionHistory": "ui-art-version-history.json",
   "patterns": {
     "gearBasePortrait": "gear-base-<baseId>.png — <baseId> from src/data/gearBases.ts; URL built in src/ui/visualAssets.ts"
   }
