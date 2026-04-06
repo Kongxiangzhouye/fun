@@ -80,6 +80,10 @@ export interface LifetimeStatsState {
   lastWeeklyBountyFullWeekKey: string;
   /** 累计选择离线奇遇「静修余韵」次数（成就） */
   offlineAdventureBoostPicks: number;
+  /** 累计达成「自然周内满 7 日灵息礼」的周次数（成就统计） */
+  loginCalendarFullWeeks: number;
+  /** 最近一次计入满签周次的周 key（与周悬赏同源周一 key） */
+  lastLoginCalendarFullWeekKey: string;
 }
 
 /** 灵田作物 id */
@@ -587,6 +591,12 @@ export interface GameState {
   dailyLoginTickDay: string | null;
   /** 上次领取灵息日历礼的本机日 */
   dailyLoginClaimedDate: string | null;
+  /** 灵息周打卡：与周悬赏同源的周 key（周一日期 YYYY-MM-DD） */
+  loginCalendarWeekKey: string;
+  /** 本周已领取灵息礼的本地日（去重，最多 7 条） */
+  loginCalendarClaimedDates: string[];
+  /** 本周是否已领取「满 7 日」额外奖励（每自然周最多一次） */
+  loginCalendarWeeklyBonusClaimed: boolean;
 
   /** 吐纳：上次点击时间 ms，0 表示从未 */
   lastTunaMs: number;

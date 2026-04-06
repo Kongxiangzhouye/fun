@@ -141,6 +141,9 @@ export interface SerializedState {
   lastLoginCalendarDate?: string | null;
   dailyLoginTickDay?: string | null;
   dailyLoginClaimedDate?: string | null;
+  loginCalendarWeekKey?: string;
+  loginCalendarClaimedDates?: string[];
+  loginCalendarWeeklyBonusClaimed?: boolean;
   spiritReservoirStored?: string;
   dailyFortune?: GameState["dailyFortune"];
   offlineAdventure?: GameState["offlineAdventure"];
@@ -334,6 +337,9 @@ export function serialize(state: GameState): string {
     lastLoginCalendarDate: state.lastLoginCalendarDate,
     dailyLoginTickDay: state.dailyLoginTickDay,
     dailyLoginClaimedDate: state.dailyLoginClaimedDate,
+    loginCalendarWeekKey: state.loginCalendarWeekKey,
+    loginCalendarClaimedDates: [...state.loginCalendarClaimedDates],
+    loginCalendarWeeklyBonusClaimed: state.loginCalendarWeeklyBonusClaimed,
     spiritReservoirStored: state.spiritReservoirStored,
     dailyFortune: { ...state.dailyFortune },
     offlineAdventure: state.offlineAdventure
@@ -500,6 +506,23 @@ export function deserialize(json: string): GameState {
   st.lastLoginCalendarDate = data.lastLoginCalendarDate ?? null;
   st.dailyLoginTickDay = data.dailyLoginTickDay ?? null;
   st.dailyLoginClaimedDate = data.dailyLoginClaimedDate ?? null;
+  {
+    const tick = st.lastTick ?? Date.now();
+    const wk = currentWeekKey(tick);
+    st.loginCalendarWeekKey = typeof data.loginCalendarWeekKey === "string" ? data.loginCalendarWeekKey : wk;
+    if (Array.isArray(data.loginCalendarClaimedDates)) {
+      st.loginCalendarClaimedDates = data.loginCalendarClaimedDates.filter((x) => typeof x === "string");
+    } else {
+      st.loginCalendarClaimedDates = [];
+    }
+    if (st.loginCalendarWeekKey !== wk) {
+      st.loginCalendarWeekKey = wk;
+      st.loginCalendarClaimedDates = [];
+      st.loginCalendarWeeklyBonusClaimed = false;
+    } else {
+      st.loginCalendarWeeklyBonusClaimed = !!data.loginCalendarWeeklyBonusClaimed;
+    }
+  }
   st.spiritReservoirStored =
     data.spiritReservoirStored !== undefined && data.spiritReservoirStored !== null
       ? String(data.spiritReservoirStored)
@@ -800,6 +823,11 @@ export function deserialize(json: string): GameState {
           ? data.lifetimeStats.lastWeeklyBountyFullWeekKey
           : "",
       offlineAdventureBoostPicks: Math.max(0, Math.floor(data.lifetimeStats.offlineAdventureBoostPicks ?? 0)),
+      loginCalendarFullWeeks: Math.max(0, Math.floor(data.lifetimeStats.loginCalendarFullWeeks ?? 0)),
+      lastLoginCalendarFullWeekKey:
+        typeof data.lifetimeStats.lastLoginCalendarFullWeekKey === "string"
+          ? data.lifetimeStats.lastLoginCalendarFullWeekKey
+          : "",
     };
   }
   normalizeLifetimeStats(st);

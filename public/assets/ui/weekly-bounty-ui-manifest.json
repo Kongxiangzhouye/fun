@@ -8,6 +8,7 @@
     { "id": "garden", "file": "bounty-garden-deco.svg" },
     { "id": "tuna", "file": "bounty-tuna-deco.svg" },
     { "id": "realm", "file": "bounty-realm-deco.svg" },
+    { "id": "estate", "file": "bounty-estate-deco.svg" },
     { "id": "claimAll", "file": "bounty-claim-all-deco.svg" },
     { "id": "claimBurst", "file": "bounty-claim-burst.svg" },
     { "id": "claimEchoBadge", "file": "bounty-weekly-claim-echo-badge.svg" },
@@ -19,6 +20,9 @@
     { "id": "wavesFocusBadge", "file": "bounty-weekly-waves-focus-badge.svg" },
     { "id": "weeklyFocusRibbon", "file": "bounty-weekly-focus-ribbon.svg" },
     { "id": "nextStepBadge", "file": "bounty-weekly-next-step-badge.svg" },
-    { "id": "surgeBadge", "file": "bounty-weekly-surge-badge.svg" }
+    { "id": "surgeBadge", "file": "bounty-weekly-surge-badge.svg" },
+    { "id": "goAction", "file": "bounty-go-action.svg" },
+    { "id": "goFocus", "file": "bounty-go-focus.svg" },
+    { "id": "milestoneDeco", "file": "bounty-milestone-deco.svg" }
   ]
 }

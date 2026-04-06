@@ -304,6 +304,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "login",
   },
   {
+    id: "login_calendar_week_full",
+    title: "灵息周天",
+    desc: "任意自然周内领取满 7 日灵息礼",
+    rewardStones: 420,
+    rewardEssence: 28,
+    listDeco: "login",
+  },
+  {
     id: "weekly_bounty_week_full_1",
     title: "悬赏初满",
     desc: "任意一周完成并领取全部周常悬赏条目",
@@ -649,6 +657,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dailyStreak >= 30;
     case "login_streak_60":
       return state.dailyStreak >= 60;
+    case "login_calendar_week_full":
+      return (state.lifetimeStats?.loginCalendarFullWeeks ?? 0) >= 1;
     case "weekly_bounty_week_full_1":
       return (state.lifetimeStats?.weeklyBountyFullWeeks ?? 0) >= 1;
     case "weekly_bounty_week_full_12":

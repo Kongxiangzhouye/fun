@@ -41,6 +41,8 @@ export function normalizeLifetimeStats(st: GameState): void {
       weeklyBountyFullWeeks: 0,
       lastWeeklyBountyFullWeekKey: "",
       offlineAdventureBoostPicks: 0,
+      loginCalendarFullWeeks: 0,
+      lastLoginCalendarFullWeekKey: "",
     };
     return;
   }
@@ -74,6 +76,11 @@ export function normalizeLifetimeStats(st: GameState): void {
   const oab = st.lifetimeStats.offlineAdventureBoostPicks;
   if (oab == null || !Number.isFinite(oab)) st.lifetimeStats.offlineAdventureBoostPicks = 0;
   else st.lifetimeStats.offlineAdventureBoostPicks = Math.max(0, Math.floor(oab));
+  const lcf = st.lifetimeStats.loginCalendarFullWeeks;
+  if (lcf == null || !Number.isFinite(lcf)) st.lifetimeStats.loginCalendarFullWeeks = 0;
+  else st.lifetimeStats.loginCalendarFullWeeks = Math.max(0, Math.floor(lcf));
+  const lck = st.lifetimeStats.lastLoginCalendarFullWeekKey;
+  st.lifetimeStats.lastLoginCalendarFullWeekKey = typeof lck === "string" ? lck : "";
 }
 
 /** 每次铸灵成功后更新终身最高稀有度（不因分解回退） */

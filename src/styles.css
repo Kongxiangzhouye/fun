@@ -9770,6 +9770,25 @@ p.gear-forge-tier-hint {
   background: linear-gradient(165deg, rgba(12, 28, 36, 0.92), rgba(8, 16, 22, 0.98));
 }
 
+.daily-login-week-hint-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 8px 0 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 160, 200, 0.28);
+  background: rgba(10, 22, 34, 0.65);
+  font-size: 0.84rem;
+  color: #b8d0e8;
+}
+
+.daily-login-week-hint-row .daily-login-week-bonus-ico {
+  margin-left: 4px;
+  opacity: 0.95;
+}
+
 .daily-login-day {
   flex: 1;
   text-align: center;
@@ -9785,6 +9804,16 @@ p.gear-forge-tier-hint {
   border-color: rgba(100, 200, 220, 0.55);
   background: rgba(30, 80, 100, 0.35);
   box-shadow: 0 0 12px rgba(80, 200, 220, 0.15);
+}
+
+.daily-login-day.claimed-week {
+  color: #9fd4c8;
+  border-color: rgba(120, 200, 160, 0.4);
+  background: rgba(20, 60, 50, 0.28);
+}
+
+.daily-login-day.future {
+  opacity: 0.45;
 }
 
 .daily-login-day.today.claimed {

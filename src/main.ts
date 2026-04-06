@@ -4823,6 +4823,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     const t0 = (ev.target as HTMLElement | null)?.closest?.("#btn-daily-login-claim") as HTMLElement | null;
     if (!t0) return;
     const t = nowMs();
+    const hadWeeklyBonus = state.loginCalendarWeeklyBonusClaimed;
     if (!claimDailyLoginReward(state, t)) {
       toast("今日已领取过灵息礼。");
       return;
@@ -4830,6 +4831,9 @@ function bindEvents(rb: Decimal, _slots: number): void {
     tryCompleteAchievements(state);
     saveGame(state);
     toast("灵息礼已领取");
+    if (!hadWeeklyBonus && state.loginCalendarWeeklyBonusClaimed) {
+      toast("灵息周天：本周满签额外奖励已到账。");
+    }
     updateTopResourcePillsAndVigor(totalCardsInPool());
     const pStr = document.getElementById("ps-streak");
     if (pStr) pStr.textContent = String(state.dailyStreak);
