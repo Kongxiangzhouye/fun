@@ -692,6 +692,17 @@ function runBiGuanAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "bi_guan_completions_40"));
 }
 
+function runDungeonBossKillAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("dungeon_boss_kills_8"));
+  st.lifetimeStats.dungeonBossKills = 8;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "dungeon_boss_kills_8"));
+  st.lifetimeStats.dungeonBossKills = 40;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "dungeon_boss_kills_40"));
+}
+
 function runCardTenPullSessionAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("card_ten_sessions_5"));
@@ -1076,6 +1087,7 @@ function main(): void {
   runTunaCompletionAchievementsSmoke();
   runFenTianBurstAchievementsSmoke();
   runBiGuanAchievementsSmoke();
+  runDungeonBossKillAchievementsSmoke();
   runCardTenPullSessionAchievementsSmoke();
   runPullTenLifetimeStatSmoke();
   runCardSinglePullLifetimeSmoke();

@@ -288,6 +288,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "dungeonWavesSurge",
   },
   {
+    id: "dungeon_boss_kills_8",
+    title: "阵眼初破",
+    desc: "在幻域累计击败首领 8 次",
+    rewardStones: 880,
+    rewardEssence: 42,
+    listDeco: "dungeon",
+  },
+  {
+    id: "dungeon_boss_kills_40",
+    title: "千嶂斩魁",
+    desc: "在幻域累计击败首领 40 次",
+    rewardStones: 3800,
+    rewardEssence: 108,
+    listDeco: "dungeonWaves",
+  },
+  {
     id: "pet_first_feed",
     title: "灵契初结",
     desc: "在唤灵池结缘任意灵宠",
@@ -1133,6 +1149,10 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.dungeon.totalWavesCleared >= 500;
     case "dungeon_waves_2000":
       return state.dungeon.totalWavesCleared >= 2000;
+    case "dungeon_boss_kills_8":
+      return (state.lifetimeStats?.dungeonBossKills ?? 0) >= 8;
+    case "dungeon_boss_kills_40":
+      return (state.lifetimeStats?.dungeonBossKills ?? 0) >= 40;
     case "pet_first_feed":
       return anyPetOwned(state);
     case "pet_level_30":

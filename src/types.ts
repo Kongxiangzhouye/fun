@@ -140,6 +140,8 @@ export interface LifetimeStatsState {
   cardSinglePullActions: number;
   /** 境界铸灵单抽结算次数（每次单抽入口计 1；十铸内部的逐抽不计入） */
   gearSinglePullActions: number;
+  /** 幻域累计击败首领次数（真首领战，不含前哨小兵） */
+  dungeonBossKills: number;
 }
 
 /** 灵田作物 id */

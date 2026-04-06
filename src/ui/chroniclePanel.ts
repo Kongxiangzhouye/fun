@@ -6,6 +6,7 @@ import { rarityZh } from "./rarityZh";
 import { gearTierClass, gearTierLabel } from "./gearVisualTier";
 import {
   UI_CHRONICLE_BATTLE_SKILL_STAT,
+  UI_CHRONICLE_DUNGEON_BOSS_KILL_STAT,
   UI_CHRONICLE_CARD_LEVEL_STAT,
   UI_CHRONICLE_CARD_SALVAGE_STAT,
   UI_CHRONICLE_CARD_STAR_STAT,
@@ -203,6 +204,13 @@ export function renderChroniclePanel(state: GameState): string {
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">幻域累计入包髓</span>
           <strong class="chronicle-stat-val">${ls.dungeonEssenceIntGained}</strong>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--dungeon-boss">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_DUNGEON_BOSS_KILL_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">首领击败</span>
+            <strong class="chronicle-stat-val">${ls.dungeonBossKills} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card chronicle-stat-card--battle-skill">
           <img class="chronicle-stat-ico" src="${UI_CHRONICLE_BATTLE_SKILL_STAT}" alt="" width="32" height="32" loading="lazy" />

@@ -71,6 +71,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       maxInGameDayReached: 1,
       cardSinglePullActions: 0,
       gearSinglePullActions: 0,
+      dungeonBossKills: 0,
     };
     return;
   }
@@ -197,6 +198,15 @@ export function normalizeLifetimeStats(st: GameState): void {
   const gspa = st.lifetimeStats.gearSinglePullActions;
   if (gspa == null || !Number.isFinite(gspa)) st.lifetimeStats.gearSinglePullActions = 0;
   else st.lifetimeStats.gearSinglePullActions = Math.max(0, Math.floor(gspa));
+  const dbk = st.lifetimeStats.dungeonBossKills;
+  if (dbk == null || !Number.isFinite(dbk)) st.lifetimeStats.dungeonBossKills = 0;
+  else st.lifetimeStats.dungeonBossKills = Math.max(0, Math.floor(dbk));
+}
+
+/** 幻域击败真首领时累加 */
+export function recordDungeonBossKillLifetime(state: GameState): void {
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.dungeonBossKills += 1;
 }
 
 /** 灵卡池单抽（非十连内部逐抽）成功结算一次后累加 */

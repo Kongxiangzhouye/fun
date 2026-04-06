@@ -974,6 +974,7 @@ export function deserialize(json: string): GameState {
       ),
       cardSinglePullActions: Math.max(0, Math.floor(data.lifetimeStats.cardSinglePullActions ?? 0)),
       gearSinglePullActions: Math.max(0, Math.floor(data.lifetimeStats.gearSinglePullActions ?? 0)),
+      dungeonBossKills: Math.max(0, Math.floor(data.lifetimeStats.dungeonBossKills ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

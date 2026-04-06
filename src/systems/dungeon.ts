@@ -45,7 +45,7 @@ import {
 } from "./dungeonAffix";
 import { daoMeridianDungeonAtkMult, daoMeridianDungeonEssenceMult } from "./daoMeridian";
 import { veinGongMingResonanceMult } from "./veinCultivation";
-import { noteDungeonEssenceIntGained } from "./pullChronicle";
+import { noteDungeonEssenceIntGained, recordDungeonBossKillLifetime } from "./pullChronicle";
 import {
   DUNGEON_MAP_H,
   DUNGEON_MAP_W,
@@ -1447,6 +1447,9 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
 /** 单只魔物阵亡结算；若本波清空则推进关卡并返回 true（调用方应结束本 tick） */
 function registerDungeonKill(state: GameState, d: DungeonState, mob: DungeonMob, now: number): boolean {
   resetDamageFloatAccum();
+  if (mob.isBoss) {
+    recordDungeonBossKillLifetime(state);
+  }
   const inBossPrep = d.wave % 5 === 0 && state.dungeonDeferBoss && !mob.isBoss;
   const bossLootWave = d.wave % 5 === 0 && !state.dungeonDeferBoss;
   const totalFloatBase = essenceRewardTotalFloat(d.wave, state, bossLootWave, d.rewardModeRepeat, now);

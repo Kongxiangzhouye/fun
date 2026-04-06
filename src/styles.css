@@ -10610,6 +10610,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--dungeon-boss {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(180, 90, 90, 0.4);
+  background: linear-gradient(145deg, rgba(48, 22, 22, 0.62), rgba(18, 10, 12, 0.76));
+}
+
+.chronicle-stat-card--dungeon-boss .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--dungeon-boss .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--battle-skill {
   display: flex;
   align-items: center;
