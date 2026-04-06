@@ -14,6 +14,7 @@ import {
   UI_LORE_RESOURCES,
   UI_LORE_VEIN,
   UI_LORE_ELEMENTS,
+  UI_LORE_PET,
   UI_RESONANCE_CORE,
 } from "./visualAssets";
 
@@ -114,6 +115,17 @@ export function renderGameLoreHtml(): string {
           <li><strong>阵线对决</strong>：敌我各按攻击间隔<strong>离散出伤 / 承击</strong>，顶条为敌阵总灵压；剑气 / 凶煞读条对齐期望 DPS 与敌方节奏，便于对照数值。</li>
           <li>五行克制会影响伤害；<strong>化劲</strong>可在无敌帧内化解敌方一击。</li>
           <li>魔物<strong>闪避</strong>以飘字「偏斜」表现；我方闪避以「闪避」表现。</li>
+        </ul>
+      </details>
+
+      <details class="game-lore-block">
+        <summary><img src="${UI_LORE_PET}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 唤灵池与灵宠</summary>
+        <ul class="game-lore-list">
+          <li>养成页<strong>灵宠</strong>：幻域累计击溃 <strong>15</strong> 波后开放唤灵池。</li>
+          <li><strong>唤灵</strong>：每次消耗 <strong>42</strong> 唤灵髓邂逅一只灵宠；稀有度按池内权重随机。</li>
+          <li><strong>重复邂逅</strong>：已获得同名灵宠时，转化为灵契经验并可能直接升级。</li>
+          <li><strong>喂养</strong>：对已邂逅灵宠消耗唤灵髓获得经验，提升等级以放大加成（上限见面板）。</li>
+          <li>灵宠效果多为灵石、幻域攻防或唤灵髓发现等；邂逅与等级<strong>跨轮回保留</strong>。</li>
         </ul>
       </details>
 
