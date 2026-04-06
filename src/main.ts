@@ -41,7 +41,7 @@ import {
   deckRealmBonusSum,
   effectiveDeckSlots,
 } from "./economy";
-import { catchUpOffline, applyTick, fastForward, maxOfflineSec, type OfflineCatchUpSummary } from "./gameLoop";
+import { catchUpOffline, applyTick, fastForward, type OfflineCatchUpSummary } from "./gameLoop";
 import {
   pullOne,
   pullTen,
@@ -644,6 +644,8 @@ let lastDodgeFailToastAt = 0;
 const AUTO_ENTER_FAIL_TOAST_GAP_MS = 3000;
 let lastAutoEnterFailToastAt = 0;
 let lastAutoEnterFailReason = "";
+let lastOfflineToastSig = "";
+let lastOfflineToastAtMs = 0;
 let lastCombatPower = 0;
 const COMBAT_POWER_POPUP_DURATION_MS = 1000;
 const COMBAT_POWER_POPUP_HOLD_MS = 520;
@@ -733,7 +735,7 @@ function playBountyClaimBurstFx(anchor: HTMLElement | null): void {
 function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
   const w = document.getElementById("toast-wrap");
   if (!w) return;
-  const capSec = maxOfflineSec(state);
+  const capSec = summary.capSec;
   const away = fmtOfflineDurationSec(summary.rawAwaySec);
   const settled = fmtOfflineDurationSec(summary.settledSec);
   const cap = fmtOfflineDurationSec(capSec);
@@ -747,7 +749,7 @@ function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
     `<strong>离线收益结算</strong>` +
     `</div>` +
     `<div class="toast-offline-line">离线时长：${away}</div>` +
-    `<div class="toast-offline-line">结算时长：${settled}${summary.wasCapped ? `（上限 ${cap}）` : ""}</div>` +
+    `<div class="toast-offline-line">结算时长：${settled} / 上限：${cap}${summary.wasCapped ? "（已触顶）" : ""}</div>` +
     `<img class="toast-offline-shine" src="${UI_OFFLINE_TRANSITION_SHINE}" alt="" width="180" height="8" loading="lazy" />` +
     `<div class="toast-offline-gain">灵石 +${fmtDecimal(summary.stoneGain)}</div>`;
   el.appendChild(body);
@@ -4011,7 +4013,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
         tryCompleteAchievements(state);
         saveGame(state);
         const fb = weeklyBountyFeedbackState(state, t);
-        toast(`悬赏奖励已领取（待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}）`);
+        toast(`悬赏奖励已领取（待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}，逾期 ${fb.overdue}）`);
         updateTopResourcePillsAndVigor(totalCardsInPool());
         if (activeHub === "cultivate" && cultivateSub === "bounty") {
           updateBountyPanelReadouts(state, t);
@@ -4047,7 +4049,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     saveGame(state);
     const fb = weeklyBountyFeedbackState(state, t);
     toast(
-      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}）`,
+      `已领取 ${r.claimed} 条悬赏：灵石 +${r.rewardStones} · 唤灵髓 +${r.rewardEssence}（待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}，逾期 ${fb.overdue}）`,
     );
     updateTopResourcePillsAndVigor(totalCardsInPool());
     if (activeHub === "cultivate" && cultivateSub === "bounty") {
@@ -5242,7 +5244,12 @@ function init(): void {
   tickDailyFortune(state, t);
   const offline = catchUpOffline(state, t);
   if (offline.stoneGain.gt(0.01)) {
-    toastOfflineSettlement(offline);
+    const sig = `${offline.rawAwaySec.toFixed(1)}|${offline.settledSec.toFixed(1)}|${offline.capSec.toFixed(1)}|${offline.stoneGain.toFixed(2)}`;
+    if (sig !== lastOfflineToastSig || t - lastOfflineToastAtMs > 6000) {
+      toastOfflineSettlement(offline);
+      lastOfflineToastSig = sig;
+      lastOfflineToastAtMs = t;
+    }
     saveGame(state);
   }
   tryCompleteAchievements(state);

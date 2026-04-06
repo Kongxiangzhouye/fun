@@ -37,6 +37,8 @@ export interface OfflineCatchUpSummary {
   settledSec: number;
   /** 离开时长秒（未 cap） */
   rawAwaySec: number;
+  /** 本次结算使用的离线上限秒 */
+  capSec: number;
   wasCapped: boolean;
 }
 
@@ -149,6 +151,7 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
     stoneGain: new Decimal(0),
     settledSec: 0,
     rawAwaySec: Math.max(0, rawAway),
+    capSec: 0,
     wasCapped: false,
   });
   if (now < state.lastTick) {
@@ -189,6 +192,7 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
     stoneGain: gained,
     settledSec: dt,
     rawAwaySec: raw,
+    capSec: cap,
     wasCapped: raw > cap + 1e-6,
   };
 }
