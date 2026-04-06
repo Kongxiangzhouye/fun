@@ -225,13 +225,7 @@ export function claimWeeklyBountyTask(state: GameState, taskId: string, now: num
 
 /** 当前周可一键领取的条目数（已达成且未领） */
 export function countClaimableWeeklyBounties(state: GameState, now: number): number {
-  ensureWeeklyBountyWeek(state, now);
-  let n = 0;
-  for (const def of WEEKLY_BOUNTY_TASKS) {
-    if (isWeeklyBountyClaimed(state, def.id)) continue;
-    if (isWeeklyBountyComplete(state, def)) n += 1;
-  }
-  return n;
+  return weeklyBountyFeedbackState(state, now).claimable;
 }
 
 /** 一键领取全部可领悬赏；返回领取条数与奖励合计（用于 UI 提示） */

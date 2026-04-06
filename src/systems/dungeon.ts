@@ -70,6 +70,8 @@ const BOSS_CHASE_VS_PLAYER = 0.8;
 const BOSS_CHASE_PULSE_AMP = 0.12;
 /** 新波次/进本短保护：避免刷怪瞬间互殴导致“刚进图就掉血” */
 const WAVE_START_GRACE_MS = 700;
+/** 单帧结算上限，避免切后台回前台后一帧累积导致“追击失控” */
+const DUEL_TICK_SLICE_SEC = 0.18;
 
 /** 刷怪与玩家出生点的最小格距（曼哈顿）；降低贴脸刷怪感 */
 const SPAWN_MIN_CELL_DIST = 3;
@@ -117,6 +119,9 @@ function hasClearCombatLine(d: DungeonState, tx: number, ty: number): boolean {
   if (w <= 0 || h <= 0 || !d.walkable.length) return true;
   const [px, py] = normToCell(d.playerX, d.playerY, w, h);
   const [mx, my] = normToCell(tx, ty, w, h);
+  const pIdx = py * w + px;
+  const mIdx = my * w + mx;
+  if (!d.walkable[pIdx] || !d.walkable[mIdx]) return false;
   return gridLineInteriorWalkClear(w, h, d.walkable, px, py, mx, my);
 }
 
@@ -1347,6 +1352,7 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
     state.dungeonDeferBoss = true;
   }
   spawnMobsForWave(state);
+  d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
 }
 
 /** 单只魔物阵亡结算；若本波清空则推进关卡并返回 true（调用方应结束本 tick） */
@@ -1636,7 +1642,7 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
   const playerHitInterval = Math.max(0.2, PLAYER_DUNGEON_HIT_INTERVAL_SEC / atkSpd);
   const pRange = playerEngageRadiusNorm(state);
 
-  const target = d.mobs.find((m) => m.hp > 0) ?? null;
+  const target = pickCombatTargetMob(d, pRange);
   if (!target) {
     if (d.mobs.length > 0 && d.mobs.every((m) => m.hp <= 0)) {
       grantWaveEssenceToInventory(state);
@@ -1750,7 +1756,9 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
     }
     const hitPhase = (d.monsterAttackAccum % hitInterval) / hitInterval;
     d.bossDodgeVisual = target.isBoss && hitPhase > 0.72;
-    if (now >= d.dodgeIframesUntil) d.monsterAttackAccum += dt;
+    if (now >= d.dodgeIframesUntil) {
+      d.monsterAttackAccum = Math.min(d.monsterAttackAccum + dt, hitInterval * 1.25);
+    }
     const mdBase = monsterDamageForWave(d.wave) * (target.isBoss ? 1.35 : 1);
     const mdMul = elementDamageMultiplier(target.element, pEl);
     let md = mdBase * mdMul;
@@ -1816,5 +1824,11 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
 export function tickDungeon(state: GameState, dt: number, now: number): void {
   const d = state.dungeon;
   if (!d.active || dt <= 0) return;
-  runDuelTick(state, dt, now);
+  let left = dt;
+  while (left > 0) {
+    const step = Math.min(left, DUEL_TICK_SLICE_SEC);
+    runDuelTick(state, step, now);
+    if (!d.active) break;
+    left -= step;
+  }
 }

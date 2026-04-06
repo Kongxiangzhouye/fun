@@ -188,7 +188,7 @@ import {
   UI_OFFLINE_TRANSITION_SHINE,
   UI_DUNGEON_HIT_FLASH_DECO,
   UI_DUNGEON_CRIT_BURST_DECO,
-  UI_DUNGEON_GUARD_BREAK_DECO,
+  UI_DUNGEON_STAGGER_PULSE_DECO,
 } from "./ui/visualAssets";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
 import { renderSpiritArrayPanel, updateSpiritArrayPanelReadouts } from "./ui/spiritArrayPanel";
@@ -4879,7 +4879,7 @@ function loop(): void {
       mapEl.classList.toggle("duel-is-boss", !!(tgt?.isBoss));
       mapEl.style.setProperty("--duel-hit-flash-deco", `url("${UI_DUNGEON_HIT_FLASH_DECO}")`);
       mapEl.style.setProperty("--duel-crit-burst-deco", `url("${UI_DUNGEON_CRIT_BURST_DECO}")`);
-      mapEl.style.setProperty("--duel-guard-break-deco", `url("${UI_DUNGEON_GUARD_BREAK_DECO}")`);
+      mapEl.style.setProperty("--duel-guard-break-deco", `url("${UI_DUNGEON_STAGGER_PULSE_DECO}")`);
       const waveTxt = document.getElementById("duel-wave-pill-txt");
       if (waveTxt) waveTxt.textContent = `第 ${d.wave} 波`;
       const plHpWrap = document.getElementById("dungeon-pl-hp-wrap");
