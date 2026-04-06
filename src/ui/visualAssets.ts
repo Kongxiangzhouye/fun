@@ -312,6 +312,8 @@ export const UI_BOUNTY_REALM_DECO = asset(WEEKLY_BOUNTY_UI_FILES.realm);
 export const UI_BOUNTY_ESTATE_DECO = asset(WEEKLY_BOUNTY_UI_FILES.estate);
 /** 周常悬赏 · 一键领取按钮内图标 */
 export const UI_BOUNTY_CLAIM_ALL_DECO = asset(WEEKLY_BOUNTY_UI_FILES.claimAll);
+/** 周常悬赏 · 自动一键领取开关 */
+export const UI_BOUNTY_AUTO_CLAIM = asset("bounty-auto-claim.svg");
 /** 周常悬赏 · 领取反馈爆闪徽记 */
 export const UI_BOUNTY_CLAIM_BURST = asset(WEEKLY_BOUNTY_UI_FILES.claimBurst);
 /** 周常悬赏 · 领取确认回响徽记（高频连领场景） */

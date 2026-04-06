@@ -459,6 +459,8 @@ export interface UiPrefs {
   autoHarvestSpiritGarden: boolean;
   /** 灵息日历：可领时自动领取今日灵息礼（需已解锁该页） */
   autoClaimDailyLogin: boolean;
+  /** 周常悬赏：有可领任务或里程时自动一键领取（需已解锁周常） */
+  autoClaimWeeklyBounty: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

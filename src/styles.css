@@ -9540,6 +9540,36 @@ p.gear-forge-tier-hint {
   opacity: 0.92;
 }
 
+.bounty-auto-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(200, 160, 90, 0.35);
+  background: rgba(28, 22, 12, 0.45);
+  cursor: pointer;
+  user-select: none;
+}
+
+.bounty-auto-row input {
+  margin-top: 3px;
+  accent-color: #d4a85c;
+}
+
+.bounty-auto-ico {
+  flex-shrink: 0;
+  margin-top: 1px;
+  opacity: 0.92;
+}
+
+.bounty-auto-text {
+  font-size: 0.84rem;
+  color: #d8c8a8;
+  line-height: 1.4;
+}
+
 .bounty-claim-all-row {
   margin-top: 10px;
 }

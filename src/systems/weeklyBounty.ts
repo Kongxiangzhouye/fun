@@ -470,6 +470,19 @@ export function claimAllCompletableWeeklyBounties(
   return { claimedTasks, claimedMilestones, rewardStones, rewardSummonEssence, rewardZhuLingEssence };
 }
 
+/** 偏好开启且本周有可领悬赏/里程时执行一键领取；否则返回 null */
+export function tryAutoClaimWeeklyBountyIfAny(
+  state: GameState,
+  now: number,
+): ReturnType<typeof claimAllCompletableWeeklyBounties> | null {
+  if (!state.uiPrefs.autoClaimWeeklyBounty) return null;
+  ensureWeeklyBountyWeek(state, now);
+  if (countClaimableWeeklyAll(state, now) <= 0) return null;
+  const r = claimAllCompletableWeeklyBounties(state, now);
+  if (r.claimedTasks + r.claimedMilestones <= 0) return null;
+  return r;
+}
+
 export interface WeeklyBountyFeedbackState {
   total: number;
   completed: number;

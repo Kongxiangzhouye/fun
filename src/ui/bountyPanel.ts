@@ -13,6 +13,7 @@ import {
   type WeeklyBountyTaskDisplayState,
 } from "../systems/weeklyBounty";
 import {
+  UI_BOUNTY_AUTO_CLAIM,
   UI_BOUNTY_CLAIM_ALL_DECO,
   UI_BOUNTY_FORGE_DECO,
   UI_BOUNTY_WAVES_DECO,
@@ -180,6 +181,11 @@ export function renderBountyPanel(state: GameState, now: number): string {
         </span>
       </div>
       <p class="hint sm bounty-observe-line" id="bounty-feedback-observe"><img class="bounty-observe-ico" src="${UI_WEEKLY_BOUNTY_STATE_SYNC}" alt="" width="16" height="16" loading="lazy" /><span id="bounty-feedback-observe-text">状态校验：${formatWeeklyBountyObserveLine(fb)}</span></p>
+      <label class="bounty-auto-row">
+        <input type="checkbox" id="chk-bounty-auto-claim" data-ui-pref="autoClaimWeeklyBounty" ${state.uiPrefs.autoClaimWeeklyBounty ? "checked" : ""} />
+        <img class="bounty-auto-ico" src="${UI_BOUNTY_AUTO_CLAIM}" alt="" width="18" height="18" loading="lazy" />
+        <span class="bounty-auto-text">有可领悬赏或里程时自动一键领取（与下方按钮相同规则）</span>
+      </label>
       <div class="bounty-milestone-block">
         <h3 class="bounty-milestone-heading">
           <img class="bounty-milestone-heading-ico" src="${UI_BOUNTY_MILESTONE_DECO}" alt="" width="22" height="22" loading="lazy" />
@@ -202,6 +208,8 @@ export function renderBountyPanel(state: GameState, now: number): string {
 /** 主循环刷新进度条与按钮（无需整页 render） */
 export function updateBountyPanelReadouts(state: GameState, now: number): void {
   ensureWeeklyBountyWeek(state, now);
+  const autoChk = document.getElementById("chk-bounty-auto-claim") as HTMLInputElement | null;
+  if (autoChk) autoChk.checked = state.uiPrefs.autoClaimWeeklyBounty;
   const wkEl = document.querySelector(".bounty-week-line strong");
   if (wkEl) wkEl.textContent = state.weeklyBounty.weekKey;
   const weekLineEl = document.querySelector(".bounty-week-line");

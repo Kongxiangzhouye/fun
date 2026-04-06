@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { createInitialState } from "../state";
 import { applyTick, catchUpOffline, fastForward, maxOfflineSec } from "../gameLoop";
-import { ensureWeeklyBountyWeek, currentWeekKey, noteWeeklyBountyEstateCompletion } from "../systems/weeklyBounty";
+import {
+  ensureWeeklyBountyWeek,
+  currentWeekKey,
+  noteWeeklyBountyEstateCompletion,
+  tryAutoClaimWeeklyBountyIfAny,
+} from "../systems/weeklyBounty";
 import { celestialStashWeeklyProgress, ensureCelestialStashWeek } from "../systems/celestialStash";
 import {
   chooseOfflineAdventureOption,
@@ -448,6 +453,12 @@ function runOfflineAdventurePendingNormalizeSmoke(): void {
   assert.equal(pending?.options[2].id, "essence", "normalized options should backfill essence");
 }
 
+function runWeeklyBountyAutoClaimSmoke(): void {
+  const st = createInitialState();
+  st.uiPrefs.autoClaimWeeklyBounty = false;
+  assert.equal(tryAutoClaimWeeklyBountyIfAny(st, Date.now()), null);
+}
+
 function runCelestialStashProgressSmoke(): void {
   const st = createInitialState();
   const now = Date.now();
@@ -540,6 +551,7 @@ function main(): void {
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();
   runCelestialStashProgressSmoke();
+  runWeeklyBountyAutoClaimSmoke();
   runEstateCommissionAutoSettleLoopSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");

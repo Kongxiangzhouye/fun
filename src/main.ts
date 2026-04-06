@@ -250,7 +250,9 @@ import {
   ensureWeeklyBountyWeek,
   formatWeeklyBountyFeedbackLine,
   noteWeeklyBountyBreakthrough,
+  tryAutoClaimWeeklyBountyIfAny,
   weeklyBountyFeedbackState,
+  weeklyBountyNextAction,
 } from "./systems/weeklyBounty";
 import {
   plantCrop,
@@ -4209,6 +4211,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoClaimSpiritReservoir") state.uiPrefs.autoClaimSpiritReservoir = checked;
       else if (t === "autoHarvestSpiritGarden") state.uiPrefs.autoHarvestSpiritGarden = checked;
       else if (t === "autoClaimDailyLogin") state.uiPrefs.autoClaimDailyLogin = checked;
+      else if (t === "autoClaimWeeklyBounty") state.uiPrefs.autoClaimWeeklyBounty = checked;
       else return;
       saveGame(state);
       render();
@@ -5460,6 +5463,29 @@ function loop(): void {
       const pAch = document.getElementById("ps-ach");
       if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
       updateDailyLoginPanelReadouts(state, now);
+    }
+  }
+  if (
+    state.uiPrefs.autoClaimWeeklyBounty &&
+    uLoop.tabBounty &&
+    typeof document !== "undefined"
+  ) {
+    const wr = tryAutoClaimWeeklyBountyIfAny(state, now);
+    if (wr) {
+      tryCompleteAchievements(state);
+      requestSave("周常悬赏自动领取", true);
+      const fb = weeklyBountyFeedbackState(state, now);
+      const next = weeklyBountyNextAction(state, now);
+      toast(
+        `已自动领取 ${wr.claimedTasks} 条悬赏、${wr.claimedMilestones} 档里程：灵石 +${wr.rewardStones} · 唤灵髓 +${wr.rewardSummonEssence} · 筑灵髓 +${wr.rewardZhuLingEssence}（${formatWeeklyBountyFeedbackLine(fb)}）`,
+      );
+      if (next) toast(`下一步建议：${next.title}（${next.progress}/${next.target}）`);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      const pAch = document.getElementById("ps-ach");
+      if (pAch) pAch.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+      if (!refreshBountyPanelLiveIfVisible(state, now, activeHub === "cultivate" && cultivateSub === "bounty")) {
+        render();
+      }
     }
   }
   const autoSettledOfflineInLoop = maybeAutoSettleOfflineAdventure(now, "loop");

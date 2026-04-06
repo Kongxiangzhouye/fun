@@ -816,6 +816,7 @@ export function deserialize(json: string): GameState {
     autoClaimSpiritReservoir: !!data.uiPrefs?.autoClaimSpiritReservoir,
     autoHarvestSpiritGarden: !!data.uiPrefs?.autoHarvestSpiritGarden,
     autoClaimDailyLogin: !!data.uiPrefs?.autoClaimDailyLogin,
+    autoClaimWeeklyBounty: !!data.uiPrefs?.autoClaimWeeklyBounty,
   };
 
   if (data.pets && typeof data.pets === "object") {
