@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "naming": "Filenames from HUB_SECTION_HEADER_UI_FILES in src/data/hubSectionHeadersUi.ts; served as public/assets/ui/<file>.",
+  "headers": [
+    { "id": "dungeon", "file": "deco-dungeon-header.svg" },
+    { "id": "train", "file": "deco-train-header.svg" },
+    { "id": "gear", "file": "deco-gear-header.svg" },
+    { "id": "pet", "file": "deco-pet-header.svg" },
+    { "id": "stats", "file": "deco-stats-header.svg" },
+    { "id": "combat", "file": "deco-combat-header.svg" },
+    { "id": "garden", "file": "deco-garden-header.svg" },
+    { "id": "bounty", "file": "deco-bounty-header.svg" }
+  ]
+}
