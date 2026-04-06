@@ -37,16 +37,17 @@ function deckDefenseFlatBonus(state: GameState): number {
   return d;
 }
 
-function modMult(g: GearItem): number {
-  let m = 1 + g.enhanceLevel * 0.012;
+function modMult(state: GameState, g: GearItem): number {
+  const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0));
+  let m = 1 + slotLv * 0.012;
   if (g.rarity === "UR") m *= 1 + g.refineLevel * 0.024;
   return m;
 }
 
-function sumGearMods(items: GearItem[], key: GearStatKey): number {
+function sumGearMods(state: GameState, items: GearItem[], key: GearStatKey): number {
   let s = 0;
   for (const g of items) {
-    const mm = modMult(g);
+    const mm = modMult(state, g);
     for (const a of [...g.prefixes, ...g.suffixes]) {
       if (a.stat === key) s += a.value * mm;
     }
@@ -56,7 +57,7 @@ function sumGearMods(items: GearItem[], key: GearStatKey): number {
 
 export function collectEquippedGear(state: GameState): GearItem[] {
   const out: GearItem[] = [];
-  const ids = [state.equippedGear.weapon, state.equippedGear.body, state.equippedGear.ring];
+  const ids = Object.values(state.equippedGear);
   for (const id of ids) {
     if (id && state.gearInventory[id]) out.push(state.gearInventory[id]!);
   }
@@ -69,41 +70,41 @@ export function combatSkillLevel(state: GameState): number {
 
 export function playerAttack(state: GameState): number {
   const g = collectEquippedGear(state);
-  const flat = sumGearMods(g, "atk_flat");
-  const inc = sumGearMods(g, "atk_inc") / 100;
+  const flat = sumGearMods(state, g, "atk_flat");
+  const inc = sumGearMods(state, g, "atk_inc") / 100;
   const base = state.realmLevel * 4 + combatSkillLevel(state) * 3 + flat;
   return Math.max(1, base * (1 + inc));
 }
 
 export function playerMaxHp(state: GameState): number {
   const g = collectEquippedGear(state);
-  const life = sumGearMods(g, "life_flat");
+  const life = sumGearMods(state, g, "life_flat");
   const base = 100 + state.realmLevel * 12 + combatSkillLevel(state) * 6 + life;
   return Math.max(10, Math.floor(base * daoMeridianHpMult(state)));
 }
 
 export function playerCritChance(state: GameState): number {
   const g = collectEquippedGear(state);
-  const fromGear = sumGearMods(g, "crit_chance") / 100;
+  const fromGear = sumGearMods(state, g, "crit_chance") / 100;
   return Math.min(0.75, fromGear + critChanceBonusFromSkills(state));
 }
 
 export function playerCritMult(state: GameState): number {
   const g = collectEquippedGear(state);
-  const fromGear = sumGearMods(g, "crit_mult") / 100;
+  const fromGear = sumGearMods(state, g, "crit_mult") / 100;
   return 1.5 + fromGear + critMultBonusFromSkills(state);
 }
 
 export function essenceFindMult(state: GameState): number {
   const g = collectEquippedGear(state);
-  const fromGear = 1 + sumGearMods(g, "essence_find") / 100;
+  const fromGear = 1 + sumGearMods(state, g, "essence_find") / 100;
   return fromGear * petEssenceFindMult(state);
 }
 
 /** 装备词条：全相抗性合计（% 面数值之和） */
 export function playerResAllSum(state: GameState): number {
   const g = collectEquippedGear(state);
-  return sumGearMods(g, "res_all");
+  return sumGearMods(state, g, "res_all");
 }
 
 
@@ -170,7 +171,7 @@ export function woodAdventureDays(state: GameState): number {
  */
 export function playerDefenseRating(state: GameState): number {
   const g = collectEquippedGear(state);
-  const gearDef = sumGearMods(g, "def_flat");
+  const gearDef = sumGearMods(state, g, "def_flat");
   const realm = state.realmLevel * 1.05;
   const combat = combatSkillLevel(state) * 0.7;
   const guYuan = state.vein.guYuan * 0.55;

@@ -29,6 +29,7 @@ type SkillsSave = GameState["skills"];
 type DungeonSave = GameState["dungeon"];
 type GearInvSave = GameState["gearInventory"];
 type EquippedSave = GameState["equippedGear"];
+type GearSlotEnhanceSave = GameState["gearSlotEnhance"];
 
 /** 旧版单键存档（首次启动时迁移到槽位 0） */
 const LEGACY_KEY = "idle-gacha-realm-v1";
@@ -145,6 +146,7 @@ export interface SerializedState {
   dungeon?: DungeonSave;
   gearInventory?: GearInvSave;
   equippedGear?: EquippedSave;
+  gearSlotEnhance?: Partial<GearSlotEnhanceSave>;
   nextGearInstanceId?: number;
   gearInventorySort?: GameState["gearInventorySort"];
   featureGuideDismissed?: string[];
@@ -178,25 +180,6 @@ function normalizeDungeonState(st: GameState): void {
   if (d.playerY == null || !Number.isFinite(d.playerY)) d.playerY = 0.5;
   if (d.nextMobId == null || d.nextMobId < 1) d.nextMobId = 1;
   if (!Array.isArray(d.mobs)) d.mobs = [];
-  /** 旧存档：单怪逻辑 → 单只 mob 接入地图 */
-  if (d.active && d.mobs.length === 0 && d.monsterMax > 0 && d.monsterHp > 0) {
-    d.mobs = [
-      {
-        id: d.nextMobId++,
-        x: 0.62,
-        y: 0.48,
-        hp: d.monsterHp,
-        maxHp: d.monsterMax,
-        element: "metal",
-        isBoss: false,
-        mobKind: 0,
-        dodge: 0.08,
-        attackRange: 0.045,
-        attackInterval: 1.15,
-        moveSpeedMul: 1,
-      },
-    ];
-  }
   for (const m of d.mobs) {
     if (!m.element) m.element = "metal";
     if (m.isBoss == null) m.isBoss = false;
@@ -222,14 +205,13 @@ function normalizeDungeonState(st: GameState): void {
   }
   if (d.attackAnimPhase == null) d.attackAnimPhase = 0;
   if (d.inMelee == null) d.inMelee = false;
-  if (d.attackVisualMode !== "aoe" && d.attackVisualMode !== "single" && d.attackVisualMode !== "none") {
+  if (d.attackVisualMode !== "aoe" && d.attackVisualMode !== "none") {
     d.attackVisualMode = "none";
   }
   if (d.interWaveCooldownUntil == null || !Number.isFinite(d.interWaveCooldownUntil)) d.interWaveCooldownUntil = 0;
   if (d.essenceThisWave == null || !Number.isFinite(d.essenceThisWave)) d.essenceThisWave = 0;
   if (d.pendingToast === undefined) d.pendingToast = null;
   if (d.pendingKillToast === undefined) d.pendingKillToast = null;
-  if (d.pendingDeathPresentation == null) d.pendingDeathPresentation = false;
   if (d.waveEntrySpawnX == null || !Number.isFinite(d.waveEntrySpawnX)) d.waveEntrySpawnX = 0.5;
   if (d.waveEntrySpawnY == null || !Number.isFinite(d.waveEntrySpawnY)) d.waveEntrySpawnY = 0.5;
   if (d.bossDodgeVisual == null) d.bossDodgeVisual = false;
@@ -245,8 +227,6 @@ function normalizeDungeonState(st: GameState): void {
   if (d.playerAttackAccum == null || !Number.isFinite(d.playerAttackAccum)) d.playerAttackAccum = 0;
   if (d.playerAttackTargetMobId == null || !Number.isFinite(d.playerAttackTargetMobId)) d.playerAttackTargetMobId = 0;
   if (d.sessionEnterAtMs == null || !Number.isFinite(d.sessionEnterAtMs)) d.sessionEnterAtMs = 0;
-  /** 旧存档进本中无计时：从当前时刻起算，避免本局用时为 0 */
-  if (d.active && d.sessionEnterAtMs <= 0) d.sessionEnterAtMs = Date.now();
   if (d.duelComboStacks == null || !Number.isFinite(d.duelComboStacks)) d.duelComboStacks = 0;
   d.duelComboStacks = Math.max(0, Math.floor(d.duelComboStacks));
   if (d.duelWeakUntilMs == null || !Number.isFinite(d.duelWeakUntilMs)) d.duelWeakUntilMs = 0;
@@ -255,6 +235,9 @@ function normalizeDungeonState(st: GameState): void {
   d.duelFervor = Math.max(0, Math.min(100, d.duelFervor));
   if (d.duelElemSurgeCounter == null || !Number.isFinite(d.duelElemSurgeCounter)) d.duelElemSurgeCounter = 0;
   d.duelElemSurgeCounter = Math.max(0, Math.floor(d.duelElemSurgeCounter));
+  if (d.bossPrepKills == null || !Number.isFinite(d.bossPrepKills)) d.bossPrepKills = 0;
+  d.bossPrepKills = Math.max(0, Math.floor(d.bossPrepKills));
+  if (d.bossPrepChallengeReady == null) d.bossPrepChallengeReady = false;
 }
 
 function normalizePetsState(st: GameState): void {
@@ -348,6 +331,7 @@ export function serialize(state: GameState): string {
     dungeon: state.dungeon,
     gearInventory: state.gearInventory,
     equippedGear: state.equippedGear,
+    gearSlotEnhance: state.gearSlotEnhance,
     nextGearInstanceId: state.nextGearInstanceId,
     gearInventorySort: state.gearInventorySort,
     featureGuideDismissed: [...state.featureGuideDismissed],
@@ -524,6 +508,26 @@ export function deserialize(json: string): GameState {
   }
   if (data.equippedGear) {
     st.equippedGear = { ...st.equippedGear, ...data.equippedGear };
+  }
+  if (data.gearSlotEnhance && typeof data.gearSlotEnhance === "object") {
+    st.gearSlotEnhance = { ...st.gearSlotEnhance, ...data.gearSlotEnhance };
+  }
+  // 兼容旧存档：将旧的“装备强化等级”迁移到对应槽位强化。
+  for (const [slot, id] of Object.entries(st.equippedGear)) {
+    if (!id) continue;
+    const g = st.gearInventory[id];
+    if (!g) continue;
+    const legacyLv = Math.max(0, Math.floor(g.enhanceLevel ?? 0));
+    const key = slot as keyof typeof st.gearSlotEnhance;
+    st.gearSlotEnhance[key] = Math.max(st.gearSlotEnhance[key] ?? 0, legacyLv);
+  }
+  for (const slot of Object.keys(st.gearSlotEnhance) as (keyof typeof st.gearSlotEnhance)[]) {
+    const lv = st.gearSlotEnhance[slot];
+    st.gearSlotEnhance[slot] = Math.max(0, Math.floor(Number.isFinite(lv) ? lv : 0));
+  }
+  for (const g of Object.values(st.gearInventory)) {
+    if (!g) continue;
+    g.enhanceLevel = 0;
   }
   st.nextGearInstanceId = Math.max(st.nextGearInstanceId, data.nextGearInstanceId ?? 1);
   st.gearInventorySort = normalizeGearInventorySort(data.gearInventorySort);

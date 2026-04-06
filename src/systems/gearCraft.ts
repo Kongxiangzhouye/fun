@@ -1,13 +1,13 @@
-import type { GameState, GearAffixRoll, GearItem, GearStatKey, Rarity } from "../types";
+import type { GameState, GearAffixRoll, GearItem, GearSlot, GearStatKey, Rarity } from "../types";
 import { xuanTieFromGearPiece } from "./salvage";
 import { GEAR_GRADE_MAX } from "../types";
 import { nextRand01 } from "../rng";
 import { rarityRank } from "../data/rarityRank";
-import { GEAR_BASES, getGearBase, maxAffixCount, maxEnhanceLevel } from "../data/gearBases";
+import { ALL_GEAR_SLOTS, GEAR_BASES, getGearBase, maxAffixCount, maxEnhanceLevel } from "../data/gearBases";
 import { gearForgeAscensionLevel, gearForgeIlvlBonus, rollGearRarityForForge } from "./gearGachaTier";
 
 /** 单件装备战力（与顶栏综合战力不同：仅用于同部位替换比对） */
-export function gearItemPower(g: GearItem): number {
+export function gearItemPower(g: GearItem, slotEnhanceLevel = 0): number {
   const rr = rarityRank(g.rarity);
   const grade = Math.max(1, Math.min(GEAR_GRADE_MAX, g.gearGrade ?? 1 + rr * 8));
   let affixSum = 0;
@@ -17,9 +17,14 @@ export function gearItemPower(g: GearItem): number {
     rr * 220 +
     grade * 6 +
     affixSum * 2 +
-    g.enhanceLevel * 22 +
+    Math.max(0, Math.floor(slotEnhanceLevel)) * 22 +
     (g.rarity === "UR" ? g.refineLevel * 55 : 0)
   );
+}
+
+export function slotEnhanceLevel(state: GameState, slot: GearSlot): number {
+  const raw = state.gearSlotEnhance?.[slot] ?? 0;
+  return Math.max(0, Math.floor(Number.isFinite(raw) ? raw : 0));
 }
 
 /** 存档迁移：缺省时由稀有度推导筑灵阶 */
@@ -150,7 +155,11 @@ function fillMods(
 export function generateRandomGear(state: GameState, forceRarity?: Rarity): GearItem {
   const forgeTier = gearForgeAscensionLevel(state);
   const rarity = forceRarity ?? rollGearRarityForForge(state, forgeTier);
-  const base = GEAR_BASES[Math.floor(nextRand01(state) * GEAR_BASES.length)]!;
+  // 槽位等权：12 个部位等概率，再在该部位基底池内随机。
+  const slot = ALL_GEAR_SLOTS[Math.floor(nextRand01(state) * ALL_GEAR_SLOTS.length)]!;
+  const slotBases = GEAR_BASES.filter((x) => x.slot === slot);
+  const basePool = slotBases.length > 0 ? slotBases : GEAR_BASES;
+  const base = basePool[Math.floor(nextRand01(state) * basePool.length)]!;
   const b = getGearBase(base.id)!;
   const ilvl = Math.floor(
     b.baseItemLevel + state.realmLevel * 0.9 + state.skills.combat.level * 0.4 + gearForgeIlvlBonus(forgeTier),
@@ -191,8 +200,7 @@ export function tryRefineUr(
   targetId: string,
   consumeId: string,
 ): { ok: boolean; msg: string } {
-  const isEquipped = (id: string): boolean =>
-    state.equippedGear.weapon === id || state.equippedGear.body === id || state.equippedGear.ring === id;
+  const isEquipped = (id: string): boolean => Object.values(state.equippedGear).some((v) => v === id);
   if (targetId === consumeId) return { ok: false, msg: "不能消耗自身" };
   const a = state.gearInventory[targetId];
   const b = state.gearInventory[consumeId];
@@ -213,12 +221,13 @@ export function xuanTieEnhanceCost(enhanceLevel: number): number {
 export function enhanceGear(state: GameState, id: string): { ok: boolean; msg: string } {
   const g = state.gearInventory[id];
   if (!g) return { ok: false, msg: "无此装备" };
+  const curLv = slotEnhanceLevel(state, g.slot);
   const max = maxEnhanceLevel(g.rarity);
-  if (g.enhanceLevel >= max) return { ok: false, msg: "强化已达上限" };
-  const cost = xuanTieEnhanceCost(g.enhanceLevel);
+  if (curLv >= max) return { ok: false, msg: "强化已达上限" };
+  const cost = xuanTieEnhanceCost(curLv);
   if (state.xuanTie < cost) return { ok: false, msg: "玄铁不足" };
   state.xuanTie -= cost;
-  g.enhanceLevel += 1;
+  state.gearSlotEnhance[g.slot] = curLv + 1;
   for (const m of [...g.prefixes, ...g.suffixes]) {
     m.value *= 1.035;
     const tpl = findAffixTemplate(m.groupId, m.stat);
@@ -235,7 +244,7 @@ export function equipGear(state: GameState, instanceId: string): { ok: boolean; 
 }
 
 /** 无背包：卸下视为拆解该件并获得玄铁（与分解规则一致）；已锁定则无法卸下 */
-export function unequipGear(state: GameState, slot: "weapon" | "body" | "ring"): boolean {
+export function unequipGear(state: GameState, slot: GearSlot): boolean {
   const id = state.equippedGear[slot];
   if (!id) return false;
   const g = state.gearInventory[id];

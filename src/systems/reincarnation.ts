@@ -34,7 +34,34 @@ export function performReincarnate(state: GameState): void {
   state.owned = {};
   state.deck = Array.from({ length: DECK_SIZE }, () => null);
   state.gearInventory = {};
-  state.equippedGear = { weapon: null, body: null, ring: null };
+  state.equippedGear = {
+    weapon: null,
+    body: null,
+    ring: null,
+    slot4: null,
+    slot5: null,
+    slot6: null,
+    slot7: null,
+    slot8: null,
+    slot9: null,
+    slot10: null,
+    slot11: null,
+    slot12: null,
+  };
+  state.gearSlotEnhance = {
+    weapon: 0,
+    body: 0,
+    ring: 0,
+    slot4: 0,
+    slot5: 0,
+    slot6: 0,
+    slot7: 0,
+    slot8: 0,
+    slot9: 0,
+    slot10: 0,
+    slot11: 0,
+    slot12: 0,
+  };
   state.nextGearInstanceId = 1;
   state.skills = {
     combat: { level: 1, xp: 0 },

@@ -59,10 +59,10 @@ function tryAutoTuna(state: GameState, now: number): void {
 
 function tryAutoGacha(state: GameState, now: number): void {
   if (!state.qoL.autoGacha) return;
-  if (state.zhuLingEssence < ESSENCE_COST_SINGLE) return;
+  if (state.summonEssence < ESSENCE_COST_SINGLE) return;
   if (now - state.lastAutoGachaMs < 2800) return;
   state.lastAutoGachaMs = now;
-  state.zhuLingEssence -= ESSENCE_COST_SINGLE;
+  state.summonEssence -= ESSENCE_COST_SINGLE;
   pullOne(state);
   onGachaPulls(state, 1);
   tryCompleteAchievements(state);

@@ -13,7 +13,8 @@ export function xuanTieFromRarity(r: Rarity, enhance: number): number {
 
 /** 分解/被替换销毁时的玄铁折算（与 `salvageGear` 一致） */
 export function xuanTieFromGearPiece(g: { rarity: Rarity; enhanceLevel: number }): number {
-  return xuanTieFromRarity(g.rarity, g.enhanceLevel);
+  void g.enhanceLevel;
+  return xuanTieFromRarity(g.rarity, 0);
 }
 
 /** 分解灵卡：移除持有，获得灵砂 */
@@ -44,25 +45,17 @@ export function salvageGear(state: GameState, instanceId: string): { ok: boolean
   const g = state.gearInventory[instanceId];
   if (!g) return { ok: false, msg: "无此装备" };
   if (g.locked) return { ok: false, msg: "已锁定，请先解锁再分解" };
-  if (
-    state.equippedGear.weapon === instanceId ||
-    state.equippedGear.body === instanceId ||
-    state.equippedGear.ring === instanceId
-  ) {
+  if (Object.values(state.equippedGear).some((id) => id === instanceId)) {
     return { ok: false, msg: "请先卸下" };
   }
-  const gain = xuanTieFromRarity(g.rarity, g.enhanceLevel);
+  const gain = xuanTieFromRarity(g.rarity, 0);
   delete state.gearInventory[instanceId];
   state.xuanTie += gain;
   return { ok: true, msg: `分解获得玄铁 +${gain}`, gain };
 }
 
 function isGearEquipped(state: GameState, instanceId: string): boolean {
-  return (
-    state.equippedGear.weapon === instanceId ||
-    state.equippedGear.body === instanceId ||
-    state.equippedGear.ring === instanceId
-  );
+  return Object.values(state.equippedGear).some((id) => id === instanceId);
 }
 
 /** 按设置自动分解仓库中未上阵的低品灵卡 / 装备（节流由调用方控制） */

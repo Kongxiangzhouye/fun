@@ -5,7 +5,7 @@ import { ensureOwned } from "./state";
 import { nextRand01 } from "./rng";
 import { addStones } from "./stones";
 import { metalGachaBonusStones } from "./deckSynergy";
-import { generateRandomGear, gearItemPower } from "./systems/gearCraft";
+import { generateRandomGear, gearItemPower, slotEnhanceLevel } from "./systems/gearCraft";
 import { xuanTieFromGearPiece } from "./systems/salvage";
 import { noteWeeklyBountyCardPulls, noteWeeklyBountyGearForges } from "./systems/weeklyBounty";
 import {
@@ -117,33 +117,50 @@ export function highestRarityInPulls(results: PullResult[]): Rarity {
 
 /**
  * 境界铸灵：无背包，新装仅能与当前部位比对战力——战力更高则替换并分解旧装；更低或相等则销毁新装并返少量玄铁。
+ * 返回本次新装是否成功装备（用于前端决定是否播放演出）。
  */
-function finalizeGearPull(state: GameState, g: GearItem): void {
+function finalizeGearPull(state: GameState, g: GearItem): { equipped: boolean; salvagedXuanTie: number } {
   const slot = g.slot;
   const curId = state.equippedGear[slot];
   if (!curId) {
     state.gearInventory[g.instanceId] = g;
     state.equippedGear[slot] = g.instanceId;
+    return commitGearPullMeta(state, g, { equipped: true, salvagedXuanTie: 0 });
   } else {
     const cur = state.gearInventory[curId];
     if (!cur) {
       state.gearInventory[g.instanceId] = g;
       state.equippedGear[slot] = g.instanceId;
+      return commitGearPullMeta(state, g, { equipped: true, salvagedXuanTie: 0 });
     } else {
-      const np = gearItemPower(g);
-      const cp = gearItemPower(cur);
+      const slotLv = slotEnhanceLevel(state, slot);
+      const np = gearItemPower(g, slotLv);
+      const cp = gearItemPower(cur, slotLv);
       if (cur.locked) {
-        state.xuanTie += Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
+        const gain = Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
+        state.xuanTie += gain;
+        return commitGearPullMeta(state, g, { equipped: false, salvagedXuanTie: gain });
       } else if (np > cp) {
-        state.xuanTie += xuanTieFromGearPiece(cur);
+        const gain = xuanTieFromGearPiece(cur);
+        state.xuanTie += gain;
         delete state.gearInventory[curId];
         state.gearInventory[g.instanceId] = g;
         state.equippedGear[slot] = g.instanceId;
+        return commitGearPullMeta(state, g, { equipped: true, salvagedXuanTie: gain });
       } else {
-        state.xuanTie += Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
+        const gain = Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
+        state.xuanTie += gain;
+        return commitGearPullMeta(state, g, { equipped: false, salvagedXuanTie: gain });
       }
     }
   }
+}
+
+function commitGearPullMeta(
+  state: GameState,
+  g: GearItem,
+  result: { equipped: boolean; salvagedXuanTie: number },
+): { equipped: boolean; salvagedXuanTie: number } {
   state.gearPityPulls += 1;
   if (rarityRank(g.rarity) >= rarityRank("SR")) {
     state.gearPityPulls = 0;
@@ -156,6 +173,7 @@ function finalizeGearPull(state: GameState, g: GearItem): void {
     rarity: g.rarity,
     displayName: g.displayName,
   });
+  return result;
 }
 
 function applyPullToState(state: GameState, card: CardDef): PullResult {
@@ -196,12 +214,14 @@ export function pullOne(state: GameState): PullResult {
 }
 
 /** 境界铸灵单抽：仅装备，不占灵卡 UR/SSR 保底计数；另有珍品+独立保底（随铸灵阶缩短） */
-export function pullGearOne(state: GameState): { ok: true; gear: GearItem } | { ok: false; msg: string } {
+export function pullGearOne(
+  state: GameState,
+): { ok: true; gear: GearItem; equipped: boolean; salvagedXuanTie: number } | { ok: false; msg: string } {
   const maxP = effectiveGearSrPityMax(state);
   const forceSrPlus = state.gearPityPulls >= maxP - 1;
   const g = forceSrPlus ? generateRandomGear(state, pickPityGearRarity(state)) : generateRandomGear(state);
-  finalizeGearPull(state, g);
-  return { ok: true, gear: g };
+  const result = finalizeGearPull(state, g);
+  return { ok: true, gear: g, equipped: result.equipped, salvagedXuanTie: result.salvagedXuanTie };
 }
 
 /** 十铸：前 9 次正常；若前 9 次无珍品+，第 10 次必为珍品+（与灵卡十连逻辑对齐） */
@@ -233,11 +253,11 @@ export function pullTen(state: GameState): PullResult[] {
   const hasSrOrBetter = out.some((r) => rarityRank(r.card.rarity) >= rarityRank("SR"));
   if (hasSrOrBetter) {
     out.push(pullOne(state));
-    return out;
+  } else {
+    const rarity = pickRarity(state);
+    const finalRarity: Rarity = rarityRank(rarity) >= rarityRank("SR") ? rarity : "SR";
+    out.push(applyPullToState(state, randomCardOfRarity(state, finalRarity)));
   }
-  const rarity = pickRarity(state);
-  const finalRarity: Rarity = rarityRank(rarity) >= rarityRank("SR") ? rarity : "SR";
-  out.push(applyPullToState(state, randomCardOfRarity(state, finalRarity)));
   return out;
 }
 

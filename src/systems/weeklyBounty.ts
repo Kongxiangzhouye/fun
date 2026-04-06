@@ -183,10 +183,36 @@ export function isWeeklyBountyClaimed(state: GameState, taskId: string): boolean
 }
 
 export type WeeklyBountyTaskState = "pending" | "claimable" | "claimed";
+export type WeeklyBountyTaskDisplayState = WeeklyBountyTaskState | "overdue";
 
 export function weeklyBountyTaskState(state: GameState, def: WeeklyBountyTaskDef): WeeklyBountyTaskState {
   if (isWeeklyBountyClaimed(state, def.id)) return "claimed";
   return isWeeklyBountyComplete(state, def) ? "claimable" : "pending";
+}
+
+function isLastDayOfWeek(now: number): boolean {
+  return new Date(now).getDay() === 0;
+}
+
+export interface WeeklyBountyTaskSnapshot {
+  id: string;
+  state: WeeklyBountyTaskDisplayState;
+  progress: number;
+}
+
+/** 统一周常条目状态口径：pending / claimable / claimed / overdue。 */
+export function weeklyBountyTaskSnapshots(state: GameState, now: number): WeeklyBountyTaskSnapshot[] {
+  ensureWeeklyBountyWeek(state, now);
+  const overdueGate = isLastDayOfWeek(now);
+  return WEEKLY_BOUNTY_TASKS.map((def) => {
+    const base = weeklyBountyTaskState(state, def);
+    const displayState: WeeklyBountyTaskDisplayState = base === "claimable" && overdueGate ? "overdue" : base;
+    return {
+      id: def.id,
+      state: displayState,
+      progress: weeklyBountyProgress(state, def),
+    };
+  });
 }
 
 function normalizeWeeklyBountyEventNow(nowMs?: number): number {
@@ -228,7 +254,8 @@ export function claimWeeklyBountyTask(state: GameState, taskId: string, now: num
   ensureWeeklyBountyWeek(state, now);
   const def = WEEKLY_BOUNTY_TASKS.find((t) => t.id === taskId);
   if (!def) return false;
-  if (weeklyBountyTaskState(state, def) !== "claimable") return false;
+  const base = weeklyBountyTaskState(state, def);
+  if (!(base === "claimable")) return false;
   state.weeklyBounty.claimed.push(taskId);
   state.weeklyBounty.claimed.sort();
   if (def.rewardStones > 0) addStones(state, def.rewardStones);
@@ -239,7 +266,7 @@ export function claimWeeklyBountyTask(state: GameState, taskId: string, now: num
 
 /** 当前周可一键领取的条目数（已达成且未领） */
 export function countClaimableWeeklyBounties(state: GameState, now: number): number {
-  return weeklyBountyFeedbackState(state, now).claimable;
+  return weeklyBountyFeedbackState(state, now).claimReady;
 }
 
 /** 一键领取全部可领悬赏；返回领取条数与奖励合计（用于 UI 提示） */
@@ -266,39 +293,59 @@ export interface WeeklyBountyFeedbackState {
   pending: number;
   claimed: number;
   claimable: number;
+  claimReady: number;
   overdue: number;
   hasOverdue: boolean;
   consistent: boolean;
+  weekKey: string;
+  expectedWeekKey: string;
+  weekAligned: boolean;
 }
 
 /** UI 反馈闭环：统一“进度→可领→已领”数量口径。 */
 export function weeklyBountyFeedbackState(state: GameState, now: number): WeeklyBountyFeedbackState {
   ensureWeeklyBountyWeek(state, now);
+  const snapshots = weeklyBountyTaskSnapshots(state, now);
   let completed = 0;
   let pending = 0;
   let claimed = 0;
   let claimable = 0;
-  for (const def of WEEKLY_BOUNTY_TASKS) {
-    const taskState = weeklyBountyTaskState(state, def);
+  let overdue = 0;
+  for (const task of snapshots) {
+    const taskState = task.state;
     if (taskState === "claimed") {
       claimed += 1;
       completed += 1;
-    } else if (taskState === "claimable") {
+    } else if (taskState === "claimable" || taskState === "overdue") {
       completed += 1;
-      claimable += 1;
+      if (taskState === "overdue") overdue += 1;
+      else claimable += 1;
     } else {
       pending += 1;
     }
   }
-  const total = WEEKLY_BOUNTY_TASKS.length;
-  // overdue 表示“已达成但未领”，与 claimable 同口径，便于 UI/提示统一展示计数
-  const overdue = claimable;
+  const total = snapshots.length;
+  const claimReady = claimable + overdue;
   const hasOverdue = overdue > 0;
-  const consistent = pending + claimable + claimed === total && completed === claimable + claimed && overdue === claimable;
-  return { total, completed, pending, claimed, claimable, overdue, hasOverdue, consistent };
+  const expectedWeekKey = currentWeekKey(now);
+  const weekKey = state.weeklyBounty.weekKey;
+  const weekAligned = weekKey === expectedWeekKey;
+  const consistent =
+    pending + claimReady + claimed === total &&
+    completed === claimReady + claimed &&
+    (hasOverdue ? overdue <= claimReady : true) &&
+    weekAligned;
+  return { total, completed, pending, claimed, claimable, claimReady, overdue, hasOverdue, consistent, weekKey, expectedWeekKey, weekAligned };
 }
 
 /** 统一悬赏反馈文案，供 toast/调试信息复用，避免各处拼接口径漂移。 */
 export function formatWeeklyBountyFeedbackLine(fb: WeeklyBountyFeedbackState): string {
-  return `待完成 ${fb.pending}，可领 ${fb.claimable}，已领 ${fb.claimed}/${fb.total}，逾期 ${fb.overdue}`;
+  return `待完成 ${fb.pending}，可领 ${fb.claimReady}，已领 ${fb.claimed}/${fb.total}，逾期 ${fb.overdue}`;
+}
+
+/** 周常状态可观测行：用于面板调试与日志。 */
+export function formatWeeklyBountyObserveLine(fb: WeeklyBountyFeedbackState): string {
+  const align = fb.weekAligned ? "周键对齐" : `周键漂移(${fb.weekKey}!=${fb.expectedWeekKey})`;
+  const consistency = fb.consistent ? "口径一致" : "口径异常";
+  return `${consistency} · ${align}`;
 }

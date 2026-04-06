@@ -132,17 +132,31 @@ export interface GearAffixRoll {
   text: string;
 }
 
+export type GearSlot =
+  | "weapon"
+  | "body"
+  | "ring"
+  | "slot4"
+  | "slot5"
+  | "slot6"
+  | "slot7"
+  | "slot8"
+  | "slot9"
+  | "slot10"
+  | "slot11"
+  | "slot12";
+
 /** 一件装备实例 */
 export interface GearItem {
   instanceId: string;
   baseId: string;
   displayName: string;
-  slot: "weapon" | "body" | "ring";
+  slot: GearSlot;
   rarity: Rarity;
   /** 筑灵阶 1–48：越高词条池越强（与稀有度、装等协同） */
   gearGrade: number;
   itemLevel: number;
-  /** SSR 及以下：与灵卡同级强化感；UR 可继续精炼 */
+  /** 旧存档兼容字段：强化已迁移为槽位强化，不再绑定单件装备 */
   enhanceLevel: number;
   /** 仅 UR：消耗同基底同稀有度提升 */
   refineLevel: number;
@@ -151,6 +165,9 @@ export interface GearItem {
   /** 锁定后不可分解，且不能作为自动分解与精炼消耗（可手动解锁） */
   locked?: boolean;
 }
+
+export type EquippedGearState = Record<GearSlot, string | null>;
+export type GearSlotEnhanceState = Record<GearSlot, number>;
 
 /** 幻域地图上的单只魔物（位置 0–1 归一化，对应格子中心） */
 export interface DungeonMob {
@@ -205,6 +222,10 @@ export interface WaveCheckpoint {
   duelWeakNextAtMs?: number;
   duelFervor?: number;
   duelElemSurgeCounter?: number;
+  /** 首领前哨：本波累计击杀的小兵数（用于解锁挑战首领） */
+  bossPrepKills?: number;
+  /** 首领前哨：是否已达到挑战门槛 */
+  bossPrepChallengeReady?: boolean;
 }
 
 export interface DungeonState {
@@ -251,8 +272,8 @@ export interface DungeonState {
   attackAnimPhase: number;
   /** 是否与目标接战（供 UI 动画） */
   inMelee: boolean;
-  /** 幻域表现：接战且出手时为圆形 AoE（`aoe`）；`single` 保留兼容旧存档 */
-  attackVisualMode: "none" | "aoe" | "single";
+  /** 幻域表现：接战且出手时为圆形 AoE */
+  attackVisualMode: "none" | "aoe";
   /** 清完一波后，到下一波刷怪前的休整截止时间（ms）；0 表示未在休整 */
   interWaveCooldownUntil: number;
   /** 当前波累计获得唤灵髓（本关结算展示） */
@@ -261,8 +282,6 @@ export interface DungeonState {
   pendingToast: string | null;
   /** 单次击杀即时入袋整数筑灵髓的提示（小兵；消费后清空） */
   pendingKillToast: string | null;
-  /** 兼容旧存档；已不再用于 UI，阵亡说明见 `pendingToast` */
-  pendingDeathPresentation: boolean;
   /** 各波次未通关时的进度（反复挑战同一关时魔物血量持久化） */
   waveCheckpoint: Record<number, WaveCheckpoint>;
   /** 当前波地图生成时的出生点（用于阵亡/暂离后再入） */
@@ -297,6 +316,10 @@ export interface DungeonState {
   duelFervor: number;
   /** 克制命中计数，用于灵脉共鸣 */
   duelElemSurgeCounter: number;
+  /** 首领前哨：本波累计击杀的小兵数（达到门槛后可随时挑战首领） */
+  bossPrepKills: number;
+  /** 首领前哨：是否已达到挑战门槛（达到后即便继续刷小兵也保持可挑战） */
+  bossPrepChallengeReady: boolean;
 }
 
 /** 界面偏好（写入存档；不影响玩法数值） */
@@ -474,7 +497,9 @@ export interface GameState {
   dungeon: DungeonState;
 
   gearInventory: Record<string, GearItem>;
-  equippedGear: { weapon: string | null; body: string | null; ring: string | null };
+  equippedGear: EquippedGearState;
+  /** 槽位强化等级：替换装备后仍保留在该部位 */
+  gearSlotEnhance: GearSlotEnhanceState;
   nextGearInstanceId: number;
   /** 行囊背包排序偏好 */
   gearInventorySort: GearInventorySortMode;

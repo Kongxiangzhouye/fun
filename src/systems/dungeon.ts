@@ -72,6 +72,8 @@ const BOSS_CHASE_PULSE_AMP = 0.12;
 const WAVE_START_GRACE_MS = 700;
 /** 单帧结算上限，避免切后台回前台后一帧累积导致“追击失控” */
 const DUEL_TICK_SLICE_SEC = 0.18;
+/** 首领前哨小兵收益折扣：允许无限刷，但单只收益降低避免失衡。 */
+const BOSS_PREP_TRASH_ESSENCE_MULT = 0.45;
 
 /** 刷怪与玩家出生点的最小格距（曼哈顿）；降低贴脸刷怪感 */
 const SPAWN_MIN_CELL_DIST = 3;
@@ -254,6 +256,8 @@ function saveWaveCheckpoint(state: GameState): void {
     duelWeakNextAtMs: d.duelWeakNextAtMs,
     duelFervor: d.duelFervor,
     duelElemSurgeCounter: d.duelElemSurgeCounter,
+    bossPrepKills: d.bossPrepKills,
+    bossPrepChallengeReady: d.bossPrepChallengeReady,
   };
 }
 
@@ -286,6 +290,8 @@ function restoreWaveFromCheckpoint(state: GameState, ck: WaveCheckpoint): void {
   d.duelWeakNextAtMs = ck.duelWeakNextAtMs ?? 0;
   d.duelFervor = ck.duelFervor ?? 0;
   d.duelElemSurgeCounter = ck.duelElemSurgeCounter ?? 0;
+  d.bossPrepKills = Math.max(0, Math.floor(ck.bossPrepKills ?? 0));
+  d.bossPrepChallengeReady = !!ck.bossPrepChallengeReady;
   if (d.duelWeakNextAtMs <= 0) {
     d.duelWeakNextAtMs = Date.now() + DUNGEON_DUEL_FEEDBACK.weakTriggerWindowBaseMs;
   }
@@ -1282,6 +1288,11 @@ export function totalAliveMobHpSum(d: DungeonState): number {
   return s;
 }
 
+export function bossPrepKillRequirement(wave: number): number {
+  const stage = Math.max(1, Math.floor(wave / 5));
+  return 10 + stage * 2;
+}
+
 function syncBars(state: GameState, d: DungeonState): void {
   const t = pickCombatTargetMob(d, playerEngageRadiusNorm(state));
   if (t) {
@@ -1366,6 +1377,8 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
   d.packSize = 0;
   d.monsterHp = 0;
   d.monsterMax = 0;
+  d.bossPrepKills = 0;
+  d.bossPrepChallengeReady = false;
   d.interWaveCooldownUntil = 0;
   let extra = "";
   if (wasRepeat) {
@@ -1385,13 +1398,22 @@ function clearWaveAndAdvance(state: GameState, now: number): void {
 /** 单只魔物阵亡结算；若本波清空则推进关卡并返回 true（调用方应结束本 tick） */
 function registerDungeonKill(state: GameState, d: DungeonState, mob: DungeonMob, now: number): boolean {
   resetDamageFloatAccum();
+  const inBossPrep = d.wave % 5 === 0 && state.dungeonDeferBoss && !mob.isBoss;
   const bossLootWave = d.wave % 5 === 0 && !state.dungeonDeferBoss;
-  const totalFloat = essenceRewardTotalFloat(d.wave, state, bossLootWave, d.rewardModeRepeat, now);
+  const totalFloatBase = essenceRewardTotalFloat(d.wave, state, bossLootWave, d.rewardModeRepeat, now);
+  const totalFloat = inBossPrep ? totalFloatBase * BOSS_PREP_TRASH_ESSENCE_MULT : totalFloatBase;
   const share = totalFloat / Math.max(1, d.packSize);
   d.essenceRemainder += share;
   d.essenceThisWave += share;
   d.packKilled += 1;
   d.sessionKills += 1;
+  if (inBossPrep) {
+    d.bossPrepKills += 1;
+    if (!d.bossPrepChallengeReady && d.bossPrepKills >= bossPrepKillRequirement(d.wave)) {
+      d.bossPrepChallengeReady = true;
+      d.pendingToast = "首领挑战已解锁：可随时点击「挑战首领」。";
+    }
+  }
   const isLastInPack = d.packKilled >= d.packSize;
   mob.hp = 0;
   const intGain = flushRemainderToZhuLing(state);
@@ -1400,14 +1422,16 @@ function registerDungeonKill(state: GameState, d: DungeonState, mob: DungeonMob,
   }
   if (isLastInPack) {
     grantWaveEssenceToInventory(state);
-    /** 首领位：先清前哨小怪，清完后不自动进下一波，须手动「挑战首领」 */
-    if (d.wave % 5 === 0 && state.dungeonDeferBoss && !mob.isBoss) {
-      d.pendingToast = "前哨已清 · 请点击「挑战首领」迎战首领";
-      d.mobs = [];
-      d.packSize = 0;
+    /** 首领前哨：无限刷小兵；达到门槛后可随时挑战首领。 */
+    if (inBossPrep) {
+      d.pendingToast =
+        d.pendingToast ??
+        (d.bossPrepChallengeReady
+          ? "前哨已清 · 可继续清剿，或随时点击「挑战首领」。"
+          : `前哨已清 · 挑战首领进度 ${d.bossPrepKills}/${bossPrepKillRequirement(d.wave)}。`);
       d.packKilled = 0;
-      d.monsterHp = 0;
-      d.monsterMax = 0;
+      spawnMobsForWave(state, now);
+      d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
       return true;
     }
     clearWaveAndAdvance(state, now);
@@ -1495,6 +1519,10 @@ function spawnMobsForWave(state: GameState, now: number = Date.now()): void {
     });
   }
   d.packSize = d.mobs.length;
+  if (!deferBoss) {
+    d.bossPrepKills = 0;
+    d.bossPrepChallengeReady = false;
+  }
   d.waveEntrySpawnX = d.playerX;
   d.waveEntrySpawnY = d.playerY;
   syncBars(state, d);
@@ -1508,15 +1536,22 @@ export function dungeonSegmentStartWave(wave: number): number {
 }
 
 /** 在首领位且当前为小怪群时，切换为真正首领并重生本波 */
-export function requestBossChallenge(state: GameState): void {
+export function requestBossChallenge(state: GameState): { ok: boolean; msg: string } {
   const d = state.dungeon;
-  if (!d.active || d.wave % 5 !== 0 || !state.dungeonDeferBoss) return;
+  if (!d.active || d.wave % 5 !== 0 || !state.dungeonDeferBoss) return { ok: false, msg: "当前不可挑战首领。" };
+  const req = bossPrepKillRequirement(d.wave);
+  if (!d.bossPrepChallengeReady || d.bossPrepKills < req) {
+    return { ok: false, msg: `需先击败前哨小兵 ${req} 只（当前 ${d.bossPrepKills}/${req}）。` };
+  }
   state.dungeonDeferBoss = false;
   delete d.waveCheckpoint[d.wave];
   d.packKilled = 0;
   d.essenceThisWave = 0;
   d.essenceRemainder = 0;
+  d.bossPrepKills = 0;
+  d.bossPrepChallengeReady = false;
   spawnMobsForWave(state, Date.now());
+  return { ok: true, msg: "已切换为首领战：本波将重整为首领。" };
 }
 
 /** 幻域阶段统一口径：普通清剿 / 首领前哨 / 首领战 */
@@ -1591,9 +1626,10 @@ export function enterDungeon(state: GameState, startWave?: number): boolean {
   d.playerAttackTargetMobId = 0;
   d.attackAnimPhase = 0;
   d.attackVisualMode = "none";
+  d.bossPrepKills = 0;
+  d.bossPrepChallengeReady = false;
   d.interWaveCooldownUntil = 0;
   d.pendingToast = null;
-  d.pendingDeathPresentation = false;
   clampCombatHpToMax(state);
   d.playerMax = playerMaxHp(state);
   d.playerHp = Math.min(state.combatHpCurrent, d.playerMax);
@@ -1644,7 +1680,6 @@ export function leaveDungeon(state: GameState): void {
   d.walkable = [];
   d.interWaveCooldownUntil = 0;
   d.pendingToast = savedCk ? "已暂离。再入该波将接续当前阵线。" : null;
-  d.pendingDeathPresentation = false;
   d.bossDodgeVisual = false;
   d.dodgeQueued = false;
   damageFloatQueue.length = 0;
@@ -1685,6 +1720,15 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
 
   const target = pickCombatTargetMob(d, pRange);
   if (!target) {
+    // 兜底：若出现“空敌阵且不在波间CD”异常状态，自动重生当前波，避免战斗软锁。
+    if (d.mobs.length === 0 && d.interWaveCooldownUntil <= 0) {
+      spawnMobsForWave(state, now);
+      d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
+      d.pendingToast = d.pendingToast ?? "阵线重整：已恢复当前波敌人。";
+      syncBars(state, d);
+      syncDungeonHpToState(state);
+      return;
+    }
     if (d.mobs.length > 0 && d.mobs.every((m) => m.hp <= 0)) {
       grantWaveEssenceToInventory(state);
       clearWaveAndAdvance(state, now);
@@ -1696,6 +1740,30 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
     syncBars(state, d);
     syncDungeonHpToState(state);
     return;
+  }
+
+  // 先走位再结算攻防，避免双方长期停在攻击圈外导致“互相不出手”。
+  const { steps, subDt } = movementIntegrationSteps(dt);
+  for (let i = 0; i < steps; i++) {
+    const stepNow = now + i * subDt * 1000;
+    const holdKite = shouldHoldKiteNoDetour(d, pRange);
+    if (!holdKite && stepNow >= d.playerMoveLockUntil) {
+      const pPos = { x: d.playerX, y: d.playerY };
+      if (target.isBoss) {
+        movePlayerInBossFight(state, d, pPos, target, subDt, stepNow);
+      } else {
+        movePlayerKiteMaxRange(state, d, pPos, target, subDt);
+      }
+      d.playerX = pPos.x;
+      d.playerY = pPos.y;
+    }
+    for (const m of d.mobs) {
+      if (m.hp <= 0) continue;
+      const chaseDist = cellDistApprox(d.playerX, d.playerY, m.x, m.y, d.mapW || 1, d.mapH || 1);
+      const shouldChase = m.id === target.id || chaseDist <= CHASE_CELL_DIST;
+      if (shouldChase) moveMobFourWayChase(d, m, pRange, subDt);
+      else moveMobFourWayWander(state, d, m, subDt);
+    }
   }
 
   if (d.dodgeQueued) {
@@ -1839,30 +1907,51 @@ function runDuelTick(state: GameState, dt: number, now: number): void {
         pushDamageFloat(px, py, `-${Math.max(1, Math.round(md))}`, "dmg-in");
       }
       if (d.playerHp <= 0) {
-        saveWaveCheckpoint(state);
-        d.entryWave = d.wave;
-        state.dungeonSanctuaryMode = true;
-        state.dungeonPortalTargetWave = dungeonSegmentStartWave(d.wave);
-        state.dungeonDeferBoss = true;
-        const s = stones(state);
-        let pen = Decimal.max(1, s.mul(0.05).ceil());
-        if (pen.gt(s)) pen = s;
-        if (s.gt(0)) subStones(state, pen);
-        state.combatHpCurrent = 0;
-        d.playerHp = 0;
-        d.active = false;
-        d.mobs = [];
-        d.walkable = [];
-        d.interWaveCooldownUntil = 0;
-        d.pendingToast =
-          s.lte(0) || pen.lte(0)
-            ? "灵力溃散，已回气。再入本关将重整阵势。"
-            : `灵力溃散，已回气。损失灵石 ${pen.toFixed(0)}（约当前灵石 5%，至少 1）。再入本关将重整阵势。`;
-        d.pendingDeathPresentation = false;
-        d.deathCooldownUntil = now + DUNGEON_DEATH_CD_MS;
-        damageFloatQueue.length = 0;
-        resetDamageFloatAccum();
-        return;
+        if (target.isBoss) {
+          // 首领战失败不回圣所：立即退回本波前哨小怪，保留在副本内缓慢回血节奏。
+          state.dungeonSanctuaryMode = false;
+          state.dungeonPortalTargetWave = 0;
+          state.dungeonDeferBoss = true;
+          d.bossPrepKills = 0;
+          d.bossPrepChallengeReady = false;
+          d.playerHp = Math.max(1, Math.floor(d.playerMax * 0.18));
+          state.combatHpCurrent = d.playerHp;
+          d.interWaveCooldownUntil = 0;
+          d.mobs = [];
+          d.walkable = [];
+          d.pendingToast = "首领击退了你，已退回前哨清剿并重整气息。";
+          spawnMobsForWave(state, now);
+          d.dodgeIframesUntil = Math.max(d.dodgeIframesUntil, now + WAVE_START_GRACE_MS);
+          damageFloatQueue.length = 0;
+          resetDamageFloatAccum();
+          syncBars(state, d);
+          syncDungeonHpToState(state);
+          return;
+        } else {
+          saveWaveCheckpoint(state);
+          d.entryWave = d.wave;
+          state.dungeonSanctuaryMode = true;
+          state.dungeonPortalTargetWave = dungeonSegmentStartWave(d.wave);
+          state.dungeonDeferBoss = true;
+          const s = stones(state);
+          let pen = Decimal.max(1, s.mul(0.05).ceil());
+          if (pen.gt(s)) pen = s;
+          if (s.gt(0)) subStones(state, pen);
+          state.combatHpCurrent = 0;
+          d.playerHp = 0;
+          d.active = false;
+          d.mobs = [];
+          d.walkable = [];
+          d.interWaveCooldownUntil = 0;
+          d.pendingToast =
+            s.lte(0) || pen.lte(0)
+              ? "灵力溃散，已回气。再入本关将重整阵势。"
+              : `灵力溃散，已回气。损失灵石 ${pen.toFixed(0)}（约当前灵石 5%，至少 1）。再入本关将重整阵势。`;
+          d.deathCooldownUntil = now + DUNGEON_DEATH_CD_MS;
+          damageFloatQueue.length = 0;
+          resetDamageFloatAccum();
+          return;
+        }
       }
     }
   } else {

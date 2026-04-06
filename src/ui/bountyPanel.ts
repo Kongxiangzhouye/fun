@@ -1,11 +1,12 @@
 import type { GameState } from "../types";
 import {
   WEEKLY_BOUNTY_TASKS,
-  weeklyBountyProgress,
   ensureWeeklyBountyWeek,
   weeklyBountyFeedbackState,
-  weeklyBountyTaskState,
+  weeklyBountyTaskSnapshots,
+  formatWeeklyBountyObserveLine,
   type WeeklyBountyCardDeco,
+  type WeeklyBountyTaskDisplayState,
 } from "../systems/weeklyBounty";
 import {
   UI_BOUNTY_CLAIM_ALL_DECO,
@@ -35,7 +36,7 @@ const BOUNTY_CARD_DECO_SRC: Record<WeeklyBountyCardDeco, string> = {
   realm: UI_BOUNTY_REALM_DECO,
 };
 
-function bountyTaskView(taskState: ReturnType<typeof weeklyBountyTaskState>): {
+function bountyTaskView(taskState: WeeklyBountyTaskDisplayState): {
   statusClass: string;
   statusText: string;
   canClaim: boolean;
@@ -47,6 +48,9 @@ function bountyTaskView(taskState: ReturnType<typeof weeklyBountyTaskState>): {
   if (taskState === "claimable") {
     return { statusClass: "claimable", statusText: "可领", canClaim: true, buttonText: "领取" };
   }
+  if (taskState === "overdue") {
+    return { statusClass: "overdue", statusText: "逾期可领", canClaim: true, buttonText: "立即领取" };
+  }
   return { statusClass: "pending", statusText: "待完成", canClaim: false, buttonText: "未达成" };
 }
 
@@ -55,10 +59,12 @@ export function renderBountyPanel(state: GameState, now: number): string {
   const wk = state.weeklyBounty.weekKey;
   const isLastDayOfWeek = new Date(now).getDay() === 0;
   const fb = weeklyBountyFeedbackState(state, now);
-  const claimableN = fb.claimable;
+  const claimableN = fb.claimReady;
+  const taskSnapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
   const rows = WEEKLY_BOUNTY_TASKS.map((t) => {
-    const prog = weeklyBountyProgress(state, t);
-    const taskState = weeklyBountyTaskState(state, t);
+    const snap = taskSnapshots.get(t.id);
+    const prog = snap?.progress ?? 0;
+    const taskState = snap?.state ?? "pending";
     const view = bountyTaskView(taskState);
     const pct = Math.min(100, (100 * prog) / t.target);
     const deco = `<img class="bounty-task-deco" src="${BOUNTY_CARD_DECO_SRC[t.cardDeco]}" alt="" width="22" height="22" loading="lazy" />`;
@@ -96,8 +102,8 @@ export function renderBountyPanel(state: GameState, now: number): string {
         </span>
         <span class="bounty-feedback-pill">
           <img class="bounty-feedback-ico" src="${UI_BOUNTY_STREAK_BADGE}" alt="" width="18" height="18" loading="lazy" />
-          <span id="bounty-feedback-claimable">可领 ${fb.claimable} / ${fb.total}</span>
-          <img class="bounty-feedback-ico bounty-feedback-surge-ico ${fb.claimable > 0 ? "is-on" : ""}" src="${UI_BOUNTY_SURGE_BADGE}" alt="" width="18" height="18" loading="lazy" />
+          <span id="bounty-feedback-claimable">可领 ${fb.claimReady} / ${fb.total}</span>
+          <img class="bounty-feedback-ico bounty-feedback-surge-ico ${fb.claimReady > 0 ? "is-on" : ""}" src="${UI_BOUNTY_SURGE_BADGE}" alt="" width="18" height="18" loading="lazy" />
         </span>
         <span class="bounty-feedback-pill ${fb.claimed >= fb.total ? "is-ready" : ""}">
           <img class="bounty-feedback-ico" src="${UI_BOUNTY_COMPLETE_BADGE}" alt="" width="18" height="18" loading="lazy" />
@@ -108,7 +114,7 @@ export function renderBountyPanel(state: GameState, now: number): string {
           <span id="bounty-feedback-overdue">${fb.hasOverdue ? `逾期 ${fb.overdue} / ${fb.total}` : "进度正常"}</span>
         </span>
       </div>
-      <p class="hint sm" id="bounty-feedback-observe">状态校验：${fb.consistent ? "一致" : "异常"}</p>
+      <p class="hint sm" id="bounty-feedback-observe">状态校验：${formatWeeklyBountyObserveLine(fb)}</p>
       <div class="bounty-claim-all-row">
         <button type="button" class="btn btn-primary bounty-claim-all-btn" id="btn-bounty-claim-all" ${claimableN > 0 ? "" : "disabled"}>
           <img class="bounty-claim-all-ico" src="${UI_BOUNTY_CLAIM_ALL_DECO}" alt="" width="20" height="20" loading="lazy" />
@@ -143,15 +149,16 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   const claimAllBtn = document.getElementById("btn-bounty-claim-all") as HTMLButtonElement | null;
   const claimAllLbl = document.getElementById("bounty-claim-all-lbl");
   const fb = weeklyBountyFeedbackState(state, now);
-  const cn = fb.claimable;
+  const cn = fb.claimReady;
+  const taskSnapshots = new Map(weeklyBountyTaskSnapshots(state, now).map((x) => [x.id, x]));
   if (claimAllBtn) claimAllBtn.disabled = cn <= 0;
   if (claimAllLbl) claimAllLbl.textContent = `一键领取可领悬赏（${cn}）`;
   const pendingLbl = document.getElementById("bounty-feedback-pending");
   if (pendingLbl) pendingLbl.textContent = `待完成 ${fb.pending} / ${fb.total}`;
   const claimableLbl = document.getElementById("bounty-feedback-claimable");
-  if (claimableLbl) claimableLbl.textContent = `可领 ${fb.claimable} / ${fb.total}`;
+  if (claimableLbl) claimableLbl.textContent = `可领 ${fb.claimReady} / ${fb.total}`;
   const surgeIco = document.querySelector(".bounty-feedback-surge-ico");
-  if (surgeIco) surgeIco.classList.toggle("is-on", fb.claimable > 0);
+  if (surgeIco) surgeIco.classList.toggle("is-on", fb.claimReady > 0);
   const claimedLbl = document.getElementById("bounty-feedback-claimed");
   if (claimedLbl) claimedLbl.textContent = `已领 ${fb.claimed} / ${fb.total}`;
   const claimPill = claimedLbl?.closest(".bounty-feedback-pill");
@@ -161,10 +168,11 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
   const overduePill = overdueLbl?.closest(".bounty-feedback-pill");
   if (overduePill) overduePill.classList.toggle("is-overdue", fb.hasOverdue);
   const observeLbl = document.getElementById("bounty-feedback-observe");
-  if (observeLbl) observeLbl.textContent = `状态校验：${fb.consistent ? "一致" : "异常"}`;
+  if (observeLbl) observeLbl.textContent = `状态校验：${formatWeeklyBountyObserveLine(fb)}`;
   for (const t of WEEKLY_BOUNTY_TASKS) {
-    const prog = weeklyBountyProgress(state, t);
-    const taskState = weeklyBountyTaskState(state, t);
+    const snap = taskSnapshots.get(t.id);
+    const prog = snap?.progress ?? 0;
+    const taskState = snap?.state ?? "pending";
     const view = bountyTaskView(taskState);
     const pct = Math.min(100, (100 * prog) / t.target);
     const card = document.querySelector(`[data-bounty-task="${t.id}"]`);
@@ -185,4 +193,11 @@ export function updateBountyPanelReadouts(state: GameState, now: number): void {
       btn.textContent = view.buttonText;
     }
   }
+}
+
+/** 主循环高频刷新入口（仅在面板可见时执行）。 */
+export function refreshBountyPanelLiveIfVisible(state: GameState, now: number, isVisible: boolean): boolean {
+  if (!isVisible) return false;
+  updateBountyPanelReadouts(state, now);
+  return true;
 }

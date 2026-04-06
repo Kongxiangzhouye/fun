@@ -2,7 +2,8 @@
  * 本地 PNG（public/assets/ui），构建后由 Vite 原样输出。
  * 图标来源：Twemoji（CC-BY 4.0）https://github.com/twitter/twemoji
  */
-import type { Element, GardenCropId, PetId, Rarity } from "../types";
+import type { Element, GardenCropId, GearSlot, PetId, Rarity } from "../types";
+import { ALL_GEAR_SLOTS } from "../data/gearBases";
 import { ACHIEVEMENTS_LIST_UI_FILES } from "../data/achievementsListUi";
 import { CHRONICLE_HEADERS_UI_FILES } from "../data/chronicleHeadersUi";
 import { DUNGEON_DUEL_UI_FILES } from "../data/dungeonDuelUi";
@@ -56,21 +57,18 @@ export const ELEMENT_ICON: Record<Element, string> = Object.fromEntries(
 ) as Record<Element, string>;
 
 /** 与 `GEAR_SLOT_UI_FILES` 同源 */
-export const GEAR_SLOT_ICON: Record<"weapon" | "body" | "ring", string> = Object.fromEntries(
-  (Object.keys(GEAR_SLOT_UI_FILES) as Array<keyof typeof GEAR_SLOT_UI_FILES>).map((slot) => [
-    slot,
-    asset(GEAR_SLOT_UI_FILES[slot]),
-  ]),
-) as Record<"weapon" | "body" | "ring", string>;
+export const GEAR_SLOT_ICON: Record<GearSlot, string> = Object.fromEntries(
+  ALL_GEAR_SLOTS.map((slot) => [slot, asset(GEAR_SLOT_UI_FILES[slot] ?? GEAR_SLOT_UI_FILES.body)]),
+) as Record<GearSlot, string>;
 
-/** 各装备基底立绘（`public/assets/ui/gear-base-<baseId>.png`）；与 `GEAR_BASES` 同步，否则回退槽位图标 */
+/** 各装备基底立绘（`public/assets/ui/gear-base-<baseId>.svg`）；与 `GEAR_BASES` 同步，否则回退槽位图标 */
 export const GEAR_BASE_PORTRAIT: Record<string, string> = Object.fromEntries(
-  GEAR_BASES.map((b) => [b.id, asset(`gear-base-${b.id}.png`)]),
+  GEAR_BASES.map((b) => [b.id, asset(`gear-base-${b.id}.svg`)]),
 );
 
 export function gearPortraitSrc(
   baseId: string,
-  slot: "weapon" | "body" | "ring",
+  slot: GearSlot,
 ): string {
   return GEAR_BASE_PORTRAIT[baseId] ?? GEAR_SLOT_ICON[slot];
 }

@@ -7,6 +7,7 @@ import {
   PLAYER_DUNGEON_HIT_INTERVAL_SEC,
 } from "../types";
 import {
+  bossPrepKillRequirement,
   canEnterDungeon,
   describeWaveProfile,
   dungeonCombatPhase,
@@ -32,7 +33,7 @@ import {
   xpToNextLevel,
 } from "../systems/skillTraining";
 import { rarityRank } from "../data/rarityRank";
-import { getGearBase } from "../data/gearBases";
+import { ALL_GEAR_SLOTS, getGearBase, GEAR_SLOT_LABEL } from "../data/gearBases";
 import { gearItemPower, xuanTieEnhanceCost } from "../systems/gearCraft";
 import { BATTLE_SKILLS } from "../data/battleSkills";
 import { battleSkillPullCost, describeBattleSkillLevels } from "../systems/battleSkills";
@@ -308,7 +309,7 @@ function renderDungeonMapHtml(state: GameState): string {
     </div>`;
 }
 
-const DUNGEON_HELP_BLURB = `筑灵髓来自战斗：普通波为小怪群，每击杀一只即入袋整数唤灵髓；清完一波进下一波。每逢第 5、10…波为首领关：先清首领前小怪，再手动点「挑战首领」才进入首领；击败首领后进下一关。首领可造成伤害，小怪不会致死（灵护）。唤灵髓用于本页聚灵阵。幻域生命全局共享。阵亡无灵石损失。`;
+const DUNGEON_HELP_BLURB = `筑灵髓来自战斗：普通波为小怪群，每击杀一只即入袋整数唤灵髓；清完一波进下一波。每逢第 5、10…波为首领关：前哨小怪可持续清剿，达成挑战门槛后可随时点「挑战首领」；击败首领后进下一关。首领可造成伤害，小怪不会致死（灵护）。唤灵髓用于本页聚灵阵。幻域生命全局共享。阵亡无灵石损失。`;
 
 function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
   const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
@@ -339,16 +340,15 @@ function battleGearStarLine(r: Rarity): string {
 
 /** 历练页中部：三件筑灵装备概览；默认收起，长按展开详情 */
 export function renderBattleEquippedStrip(state: GameState, expanded: boolean): string {
-  const slots = ["weapon", "body", "ring"] as const;
-  const slotLabel: Record<(typeof slots)[number], string> = { weapon: "武器", body: "衣甲", ring: "指环" };
+  const displaySlots = ALL_GEAR_SLOTS;
   let cells = "";
   let collapsedIcons = "";
-  for (const s of slots) {
+  for (const s of displaySlots) {
     const id = state.equippedGear[s];
     const g = id ? state.gearInventory[id] : null;
     if (g) {
       const pw = gearItemPower(g);
-      collapsedIcons += `<div class="battle-gear-ico-mini rarity-${g.rarity}" title="${slotLabel[s]}">
+      collapsedIcons += `<div class="battle-gear-ico-mini rarity-${g.rarity}" title="${GEAR_SLOT_LABEL[s]}">
         <img src="${gearPortraitSrc(g.baseId, g.slot)}" alt="" width="36" height="36" loading="lazy" />
       </div>`;
       cells += `
@@ -359,7 +359,7 @@ export function renderBattleEquippedStrip(state: GameState, expanded: boolean): 
         </div>
         <div class="battle-gear-lv">Lv.${g.itemLevel}</div>
         <div class="battle-gear-pw">战力 ${fmtNum(pw)}</div>
-        <span class="battle-gear-slot-label">${slotLabel[s]}</span>
+        <span class="battle-gear-slot-label">${GEAR_SLOT_LABEL[s]}</span>
       </div>`;
     } else {
       collapsedIcons += `<div class="battle-gear-ico-mini battle-gear-ico-mini--empty" aria-hidden="true"><span>+</span></div>`;
@@ -370,8 +370,8 @@ export function renderBattleEquippedStrip(state: GameState, expanded: boolean): 
           <span class="battle-gear-empty-plus">+</span>
         </div>
         <div class="battle-gear-lv">—</div>
-        <div class="battle-gear-pw">未装备</div>
-        <span class="battle-gear-slot-label">${slotLabel[s]}</span>
+        <div class="battle-gear-pw">空位</div>
+        <span class="battle-gear-slot-label">${GEAR_SLOT_LABEL[s]}</span>
       </div>`;
     }
   }
@@ -387,7 +387,7 @@ export function renderBattleEquippedStrip(state: GameState, expanded: boolean): 
         <div class="battle-equipped-expanded-only" ${expanded ? "" : "hidden"}>
           <div class="battle-equipped-strip-head">
             <span class="battle-equipped-strip-title">筑灵装备</span>
-            <span class="hint sm battle-equipped-strip-hint">铸灵仅保留战力更高者</span>
+            <span class="hint sm battle-equipped-strip-hint">12 部位等权掉落，按同部位战力自动替换</span>
           </div>
           <div class="battle-gear-grid">${cells}</div>
           <div class="battle-equipped-actions">
@@ -406,9 +406,6 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
   const weekLine = state.weeklyBounty?.weekKey || currentWeekKey(now);
   const affix = getDungeonAffixForWeekKey(weekLine);
   const isVortexAffix = affix.id === "storm_sigil" || affix.id === "iron_march";
-  const affixFrameSrc = isVortexAffix
-    ? UI_DUNGEON_REALM_VORTEX_FRAME_DECO
-    : UI_DUNGEON_REALM_CLASSIC_FRAME_DECO;
   const affixModeDecoSrc = isVortexAffix
     ? UI_DUNGEON_AFFIX_VORTEX_DECO
     : UI_DUNGEON_AFFIX_CLASSIC_DECO;
@@ -431,6 +428,9 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
   const showIdleBossBtn =
     !d.active && !sanctuaryIdle && state.dungeonDeferBoss && fw % 5 === 0 && canEnter;
   const combatPhase = d.active ? dungeonCombatPhase(state) : "trash";
+  const bossPrepReq = bossPrepKillRequirement(d.wave);
+  const bossPrepProgress = `${d.bossPrepKills}/${bossPrepReq}`;
+  const bossChallengeUnlocked = d.bossPrepChallengeReady && d.bossPrepKills >= bossPrepReq;
   const phaseBadgeSrc =
     combatPhase === "boss_fight"
       ? UI_DUEL_BOSS_BADGE
@@ -454,7 +454,7 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
           <p class="hint sm dungeon-panel-subtitle">上为阵线战斗 · 中为筑灵装备（默认收起，长按展开）· 下为聚灵抽卡</p>
         </div>
       </div>
-      <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner" style="background-image:url('${affixFrameSrc}')">
+      <div class="dungeon-affix-banner" role="region" aria-label="本周幻域词缀" id="dungeon-affix-banner">
         <img class="dungeon-affix-icon" src="${UI_DUNGEON_AFFIX_DECO}" alt="" width="40" height="40" loading="lazy" />
         <img class="dungeon-affix-mode-deco" id="dungeon-affix-mode-deco" src="${affixModeDecoSrc}" alt="" width="124" height="24" loading="lazy" />
         <div class="dungeon-affix-text">
@@ -477,6 +477,7 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
       </div>`
           : ""
       }
+      <div class="dungeon-combat-module">
       <div class="dungeon-map-stage">
         <button type="button" class="dungeon-map-help-btn" id="btn-dungeon-help" aria-expanded="false" aria-controls="dungeon-help-popover" aria-label="查看幻域说明" title="幻域说明">?</button>
         ${helpPop}
@@ -495,14 +496,16 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
               combatPhase === "boss_fight"
                 ? "首领可对你造成真实伤害。击败首领后本关胜利，并自动进入下一波。"
                 : combatPhase === "boss_prep"
-                  ? "场上为首领前小怪群：请先全部清完，再点下方「挑战首领」进入真正的首领战（不会自动开）。"
+                  ? `首领前哨可无限清剿；累计击败小兵达到门槛后可随时挑战首领（当前 ${bossPrepProgress}）。`
                   : "普通清剿：敌人自动接战；每击杀一只小兵，唤灵髓整数立即入袋。清完本关后进入下一波。"
             }</p>
             ${
               showCombatBossBtn
                 ? `<div class="dungeon-phase-banner-cta" id="dungeon-phase-cta">
-              <button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss">挑战首领</button>
-              <span class="hint sm dungeon-phase-cta-note" id="dungeon-phase-cta-note">清完小怪后可用</span>
+              <button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss" ${bossChallengeUnlocked ? "" : "disabled"}>挑战首领</button>
+              <span class="hint sm dungeon-phase-cta-note" id="dungeon-phase-cta-note">${
+                bossChallengeUnlocked ? "已达门槛，可随时挑战。" : `挑战门槛：击败小兵 ${bossPrepReq}（当前 ${bossPrepProgress}）`
+              }</span>
             </div>`
                 : ""
             }
@@ -523,10 +526,10 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
           ${renderIdlePreviewMap()}
           <p class="dungeon-idle-stats">累计通关 <strong>${d.totalWavesCleared}</strong> 波 · 最高第 <strong>${d.maxWaveRecord}</strong> 波</p>
           <p class="hint sm">目标第 <strong>${Math.max(1, d.entryWave)}</strong> 波：${nextWavePreview}</p>
-          <p class="hint sm">下一未通关波为第 <strong>${fw}</strong> 波（前沿）。首领关（5 的倍数波）需先清小怪，再点「挑战首领」。</p>
+          <p class="hint sm">下一未通关波为第 <strong>${fw}</strong> 波（前沿）。首领关可持续清剿前哨小怪，达门槛后可随时挑战首领。</p>
           <ol class="dungeon-idle-guide-steps hint sm">
             <li>点「进入副本」开始；普通波自动打小怪，每只掉落即时入袋。</li>
-            <li>首领波先清前哨小怪 → 点「挑战首领」→ 击败首领 → 自动进下一波。</li>
+            <li>首领波前哨可无限刷；达成挑战门槛后可点「挑战首领」，击败后自动进下一波。</li>
             <li>下方聚灵阵消耗筑灵髓抽卡；筑灵条长按可展开。</li>
           </ol>
           ${
@@ -575,6 +578,7 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
         </div>
       </div>
       ${renderBattleEquippedStrip(state, battleGearStripExpanded)}
+      </div>
     </section>`;
 }
 
@@ -686,7 +690,7 @@ export function renderBattleSkillPanel(state: GameState): string {
 }
 
 const RARITY_ORDER_SORT: Record<string, number> = { UR: 0, SSR: 1, SR: 2, R: 3, N: 4 };
-const SLOT_ORDER_SORT: Record<"weapon" | "body" | "ring", number> = { weapon: 0, body: 1, ring: 2 };
+const SLOT_ORDER_SORT: Record<string, number> = Object.fromEntries(ALL_GEAR_SLOTS.map((s, i) => [s, i]));
 
 function sortGearInventoryItems(items: GearItem[], mode: GearInventorySortMode): GearItem[] {
   const ro = RARITY_ORDER_SORT;
@@ -727,7 +731,7 @@ const GEAR_SORT_LABELS: Record<GearInventorySortMode, string> = {
 export function renderGearPanel(
   state: GameState,
   refineTargetId: string | null = null,
-  gearDetailSlot: "weapon" | "body" | "ring" | null = null,
+  gearDetailSlot: (typeof ALL_GEAR_SLOTS)[number] | null = null,
   gearInvSort: GearInventorySortMode = "rarity",
 ): string {
   void refineTargetId;
@@ -736,15 +740,14 @@ export function renderGearPanel(
   let inv = "";
   for (const g of items) {
     const eq =
-      state.equippedGear.weapon === g.instanceId ||
-      state.equippedGear.body === g.instanceId ||
-      state.equippedGear.ring === g.instanceId;
+      Object.values(state.equippedGear).some((id) => id === g.instanceId);
     if (!eq) continue;
     const pre = g.prefixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
     const suf = g.suffixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
-    const xt = xuanTieEnhanceCost(g.enhanceLevel);
+    const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0));
+    const xt = xuanTieEnhanceCost(slotLv);
     const locked = !!g.locked;
-    const pw = gearItemPower(g);
+    const pw = gearItemPower(g, slotLv);
     inv += `
       <div class="gear-row equipped ${locked ? "is-locked" : ""}">
         <div class="gear-row-visual">
@@ -753,7 +756,7 @@ export function renderGearPanel(
           </div>
           <div>
           <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade} · ilvl ${g.itemLevel}
-          <p class="inv-meta">战力 ${pw} · 强化 ${g.enhanceLevel}${locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
+          <p class="inv-meta">战力 ${pw} · 槽位强化 ${slotLv}${locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
           <div class="affix-block">${pre}${suf}</div>
           </div>
         </div>
@@ -766,12 +769,8 @@ export function renderGearPanel(
         </div>
       </div>`;
   }
-  const slotLabel: Record<"weapon" | "body" | "ring", string> = {
-    weapon: "武器",
-    body: "衣甲",
-    ring: "指环",
-  };
-  const slots = ["weapon", "body", "ring"] as const;
+  const slotLabel = GEAR_SLOT_LABEL;
+  const slots = ALL_GEAR_SLOTS;
   let slotHtml = "";
   for (const s of slots) {
     const id = state.equippedGear[s];
@@ -780,7 +779,7 @@ export function renderGearPanel(
     slotHtml += `<div class="gear-slot-line">
       <button type="button" class="gear-slot-summary ${open ? "is-open" : ""}" data-gear-open-slot="${s}">
         <span class="gear-slot-summary-label">${slotLabel[s]}</span>
-        <span class="gear-slot-summary-name">${g ? `${g.displayName} · 战力 ${gearItemPower(g)}` : "（空）"}</span>
+        <span class="gear-slot-summary-name">${g ? `${g.displayName} · 战力 ${gearItemPower(g, Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0)))}` : "（空）"}</span>
         <span class="inv-meta gear-slot-summary-hint">${open ? "收起" : "详情 · 卸下 / 强化"}</span>
       </button>
     </div>`;
@@ -798,7 +797,8 @@ export function renderGearPanel(
     } else {
       const pre = g.prefixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
       const suf = g.suffixes.map((x) => `<span class="affix">${x.text}</span>`).join("");
-      const xt = xuanTieEnhanceCost(g.enhanceLevel);
+      const slotLv = Math.max(0, Math.floor(state.gearSlotEnhance[g.slot] ?? 0));
+      const xt = xuanTieEnhanceCost(slotLv);
       detailBlock = `<div class="gear-equipped-detail" id="gear-equipped-detail">
         <div class="gear-equipped-detail-head">
           <div class="gear-icon-wrap rarity-${g.rarity}">
@@ -806,7 +806,7 @@ export function renderGearPanel(
           </div>
           <div>
             <strong class="rarity-${g.rarity}">${g.displayName}</strong> · ${rarityZh(g.rarity)} · 筑灵阶 ${g.gearGrade} · ilvl ${g.itemLevel}
-            <p class="inv-meta">已装备于 ${slotLabel[s]} · 战力 ${gearItemPower(g)} · 强化 ${g.enhanceLevel}${g.locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
+            <p class="inv-meta">已装备于 ${slotLabel[s]} · 战力 ${gearItemPower(g, slotLv)} · 槽位强化 ${slotLv}${g.locked ? " · <span class=\"gear-locked-tag\">已锁定</span>" : ""}</p>
           </div>
         </div>
         <div class="affix-block">${pre}${suf}</div>
@@ -827,7 +827,7 @@ export function renderGearPanel(
         <img class="panel-title-art-icon" src="${UI_HEAD_GEAR}" alt="" width="28" height="28" loading="lazy" />
         <h2>装备</h2>
       </div>
-      <p class="hint">装备仅保留<strong>已穿三件</strong>：新装在境界铸灵与当前部位比对<strong>战力</strong>，更高才替换。强化消耗玄铁。在「历练·筑灵」页长按筑灵条展开，点「管理」在此强化、锁定或分解。</p>
+      <p class="hint">装备按<strong>12 部位</strong>生效：新装在境界铸灵与当前部位比对<strong>战力</strong>，更高才替换。强化消耗玄铁。在「历练·筑灵」页长按筑灵条展开，点「管理」在此强化、锁定或分解。</p>
       <p class="hint sm">锁定装备不可分解，也不会被自动分解（灵卡自动分解仍可在聚灵阵勾选）。</p>
       <h3 class="sub-h">已装备</h3>
       ${slotHtml}
