@@ -100,6 +100,34 @@ export const UI_SOUND_PREFS_DECO = asset(PLAYER_PROFILE_UI_FILES.soundPrefsDeco)
 export const UI_SAVE_SLOTS_DECO = asset(PLAYER_PROFILE_UI_FILES.saveSlotsDeco);
 /** 存档管理 · 槽位备注（本机标签） */
 export const UI_SAVE_SLOT_LABEL_DECO = asset(PLAYER_PROFILE_UI_FILES.saveSlotLabelDeco);
+/** 存档导入反馈 · 成功状态徽章 */
+export const UI_SAVE_IMPORT_BADGE_SUCCESS = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#67d7a3" stroke-width="1.6"/><path d="M6.3 10.3l2.4 2.5 5-5.2" stroke="#cffff0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+);
+/** 存档导入反馈 · 警告状态徽章 */
+export const UI_SAVE_IMPORT_BADGE_WARN = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.5l7 12.1c.4.8-.1 1.8-1 1.8H4c-.9 0-1.4-1-1-1.8L10 2.5z" stroke="#f3c27d" stroke-width="1.4"/><path d="M10 7.2v4.2" stroke="#fff1da" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="13.9" r=".9" fill="#fff1da"/></svg>`,
+);
+/** 存档导入反馈 · 失败状态徽章 */
+export const UI_SAVE_IMPORT_BADGE_FAIL = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#f18989" stroke-width="1.6"/><path d="M7 7l6 6M13 7l-6 6" stroke="#ffe4e4" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+);
+/** 存档导入反馈 · 提示条图标 */
+export const UI_SAVE_IMPORT_TIP_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.2" y="3.4" width="13.6" height="13.2" rx="3.2" stroke="#8cb4ff" stroke-width="1.3"/><path d="M10 5.8v4.7M10 13.2h.01" stroke="#dce8ff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+);
+/** 主流程模块拆分 · panel header 图标 */
+export const UI_FLOW_PANEL_HEADER_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.8" y="4.1" width="14.4" height="11.8" rx="2.6" stroke="#9db8ff" stroke-width="1.3"/><path d="M5.9 8.1h8.2M5.9 11h5.2" stroke="#e2ebff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+);
+/** 主流程模块拆分 · section tag 图标 */
+export const UI_FLOW_SECTION_TAG_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M3.2 6.1a2 2 0 0 1 2-2h6.6l4.1 4.1v6a2 2 0 0 1-2 2H5.2a2 2 0 0 1-2-2v-8z" stroke="#86c5ff" stroke-width="1.3"/><circle cx="7.2" cy="8" r="1.1" fill="#d7f0ff"/></svg>`,
+);
+/** 主流程模块拆分 · compact action row 图标 */
+export const UI_FLOW_ACTION_ROW_DECO = inlineSvg(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.1" y="4.5" width="13.8" height="3" rx="1.5" stroke="#9ec7a0" stroke-width="1.2"/><rect x="3.1" y="8.7" width="9.8" height="3" rx="1.5" stroke="#9ec7a0" stroke-width="1.2"/><rect x="3.1" y="12.9" width="12.1" height="3" rx="1.5" stroke="#9ec7a0" stroke-width="1.2"/></svg>`,
+);
 /** 快捷键说明浮层标题图标 */
 export const UI_KEYBOARD_HELP_DECO = asset(PLAYER_PROFILE_UI_FILES.keyboardHelpDeco);
 /** 关于游戏浮层标题图标 */

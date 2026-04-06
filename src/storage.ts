@@ -42,6 +42,8 @@ export const SAVE_SLOT_COUNT = 3;
 /** 存档位备注最大字符数 */
 export const SAVE_SLOT_LABEL_MAX = 20;
 
+export type SaveLoadResult<T> = { ok: true; value: T } | { ok: false; error: string };
+
 function storageKeyForSlot(slot: number): string {
   return `idle-gacha-realm-v1-slot-${slot}`;
 }
@@ -700,6 +702,30 @@ export function deserialize(json: string): GameState {
   return st;
 }
 
+function deserializeStrict(json: string): SaveLoadResult<GameState> {
+  let data: SerializedState;
+  try {
+    data = JSON.parse(json) as SerializedState;
+  } catch {
+    return { ok: false, error: "存档内容不是有效 JSON。" };
+  }
+  if (!data || typeof data !== "object") {
+    return { ok: false, error: "存档格式无效：缺少对象结构。" };
+  }
+  if (!Number.isFinite(data.version ?? NaN) || (data.version ?? 0) < 1) {
+    return { ok: false, error: "存档版本字段无效。" };
+  }
+  const realmOk = Number.isFinite(data.realmLevel ?? NaN) && Number(data.realmLevel) >= 1;
+  const pullsOk = Number.isFinite(data.totalPulls ?? NaN) && Number(data.totalPulls) >= 0;
+  const stonesOk =
+    typeof data.spiritStones === "string" ||
+    (typeof data.spiritStones === "number" && Number.isFinite(data.spiritStones));
+  if (!realmOk || !pullsOk || !stonesOk) {
+    return { ok: false, error: "存档缺少核心字段或字段类型不正确。" };
+  }
+  return { ok: true, value: deserialize(json) };
+}
+
 function migrateFromOlder(data: Partial<SerializedState>, st: GameState): GameState {
   const now = Date.now();
   const d = new Date(now);
@@ -877,20 +903,29 @@ export function copyCurrentToSlot(target: number, current: GameState): void {
  * 先刷写当前槽，再切换激活槽并载入目标槽（空槽则新开局）。
  * 返回新的 GameState，调用方应替换全局 `state` 并重绘。
  */
-export function switchToSaveSlot(slot: number, current: GameState): GameState {
+export function switchToSaveSlot(slot: number, current: GameState): SaveLoadResult<GameState> {
   ensureSaveSlotsMigrated();
-  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return current;
+  if (slot < 0 || slot >= SAVE_SLOT_COUNT) return { ok: false, error: "目标存档位不存在。" };
   const from = getActiveSlotIndex();
-  if (slot === from) return current;
+  if (slot === from) return { ok: true, value: current };
   try {
     current.version = SAVE_VERSION;
+    const raw = localStorage.getItem(storageKeyForSlot(slot));
+    let nextState: GameState;
+    if (raw) {
+      const parsed = deserializeStrict(raw);
+      if (!parsed.ok) {
+        return { ok: false, error: `目标槽位存档损坏：${parsed.error}` };
+      }
+      nextState = parsed.value;
+    } else {
+      nextState = createInitialState();
+    }
     localStorage.setItem(storageKeyForSlot(from), serialize(current));
     setActiveSlotIndex(slot);
-    const raw = localStorage.getItem(storageKeyForSlot(slot));
-    if (raw) return deserialize(raw);
-    return createInitialState();
+    return { ok: true, value: nextState };
   } catch {
-    return current;
+    return { ok: false, error: "存档位切换失败：本地存储写入异常。" };
   }
 }
 
@@ -942,20 +977,20 @@ export function exportSave(state: GameState): string {
   return encodeUtf8Base64(serialize(state));
 }
 
-export function importSave(b64: string): GameState | null {
+export function importSave(b64: string): SaveLoadResult<GameState> {
   const raw = b64.trim();
-  if (!raw) return null;
+  if (!raw) return { ok: false, error: "导入内容为空。" };
   const normalized = normalizeBase64Input(raw);
   try {
     const json = decodeUtf8Base64(normalized);
-    return deserialize(json);
+    return deserializeStrict(json);
   } catch {
     // Fallback for older exports using escape/unescape based encoding.
     try {
       const legacy = decodeURIComponent(escape(atob(normalized)));
-      return deserialize(legacy);
+      return deserializeStrict(legacy);
     } catch {
-      return null;
+      return { ok: false, error: "字符串无法解码为有效存档。" };
     }
   }
 }

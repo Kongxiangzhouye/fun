@@ -19,17 +19,10 @@ import {
   loadGame,
   saveGame,
   exportSave,
-  importSave,
   totalCardsInPool,
   clearSaveAndNewGame,
   SAVE_SLOT_COUNT,
   getActiveSlotIndex,
-  peekSlotSummary,
-  switchToSaveSlot,
-  copyCurrentToSlot,
-  getSlotLabel,
-  setSlotLabel,
-  SAVE_SLOT_LABEL_MAX,
 } from "./storage";
 import {
   incomePerSecond,
@@ -171,12 +164,9 @@ import {
   UI_ACH_FORTUNE_BLOOM_DECO,
   UI_ACH_VEIN_DECO,
   UI_ACH_REALM_DECO,
-  UI_SAVE_DOWNLOAD_DECO,
   UI_UI_PREFS_DECO,
   UI_DATA_OVERVIEW_DECO,
   UI_SOUND_PREFS_DECO,
-  UI_SAVE_SLOTS_DECO,
-  UI_SAVE_SLOT_LABEL_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
   UI_DATA_EXPORT_DECO,
@@ -219,6 +209,8 @@ import {
 } from "./systems/spiritReservoir";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
+import { renderSaveToolsPanel } from "./ui/saveToolsView";
+import { bindSaveToolsEvents } from "./ui/saveToolsEvents";
 import { tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
 import {
   claimAllCompletableWeeklyBounties,
@@ -2308,7 +2300,7 @@ function renderCharacterHub(u: ReturnType<typeof getUiUnlocks>): string {
     return `<div class="character-hub-root">${renderDataOverviewPanel()}</div>`;
   }
   if (characterSub === "archive") {
-    return `<div class="character-hub-root">${renderSaveToolsPanel()}</div>`;
+    return `<div class="character-hub-root">${renderSaveToolsPanel(fmtPlaytimeSec)}</div>`;
   }
   return `<div class="character-hub-root">${renderPlayerStatsBlock(state)}${renderCombatStatsPanel()}</div>`;
 }
@@ -2733,82 +2725,6 @@ function updateDataOverviewReadouts(): void {
 
 function escapeHtmlAttr(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function renderSaveSlotRow(i: number): string {
-  const active = getActiveSlotIndex();
-  const sum = peekSlotSummary(i);
-  const meta = sum.empty ? "空槽" : `境界 ${sum.realmLevel} · ${fmtPlaytimeSec(sum.playtimeSec ?? 0)}`;
-  const isActive = i === active;
-  const labelVal = escapeHtmlAttr(getSlotLabel(i));
-  return `<li class="save-slot-row">
-    <div class="save-slot-main">
-      <div class="save-slot-title-row">
-        <strong class="save-slot-title">槽位 ${i + 1}</strong>
-        ${isActive ? `<span class="save-slot-badge">当前</span>` : ""}
-      </div>
-      <span class="save-slot-meta">${meta}</span>
-      <div class="save-slot-label-row">
-        <label class="save-slot-label-field" for="save-slot-label-${i}">备注</label>
-        <input
-          type="text"
-          id="save-slot-label-${i}"
-          class="save-slot-label-input"
-          data-save-slot-label="${i}"
-          maxlength="${SAVE_SLOT_LABEL_MAX}"
-          autocomplete="off"
-          placeholder="本机备注，最多 ${SAVE_SLOT_LABEL_MAX} 字"
-          value="${labelVal}"
-        />
-      </div>
-    </div>
-    <div class="save-slot-actions">
-      ${
-        !isActive
-          ? `<button type="button" class="btn save-slot-btn" data-save-slot-activate="${i}">切换到此槽</button><button type="button" class="btn save-slot-btn" data-save-slot-copy="${i}">将当前复制到此槽</button>`
-          : ""
-      }
-    </div>
-  </li>`;
-}
-
-function renderSaveToolsPanel(): string {
-  const rows = Array.from({ length: SAVE_SLOT_COUNT }, (_, i) => renderSaveSlotRow(i)).join("");
-  return `<section class="panel save-tools-panel">
-    <h2>存档管理</h2>
-    <p class="hint">保存/导出/导入与重置都集中在这里。重置前建议先导出备份。</p>
-    <div class="save-slots-block">
-      <div class="save-slots-head">
-        <img class="save-slots-head-ico" src="${UI_SAVE_SLOTS_DECO}" alt="" width="26" height="26" loading="lazy" />
-        <h3 class="save-slots-heading">本机存档位</h3>
-        <img
-          class="save-slots-label-head-ico"
-          src="${UI_SAVE_SLOT_LABEL_DECO}"
-          alt=""
-          width="22"
-          height="22"
-          loading="lazy"
-          title="槽位备注仅保存在本机，不随导出存档字符串迁移"
-        />
-      </div>
-      <p class="hint sm save-slots-hint">共 ${SAVE_SLOT_COUNT} 个独立槽位；可填备注区分周目。切换前会自动保存当前槽；空槽切换将新开局。备注不写入导出字符串。</p>
-      <ul class="save-slots-list">${rows}</ul>
-    </div>
-    <div class="footer-tools">
-      <button class="btn" type="button" id="btn-save">保存到本机</button>
-      <button class="btn" type="button" id="btn-export">导出存档字符串</button>
-      <button class="btn btn-save-download" type="button" id="btn-save-download">
-        <img src="${UI_SAVE_DOWNLOAD_DECO}" alt="" width="18" height="18" class="btn-save-download-ico" loading="lazy" />
-        下载备份文件
-      </button>
-      <input type="text" id="import-input" class="import-input" placeholder="粘贴存档字符串" />
-      <button class="btn" type="button" id="btn-import">导入存档</button>
-    </div>
-    <div class="reset-strip">
-      <button type="button" class="btn btn-danger" id="btn-reset-world">重置存档</button>
-      <span class="reset-strip-hint">会清空当前存档并从头开始，建议先导出备份</span>
-    </div>
-  </section>`;
 }
 
 function renderHubContent(
@@ -4794,104 +4710,21 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
   }
 
-  document.getElementById("btn-save")?.addEventListener("click", () => {
-    saveGame(state);
-    toast("已保存到本机。");
-  });
-
-  document.getElementById("btn-export")?.addEventListener("click", () => {
-    const s = exportSave(state);
-    void navigator.clipboard.writeText(s).then(
-      () => toast("存档字符串已复制到剪贴板。"),
-      () => {
-        const pasted = window.prompt("剪贴板不可用，请手动复制以下完整存档字符串：", s);
-        if (pasted == null) {
-          toast("导出未完成：请重试或检查剪贴板权限。");
-        } else {
-          toast("已显示完整存档字符串，请手动复制。");
-        }
-      },
-    );
-  });
-
-  document.getElementById("btn-save-download")?.addEventListener("click", () => {
-    triggerDownloadSaveBackup();
-  });
-
-  document.querySelectorAll("[data-save-slot-activate]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const slot = Number((btn as HTMLElement).dataset.saveSlotActivate);
-      if (!Number.isFinite(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) return;
-      if (slot === getActiveSlotIndex()) return;
-      if (peekSlotSummary(slot).empty) {
-        const ok = confirm(
-          `存档位 ${slot + 1} 当前为空。切换后将从此槽开始新开局（当前槽会先保存）。确定吗？`,
-        );
-        if (!ok) return;
-      }
-      state = switchToSaveSlot(slot, state);
+  bindSaveToolsEvents({
+    getState: () => state,
+    setState: (next) => {
+      state = next;
+    },
+    saveGame,
+    toast,
+    render,
+    triggerDownloadSaveBackup,
+    afterStateReplaced: () => {
       selectedInvId = null;
       refineTargetId = null;
       autoEnterPromptHandled = false;
       flyCreditsDismissed = false;
-      saveGame(state);
-      toast(`已切换到存档位 ${slot + 1}`);
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-save-slot-copy]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const slot = Number((btn as HTMLElement).dataset.saveSlotCopy);
-      if (!Number.isFinite(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) return;
-      if (slot === getActiveSlotIndex()) return;
-      const sum = peekSlotSummary(slot);
-      if (!sum.empty) {
-        const ok = confirm(`将用当前进度覆盖存档位 ${slot + 1} 的已有存档。确定吗？`);
-        if (!ok) return;
-      }
-      copyCurrentToSlot(slot, state);
-      toast(`已复制当前进度到存档位 ${slot + 1}`);
-      render();
-    });
-  });
-
-  document.querySelectorAll(".save-slot-label-input").forEach((el) => {
-    el.addEventListener("change", () => {
-      const inp = el as HTMLInputElement;
-      const slot = Number(inp.dataset.saveSlotLabel);
-      if (!Number.isFinite(slot) || slot < 0 || slot >= SAVE_SLOT_COUNT) return;
-      setSlotLabel(slot, inp.value);
-      inp.value = getSlotLabel(slot);
-    });
-  });
-
-  document.getElementById("btn-import")?.addEventListener("click", () => {
-    const inp = document.getElementById("import-input") as HTMLInputElement | null;
-    const raw = inp?.value?.trim();
-    if (!raw) {
-      toast("请先粘贴存档字符串。");
-      inp?.focus();
-      return;
-    }
-    const next = importSave(raw);
-    if (!next) {
-      toast("导入失败：字符串无效。");
-      return;
-    }
-    const curExport = exportSave(state);
-    if (raw !== curExport) {
-      const ok = confirm("导入会覆盖当前进度，建议先导出备份。确认继续导入吗？");
-      if (!ok) return;
-    }
-    state = next;
-    selectedInvId = null;
-    refineTargetId = null;
-    autoEnterPromptHandled = false;
-    flyCreditsDismissed = false;
-    saveGame(state);
-    toast("存档导入成功。");
-    render();
+    },
   });
 
   document.querySelector(".app-title-spirit")?.addEventListener("click", () => {
