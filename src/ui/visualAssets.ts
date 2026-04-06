@@ -188,6 +188,10 @@ export const UI_DUNGEON_HIT_CONFIRM_RING_DECO = asset(
 );
 /** 阵线对决 · 连击链路确认反馈（高频命中阶段） */
 export const UI_DUNGEON_COMBO_CHAIN_DECO = asset(DUNGEON_DUEL_UI_FILES.comboChainDeco, UI_DUNGEON_DUEL_DECO);
+/** 阵线对决 · 阶段条清剿阶段徽记 */
+export const UI_DUNGEON_PHASE_TRASH_BADGE_DECO = asset(DUNGEON_DUEL_UI_FILES.phaseTrashBadgeDeco);
+/** 阵线对决 · 阶段条首领前哨阶段徽记 */
+export const UI_DUNGEON_PHASE_BOSS_PREP_BADGE_DECO = asset(DUNGEON_DUEL_UI_FILES.phaseBossPrepBadgeDeco);
 /** 阵线对决 · 招架成功火花反馈（近战高频防反阶段） */
 export const UI_DUNGEON_PARRY_SPARK_DECO = asset(DUNGEON_DUEL_UI_FILES.parrySparkDeco, UI_DUNGEON_DUEL_DECO);
 /** 阵线对决 · 弱点命中提示反馈（高压窗口弱点确认） */

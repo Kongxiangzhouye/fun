@@ -48,6 +48,8 @@ import {
   UI_DUNGEON_HIT_FLASH_DECO,
   UI_DUNGEON_CRIT_ECHO_DECO,
   UI_DUNGEON_COMBO_CHAIN_DECO,
+  UI_DUNGEON_PHASE_TRASH_BADGE_DECO,
+  UI_DUNGEON_PHASE_BOSS_PREP_BADGE_DECO,
   UI_DUNGEON_WEAKNESS_PING_DECO,
   UI_DUEL_GAUGE_SWORD,
   UI_DUEL_GAUGE_THREAT,
@@ -428,6 +430,12 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
   const showIdleBossBtn =
     !d.active && !sanctuaryIdle && state.dungeonDeferBoss && fw % 5 === 0 && canEnter;
   const combatPhase = d.active ? getDungeonCombatPhase(state) : "trash";
+  const phaseBadgeSrc =
+    combatPhase === "boss_fight"
+      ? UI_DUEL_BOSS_BADGE
+      : combatPhase === "boss_prep"
+        ? UI_DUNGEON_PHASE_BOSS_PREP_BADGE_DECO
+        : UI_DUNGEON_PHASE_TRASH_BADGE_DECO;
 
   const helpPop = `<div id="dungeon-help-popover" class="dungeon-help-popover" role="region" aria-label="幻域说明" hidden>
     <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
@@ -476,6 +484,7 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
           ? `<div class="dungeon-active-stack dungeon-active-stack--live">
           <div class="dungeon-phase-banner dungeon-phase-banner--${combatPhase}" role="region" aria-label="阶段说明">
             <div class="dungeon-phase-banner-head">
+              <img class="dungeon-phase-badge-ico" src="${phaseBadgeSrc}" alt="" width="18" height="18" loading="lazy" />
               <span class="dungeon-phase-badge">${
                 combatPhase === "boss_fight" ? "首领对决" : combatPhase === "boss_prep" ? "首领前哨" : "阵线清剿"
               }</span>
