@@ -550,6 +550,14 @@ export const UI_ESTATE_COMMISSION_AUTO_STRATEGY_SAME = asset("icon-estate-commis
 export const UI_ESTATE_COMMISSION_AUTO_STRATEGY_ANY = asset("icon-estate-commission-auto-any-type.svg");
 /** 周常悬赏 · 状态快照徽记 */
 export const UI_WEEKLY_BOUNTY_STATE_SYNC = asset("icon-weekly-bounty-state-sync.svg");
+/** 闭关快进 · 触发离线奇遇提示 */
+export const UI_FAST_FORWARD_ADVENTURE_TRIGGER = asset("icon-fast-forward-adventure-trigger.svg");
+/** 闭关快进 · 时间推进提示 */
+export const UI_FAST_FORWARD_TIME_ADVANCE = asset("icon-fast-forward-time-advance.svg");
+/** 闭关快进 · 周常状态同步提示 */
+export const UI_FAST_FORWARD_WEEKLY_SYNC = asset("icon-fast-forward-weekly-sync.svg");
+/** 闭关快进 · 天机匣周键同步提示 */
+export const UI_FAST_FORWARD_STASH_SYNC = asset("icon-fast-forward-stash-sync.svg");
 /** 与 `EMPTY_STATE_UI_FILES` 同源 */
 export const UI_EMPTY_GEAR = asset(EMPTY_STATE_UI_FILES.gear);
 export const UI_EMPTY_PET = asset(EMPTY_STATE_UI_FILES.pet);

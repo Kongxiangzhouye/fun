@@ -3649,6 +3649,29 @@ h1 {
   background: linear-gradient(160deg, rgba(20, 34, 62, 0.96), rgba(12, 18, 34, 0.98));
 }
 
+.toast.toast-fast-forward-hint {
+  border-color: rgba(116, 206, 170, 0.45);
+  background: linear-gradient(160deg, rgba(16, 40, 45, 0.96), rgba(12, 20, 32, 0.98));
+}
+
+.toast-ff-head {
+  color: #dff9ef;
+  margin-bottom: 6px;
+}
+
+.toast-ff-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #cbe7e8;
+  line-height: 1.45;
+}
+
+.toast-ff-line img {
+  opacity: 0.95;
+  flex-shrink: 0;
+}
+
 .toast-msg-offline {
   min-width: min(88vw, 300px);
 }

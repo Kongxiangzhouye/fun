@@ -34,7 +34,7 @@ import {
   deckRealmBonusSum,
   effectiveDeckSlots,
 } from "./economy";
-import { catchUpOffline, applyTick, fastForward, type OfflineCatchUpSummary } from "./gameLoop";
+import { catchUpOffline, applyTick, fastForward, maxOfflineSec, type OfflineCatchUpSummary } from "./gameLoop";
 import {
   pullOne,
   pullTen,
@@ -197,6 +197,10 @@ import {
   UI_ESTATE_COMMISSION_REFRESH_COOLDOWN,
   UI_ESTATE_COMMISSION_REFRESH_BLOCKED,
   UI_WEEKLY_BOUNTY_STATE_SYNC,
+  UI_FAST_FORWARD_ADVENTURE_TRIGGER,
+  UI_FAST_FORWARD_TIME_ADVANCE,
+  UI_FAST_FORWARD_WEEKLY_SYNC,
+  UI_FAST_FORWARD_STASH_SYNC,
   UI_DUNGEON_HIT_FLASH_DECO,
   UI_DUNGEON_HIT_TRACE_RING_DECO,
   UI_DUNGEON_CRIT_BURST_DECO,
@@ -937,6 +941,24 @@ function toastOfflineSettlement(summary: OfflineCatchUpSummary): void {
     iconSrc: UI_FEEDBACK_TOAST_ICON,
     durationMs: TOAST_DURATION_MS,
     className: "toast toast-offline feedback-toast",
+  });
+}
+
+function toastFastForwardTimelineHint(adventureQueued: boolean, fastForwardSec: number): void {
+  const mins = Math.max(1, Math.round(fastForwardSec / 60));
+  const adventureLine = adventureQueued
+    ? "闭关触发离线奇遇：已加入三选一。"
+    : "闭关触发离线奇遇：当前已有待处理奇遇，本次不覆盖。";
+  const html =
+    `<div class="toast-ff-head"><strong>闭关时间推进已结算</strong></div>` +
+    `<div class="toast-ff-line"><img src="${UI_FAST_FORWARD_ADVENTURE_TRIGGER}" alt="" width="14" height="14" loading="lazy" />${adventureLine}</div>` +
+    `<div class="toast-ff-line"><img src="${UI_FAST_FORWARD_TIME_ADVANCE}" alt="" width="14" height="14" loading="lazy" />时间推进口径：离线同口径（约 ${mins} 分钟）</div>` +
+    `<div class="toast-ff-line"><img src="${UI_FAST_FORWARD_WEEKLY_SYNC}" alt="" width="14" height="14" loading="lazy" />周常悬赏周键已同步</div>` +
+    `<div class="toast-ff-line"><img src="${UI_FAST_FORWARD_STASH_SYNC}" alt="" width="14" height="14" loading="lazy" />天机匣周键已同步</div>`;
+  showHtmlFeedbackToast(html, {
+    iconSrc: UI_FAST_FORWARD_TIME_ADVANCE,
+    durationMs: 5200,
+    className: "toast toast-fast-forward-hint feedback-toast",
   });
 }
 
@@ -4177,10 +4199,13 @@ function bindEvents(rb: Decimal, _slots: number): void {
       toast("闭关冷却中，请稍后再试。");
       return;
     }
-    const g = fastForward(state, 3600);
+    const fastForwardSec = 3600;
+    const g = fastForward(state, fastForwardSec, t);
+    const queued = maybeQueueOfflineAdventure(state, Math.min(fastForwardSec, maxOfflineSec(state)), t);
     state.biGuanCooldownUntil = t + BI_GUAN_COOLDOWN_MS;
     saveGame(state);
     toast(`闭关完成：获得约 ${fmtDecimal(g)} 灵石（${Math.round(BI_GUAN_COOLDOWN_MS / 1000)} 秒冷却）`);
+    toastFastForwardTimelineHint(queued, fastForwardSec);
     render();
   });
 

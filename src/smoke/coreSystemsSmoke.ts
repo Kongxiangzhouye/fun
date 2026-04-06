@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { createInitialState } from "../state";
-import { applyTick, catchUpOffline, maxOfflineSec } from "../gameLoop";
+import { applyTick, catchUpOffline, fastForward, maxOfflineSec } from "../gameLoop";
 import { ensureWeeklyBountyWeek, currentWeekKey } from "../systems/weeklyBounty";
+import { ensureCelestialStashWeek } from "../systems/celestialStash";
 import { chooseOfflineAdventureOption } from "../systems/offlineAdventure";
 import {
   serialize,
@@ -205,6 +206,31 @@ function runAutoSalvageAccumulatorRemainderSmoke(): void {
   );
 }
 
+function runFastForwardCrossWeekSyncSmoke(): void {
+  const st = createInitialState();
+  st.weeklyBounty.weekKey = "1999-01-04";
+  st.weeklyBounty.waves = 5;
+  st.celestialStash.weekKey = "1999-01-04";
+  st.celestialStash.purchased = ["starter-stash"];
+  st.qoL.autoTuna = true;
+  st.lastTunaMs = 0;
+  const monday = new Date();
+  monday.setHours(0, 10, 0, 0);
+  const day = monday.getDay();
+  const diffToMon = day === 0 ? -6 : 1 - day;
+  monday.setDate(monday.getDate() + diffToMon);
+  const endMs = monday.getTime();
+  const startMs = endMs - 20 * 60 * 1000;
+  st.lastTick = startMs;
+  fastForward(st, 3600, endMs);
+  ensureWeeklyBountyWeek(st, endMs);
+  ensureCelestialStashWeek(st, endMs);
+  assert.equal(st.weeklyBounty.weekKey, currentWeekKey(endMs), "fast-forward should sync weekly bounty week key");
+  assert.equal(st.celestialStash.weekKey, currentWeekKey(endMs), "fast-forward should sync celestial stash week key");
+  assert.equal(st.celestialStash.purchased.length, 0, "cross-week fast-forward should reset celestial stash purchases");
+  assert.ok(st.lastTunaMs >= startMs, "fast-forward should follow offline auto tuna timing");
+}
+
 function main(): void {
   runOfflineCapSmoke();
   runWeeklySyncSmoke();
@@ -215,6 +241,7 @@ function main(): void {
   runOfflineBoostRenewRuleSmoke();
   runApplyTickSegmentedCatchUpSmoke();
   runAutoSalvageAccumulatorRemainderSmoke();
+  runFastForwardCrossWeekSyncSmoke();
   // eslint-disable-next-line no-console
   console.log("core systems smoke passed");
 }

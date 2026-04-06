@@ -201,27 +201,23 @@ function applyOfflineAutoTuna(state: GameState, startMs: number, endMs: number):
   }
 }
 
-export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSummary {
-  const empty = (rawAway: number): OfflineCatchUpSummary => ({
-    stoneGain: new Decimal(0),
-    settledSec: 0,
-    rawAwaySec: Math.max(0, rawAway),
-    capSec: 0,
-    wasCapped: false,
-  });
-  if (now < state.lastTick) {
-    state.lastTick = now;
-    return empty(0);
-  }
-  const raw = (now - state.lastTick) / 1000;
-  const cap = maxOfflineSec(state);
-  const dt = Math.min(cap, Math.max(0, raw));
-  if (dt < 1) return empty(raw);
+interface OfflineLikeAdvanceResult {
+  gained: Decimal;
+  settledSec: number;
+}
+
+function advanceOfflineLikeTimeline(
+  state: GameState,
+  startMs: number,
+  settledSec: number,
+  finalWeekSyncMs: number,
+): OfflineLikeAdvanceResult {
+  if (settledSec <= 1e-6) return { gained: new Decimal(0), settledSec: 0 };
   const ips = incomePerSecond(state, totalCardsInPool());
   const mult = earthOfflineIncomeMult(state);
   let gained = new Decimal(0);
-  let remainSec = dt;
-  let cursorMs = state.lastTick;
+  let remainSec = settledSec;
+  let cursorMs = startMs;
   ensureWeeklyBountyWeek(state, cursorMs);
   ensureCelestialStashWeek(state, cursorMs);
   while (remainSec > 1e-6) {
@@ -244,12 +240,32 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
     ensureWeeklyBountyWeek(state, cursorMs);
     ensureCelestialStashWeek(state, cursorMs);
   }
+  ensureWeeklyBountyWeek(state, finalWeekSyncMs);
+  ensureCelestialStashWeek(state, finalWeekSyncMs);
+  return { gained, settledSec };
+}
+
+export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSummary {
+  const empty = (rawAway: number): OfflineCatchUpSummary => ({
+    stoneGain: new Decimal(0),
+    settledSec: 0,
+    rawAwaySec: Math.max(0, rawAway),
+    capSec: 0,
+    wasCapped: false,
+  });
+  if (now < state.lastTick) {
+    state.lastTick = now;
+    return empty(0);
+  }
+  const raw = (now - state.lastTick) / 1000;
+  const cap = maxOfflineSec(state);
+  const dt = Math.min(cap, Math.max(0, raw));
+  if (dt < 1) return empty(raw);
+  const advanced = advanceOfflineLikeTimeline(state, state.lastTick, dt, now);
   state.lastTick = now;
-  ensureWeeklyBountyWeek(state, now);
-  ensureCelestialStashWeek(state, now);
   return {
-    stoneGain: gained,
-    settledSec: dt,
+    stoneGain: advanced.gained,
+    settledSec: advanced.settledSec,
     rawAwaySec: raw,
     capSec: cap,
     wasCapped: raw > cap + 1e-6,
@@ -257,12 +273,10 @@ export function catchUpOffline(state: GameState, now: number): OfflineCatchUpSum
 }
 
 /** 闭关令 / 合法跳时：按离线规则瞬间结算 */
-export function fastForward(state: GameState, seconds: number): Decimal {
+export function fastForward(state: GameState, seconds: number, now = Date.now()): Decimal {
   if (seconds <= 0) return new Decimal(0);
   const dt = Math.min(seconds, maxOfflineSec(state));
-  const ips = incomePerSecond(state, totalCardsInPool());
-  const mult = earthOfflineIncomeMult(state);
-  const gained = ips.mul(dt).mul(mult);
-  applyOfflineLikeProgress(state, dt, gained, ips, mult);
-  return gained;
+  if (dt <= 1e-6) return new Decimal(0);
+  const advanced = advanceOfflineLikeTimeline(state, state.lastTick, dt, now);
+  return advanced.gained;
 }
