@@ -656,6 +656,23 @@ function runFenTianBurstAchievementsSmoke(): void {
   assert.ok(b.some((x) => x.id === "fen_tian_bursts_150"), "150 fen tian should unlock");
 }
 
+function runOfflineAdventureAndMetaAchievementsSmoke(): void {
+  const st = createInitialState();
+  assert.ok(!st.achievementsDone.has("offline_adventure_35"), "offline 35 should start locked");
+  st.lifetimeStats.offlineAdventureCompletions = 35;
+  const a = tryCompleteAchievements(st);
+  assert.ok(a.some((x) => x.id === "offline_adventure_35"), "35 offline completions should unlock");
+  st.lifetimeStats.offlineAdventureCompletions = 140;
+  const b = tryCompleteAchievements(st);
+  assert.ok(b.some((x) => x.id === "offline_adventure_140"), "140 offline completions should unlock");
+  st.lifetimeStats.metaUpgrades = 30;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "meta_upgrades_30"), "30 meta upgrades should unlock");
+  st.lifetimeStats.metaUpgrades = 120;
+  const d = tryCompleteAchievements(st);
+  assert.ok(d.some((x) => x.id === "meta_upgrades_120"), "120 meta upgrades should unlock");
+}
+
 function runCardSalvageAndVeinAchievementsSmoke(): void {
   const st = createInitialState();
   assert.ok(!st.achievementsDone.has("card_salvages_35"), "card salvage 35 should start locked");
@@ -800,6 +817,7 @@ function main(): void {
   runReincarnationTierAchievementsSmoke();
   runBattleSkillAndGearSalvageAchievementsSmoke();
   runCardSalvageAndVeinAchievementsSmoke();
+  runOfflineAdventureAndMetaAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();

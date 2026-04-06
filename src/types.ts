@@ -100,6 +100,10 @@ export interface LifetimeStatsState {
   cardSalvages: number;
   /** 洞府灵脉任意一条目成功升级次数（终身，含自动） */
   veinUpgrades: number;
+  /** 离线奇遇成功结算次数（任选一项即计 1，含自动） */
+  offlineAdventureCompletions: number;
+  /** 轮回元强化（道韵购买）成功次数（终身，含自动） */
+  metaUpgrades: number;
 }
 
 /** 灵田作物 id */

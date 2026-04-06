@@ -287,8 +287,9 @@ export function chooseOfflineAdventureOption(
       state.offlineAdventure.activeBoostMult = boostMult;
     }
   }
+  normalizeLifetimeStats(state);
+  state.lifetimeStats.offlineAdventureCompletions += 1;
   if (picked.id === "boost") {
-    normalizeLifetimeStats(state);
     state.lifetimeStats.offlineAdventureBoostPicks += 1;
   }
   state.offlineAdventure.pending = null;

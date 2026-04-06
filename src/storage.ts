@@ -949,6 +949,8 @@ export function deserialize(json: string): GameState {
       gearSalvages: Math.max(0, Math.floor(data.lifetimeStats.gearSalvages ?? 0)),
       cardSalvages: Math.max(0, Math.floor(data.lifetimeStats.cardSalvages ?? 0)),
       veinUpgrades: Math.max(0, Math.floor(data.lifetimeStats.veinUpgrades ?? 0)),
+      offlineAdventureCompletions: Math.max(0, Math.floor(data.lifetimeStats.offlineAdventureCompletions ?? 0)),
+      metaUpgrades: Math.max(0, Math.floor(data.lifetimeStats.metaUpgrades ?? 0)),
     };
   }
   normalizeLifetimeStats(st);

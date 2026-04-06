@@ -12,6 +12,8 @@ import {
   UI_CHRONICLE_FORTUNE_STAT,
   UI_CHRONICLE_GARDEN_HARVEST_STAT,
   UI_CHRONICLE_GEAR_SALVAGE_STAT,
+  UI_CHRONICLE_META_UPGRADE_STAT,
+  UI_CHRONICLE_OFFLINE_ADVENTURE_STAT,
   UI_CHRONICLE_PET_PULL_STAT,
   UI_CHRONICLE_TUNA_STAT,
   UI_CHRONICLE_VEIN_UPGRADE_STAT,
@@ -125,6 +127,13 @@ export function renderChroniclePanel(state: GameState): string {
             <strong class="chronicle-stat-val">${ls.dailyFortuneRolls} 次</strong>
           </div>
         </div>
+        <div class="chronicle-stat-card chronicle-stat-card--offline-adventure">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_OFFLINE_ADVENTURE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">离线奇遇结算</span>
+            <strong class="chronicle-stat-val">${ls.offlineAdventureCompletions} 次</strong>
+          </div>
+        </div>
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">蓄灵池收取</span>
           <strong class="chronicle-stat-val">${ls.spiritReservoirClaims} 次</strong>
@@ -174,6 +183,13 @@ export function renderChroniclePanel(state: GameState): string {
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">周常单周清满</span>
           <strong class="chronicle-stat-val">${ls.weeklyBountyFullWeeks} 次</strong>
+        </div>
+        <div class="chronicle-stat-card chronicle-stat-card--meta-upgrade">
+          <img class="chronicle-stat-ico" src="${UI_CHRONICLE_META_UPGRADE_STAT}" alt="" width="32" height="32" loading="lazy" />
+          <div>
+            <span class="chronicle-stat-lbl">轮回元强化</span>
+            <strong class="chronicle-stat-val">${ls.metaUpgrades} 次</strong>
+          </div>
         </div>
         <div class="chronicle-stat-card">
           <span class="chronicle-stat-lbl">当前灵石</span>

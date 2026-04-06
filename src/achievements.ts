@@ -416,6 +416,38 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "vein",
   },
   {
+    id: "offline_adventure_35",
+    title: "离尘归鞘",
+    desc: "离线奇遇成功结算累计 35 次",
+    rewardStones: 1100,
+    rewardEssence: 38,
+    listDeco: "reservoir",
+  },
+  {
+    id: "offline_adventure_140",
+    title: "千嶂行记",
+    desc: "离线奇遇成功结算累计 140 次",
+    rewardStones: 4800,
+    rewardEssence: 95,
+    listDeco: "reservoirBloom",
+  },
+  {
+    id: "meta_upgrades_30",
+    title: "元窍初铸",
+    desc: "轮回元强化成功购买累计 30 次",
+    rewardStones: 2400,
+    rewardEssence: 72,
+    listDeco: "reincarnation",
+  },
+  {
+    id: "meta_upgrades_120",
+    title: "道韵铸元",
+    desc: "轮回元强化成功购买累计 120 次",
+    rewardStones: 9800,
+    rewardEssence: 155,
+    listDeco: "reincarnation",
+  },
+  {
     id: "login_streak_7",
     title: "灵息不辍",
     desc: "登录连签达到 7 日",
@@ -881,6 +913,14 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.veinUpgrades ?? 0) >= 80;
     case "vein_upgrades_320":
       return (state.lifetimeStats?.veinUpgrades ?? 0) >= 320;
+    case "offline_adventure_35":
+      return (state.lifetimeStats?.offlineAdventureCompletions ?? 0) >= 35;
+    case "offline_adventure_140":
+      return (state.lifetimeStats?.offlineAdventureCompletions ?? 0) >= 140;
+    case "meta_upgrades_30":
+      return (state.lifetimeStats?.metaUpgrades ?? 0) >= 30;
+    case "meta_upgrades_120":
+      return (state.lifetimeStats?.metaUpgrades ?? 0) >= 120;
     case "spirit_array_10":
       return state.spiritArrayLevel >= 10;
     case "spirit_array_25":

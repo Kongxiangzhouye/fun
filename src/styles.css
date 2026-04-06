@@ -10447,6 +10447,40 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--offline-adventure {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(100, 140, 180, 0.4);
+  background: linear-gradient(145deg, rgba(20, 32, 48, 0.65), rgba(10, 14, 22, 0.74));
+}
+
+.chronicle-stat-card--offline-adventure .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--offline-adventure .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.chronicle-stat-card--meta-upgrade {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(200, 170, 90, 0.38);
+  background: linear-gradient(145deg, rgba(36, 30, 18, 0.58), rgba(14, 12, 10, 0.72));
+}
+
+.chronicle-stat-card--meta-upgrade .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--meta-upgrade .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-sub-h {
   margin-top: 4px;
 }
