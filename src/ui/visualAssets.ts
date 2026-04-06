@@ -5,7 +5,9 @@
 import type { Element, GardenCropId, PetId, Rarity } from "../types";
 import { EMPTY_STATE_UI_FILES } from "../data/emptyStateUi";
 import { GACHA_POOL_UI_FILES } from "../data/gachaPoolUi";
+import { HUB_SECTION_HEADER_UI_FILES } from "../data/hubSectionHeadersUi";
 import { HUD_BAR_UI_FILES } from "../data/hudBarUi";
+import { PLAYER_PROFILE_UI_FILES } from "../data/playerProfileUi";
 import { PANEL_CHROME_UI_FILES } from "../data/panelChromeUi";
 import { ELEMENT_UI_FILES } from "../data/elementUi";
 import { RARITY_BADGE_UI_FILES } from "../data/rarityBadgeUi";
@@ -72,47 +74,47 @@ export const UI_GEAR_FORGE_TIER_DECO = asset(GACHA_POOL_UI_FILES.gearForgeTierDe
 
 /** 顶栏标题旁灵息球、面板角饰、全页星点底（自绘 SVG）；与 `PANEL_CHROME_UI_FILES` 同源 */
 export const UI_TITLE_SPIRIT = asset(PANEL_CHROME_UI_FILES.titleSpirit);
-/** 存档页 · 下载备份文件按钮 */
-export const UI_SAVE_DOWNLOAD_DECO = asset("save-download-deco.svg");
+/** 存档页 · 下载备份文件按钮；与 `PLAYER_PROFILE_UI_FILES` 同源 */
+export const UI_SAVE_DOWNLOAD_DECO = asset(PLAYER_PROFILE_UI_FILES.saveDownloadDeco);
 /** 角色 · 偏好设置面板标题装饰 */
-export const UI_UI_PREFS_DECO = asset("ui-prefs-panel-deco.svg");
+export const UI_UI_PREFS_DECO = asset(PLAYER_PROFILE_UI_FILES.uiPrefsDeco);
 /** 角色 · 数据总览面板标题装饰 */
-export const UI_DATA_OVERVIEW_DECO = asset("data-overview-deco.svg");
+export const UI_DATA_OVERVIEW_DECO = asset(PLAYER_PROFILE_UI_FILES.dataOverviewDeco);
 /** 偏好设置 · 音频小节图标 */
-export const UI_SOUND_PREFS_DECO = asset("ui-sound-prefs-deco.svg");
+export const UI_SOUND_PREFS_DECO = asset(PLAYER_PROFILE_UI_FILES.soundPrefsDeco);
 /** 存档管理 · 多存档位区块图标 */
-export const UI_SAVE_SLOTS_DECO = asset("save-slots-deco.svg");
+export const UI_SAVE_SLOTS_DECO = asset(PLAYER_PROFILE_UI_FILES.saveSlotsDeco);
 /** 存档管理 · 槽位备注（本机标签） */
-export const UI_SAVE_SLOT_LABEL_DECO = asset("save-slot-label-deco.svg");
+export const UI_SAVE_SLOT_LABEL_DECO = asset(PLAYER_PROFILE_UI_FILES.saveSlotLabelDeco);
 /** 快捷键说明浮层标题图标 */
-export const UI_KEYBOARD_HELP_DECO = asset("keyboard-help-deco.svg");
+export const UI_KEYBOARD_HELP_DECO = asset(PLAYER_PROFILE_UI_FILES.keyboardHelpDeco);
 /** 关于游戏浮层标题图标 */
-export const UI_ABOUT_GAME_DECO = asset("about-game-deco.svg");
+export const UI_ABOUT_GAME_DECO = asset(PLAYER_PROFILE_UI_FILES.aboutGameDeco);
 /** 数据总览 · 复制统计摘要按钮图标 */
-export const UI_DATA_EXPORT_DECO = asset("data-export-deco.svg");
+export const UI_DATA_EXPORT_DECO = asset(PLAYER_PROFILE_UI_FILES.dataExportDeco);
 /** 数据总览 · 下载统计摘要为 .txt 按钮图标 */
-export const UI_DATA_STATS_DOWNLOAD_DECO = asset("data-stats-download-deco.svg");
+export const UI_DATA_STATS_DOWNLOAD_DECO = asset(PLAYER_PROFILE_UI_FILES.dataStatsDownloadDeco);
 export const UI_PANEL_CORNER = asset(PANEL_CHROME_UI_FILES.panelCorner);
 export const UI_BG_SPARKLES = asset(PANEL_CHROME_UI_FILES.bgSparkles);
 /** 离线收益摘要条左侧装饰 */
 export const UI_OFFLINE_SUMMARY_DECO = asset(PANEL_CHROME_UI_FILES.offlineSummaryDeco);
 export const UI_PANEL_RUNES = asset(PANEL_CHROME_UI_FILES.panelRunes);
 
-/** 分区标题与空状态插画（自绘 SVG） */
-export const UI_HEAD_DUNGEON = asset("deco-dungeon-header.svg");
-export const UI_HEAD_TRAIN = asset("deco-train-header.svg");
-export const UI_HEAD_GEAR = asset("deco-gear-header.svg");
+/** 分区标题与空状态插画（自绘 SVG）；主分区头图与 `HUB_SECTION_HEADER_UI_FILES` 同源 */
+export const UI_HEAD_DUNGEON = asset(HUB_SECTION_HEADER_UI_FILES.dungeon);
+export const UI_HEAD_TRAIN = asset(HUB_SECTION_HEADER_UI_FILES.train);
+export const UI_HEAD_GEAR = asset(HUB_SECTION_HEADER_UI_FILES.gear);
 /** 行囊背包排序条左侧小标 */
 export const UI_GEAR_SORT_DECO = asset("gear-sort-deco.svg");
 /** 行囊排序偏好已持久化提示（图钉） */
 export const UI_GEAR_SORT_PINNED_DECO = asset("gear-sort-pinned-deco.svg");
 /** 装备锁定 / 解锁按钮内小锁 */
 export const UI_GEAR_LOCK_DECO = asset("gear-lock-deco.svg");
-export const UI_HEAD_PET = asset("deco-pet-header.svg");
-export const UI_HEAD_STATS = asset("deco-stats-header.svg");
-export const UI_HEAD_COMBAT = asset("deco-combat-header.svg");
-export const UI_HEAD_GARDEN = asset("deco-garden-header.svg");
-export const UI_HEAD_BOUNTY = asset("deco-bounty-header.svg");
+export const UI_HEAD_PET = asset(HUB_SECTION_HEADER_UI_FILES.pet);
+export const UI_HEAD_STATS = asset(HUB_SECTION_HEADER_UI_FILES.stats);
+export const UI_HEAD_COMBAT = asset(HUB_SECTION_HEADER_UI_FILES.combat);
+export const UI_HEAD_GARDEN = asset(HUB_SECTION_HEADER_UI_FILES.garden);
+export const UI_HEAD_BOUNTY = asset(HUB_SECTION_HEADER_UI_FILES.bounty);
 /** 周常悬赏 · 铸灵功课卡片标题旁 */
 export const UI_BOUNTY_FORGE_DECO = asset("bounty-forge-deco.svg");
 /** 周常悬赏 · 幻域清剿 */
