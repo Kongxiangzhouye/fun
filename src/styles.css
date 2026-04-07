@@ -5374,6 +5374,19 @@ html.ui-reduce-motion *::after {
   opacity: 0.93;
 }
 
+.data-overview-panel h3.data-overview-h3--manor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.data-overview-panel .data-overview-manor-flair {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  opacity: 0.93;
+}
+
 .data-overview-panel .data-overview-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));

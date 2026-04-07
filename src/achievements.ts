@@ -520,6 +520,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "petPullBloom",
   },
   {
+    id: "pet_pulls_600",
+    title: "万唤灵渊",
+    desc: "灵宠唤引累计 600 次",
+    rewardStones: 7200,
+    rewardEssence: 135,
+    listDeco: "petPullBloom",
+  },
+  {
     id: "garden_first_harvest",
     title: "灵田初收",
     desc: "在灵府灵田完成 1 次收获",
@@ -549,6 +557,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "灵田累计收获 300 次",
     rewardStones: 2800,
     rewardEssence: 72,
+    listDeco: "gardenBloom",
+  },
+  {
+    id: "garden_harvest_800",
+    title: "畦间万穗",
+    desc: "灵田累计收获 800 次",
+    rewardStones: 6200,
+    rewardEssence: 115,
     listDeco: "gardenBloom",
   },
   {
@@ -637,6 +653,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "洞府委托成功结算累计 120 次",
     rewardStones: 2400,
     rewardEssence: 62,
+    listDeco: "gardenBloom",
+  },
+  {
+    id: "estate_commissions_300",
+    title: "万务归府",
+    desc: "洞府委托成功结算累计 300 次",
+    rewardStones: 5200,
+    rewardEssence: 105,
     listDeco: "gardenBloom",
   },
   {
@@ -1527,6 +1551,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return state.petPullsTotal >= 100;
     case "pet_pulls_300":
       return state.petPullsTotal >= 300;
+    case "pet_pulls_600":
+      return state.petPullsTotal >= 600;
     case "garden_first_harvest":
       return (state.spiritGarden?.totalHarvests ?? 0) >= 1;
     case "garden_harvest_30":
@@ -1535,6 +1561,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.spiritGarden?.totalHarvests ?? 0) >= 100;
     case "garden_harvest_300":
       return (state.spiritGarden?.totalHarvests ?? 0) >= 300;
+    case "garden_harvest_800":
+      return (state.spiritGarden?.totalHarvests ?? 0) >= 800;
     case "login_streak_7":
       return state.dailyStreak >= 7;
     case "login_streak_30":
@@ -1611,6 +1639,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.estateCommissionCompletions ?? 0) >= 20;
     case "estate_commissions_120":
       return (state.lifetimeStats?.estateCommissionCompletions ?? 0) >= 120;
+    case "estate_commissions_300":
+      return (state.lifetimeStats?.estateCommissionCompletions ?? 0) >= 300;
     case "battle_skill_pulls_50":
       return (state.lifetimeStats?.battleSkillPulls ?? 0) >= 50;
     case "battle_skill_pulls_250":

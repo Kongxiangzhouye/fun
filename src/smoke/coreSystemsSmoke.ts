@@ -1145,6 +1145,21 @@ function runEstateCommissionAchievementsSmoke(): void {
   st.lifetimeStats.estateCommissionCompletions = 120;
   const b = tryCompleteAchievements(st);
   assert.ok(b.some((x) => x.id === "estate_commissions_120"), "120 estate completions should unlock");
+  st.lifetimeStats.estateCommissionCompletions = 300;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "estate_commissions_300"), "300 estate completions should unlock");
+}
+
+function runManorGardenPetMilestoneAchievementsSmoke(): void {
+  const st = createInitialState();
+  st.lifetimeStats.estateCommissionCompletions = 300;
+  st.spiritGarden.totalHarvests = 800;
+  st.petPullsTotal = 600;
+  const newly = tryCompleteAchievements(st);
+  const ids = new Set(newly.map((x) => x.id));
+  assert.ok(ids.has("estate_commissions_300"), "300 estate should unlock in batch");
+  assert.ok(ids.has("garden_harvest_800"), "800 garden harvests should unlock in batch");
+  assert.ok(ids.has("pet_pulls_600"), "600 pet pulls should unlock in batch");
 }
 
 function runTunaCompletionAchievementsSmoke(): void {
@@ -1279,6 +1294,7 @@ function main(): void {
   runGearSinglePullLifetimeSmoke();
   runGearSinglePullAchievementsSmoke();
   runEstateCommissionAchievementsSmoke();
+  runManorGardenPetMilestoneAchievementsSmoke();
   runReincarnationTierAchievementsSmoke();
   runRealmLevelTierAchievementsSmoke();
   runTotalPullsMilestoneAchievementsSmoke();

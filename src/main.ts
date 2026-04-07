@@ -181,6 +181,7 @@ import {
   UI_DATA_OVERVIEW_TRAINING_FLAIR,
   UI_DATA_OVERVIEW_CULTIVATION_FLAIR,
   UI_DATA_OVERVIEW_GROWTH_FLAIR,
+  UI_DATA_OVERVIEW_MANOR_FLAIR,
   UI_SOUND_PREFS_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
@@ -2964,7 +2965,6 @@ function buildDataOverviewExportText(st: GameState): string {
     `境界铸灵十铸完成次数: ${lt.gearTenPullSessions}`,
     `境界铸灵单抽累计次数: ${lt.gearSinglePullActions}`,
     `本轮唤引次数: ${st.pullsThisLife ?? 0}`,
-    `灵宠唤引累计: ${st.petPullsTotal}`,
     `图鉴解锁: ${st.codexUnlocked.size} / ${pool}`,
     `持有不同灵卡: ${countUniqueOwned(st)}`,
     `成就: ${st.achievementsDone.size} / ${ACHIEVEMENTS.length}`,
@@ -2974,6 +2974,11 @@ function buildDataOverviewExportText(st: GameState): string {
     `累计清波次数: ${d.totalWavesCleared}`,
     `首领击败累计: ${lt.dungeonBossKills}`,
     `翻滚闪避累计: ${lt.dungeonRollDodges}`,
+    "",
+    "[洞府灵苑]",
+    `洞府委托成功累计: ${lt.estateCommissionCompletions}`,
+    `灵田累计收获: ${st.spiritGarden.totalHarvests}`,
+    `灵宠唤引累计: ${st.petPullsTotal}`,
     "",
     "[灵脉修炼]",
     `吐纳成功累计: ${lt.tunaCompletions}`,
@@ -3010,7 +3015,6 @@ function buildDataOverviewExportText(st: GameState): string {
     "",
     "[其他]",
     `行囊装备件数: ${Object.keys(st.gearInventory).length}`,
-    `灵田累计收获: ${st.spiritGarden.totalHarvests}`,
   ];
   return lines.join("\n");
 }
@@ -3071,7 +3075,6 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">境界十铸完成次数</span><strong class="d-val" id="data-overview-lt-gear-ten">${lt.gearTenPullSessions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">境界单铸累计次数</span><strong class="d-val" id="data-overview-lt-gear-single">${lt.gearSinglePullActions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">本轮唤引次数</span><strong class="d-val" id="data-overview-pulls-life">${st.pullsThisLife ?? 0}</strong></div>
-        <div class="data-overview-cell"><span class="d-label">灵宠唤引累计</span><strong class="d-val" id="data-overview-pet-pulls">${st.petPullsTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">图鉴解锁</span><strong class="d-val" id="data-overview-codex">${codex} / ${pool}</strong></div>
         <div class="data-overview-cell"><span class="d-label">持有不同灵卡</span><strong class="d-val" id="data-overview-owned">${owned}</strong></div>
         <div class="data-overview-cell data-overview-cell--ach">
@@ -3091,6 +3094,18 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">累计清波次数</span><strong class="d-val" id="data-overview-waves-cleared">${d.totalWavesCleared}</strong></div>
         <div class="data-overview-cell"><span class="d-label">首领击败累计</span><strong class="d-val" id="data-overview-lt-dungeon-boss">${lt.dungeonBossKills}</strong></div>
         <div class="data-overview-cell"><span class="d-label">翻滚闪避累计</span><strong class="d-val" id="data-overview-lt-dungeon-roll">${lt.dungeonRollDodges}</strong></div>
+      </div>
+    </div>
+
+    <div class="data-overview-section">
+      <h3 class="data-overview-h3--manor">
+        <img class="data-overview-manor-flair" src="${UI_DATA_OVERVIEW_MANOR_FLAIR}" alt="" width="22" height="22" loading="lazy" />
+        洞府灵苑
+      </h3>
+      <div class="data-overview-grid">
+        <div class="data-overview-cell"><span class="d-label">洞府委托成功累计</span><strong class="d-val" id="data-overview-lt-estate">${lt.estateCommissionCompletions}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵田累计收获</span><strong class="d-val" id="data-overview-harvests">${st.spiritGarden.totalHarvests}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵宠唤引累计</span><strong class="d-val" id="data-overview-pet-pulls">${st.petPullsTotal}</strong></div>
       </div>
     </div>
 
@@ -3156,7 +3171,6 @@ function renderDataOverviewPanel(): string {
       <h3>其他</h3>
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">行囊装备件数</span><strong class="d-val" id="data-overview-gear-count">${gearN}</strong></div>
-        <div class="data-overview-cell"><span class="d-label">灵田累计收获</span><strong class="d-val" id="data-overview-harvests">${st.spiritGarden.totalHarvests}</strong></div>
       </div>
     </div>
   </section>`;
@@ -3186,7 +3200,6 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-gear-ten", String(lt.gearTenPullSessions));
   set("data-overview-lt-gear-single", String(lt.gearSinglePullActions));
   set("data-overview-pulls-life", String(st.pullsThisLife ?? 0));
-  set("data-overview-pet-pulls", String(st.petPullsTotal));
   set("data-overview-codex", `${st.codexUnlocked.size} / ${pool}`);
   set("data-overview-owned", String(countUniqueOwned(st)));
   set("data-overview-ach", `${st.achievementsDone.size} / ${ACHIEVEMENTS.length}`);
@@ -3194,6 +3207,9 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-waves-cleared", String(d.totalWavesCleared));
   set("data-overview-lt-dungeon-boss", String(lt.dungeonBossKills));
   set("data-overview-lt-dungeon-roll", String(lt.dungeonRollDodges));
+  set("data-overview-lt-estate", String(lt.estateCommissionCompletions));
+  set("data-overview-harvests", String(st.spiritGarden.totalHarvests));
+  set("data-overview-pet-pulls", String(st.petPullsTotal));
   set("data-overview-lt-tuna", String(lt.tunaCompletions));
   set("data-overview-lt-fentian", String(lt.fenTianBursts));
   set("data-overview-lt-bi-guan", String(lt.biGuanCompletions));
@@ -3224,7 +3240,6 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-rarity", rarityPeak);
   set("data-overview-lt-bounty-weeks", String(lt.weeklyBountyFullWeeks));
   set("data-overview-gear-count", String(Object.keys(st.gearInventory).length));
-  set("data-overview-harvests", String(st.spiritGarden.totalHarvests));
 }
 
 function escapeHtmlAttr(s: string): string {
