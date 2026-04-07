@@ -11656,35 +11656,6 @@ p.gear-forge-tier-hint {
   opacity: 0.88;
 }
 
-.idle-ling-sha-drip-auto-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 10px;
-  padding: 8px 10px;
-  border-radius: var(--radius);
-  border: 1px solid rgba(180, 130, 70, 0.4);
-  background: rgba(28, 20, 12, 0.55);
-  cursor: pointer;
-  user-select: none;
-}
-
-.idle-ling-sha-drip-auto-row input {
-  margin: 0;
-  accent-color: #d4a574;
-}
-
-.idle-ling-sha-drip-auto-ico {
-  flex-shrink: 0;
-  opacity: 0.92;
-}
-
-.idle-ling-sha-drip-auto-text {
-  font-size: 0.88rem;
-  color: #e0c8a8;
-  line-height: 1.35;
-}
-
 .spirit-reservoir-eta-row {
   display: flex;
   align-items: flex-start;

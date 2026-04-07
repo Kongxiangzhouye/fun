@@ -34,7 +34,6 @@ import {
   canClaimIdleLingShaDrip,
   claimIdleLingShaDrip,
   dripThreshold,
-  tryAutoClaimIdleLingShaDripIfPref,
 } from "../systems/idleLingShaDrip";
 import { plantCrop, tryAutoHarvestAndReplantGarden } from "../systems/spiritGarden";
 import {
@@ -656,17 +655,6 @@ function runIdleLingShaDripSmoke(): void {
   assert.equal(n, 1);
   assert.equal(st.lingSha, beforeLs + 1);
   assert.ok(!canClaimIdleLingShaDrip(st));
-}
-
-function runIdleLingShaDripAutoClaimSmoke(): void {
-  const st = createInitialState();
-  st.realmLevel = 5;
-  st.uiPrefs.autoClaimIdleLingShaDrip = true;
-  const th = dripThreshold(st);
-  st.idleLingShaDripPool = th.mul(3).toString();
-  const n = tryAutoClaimIdleLingShaDripIfPref(st);
-  assert.equal(n, 3, "pref on should chain-claim multiple full thresholds");
-  assert.ok(!canClaimIdleLingShaDrip(st), "pool should be below one threshold after triple claim");
 }
 
 function runIdleLingShaDripOfflineTickSmoke(): void {
@@ -1372,7 +1360,6 @@ function main(): void {
   runSpiritArrayUpgradeAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
   runIdleLingShaDripSmoke();
-  runIdleLingShaDripAutoClaimSmoke();
   runIdleLingShaDripOfflineTickSmoke();
   runIdleLingShaDripAchievementSmoke();
   runIdleLingShaDrip300AchievementSmoke();

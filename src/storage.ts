@@ -828,7 +828,6 @@ export function deserialize(json: string): GameState {
     soundMuted: !!data.uiPrefs?.soundMuted,
     masterVolume: normalizeMasterVolume(data.uiPrefs?.masterVolume),
     autoClaimSpiritReservoir: !!data.uiPrefs?.autoClaimSpiritReservoir,
-    autoClaimIdleLingShaDrip: !!data.uiPrefs?.autoClaimIdleLingShaDrip,
     autoHarvestSpiritGarden: !!data.uiPrefs?.autoHarvestSpiritGarden,
     autoClaimDailyLogin: !!data.uiPrefs?.autoClaimDailyLogin,
     autoClaimWeeklyBounty: !!data.uiPrefs?.autoClaimWeeklyBounty,
