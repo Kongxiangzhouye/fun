@@ -529,6 +529,8 @@ export interface UiPrefs {
   masterVolume: number;
   /** 蓄灵池蓄满时自动收取（需已解锁蓄灵池） */
   autoClaimSpiritReservoir: boolean;
+  /** 灵砂涓滴：凝露满一管时自动收取灵砂（需已解锁灵府灵脉涓滴） */
+  autoClaimIdleLingShaDrip: boolean;
   /** 灵田：有成熟地块时自动「收获并续种」（需已解锁灵田） */
   autoHarvestSpiritGarden: boolean;
   /** 灵息日历：可领时自动领取今日灵息礼（需已解锁该页） */

@@ -144,6 +144,7 @@ import {
   UI_HUB_SECTION_FLAIR,
   UI_HEAD_SPIRIT_RESERVOIR,
   UI_HEAD_IDLE_LING_SHA_DRIP,
+  UI_IDLE_LING_SHA_DRIP_AUTO,
   UI_SPIRIT_RESERVOIR_AUTO,
   UI_SPIRIT_RESERVOIR_ETA,
   UI_HEAD_DAILY_FORTUNE,
@@ -263,6 +264,7 @@ import {
   dripPool,
   dripThreshold,
   formatIdleLingShaDripEtaLine,
+  tryAutoClaimIdleLingShaDripIfPref,
 } from "./systems/idleLingShaDrip";
 import { spiritTideActive, SPIRIT_TIDE_STONE_MULT } from "./systems/spiritTide";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
@@ -3578,6 +3580,11 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <img class="idle-ling-sha-drip-eta-ico" src="${UI_SPIRIT_RESERVOIR_ETA}" alt="" width="16" height="16" loading="lazy" />
         <span id="idle-ling-sha-drip-eta">${dripEtaLine}</span>
       </p>
+      <label class="idle-ling-sha-drip-auto-row">
+        <input type="checkbox" id="chk-idle-ling-sha-drip-auto" data-ui-pref="autoClaimIdleLingShaDrip" ${state.uiPrefs.autoClaimIdleLingShaDrip ? "checked" : ""} />
+        <img class="idle-ling-sha-drip-auto-ico" src="${UI_IDLE_LING_SHA_DRIP_AUTO}" alt="" width="18" height="18" loading="lazy" />
+        <span class="idle-ling-sha-drip-auto-text">满管时自动收取灵砂（可连收多管）</span>
+      </label>
       <button type="button" class="btn ${canDrip ? "btn-primary" : ""}" id="btn-idle-ling-sha-drip-claim" ${canDrip ? "" : "disabled"}>${canDrip ? "收取灵砂" : "凝露未满"}</button>
     </section>`
     : "";
@@ -4515,6 +4522,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "compactNumbers") state.uiPrefs.compactNumbers = checked;
       else if (t === "soundMuted") state.uiPrefs.soundMuted = checked;
       else if (t === "autoClaimSpiritReservoir") state.uiPrefs.autoClaimSpiritReservoir = checked;
+      else if (t === "autoClaimIdleLingShaDrip") state.uiPrefs.autoClaimIdleLingShaDrip = checked;
       else if (t === "autoHarvestSpiritGarden") state.uiPrefs.autoHarvestSpiritGarden = checked;
       else if (t === "autoClaimDailyLogin") state.uiPrefs.autoClaimDailyLogin = checked;
       else if (t === "autoClaimWeeklyBounty") state.uiPrefs.autoClaimWeeklyBounty = checked;
@@ -5806,6 +5814,8 @@ function updateEstateIdleLiveReadouts(now: number): void {
     const dBtn = document.getElementById("btn-idle-ling-sha-drip-claim") as HTMLButtonElement | null;
     const dEta = document.getElementById("idle-ling-sha-drip-eta");
     if (dEta) dEta.textContent = formatIdleLingShaDripEtaLine(state, ips);
+    const dripAutoChk = document.getElementById("chk-idle-ling-sha-drip-auto") as HTMLInputElement | null;
+    if (dripAutoChk) dripAutoChk.checked = state.uiPrefs.autoClaimIdleLingShaDrip;
     if (elDp) elDp.textContent = fmtDecimal(dPool2);
     if (elDt) elDt.textContent = fmtDecimal(dTh);
     if (dBar) dBar.style.width = `${dPct2}%`;
@@ -5890,6 +5900,16 @@ function loop(): void {
     tryCompleteAchievements(state);
     requestSave("蓄灵满溢自动收取", true);
     toast(`蓄灵已满，已自动收取 ${fmtDecimal(autoReservoir)} 灵石`);
+    if (typeof document !== "undefined") {
+      updateTopResourcePillsAndVigor(totalCardsInPool());
+      updateEstateIdleLiveReadouts(now);
+    }
+  }
+  const autoLingShaDrip = tryAutoClaimIdleLingShaDripIfPref(state);
+  if (autoLingShaDrip > 0) {
+    tryCompleteAchievements(state);
+    requestSave("灵砂涓滴自动收取", true);
+    toast(`灵砂涓滴已自动收取 ${autoLingShaDrip} 灵砂`);
     if (typeof document !== "undefined") {
       updateTopResourcePillsAndVigor(totalCardsInPool());
       updateEstateIdleLiveReadouts(now);

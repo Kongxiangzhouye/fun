@@ -142,6 +142,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>灵田</strong>：地块种植灵草，到时收获灵砂、灵石等；养成进度<strong>跨轮回保留</strong>。累计收获 <strong>1 / 30 / 100 / 300</strong> 次可在<strong>成就</strong>领奖。</li>
           <li><strong>纳灵阵图</strong>：消耗灵石与灵砂提升重数，增加全局灵石效率（与其它乘区叠乘）；最高 <strong>30</strong> 重，<strong>10 / 25 / 30</strong> 重可在<strong>成就</strong>领奖。</li>
           <li><strong>蓄灵池</strong>：随当前灵石产出缓慢蓄存，可一次性收取进背包；有上限，随境界与轮回略放大。累计收取 <strong>1 / 50 / 200</strong> 次可在<strong>成就</strong>领奖。</li>
+          <li><strong>灵砂涓滴</strong>：按当前灵石秒产凝露进度，满一管可收取 <strong>1</strong> 灵砂；可勾选<strong>满管自动收取</strong>（与蓄灵池同解锁条件）。累计收取有<strong>成就</strong>里程碑。</li>
           <li><strong>心斋卦象</strong>：按<strong>本地日历日</strong>刷新一条运势，影响灵石等乘区；跨日自动更替。卦象累计刷新 <strong>1 / 30 / 100</strong> 次可在<strong>成就</strong>领奖。</li>
           <li><strong>天机匣</strong>：每周轮换限购兑换，周次与<strong>周常悬赏</strong>同源（每周一本地 0:00）；用灵石 / 灵砂 / 玄铁 / 唤灵髓等按条目支付。累计成功兑换 <strong>1 / 25 / 100</strong> 次可在<strong>成就</strong>领奖。</li>
         </ul>
@@ -215,6 +216,7 @@ export function renderGameLoreHtml(): string {
           <li><strong>灵府·灵田</strong>：累计唤引≥1次且境界≥四重。</li>
           <li><strong>纳灵阵图</strong>：境界≥五重且累计唤引≥2次。</li>
           <li><strong>蓄灵池</strong>：境界≥三重，或累计唤引≥3次。</li>
+          <li><strong>灵砂涓滴</strong>：与蓄灵池同条件。</li>
           <li><strong>心斋卦象</strong>：境界≥四重，或累计唤引≥5次。</li>
           <li><strong>天机匣</strong>：境界≥五重，或累计唤引≥6次。</li>
           <li><strong>道韵灵窍</strong>：已完成轮回、或道韵≥15、或已领悟过道窍（等级&gt;0）。</li>

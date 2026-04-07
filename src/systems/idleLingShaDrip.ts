@@ -67,6 +67,23 @@ export function secondsToDripFull(state: GameState, incomePerSec: Decimal): numb
   return Math.max(1, Math.ceil(th.minus(cur).div(rate).toNumber()));
 }
 
+const MAX_AUTO_DRIP_CLAIMS_PER_TICK = 400;
+
+/**
+ * 偏好开启且凝露≥一管时自动收取（可连续多次，直至不满管或达上限）。
+ * 返回本帧实际收取的灵砂颗数。
+ */
+export function tryAutoClaimIdleLingShaDripIfPref(state: GameState): number {
+  if (!state.uiPrefs.autoClaimIdleLingShaDrip) return 0;
+  if (!idleLingShaDripUnlocked(state)) return 0;
+  let n = 0;
+  for (let i = 0; i < MAX_AUTO_DRIP_CLAIMS_PER_TICK && canClaimIdleLingShaDrip(state); i++) {
+    if (claimIdleLingShaDrip(state) > 0) n += 1;
+    else break;
+  }
+  return n;
+}
+
 export function formatIdleLingShaDripEtaLine(state: GameState, incomePerSec: Decimal): string {
   const ratio = dripFillRatio(state);
   if (ratio >= 1) return "涓滴已满，收取前不再累积。";
