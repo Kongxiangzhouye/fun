@@ -2217,6 +2217,13 @@ body {
   animation: none;
 }
 
+.gacha-pool-tab.tutorial-pulse,
+.gacha-pool-panel.tutorial-pulse,
+.btn.tutorial-pulse {
+  animation: none;
+  box-shadow: 0 0 0 2px rgba(124, 156, 255, 0.45);
+}
+
 .character-hub-root {
   display: flex;
   flex-direction: column;

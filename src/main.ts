@@ -2347,7 +2347,7 @@ function renderTutorialBlock(): string {
       <div class="tutorial-backdrop" role="dialog">
         <div class="tutorial-modal">
           <h3>新手引导</h3>
-          <p class="hint">先领新手礼包，再去「<strong>历练·筑灵</strong>」用<strong>筑灵髓</strong>抽一次灵卡，然后到「<strong>养成→卡组</strong>」上阵灵卡开始产出。</p>
+          <p class="hint">先领新手礼包，再去「<strong>养成→卡组</strong>」页下方<strong>聚灵阵·灵卡池</strong>用<strong>唤灵髓</strong>单抽一次，然后在本页上阵灵卡开始产出。</p>
           <div class="btn-row">
             <button class="btn btn-primary" type="button" id="btn-tutorial-claim">领取新手礼包（筑灵髓×50 · 灵石×600）</button>
             <button class="btn" type="button" id="btn-tutorial-skip">跳过引导</button>
@@ -2356,8 +2356,8 @@ function renderTutorialBlock(): string {
       </div>`;
   }
   const hints: Record<number, string> = {
-    2: "引导：点底部「历练·筑灵」。",
-    3: "引导：在本页下方完成 1 次灵卡单抽（消耗筑灵髓）。",
+    2: "引导：点底部「养成」，并打开「卡组·上阵」。",
+    3: "引导：在本页下方聚灵阵完成 1 次灵卡单抽（消耗唤灵髓）。",
     4: "引导：点「养成→卡组」，再点任意阵位。",
     5: "引导：在弹层里选择 1 张灵卡上阵。",
     6: "引导：点「灵府→洞府」，任意强化 1 次。",
@@ -2487,8 +2487,8 @@ const BOUNTY_ACTION_ROUTES: Record<string, () => void> = {
     battleSub = "dungeon";
   },
   card_pull: () => {
-    activeHub = "battle";
-    battleSub = "forge";
+    activeHub = "cultivate";
+    cultivateSub = "deck";
     gachaPool = "cards";
   },
   gear_forge: () => {
@@ -2601,7 +2601,7 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
         "卡组·上阵",
         true,
         cultivateSub === "deck",
-        state.tutorialStep >= 4 && state.tutorialStep <= 5,
+        state.tutorialStep >= 2 && state.tutorialStep <= 5,
       ),
       mkCult("train", "修炼·自动收益", u.tabTrain, cultivateSub === "train", false),
       mkCult("xinfa", "心法·领悟", u.tabBattleSkills, cultivateSub === "xinfa", false),
@@ -2666,8 +2666,8 @@ function renderBottomNav(u: ReturnType<typeof getUiUnlocks>): string {
   };
   return `<nav class="app-bottom-nav" role="navigation" aria-label="主导航">
     ${item("estate", "灵府·成长", false, state.tutorialStep === 6 || state.tutorialStep === 7)}
-    ${item("cultivate", "养成", false, state.tutorialStep >= 4 && state.tutorialStep <= 5)}
-    ${item("battle", "历练·筑灵", false, state.tutorialStep === 2 || state.tutorialStep === 3)}
+    ${item("cultivate", "养成", false, state.tutorialStep >= 2 && state.tutorialStep <= 5)}
+    ${item("battle", "历练·筑灵", false, false)}
     ${item("character", "角色", false, false)}
   </nav>`;
 }
@@ -2955,8 +2955,7 @@ function handleGlobalKeyboardShortcuts(e: KeyboardEvent): void {
   if (!hub) return;
   if (e.repeat) return;
   const u = getUiUnlocks(state);
-  const battleForcedByTutorial = state.tutorialStep === 2 || state.tutorialStep === 3;
-  if (hub === "battle" && !u.tabDungeon && !battleForcedByTutorial) {
+  if (hub === "battle" && !u.tabDungeon) {
     e.preventDefault();
     toast("历练·筑灵尚未解锁。");
     return;
@@ -3378,12 +3377,23 @@ function render(): void {
   const app = document.getElementById("app");
   if (!app) return;
   ensureWeeklyBountyWeek(state, nowMs());
-  if ((state.tutorialStep === 2 || state.tutorialStep === 3) && activeHub !== "battle") {
-    activeHub = "battle";
+  if ((state.tutorialStep === 2 || state.tutorialStep === 3) && activeHub !== "cultivate") {
+    activeHub = "cultivate";
+    cultivateSub = "deck";
+    gachaPool = "cards";
   } else if ((state.tutorialStep === 4 || state.tutorialStep === 5) && activeHub !== "cultivate") {
     activeHub = "cultivate";
   } else if ((state.tutorialStep === 6 || state.tutorialStep === 7) && activeHub !== "estate") {
     activeHub = "estate";
+  }
+
+  if (
+    state.tutorialStep === 2 &&
+    activeHub === "cultivate" &&
+    cultivateSub === "deck"
+  ) {
+    state.tutorialStep = 3;
+    saveGame(state);
   }
 
   if (activeHub !== "battle") {
@@ -3699,6 +3709,7 @@ function renderGacha(
   u: ReturnType<typeof getUiUnlocks>,
   embedBattle?: boolean,
   poolMode: "both" | "cardsOnly" | "gearOnly" = "both",
+  tutorialPulseStep3 = false,
 ): string {
   const fmtChronicleTime = (atMs: number): string => {
     const d = new Date(atMs);
@@ -3846,6 +3857,7 @@ function renderGacha(
   const tenUnlocked = u.gachaTenUnlocked;
   const showCards = poolMode !== "gearOnly";
   const showGear = poolMode !== "cardsOnly";
+  const tutPulseGacha = tutorialPulseStep3 && state.tutorialStep === 3;
   const tenDisabled = !tenUnlocked || state.summonEssence < ESSENCE_COST_TEN;
   const gearTenDisabled = !tenUnlocked || state.zhuLingEssence < ESSENCE_COST_GEAR_TEN;
   const resonanceBlock = embedBattle
@@ -3895,14 +3907,14 @@ function renderGacha(
   const poolTabs = u.tabGear && showCards && showGear
     ? `
     <div class="gacha-pool-tabs" role="tablist">
-      <button type="button" class="gacha-pool-tab ${gachaPool === "cards" ? "active" : ""}" data-gacha-pool="cards">灵卡池</button>
+      <button type="button" class="gacha-pool-tab ${gachaPool === "cards" ? "active" : ""}${tutPulseGacha ? " tutorial-pulse" : ""}" data-gacha-pool="cards">灵卡池</button>
       <button type="button" class="gacha-pool-tab ${gachaPool === "gear" ? "active" : ""}" data-gacha-pool="gear">境界铸灵</button>
     </div>`
     : "";
 
   const cardSection = showCards
     ? `
-    <div class="gacha-pool-panel" ${gachaPool === "cards" ? "" : 'hidden'} id="gacha-panel-cards">
+    <div class="gacha-pool-panel${tutPulseGacha ? " tutorial-pulse" : ""}" ${gachaPool === "cards" ? "" : 'hidden'} id="gacha-panel-cards">
       <div class="pity-meter-block" aria-label="天极保底进度">
         <div class="pity-meter-head">
           <img class="pity-sigil-img" src="${UI_PITY_SIGIL}" alt="" width="22" height="22" loading="lazy" />
@@ -3917,7 +3929,7 @@ function renderGacha(
       </div>
       <p class="hint${embedBattle ? " gacha-hint-embed" : ""}">${embedBattle ? "金系卡牌≥3 时抽卡额外灵石。" : "金系卡牌≥3 时，抽卡可获得额外灵石；解锁十连加成功能后收益更高。"}</p>
       <div class="gacha-actions">
-        <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-1" ${state.summonEssence >= ESSENCE_COST_SINGLE ? "" : "disabled"}>单抽（${ESSENCE_COST_SINGLE} 唤灵髓）</button>
+        <button class="btn btn-primary gacha-flash${tutPulseGacha ? " tutorial-pulse" : ""}" type="button" id="btn-pull-1" ${state.summonEssence >= ESSENCE_COST_SINGLE ? "" : "disabled"}>单抽（${ESSENCE_COST_SINGLE} 唤灵髓）</button>
         ${
           tenUnlocked
             ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-10" ${tenDisabled ? "disabled" : ""}>十连（${ESSENCE_COST_TEN} 唤灵髓）</button>`
@@ -4150,7 +4162,7 @@ function renderDeck(slots: number): string {
       <div class="deck-slots">${slotsHtml}</div>
       ${modalHtml}
     </section>
-    ${renderGacha(pityUr, u, false, "cardsOnly")}
+    ${renderGacha(pityUr, u, false, "cardsOnly", state.tutorialStep === 3)}
   `;
 }
 
@@ -4360,10 +4372,6 @@ function bindEvents(rb: Decimal, _slots: number): void {
     activeHub = hub;
     if (hub !== "cultivate") deckModalSlot = null;
     if (hub !== "character") gearDetailSlot = null;
-    if (hub === "battle" && state.tutorialStep === 2) {
-      state.tutorialStep = 3;
-      saveGame(state);
-    }
     if (hub === "cultivate" && state.tutorialStep === 4) {
       state.tutorialStep = 5;
       saveGame(state);
@@ -4580,12 +4588,14 @@ function bindEvents(rb: Decimal, _slots: number): void {
   });
 
   document.getElementById("btn-tutorial-claim")?.addEventListener("click", () => {
-    state.tutorialStep = 3;
-    activeHub = "battle";
+    state.tutorialStep = 2;
+    activeHub = "cultivate";
+    cultivateSub = "deck";
+    gachaPool = "cards";
     state.zhuLingEssence += 50;
     addStones(state, 600);
     saveGame(state);
-    toast("新手礼包已领取。已为你打开「历练·筑灵」，请在下方完成 1 次灵卡单抽。");
+    toast("新手礼包已领取。已为你打开「养成→卡组」，请在下方聚灵阵完成 1 次灵卡单抽。");
     render();
   });
 
