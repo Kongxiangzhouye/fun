@@ -685,7 +685,7 @@ export interface GameState {
   trueEndingSeen: boolean;
 
   /**
-   * 引导：0 结束；1 启程礼；2 聚灵阵；3 唤引；4 卡组；5 上阵；
+   * 引导：0 结束；1 启程礼；2 养成→卡组；3 聚灵阵灵卡单抽；4 卡组；5 上阵；
    * 6 洞府蕴灵首次；7 首次破境
    */
   tutorialStep: number;

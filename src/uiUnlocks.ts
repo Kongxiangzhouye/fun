@@ -47,15 +47,16 @@ export function getUiUnlocks(state: GameState): {
 } {
   const pulls = state.totalPulls;
   const rl = state.realmLevel;
-  const inBattleTutorial = state.tutorialStep >= 2 && state.tutorialStep <= 3;
+  /** 灵卡单抽引导（聚灵阵在养成→卡组页） */
+  const inGachaTutorial = state.tutorialStep >= 2 && state.tutorialStep <= 3;
   const inVeinTutorial = state.tutorialStep >= 6 && state.tutorialStep <= 7;
   const tutDone = state.tutorialStep === 0;
   const gearCount = Object.keys(state.gearInventory).length;
-  /** 幻域：启程礼后仍先引导聚灵阵唤引，首次唤引后再开刷髓副本（老存档 tutorialStep===0 直接开放） */
+  /** 幻域：启程礼后仍先引导灵卡唤引，首次唤引后再开刷髓副本（老存档 tutorialStep===0 直接开放） */
   const dungeonUnlocked =
     state.tutorialStep !== 1 &&
     (state.tutorialStep === 0 ||
-      inBattleTutorial ||
+      inGachaTutorial ||
       state.totalPulls >= 1 ||
       state.realmLevel >= 2 ||
       state.dungeon.totalWavesCleared >= 1);
