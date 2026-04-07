@@ -3,6 +3,5 @@ export const PANEL_CHROME_UI_FILES = {
   titleSpirit: "title-spirit.svg",
   panelCorner: "panel-corner.svg",
   bgSparkles: "bg-sparkles.svg",
-  offlineSummaryDeco: "offline-summary-deco.svg",
   panelRunes: "bg-panel-runes.svg",
 } as const;

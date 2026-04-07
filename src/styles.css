@@ -305,6 +305,41 @@ body {
   gap: 6px;
 }
 
+/* 灵府：一级页签 + 灵脉三级子页签纵向排列 */
+.hub-estate-nav-column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  gap: 0;
+}
+
+.hub-estate-tier1-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.hub-estate-idle-tier2 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(52, 64, 92, 0.35);
+}
+
+.hub-sub-tab--estate-idle {
+  font-size: 0.78rem;
+  padding: 6px 10px;
+}
+
 .discoverability-hint {
   max-width: 640px;
   margin: -4px auto 10px;
@@ -2643,8 +2678,8 @@ h1 {
   min-width: 200px;
 }
 
-/** 折叠收纳，默认只占一行 summary */
-.unlock-hints-details {
+/** 主区「功能解锁 + 页面导航」合并折叠；默认只占一行 summary */
+.hub-assist-panel {
   flex-shrink: 0;
   width: 100%;
   max-width: 640px;
@@ -2652,7 +2687,7 @@ h1 {
   padding: 0 4px;
 }
 
-.unlock-hints-summary {
+.hub-assist-summary {
   cursor: pointer;
   list-style: none;
   font-size: 0.82rem;
@@ -2663,13 +2698,32 @@ h1 {
   background: rgba(14, 18, 28, 0.75);
 }
 
-.unlock-hints-details[open] > .unlock-hints-summary {
+.hub-assist-panel[open] > .hub-assist-summary {
   border-color: rgba(124, 156, 255, 0.28);
 }
 
-.unlock-hints-details-body.unlock-hints {
+.hub-assist-body {
+  padding: 8px 2px 4px;
+}
+
+.hub-assist-body .unlock-hints--in-assist {
   max-height: min(200px, 38vh);
   margin-bottom: 0;
+}
+
+.hub-assist-divider {
+  height: 1px;
+  margin: 8px 0;
+  background: linear-gradient(90deg, transparent, rgba(124, 156, 255, 0.12), transparent);
+}
+
+.hub-assist-body .discoverability-hint {
+  margin: 0 auto;
+  max-width: none;
+}
+
+.hub-assist-body .discoverability-hint--in-assist {
+  margin-top: 4px;
 }
 
 .unlock-hints {
@@ -3816,8 +3870,7 @@ h1 {
   letter-spacing: 0.03em;
 }
 
-.offline-event-panel,
-.income-visual-panel {
+.offline-event-panel {
   display: grid;
   gap: 10px;
 }
@@ -4234,87 +4287,6 @@ h1 {
   background: rgba(146, 106, 36, 0.3);
 }
 
-.income-guide-cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.income-guide-card {
-  border-radius: 10px;
-  padding: 10px;
-  border: 1px solid rgba(120, 152, 219, 0.27);
-  background: linear-gradient(160deg, rgba(23, 31, 51, 0.82), rgba(12, 18, 30, 0.9));
-}
-
-.smoke-dev-panel {
-  border-color: rgba(161, 132, 255, 0.34);
-  background: linear-gradient(165deg, rgba(30, 24, 49, 0.86), rgba(16, 14, 29, 0.96));
-}
-
-.smoke-dev-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.smoke-dev-note {
-  margin: 0 0 8px !important;
-}
-
-.smoke-dev-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.smoke-dev-card {
-  border-radius: 10px;
-  padding: 9px 10px;
-  border: 1px solid rgba(154, 137, 232, 0.34);
-  background: linear-gradient(170deg, rgba(54, 41, 88, 0.34), rgba(22, 19, 39, 0.74));
-}
-
-.smoke-dev-card-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-.smoke-dev-card-ico {
-  flex-shrink: 0;
-  opacity: 0.92;
-}
-
-.smoke-dev-card strong {
-  display: block;
-  margin: 0;
-  color: #e9e0ff;
-}
-
-.smoke-dev-card-tag {
-  display: inline-flex;
-  align-items: center;
-  margin: 0 0 5px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
-  color: #efe5ff;
-  border: 1px solid rgba(176, 154, 243, 0.42);
-  background: rgba(118, 92, 188, 0.26);
-}
-
-.income-guide-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 5px;
-}
-
 .estate-commission-panel .estate-commission-card {
   border: 1px solid color-mix(in srgb, var(--line) 75%, #7bd0ff 25%);
   border-radius: 12px;
@@ -4446,20 +4418,16 @@ h1 {
 }
 
 @media (max-width: 768px) {
-  .offline-choice-grid,
-  .income-guide-cards,
-  .smoke-dev-grid {
+  .offline-choice-grid {
     grid-template-columns: 1fr;
   }
 
-  .offline-choice-card,
-  .income-guide-card {
+  .offline-choice-card {
     padding: 9px;
     min-height: 0;
   }
 
-  .offline-choice-head,
-  .income-guide-head {
+  .offline-choice-head {
     flex-wrap: wrap;
     align-items: flex-start;
   }

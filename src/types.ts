@@ -555,8 +555,8 @@ export interface UiPrefs {
   confirmReincarnation: boolean;
   /** 是否在浏览器标签标题中显示境界与灵石摘要；关闭后固定为「万象唤灵」 */
   dynamicDocumentTitle: boolean;
-  /** 灵府·修炼页是否显示「收益来源拆分与升级引导」说明面板 */
-  showIncomeGuidePanel: boolean;
+  /** 主内容区顶部是否显示「功能解锁与页面导航」折叠条（细则仍在图鉴·札记） */
+  showHubAssistHints: boolean;
 }
 
 /** 造化玉解锁的 QoL（文档 §5） */

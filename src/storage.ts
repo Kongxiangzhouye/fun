@@ -841,7 +841,7 @@ export function deserialize(json: string): GameState {
     autoBuyMeta: !!data.uiPrefs?.autoBuyMeta,
     confirmReincarnation: data.uiPrefs?.confirmReincarnation !== false,
     dynamicDocumentTitle: data.uiPrefs?.dynamicDocumentTitle !== false,
-    showIncomeGuidePanel: data.uiPrefs?.showIncomeGuidePanel !== false,
+    showHubAssistHints: data.uiPrefs?.showHubAssistHints !== false,
   };
 
   if (data.pets && typeof data.pets === "object") {

@@ -310,18 +310,6 @@ export const UI_SAVE_SAVING_ICON = inlineSvg(
 export const UI_SAVE_SAVED_ICON = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.4" stroke="#6dd5a7" stroke-width="1.4"/><path d="M6.4 10.1l2.2 2.3 5-5.1" stroke="#d7ffe9" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
 );
-/** smoke 开发信息区 · 标签图标 */
-export const UI_SMOKE_DEV_BADGE = inlineSvg(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.9" y="3.3" width="14.2" height="13.4" rx="2.9" stroke="#c4b5ff" stroke-width="1.3"/><path d="M6.1 8.1h7.8M6.1 11h5.3" stroke="#ece4ff" stroke-width="1.4" stroke-linecap="round"/><circle cx="13.9" cy="13.2" r="1.1" fill="#d8c8ff"/></svg>`,
-);
-/** smoke 信息板 · 回归检查卡图标占位 */
-export const UI_SMOKE_DEV_REGRESSION_ICON = inlineSvg(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="3.2" y="3.3" width="13.6" height="13.4" rx="2.8" stroke="#c4b5ff" stroke-width="1.3"/><path d="M6.4 7.4h7.2M6.4 10h5.2M6.4 12.6h3.2" stroke="#ece4ff" stroke-width="1.35" stroke-linecap="round"/></svg>`,
-);
-/** smoke 信息板 · 指标观测卡图标占位 */
-export const UI_SMOKE_DEV_METRIC_ICON = inlineSvg(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M4.1 15.6h11.8" stroke="#bca9ff" stroke-width="1.3" stroke-linecap="round"/><rect x="5.1" y="10.2" width="2.2" height="4.4" rx=".9" fill="#dfd1ff"/><rect x="8.9" y="7.8" width="2.2" height="6.8" rx=".9" fill="#cfbdff"/><rect x="12.7" y="5.4" width="2.2" height="9.2" rx=".9" fill="#c0abff"/></svg>`,
-);
 /** 拆分反馈模块统一外观 · toast 图标 */
 export const UI_FEEDBACK_TOAST_ICON = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="2.8" y="4.1" width="14.4" height="11.8" rx="2.8" stroke="#9ab9ff" stroke-width="1.3"/><path d="M6.2 8.1h7.6M6.2 11h5.1" stroke="#e4ecff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
@@ -340,8 +328,6 @@ export const UI_DATA_EXPORT_DECO = asset(PLAYER_PROFILE_UI_FILES.dataExportDeco)
 export const UI_DATA_STATS_DOWNLOAD_DECO = asset(PLAYER_PROFILE_UI_FILES.dataStatsDownloadDeco);
 export const UI_PANEL_CORNER = asset(PANEL_CHROME_UI_FILES.panelCorner);
 export const UI_BG_SPARKLES = asset(PANEL_CHROME_UI_FILES.bgSparkles);
-/** 离线收益摘要条左侧装饰 */
-export const UI_OFFLINE_SUMMARY_DECO = asset(PANEL_CHROME_UI_FILES.offlineSummaryDeco);
 /** 离线结算摘要徽记（用于摘要标题或关键收益行） */
 export const UI_OFFLINE_SUMMARY_BADGE = asset(OFFLINE_SETTLEMENT_UI_FILES.summaryBadge);
 /** 离线结算低收益/空转状态徽记 */
@@ -380,17 +366,6 @@ export const UI_OFFLINE_EVENT_OPTION_RISK = inlineSvg(
 /** 离线奇遇三选一 · 髓潮选项图标（内联 SVG） */
 export const UI_OFFLINE_EVENT_OPTION_ESSENCE = inlineSvg(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 2.4c2.1 2.8 4.2 5.6 4.2 8.6a4.2 4.2 0 11-8.4 0c0-3 2.1-5.8 4.2-8.6z" stroke="#7ee0d8" stroke-width="1.25"/><path d="M6.8 12.1c.9 1.1 2.1 1.7 3.2 1.7s2.3-.6 3.2-1.7" stroke="#b8fff6" stroke-width="1.2" stroke-linecap="round"/><ellipse cx="10" cy="9.2" rx="2.1" ry="1.1" fill="rgba(120,230,216,0.35)"/></svg>`,
-);
-
-/** 收益来源拆分与升级引导 · 图标（内联 SVG） */
-export const UI_INCOME_SOURCE_ICON_REALM = inlineSvg(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#8fd0ff" stroke-width="1.3"/><path d="M10 4.5l1.6 3.1 3.5.5-2.5 2.4.6 3.4L10 12.3 6.8 14l.6-3.4L4.9 8l3.5-.4L10 4.5z" fill="#d7f0ff"/></svg>`,
-);
-export const UI_INCOME_SOURCE_ICON_DECK = inlineSvg(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><rect x="4.1" y="3.4" width="10.4" height="13.1" rx="1.9" stroke="#9fc7a0" stroke-width="1.3"/><rect x="6.6" y="5.9" width="10.4" height="10.8" rx="1.9" stroke="#79af87" stroke-width="1.3"/><path d="M11.8 8.1l1 2 2.2.3-1.6 1.5.4 2.1-2-1.1-2 1.1.4-2.1-1.6-1.5 2.2-.3 1-2z" fill="#dff5e4"/></svg>`,
-);
-export const UI_INCOME_SOURCE_ICON_UPGRADE = inlineSvg(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none"><path d="M10 3.1l4.8 5h-3v6h-3.6v-6h-3l4.8-5z" fill="#f7e8ac"/><rect x="3.6" y="14.5" width="12.8" height="2.2" rx="1.1" fill="#b08f4b"/></svg>`,
 );
 
 /** 分区标题与空状态插画（自绘 SVG）；主分区头图与 `HUB_SECTION_HEADER_UI_FILES` 同源 */

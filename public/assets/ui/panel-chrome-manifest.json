@@ -5,7 +5,6 @@
     { "id": "titleSpirit", "file": "title-spirit.svg" },
     { "id": "panelCorner", "file": "panel-corner.svg" },
     { "id": "bgSparkles", "file": "bg-sparkles.svg" },
-    { "id": "offlineSummaryDeco", "file": "offline-summary-deco.svg" },
     { "id": "panelRunes", "file": "bg-panel-runes.svg" }
   ]
 }

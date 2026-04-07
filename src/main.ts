@@ -198,7 +198,6 @@ import {
   UI_BOUNTY_CLAIM_ECHO_BADGE,
   UI_OFFLINE_IDLE_BADGE,
   UI_OFFLINE_SUMMARY_BADGE,
-  UI_OFFLINE_SUMMARY_DECO,
   UI_OFFLINE_TRANSITION_SHINE,
   UI_OFFLINE_RESONANCE_CHAIN,
   UI_OFFLINE_RESONANCE_INSTANT,
@@ -207,9 +206,6 @@ import {
   UI_OFFLINE_EVENT_OPTION_SAFE,
   UI_OFFLINE_EVENT_OPTION_RISK,
   UI_OFFLINE_EVENT_OPTION_ESSENCE,
-  UI_INCOME_SOURCE_ICON_REALM,
-  UI_INCOME_SOURCE_ICON_DECK,
-  UI_INCOME_SOURCE_ICON_UPGRADE,
   UI_CHRONICLE_SPIRIT_TIDE_STAT,
   UI_ESTATE_COMMISSION_RESOURCE,
   UI_ESTATE_COMMISSION_COMBAT,
@@ -230,9 +226,6 @@ import {
   UI_DUNGEON_WEAKNESS_PING_DECO,
   UI_DUNGEON_STAGGER_PULSE_DECO,
   UI_FEEDBACK_TOAST_ICON,
-  UI_SMOKE_DEV_BADGE,
-  UI_SMOKE_DEV_METRIC_ICON,
-  UI_SMOKE_DEV_REGRESSION_ICON,
 } from "./ui/visualAssets";
 import { GEAR_TIER_LABELS, gearTierClass, gearTierLabel, gearVisualTier } from "./ui/gearVisualTier";
 import { renderSpiritGardenPage } from "./ui/spiritGardenPanel";
@@ -370,7 +363,7 @@ import {
   describeGearForgeTierLine,
   gearForgeAscensionLevel,
   gearForgeIlvlBonus,
-  GEAR_FORGE_TIER_MAX,
+  gearForgeRarityWeightsRaw,
 } from "./systems/gearGachaTier";
 import {
   PULL_CHRONICLE_MAX,
@@ -515,6 +508,8 @@ let delegatedPanelClickListenersBound = false;
 /** 主导航：底部四栏（灵府→养成→历练·筑灵→角色）+ 部分页内二级子栏 */
 type HubId = "character" | "cultivate" | "battle" | "estate";
 type EstateSub = "idle" | "vein" | "array" | "garden";
+/** 「灵脉·境界升级」页内再分栏，减轻单页过长 */
+type EstateIdleSub = "core" | "well" | "away";
 type BattleSub = "dungeon" | "forge";
 type CultivateSub =
   | "deck"
@@ -539,6 +534,7 @@ type CharacterSub =
 
 let activeHub: HubId = "estate";
 let estateSub: EstateSub = "idle";
+let estateIdleSub: EstateIdleSub = "core";
 let battleSub: BattleSub = "dungeon";
 let cultivateSub: CultivateSub = "deck";
 let characterSub: CharacterSub = "stats";
@@ -1760,14 +1756,107 @@ function collectUnlockHintLines(u: ReturnType<typeof getUiUnlocks>): string[] {
   return unlockLines;
 }
 
-function renderUnlockHintsDetailsBlock(lines: string[]): string {
+/**
+ * 子页「常用入口」导航文案；不含新手引导步判断，由 {@link renderHubAssistPanel} 统一收纳。
+ */
+function getDiscoverabilityHintHtml(): string {
+  let text = "";
+  if (activeHub === "cultivate") {
+    switch (cultivateSub) {
+      case "deck":
+        text = "常用入口：布阵在「养成→卡组」点阵位；升阶/分解在「角色→灵卡」；装备强化在「历练·筑灵」长按筑灵条展开后点「管理」。";
+        break;
+      case "train":
+        text = "常用入口：这里只负责挂机修炼；心法在「养成→心法·领悟」；灵卡与装备请去「卡组」或「角色」页。";
+        break;
+      case "xinfa":
+        text = "常用入口：消耗唤灵髓领悟/升级心法；唤灵髓来自共鸣与幻域等，规则见「图鉴·札记」。";
+        break;
+      case "codex":
+        text = "常用入口：规则说明看「养成→图鉴·札记」；若找不到功能，去「角色→功能预览·导航」。";
+        break;
+      case "meta":
+        text = "常用入口：轮回=重开本轮并换永久加成；保存/导出/导入存档在「角色→存档·管理」。";
+        break;
+      case "ach":
+        text = "常用入口：奖励自动发放；若不清楚玩法入口，先看「角色→功能预览·导航」。";
+        break;
+      case "bounty":
+        text = "常用入口：周常悬赏按本地每周一刷新；幻域、唤引、铸灵、灵田、吐纳、破境与洞府委托均可推进条目。";
+        break;
+      case "chronicle":
+        text = "常用入口：唤灵通鉴记录最近灵卡唤引；境界铸灵不计入列表。";
+        break;
+      case "daily":
+        text = "常用入口：灵息日历按本地日结算连签；每日可领灵石与唤灵髓，与周常悬赏不同轨。";
+        break;
+      case "stash":
+        text = "常用入口：天机匣按自然周刷新限购兑换；与周常悬赏共用周次，资源种类不同。";
+        break;
+      case "pets":
+        text = "常用入口：灵宠是全局加成；唤灵入口在底部「抽卡」，成长进度在本页查看。";
+        break;
+      default:
+        text = "";
+    }
+  } else if (activeHub === "character") {
+    if (characterSub === "cards") {
+      text = "常用入口：这里只做灵卡升阶/分解；上阵请去「养成→卡组」点阵位。";
+    } else if (characterSub === "guides") {
+      text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在「角色→存档·管理」。";
+    } else if (characterSub === "settings") {
+      text = "常用入口：动效、数字与音频偏好在此；按 ? 打开快捷键说明；备份与导入在「存档·管理」。";
+    } else if (characterSub === "data") {
+      text = "常用入口：可复制或下载统计摘要（.txt）；详细规则见「养成→图鉴」，奖励见「成就」。";
+    } else if (characterSub === "archive") {
+      text = "常用入口：多存档位与本机备注、保存/导出/导入与重置均在此；切换槽位前会自动保存当前槽。";
+    } else if (characterSub === "meridian") {
+      text = "常用入口：道韵灵窍消耗道韵获得永久加成；道韵主要来自轮回结算。";
+    }
+  } else if (activeHub === "estate") {
+    text =
+      "常用入口：灵脉页分三子页——修炼·破境（主收益/破境）、蓄灵·卦象（蓄灵/涓滴/卦象）、游历·委托（离线/洞府委托）；洞府/阵图/灵田用上方页签切换。";
+  } else if (activeHub === "battle") {
+    text = "常用入口：历练已拆为二级模块——「幻域·战斗」与「境界·铸灵」，可在页内上方切换。";
+  }
+  if (!text) return "";
+  if (activeHub === "battle" && battleSub === "dungeon") {
+    const live = state.dungeon.active
+      ? `<p class="hint sm discoverability-help-live" id="discoverability-help-live-meta">${formatDungeonActiveHelpMeta(state, nowMs())}</p>`
+      : "";
+    return `<div class="hint sm discoverability-hint discoverability-hint--in-assist">
+      <p class="discoverability-hint-main">${text}</p>
+      <details class="discoverability-help-details">
+        <summary>战斗说明（原 ? 面板）</summary>
+        <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
+        ${live}
+      </details>
+    </div>`;
+  }
+  return `<p class="hint sm discoverability-hint">${text}</p>`;
+}
+
+/** 合并「功能解锁条件」与「页面导航」为单一折叠条，默认收起，减少主区重复说明。 */
+function renderHubAssistPanel(unlockLines: string[]): string {
   if (state.tutorialStep !== 0) return "";
-  if (lines.length === 0) return "";
-  return `<details class="unlock-hints-details">
-    <summary class="unlock-hints-summary">功能解锁条件</summary>
-    <div class="unlock-hints unlock-hints-details-body">
-      ${lines.map((t) => `<p class="unlock-hint">${t}</p>`).join("")}
+  if (state.uiPrefs.showHubAssistHints === false) return "";
+  const unlockHtml =
+    unlockLines.length > 0
+      ? `<div class="unlock-hints unlock-hints--in-assist">
+      ${unlockLines.map((t) => `<p class="unlock-hint">${t}</p>`).join("")}
       <p class="hint sm unlock-hint-more">更多说明见「养成→图鉴·札记」。</p>
+    </div>`
+      : "";
+  const discHtml = getDiscoverabilityHintHtml();
+  if (!unlockHtml && !discHtml) return "";
+  const divider =
+    unlockHtml && discHtml ? `<div class="hub-assist-divider" aria-hidden="true"></div>` : "";
+  return `<details class="hub-assist-panel">
+    <summary class="hub-assist-summary">功能解锁与页面导航</summary>
+    <div class="hub-assist-body">
+      ${unlockHtml}
+      ${divider}
+      ${discHtml}
     </div>
   </details>`;
 }
@@ -2381,7 +2470,7 @@ function renderTopBar(
 
 /** 与 renderHubContent 强相关的导航状态；变化时主列表应回到顶部而非保留滚动 */
 function mainContentViewKey(): string {
-  return `${activeHub}|${estateSub}|${battleSub}|${cultivateSub}|${characterSub}|${gachaPool}`;
+  return `${activeHub}|${estateSub}|${estateIdleSub}|${battleSub}|${cultivateSub}|${characterSub}|${gachaPool}`;
 }
 
 function goByBountyAction(action: string | null | undefined): boolean {
@@ -2414,6 +2503,7 @@ const BOUNTY_ACTION_ROUTES: Record<string, () => void> = {
   tuna: () => {
     activeHub = "estate";
     estateSub = "idle";
+    estateIdleSub = "core";
   },
   breakthrough: () => {
     activeHub = "estate";
@@ -2422,6 +2512,7 @@ const BOUNTY_ACTION_ROUTES: Record<string, () => void> = {
   estate_commission: () => {
     activeHub = "estate";
     estateSub = "idle";
+    estateIdleSub = "away";
   },
 };
 
@@ -2476,6 +2567,8 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
     unlocked
       ? `<button type="button" class="hub-sub-tab ${active ? "active" : ""}" data-battle-sub="${id}"${active ? ` aria-current="page"` : ""}>${label}</button>`
       : `<span class="hub-sub-tab hub-sub-tab-locked" title="未解锁">${label}</span>`;
+  const mkEstateIdle = (id: EstateIdleSub, label: string, active: boolean): string =>
+    `<button type="button" class="hub-sub-tab hub-sub-tab--estate-idle ${active ? "active" : ""}" data-estate-idle-sub="${id}"${active ? ` aria-current="page"` : ""}>${label}</button>`;
 
   let left = "";
   let right = "";
@@ -2490,7 +2583,17 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
     if (u.tabGarden) {
       gTabs.push(mkEstate("garden", "灵田·灵草", estateSub === "garden", false));
     }
-    left = gTabs.join("");
+    const idleTier2 =
+      estateSub === "idle"
+        ? `<div class="hub-estate-idle-tier2" role="group" aria-label="灵脉子页">
+      ${mkEstateIdle("core", "修炼·破境", estateIdleSub === "core")}
+      ${mkEstateIdle("well", "蓄灵·卦象", estateIdleSub === "well")}
+      ${mkEstateIdle("away", "游历·委托", estateIdleSub === "away")}
+    </div>`
+        : "";
+    left = `<div class="hub-estate-nav-column">
+      <div class="hub-estate-tier1-wrap">${gTabs.join("")}</div>${idleTier2}
+    </div>`;
   } else if (activeHub === "cultivate") {
     const rowBattle = [
       mkCult(
@@ -2554,84 +2657,6 @@ function renderFloatingSubNav(u: ReturnType<typeof getUiUnlocks>): string {
   return `<div class="hub-inline-subnav" aria-label="页内导航">
     <div class="hub-inline-subnav-row">${left}${right}</div>
   </div>`;
-}
-
-function renderDiscoverabilityHint(): string {
-  if (state.tutorialStep !== 0) return "";
-  let text = "";
-  if (activeHub === "cultivate") {
-    switch (cultivateSub) {
-      case "deck":
-        text = "常用入口：布阵在「养成→卡组」点阵位；升阶/分解在「角色→灵卡」；装备强化在「历练·筑灵」长按筑灵条展开后点「管理」。";
-        break;
-      case "train":
-        text = "常用入口：这里只负责挂机修炼；心法在「养成→心法·领悟」；灵卡与装备请去「卡组」或「角色」页。";
-        break;
-      case "xinfa":
-        text = "常用入口：消耗唤灵髓领悟/升级心法；唤灵髓来自共鸣与幻域等，规则见「图鉴·札记」。";
-        break;
-      case "codex":
-        text = "常用入口：规则说明看「养成→图鉴·札记」；若找不到功能，去「角色→功能预览·导航」。";
-        break;
-      case "meta":
-        text = "常用入口：轮回=重开本轮并换永久加成；保存/导出/导入存档在「角色→存档·管理」。";
-        break;
-      case "ach":
-        text = "常用入口：奖励自动发放；若不清楚玩法入口，先看「角色→功能预览·导航」。";
-        break;
-      case "bounty":
-        text = "常用入口：周常悬赏按本地每周一刷新；幻域、唤引、铸灵、灵田、吐纳、破境与洞府委托均可推进条目。";
-        break;
-      case "chronicle":
-        text = "常用入口：唤灵通鉴记录最近灵卡唤引；境界铸灵不计入列表。";
-        break;
-      case "daily":
-        text = "常用入口：灵息日历按本地日结算连签；每日可领灵石与唤灵髓，与周常悬赏不同轨。";
-        break;
-      case "stash":
-        text = "常用入口：天机匣按自然周刷新限购兑换；与周常悬赏共用周次，资源种类不同。";
-        break;
-      case "pets":
-        text = "常用入口：灵宠是全局加成；唤灵入口在底部「抽卡」，成长进度在本页查看。";
-        break;
-      default:
-        text = "";
-    }
-  } else if (activeHub === "character") {
-    if (characterSub === "cards") {
-      text = "常用入口：这里只做灵卡升阶/分解；上阵请去「养成→卡组」点阵位。";
-    } else if (characterSub === "guides") {
-      text = "常用入口：这里专门告诉你“功能在哪”；保存/导出/导入存档在「角色→存档·管理」。";
-    } else if (characterSub === "settings") {
-      text = "常用入口：动效、数字与音频偏好在此；按 ? 打开快捷键说明；备份与导入在「存档·管理」。";
-    } else if (characterSub === "data") {
-      text = "常用入口：可复制或下载统计摘要（.txt）；详细规则见「养成→图鉴」，奖励见「成就」。";
-    } else if (characterSub === "archive") {
-      text = "常用入口：多存档位与本机备注、保存/导出/导入与重置均在此；切换槽位前会自动保存当前槽。";
-    } else if (characterSub === "meridian") {
-      text = "常用入口：道韵灵窍消耗道韵获得永久加成；道韵主要来自轮回结算。";
-    }
-  } else if (activeHub === "estate") {
-    text =
-      "常用入口：灵脉=升级境界，洞府=长期加成，阵图=灵石全局乘区（轮回不重置），灵田=种植收获灵砂；可并行推进。";
-  } else if (activeHub === "battle") {
-    text = "常用入口：历练已拆为二级模块——「幻域·战斗」与「境界·铸灵」，可在页内上方切换。";
-  }
-  if (!text) return "";
-  if (activeHub === "battle" && battleSub === "dungeon") {
-    const live = state.dungeon.active
-      ? `<p class="hint sm discoverability-help-live" id="discoverability-help-live-meta">${formatDungeonActiveHelpMeta(state, nowMs())}</p>`
-      : "";
-    return `<div class="hint sm discoverability-hint">
-      <p class="discoverability-hint-main">${text}</p>
-      <details class="discoverability-help-details">
-        <summary>战斗说明（原 ? 面板）</summary>
-        <p class="hint sm">${DUNGEON_HELP_BLURB}</p>
-        ${live}
-      </details>
-    </div>`;
-  }
-  return `<p class="hint sm discoverability-hint">${text}</p>`;
 }
 
 function renderBottomNav(u: ReturnType<typeof getUiUnlocks>): string {
@@ -2766,16 +2791,16 @@ function renderUiPrefsPanel(): string {
         </label>
         <p class="hint sm ui-pref-desc">开启时浏览器标签会显示「万象唤灵 · 境界 · 灵石」便于切后台查看；关闭则固定为「万象唤灵」。</p>
       </li>
-      <li class="ui-pref-row ui-pref-row--idle-guide">
+      <li class="ui-pref-row ui-pref-row--hub-assist">
         <div class="ui-pref-inline-head">
-          <img class="ui-pref-inline-ico" src="${UI_INCOME_SOURCE_ICON_UPGRADE}" alt="" width="22" height="22" loading="lazy" />
-          <span class="ui-pref-section-title">修炼页</span>
+          <img class="ui-pref-inline-ico" src="${UI_UI_PREFS_DECO}" alt="" width="22" height="22" loading="lazy" />
+          <span class="ui-pref-section-title">主内容区</span>
         </div>
         <label class="ui-pref-label">
-          <input type="checkbox" class="ui-pref-input" data-ui-pref="showIncomeGuidePanel" ${p.showIncomeGuidePanel !== false ? "checked" : ""} />
-          <span class="ui-pref-title">显示「收益来源拆分与升级引导」面板</span>
+          <input type="checkbox" class="ui-pref-input" data-ui-pref="showHubAssistHints" ${p.showHubAssistHints !== false ? "checked" : ""} />
+          <span class="ui-pref-title">显示「功能解锁与页面导航」折叠条</span>
         </label>
-        <p class="hint sm ui-pref-desc">关闭后隐藏灵府·修炼页中的说明型面板，仅保留灵潮、卦象、蓄灵与灵脉汇聚等核心区；不影响数值。</p>
+        <p class="hint sm ui-pref-desc">关闭后主界面顶部不再显示；解锁条件与常用入口说明仍可在「养成→图鉴·札记」查阅。</p>
       </li>
       <li class="ui-pref-row ui-pref-audio-block">
         <div class="ui-pref-audio-head">
@@ -2966,6 +2991,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `轮回次数: ${st.reincarnations}`,
     `本轮灵石峰值: ${fmtDecimal(new Decimal(st.peakSpiritStonesThisLife || "0"))}`,
     `灵息连签: ${st.dailyStreak}`,
+    `当前灵石: ${fmtDecimal(stones(st))}`,
     "",
     "[唤引与图鉴]",
     `灵卡唤引总次数: ${st.totalPulls}`,
@@ -2987,7 +3013,9 @@ function buildDataOverviewExportText(st: GameState): string {
     "[洞府灵苑]",
     `洞府委托成功累计: ${lt.estateCommissionCompletions}`,
     `灵田累计收获: ${st.spiritGarden.totalHarvests}`,
+    `灵田种植累计: ${lt.gardenPlants}`,
     `灵宠唤引累计: ${st.petPullsTotal}`,
+    `灵宠喂养累计: ${lt.petFeeds}`,
     "",
     "[灵脉修炼]",
     `吐纳成功累计: ${lt.tunaCompletions}`,
@@ -2998,11 +3026,17 @@ function buildDataOverviewExportText(st: GameState): string {
     `境界突破累计: ${lt.realmBreakthroughs}`,
     `灵卡升阶累计: ${lt.cardLevelUps}`,
     `纳灵阵图绘阵累计: ${lt.spiritArrayUpgrades}`,
+    `心法领悟/精进累计: ${lt.battleSkillPulls}`,
+    `三艺挂机升级累计: ${lt.skillLevelUps}`,
+    `轮回元强化成功累计: ${lt.metaUpgrades}`,
     "",
     "[养成淬炼]",
     `洞府灵脉升级累计: ${lt.veinUpgrades}`,
     `行囊槽位强化累计: ${lt.gearEnhances}`,
     `灵卡叠星累计: ${lt.cardStarUps}`,
+    `灵卡分解累计: ${lt.cardSalvages}`,
+    `装备分解累计: ${lt.gearSalvages}`,
+    `天极精炼累计: ${lt.urGearRefines}`,
     "",
     "[终身累计]",
     `累计消耗道韵: ${lt.daoEssenceSpentLifetime}`,
@@ -3018,7 +3052,9 @@ function buildDataOverviewExportText(st: GameState): string {
     `心斋卦象刷新次数: ${lt.dailyFortuneRolls}`,
     `灵息日历当日礼领取累计: ${lt.dailyLoginDayClaims}`,
     `离线灵石回补结算累计: ${lt.offlineStoneSettlements}`,
+    `离线奇遇结算累计: ${lt.offlineAdventureCompletions}`,
     `灵潮时辰进入次数: ${lt.spiritTideHours}`,
+    `聚灵共鸣发放唤灵髓次数: ${lt.resonanceEssencePayouts}`,
     `铸灵累计次数: ${lt.gearForgesTotal}`,
     `历史最高铸灵稀有度: ${rarityPeak}`,
     `周常悬赏单周清满次数: ${lt.weeklyBountyFullWeeks}`,
@@ -3073,6 +3109,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">轮回次数</span><strong class="d-val" id="data-overview-reinc">${st.reincarnations}</strong></div>
         <div class="data-overview-cell"><span class="d-label">本轮灵石峰值</span><strong class="d-val" id="data-overview-peak-stone">${fmtDecimal(new Decimal(st.peakSpiritStonesThisLife || "0"))}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵息连签</span><strong class="d-val" id="data-overview-streak">${st.dailyStreak}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">当前灵石</span><strong class="d-val" id="data-overview-current-stones">${fmtDecimal(stones(st))}</strong></div>
       </div>
     </div>
 
@@ -3115,7 +3152,9 @@ function renderDataOverviewPanel(): string {
       <div class="data-overview-grid">
         <div class="data-overview-cell"><span class="d-label">洞府委托成功累计</span><strong class="d-val" id="data-overview-lt-estate">${lt.estateCommissionCompletions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵田累计收获</span><strong class="d-val" id="data-overview-harvests">${st.spiritGarden.totalHarvests}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵田种植累计</span><strong class="d-val" id="data-overview-lt-garden-plants">${lt.gardenPlants}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵宠唤引累计</span><strong class="d-val" id="data-overview-pet-pulls">${st.petPullsTotal}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵宠喂养累计</span><strong class="d-val" id="data-overview-lt-pet-feeds">${lt.petFeeds}</strong></div>
       </div>
     </div>
 
@@ -3140,6 +3179,9 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">境界突破累计</span><strong class="d-val" id="data-overview-lt-realm-breakthroughs">${lt.realmBreakthroughs}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵卡升阶累计</span><strong class="d-val" id="data-overview-lt-card-level-ups">${lt.cardLevelUps}</strong></div>
         <div class="data-overview-cell"><span class="d-label">纳灵阵图绘阵累计</span><strong class="d-val" id="data-overview-lt-spirit-array">${lt.spiritArrayUpgrades}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">心法领悟/精进累计</span><strong class="d-val" id="data-overview-lt-battle-skill-pulls">${lt.battleSkillPulls}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">三艺挂机升级累计</span><strong class="d-val" id="data-overview-lt-skill-level-ups">${lt.skillLevelUps}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">轮回元强化成功累计</span><strong class="d-val" id="data-overview-lt-meta-upgrades">${lt.metaUpgrades}</strong></div>
       </div>
     </div>
 
@@ -3152,6 +3194,9 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">洞府灵脉升级累计</span><strong class="d-val" id="data-overview-lt-vein-upgrades">${lt.veinUpgrades}</strong></div>
         <div class="data-overview-cell"><span class="d-label">行囊槽位强化累计</span><strong class="d-val" id="data-overview-lt-gear-enhances">${lt.gearEnhances}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵卡叠星累计</span><strong class="d-val" id="data-overview-lt-card-star-ups">${lt.cardStarUps}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵卡分解累计</span><strong class="d-val" id="data-overview-lt-card-salvages">${lt.cardSalvages}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">装备分解累计</span><strong class="d-val" id="data-overview-lt-gear-salvages">${lt.gearSalvages}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">天极精炼累计</span><strong class="d-val" id="data-overview-lt-ur-refines">${lt.urGearRefines}</strong></div>
       </div>
     </div>
 
@@ -3171,7 +3216,9 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">心斋卦象刷新次数</span><strong class="d-val" id="data-overview-lt-fortune">${lt.dailyFortuneRolls}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵息日历当日礼领取累计</span><strong class="d-val" id="data-overview-lt-daily-login">${lt.dailyLoginDayClaims}</strong></div>
         <div class="data-overview-cell"><span class="d-label">离线灵石回补结算累计</span><strong class="d-val" id="data-overview-lt-offline-settle">${lt.offlineStoneSettlements}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">离线奇遇结算累计</span><strong class="d-val" id="data-overview-lt-offline-adventure">${lt.offlineAdventureCompletions}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵潮时辰进入次数</span><strong class="d-val" id="data-overview-lt-spirit-tide">${lt.spiritTideHours}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">聚灵共鸣发放唤灵髓次数</span><strong class="d-val" id="data-overview-lt-resonance-payouts">${lt.resonanceEssencePayouts}</strong></div>
         <div class="data-overview-cell"><span class="d-label">铸灵累计次数</span><strong class="d-val" id="data-overview-lt-forge">${lt.gearForgesTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历史最高铸灵稀有度</span><strong class="d-val" id="data-overview-lt-rarity">${rarityPeak}</strong></div>
         <div class="data-overview-cell"><span class="d-label">周常悬赏单周清满次数</span><strong class="d-val" id="data-overview-lt-bounty-weeks">${lt.weeklyBountyFullWeeks}</strong></div>
@@ -3205,6 +3252,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-reinc", String(st.reincarnations));
   set("data-overview-peak-stone", fmtDecimal(new Decimal(st.peakSpiritStonesThisLife || "0")));
   set("data-overview-streak", String(st.dailyStreak));
+  set("data-overview-current-stones", fmtDecimal(stones(st)));
   set("data-overview-total-pulls", String(st.totalPulls));
   set("data-overview-lt-card-ten", String(lt.cardTenPullSessions));
   set("data-overview-lt-card-single", String(lt.cardSinglePullActions));
@@ -3220,16 +3268,24 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-dungeon-roll", String(lt.dungeonRollDodges));
   set("data-overview-lt-estate", String(lt.estateCommissionCompletions));
   set("data-overview-harvests", String(st.spiritGarden.totalHarvests));
+  set("data-overview-lt-garden-plants", String(lt.gardenPlants));
   set("data-overview-pet-pulls", String(st.petPullsTotal));
+  set("data-overview-lt-pet-feeds", String(lt.petFeeds));
   set("data-overview-lt-tuna", String(lt.tunaCompletions));
   set("data-overview-lt-fentian", String(lt.fenTianBursts));
   set("data-overview-lt-bi-guan", String(lt.biGuanCompletions));
   set("data-overview-lt-realm-breakthroughs", String(lt.realmBreakthroughs));
   set("data-overview-lt-card-level-ups", String(lt.cardLevelUps));
   set("data-overview-lt-spirit-array", String(lt.spiritArrayUpgrades));
+  set("data-overview-lt-battle-skill-pulls", String(lt.battleSkillPulls));
+  set("data-overview-lt-skill-level-ups", String(lt.skillLevelUps));
+  set("data-overview-lt-meta-upgrades", String(lt.metaUpgrades));
   set("data-overview-lt-vein-upgrades", String(lt.veinUpgrades));
   set("data-overview-lt-gear-enhances", String(lt.gearEnhances));
   set("data-overview-lt-card-star-ups", String(lt.cardStarUps));
+  set("data-overview-lt-card-salvages", String(lt.cardSalvages));
+  set("data-overview-lt-gear-salvages", String(lt.gearSalvages));
+  set("data-overview-lt-ur-refines", String(lt.urGearRefines));
   set("data-overview-lt-dao-spent", String(lt.daoEssenceSpentLifetime));
   set("data-overview-lt-summon-spent", String(lt.summonEssenceSpentLifetime));
   set("data-overview-lt-zhuling-spent", String(lt.zhuLingEssenceSpentLifetime));
@@ -3243,7 +3299,9 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
   set("data-overview-lt-daily-login", String(lt.dailyLoginDayClaims));
   set("data-overview-lt-offline-settle", String(lt.offlineStoneSettlements));
+  set("data-overview-lt-offline-adventure", String(lt.offlineAdventureCompletions));
   set("data-overview-lt-spirit-tide", String(lt.spiritTideHours));
+  set("data-overview-lt-resonance-payouts", String(lt.resonanceEssencePayouts));
   set("data-overview-lt-forge", String(lt.gearForgesTotal));
   const rarityPeak =
     lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length
@@ -3353,7 +3411,7 @@ function render(): void {
   const pityUr = urPityRemaining(state);
   const goldClass = state.trueEndingSeen ? " app-gold" : "";
   const unlockLines = collectUnlockHintLines(u);
-  const unlockDetailsBlock = renderUnlockHintsDetailsBlock(unlockLines);
+  const hubAssistBlock = renderHubAssistPanel(unlockLines);
 
   app.innerHTML = `
     <div class="app-visual-bg" style="--ui-sparkles:url('${UI_BG_SPARKLES}')" aria-hidden="true"></div>
@@ -3372,10 +3430,8 @@ function render(): void {
 
     <main class="app-main app-main-stack" id="main-content">
     <div class="hub-page-scroll">
-    ${unlockDetailsBlock}
+    ${hubAssistBlock}
     ${renderFloatingSubNav(u)}
-    ${renderDiscoverabilityHint()}
-    ${renderSmokeDevInfoPanel()}
     ${renderHubContent(ips, rb, canBreak, u, pityUr, slots)}
     </div>
     </main>
@@ -3399,39 +3455,6 @@ function render(): void {
       el.scrollTop = Math.min(preservedHubScrollTop, maxTop);
     });
   }
-}
-
-function renderSmokeDevInfoPanel(): string {
-  if (!import.meta.env.DEV) return "";
-  return `<section class="panel smoke-dev-panel" id="smoke-dev-panel" role="region" aria-label="开发信息 smoke">
-    <div class="panel-title-art-row panel-title-art-row--sub">
-      <img class="panel-title-art-icon" src="${UI_SMOKE_DEV_BADGE}" alt="" width="24" height="24" loading="lazy" />
-      <h2>Smoke 开发信息</h2>
-    </div>
-    <div class="smoke-dev-chip-row">
-      <span class="status-badge status-badge--info">开发可视</span>
-      <span class="status-badge status-badge--pending">仅 DEV 环境显示</span>
-    </div>
-    <p class="hint sm smoke-dev-note">用于展示 smoke 相关调试结论、回归检查口径与短期观测项；不影响线上业务逻辑。</p>
-    <div class="smoke-dev-grid" aria-label="smoke 信息占位">
-      <article class="smoke-dev-card">
-        <div class="smoke-dev-card-head">
-          <img class="smoke-dev-card-ico" src="${UI_SMOKE_DEV_REGRESSION_ICON}" alt="" width="16" height="16" loading="lazy" />
-          <strong>回归检查</strong>
-        </div>
-        <p class="smoke-dev-card-tag">progression smoke</p>
-        <p class="hint sm">建议填入：核心循环、存档写入、战斗入口、离线结算。</p>
-      </article>
-      <article class="smoke-dev-card">
-        <div class="smoke-dev-card-head">
-          <img class="smoke-dev-card-ico" src="${UI_SMOKE_DEV_METRIC_ICON}" alt="" width="16" height="16" loading="lazy" />
-          <strong>观测指标</strong>
-        </div>
-        <p class="smoke-dev-card-tag">开发态信息板</p>
-        <p class="hint sm">建议填入：耗时阈值、异常次数、触发路径标签。</p>
-      </article>
-    </div>
-  </section>`;
 }
 
 function qoLRow(label: string, kind: keyof QoLFlags, desc: string): string {
@@ -3605,50 +3628,6 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const offlineChoicePanel = renderOfflineAdventurePanel(state, now, offlineBoostRenewRuleText, offlineResonanceTypeZh);
   const estateCommissionPanel = renderEstateCommissionPanel(state, now, fmtOfflineDurationSec);
 
-  const incomeGuidePanel =
-    state.uiPrefs.showIncomeGuidePanel !== false
-      ? `<section class="panel income-visual-panel">
-      <div class="panel-title-art-row panel-title-art-row--sub">
-        <img class="panel-title-art-icon" src="${UI_OFFLINE_SUMMARY_DECO}" alt="" width="24" height="24" loading="lazy" />
-        <h2>收益来源拆分与升级引导</h2>
-      </div>
-      <div class="income-source-chip-row" aria-label="收益来源">
-        <span class="info-chip">
-          <img src="${UI_INCOME_SOURCE_ICON_REALM}" alt="" width="14" height="14" loading="lazy" />
-          境界原息
-        </span>
-        <span class="info-chip">
-          <img src="${UI_INCOME_SOURCE_ICON_DECK}" alt="" width="14" height="14" loading="lazy" />
-          灵卡原息
-        </span>
-        <span class="info-chip">
-          <img src="${UI_INCOME_SOURCE_ICON_UPGRADE}" alt="" width="14" height="14" loading="lazy" />
-          加成增益
-        </span>
-        <span class="info-chip info-chip--highlight">
-          <img src="${UI_INCOME_SOURCE_ICON_UPGRADE}" alt="" width="14" height="14" loading="lazy" />
-          升级建议
-        </span>
-      </div>
-      <div class="income-guide-cards">
-        <article class="income-guide-card">
-          <div class="income-guide-head">
-            <strong>来源拆分</strong>
-            <span class="status-badge status-badge--info">信息徽章</span>
-          </div>
-          <p class="hint sm">展示「境界原息 / 灵卡原息 / 增益附加」三段，数值可与总每秒收益对齐解释。</p>
-        </article>
-        <article class="income-guide-card">
-          <div class="income-guide-head">
-            <strong>升级引导</strong>
-            <span class="recommend-tag">优先强化</span>
-          </div>
-          <p class="hint sm">当资源足够时，引导按钮与标签采用高对比强调，便于移动端快速识别。</p>
-        </article>
-      </div>
-    </section>`
-      : "";
-
   const core = `
     <section class="panel">
       <h2>灵脉汇聚</h2>
@@ -3696,7 +3675,23 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       <p class="hint">图鉴收集 ${unique} / ${codex}${deckRealmPct > 0.001 ? ` · 卡组境界加成 ${deckRealmPct.toFixed(2)}%` : ""}</p>
     </section>`;
 
-  return reservoirBlock + lingShaDripBlock + fortuneBlock + offlineChoicePanel + estateCommissionPanel + incomeGuidePanel + core;
+  const wellPanels = reservoirBlock + lingShaDripBlock + fortuneBlock;
+  const awayPanels = offlineChoicePanel + estateCommissionPanel;
+  const corePanels = core;
+
+  switch (estateIdleSub) {
+    case "well": {
+      if (wellPanels.trim() === "") {
+        return `<section class="panel"><p class="hint">尚未解锁蓄灵池、涓滴或卦象等内容；提升境界与唤引进度后，可在此查看。</p></section>`;
+      }
+      return wellPanels;
+    }
+    case "away":
+      return awayPanels;
+    case "core":
+    default:
+      return corePanels;
+  }
 }
 
 function renderGacha(
@@ -3805,24 +3800,7 @@ function renderGacha(
     if (forcedSrPlus) {
       probs = normalizeRarityWeights({ N: 0, R: 0, SR: 120, SSR: 68, UR: 12 });
     } else {
-      const uTier =
-        GEAR_FORGE_TIER_MAX <= 1 ? 0 : Math.min(1, Math.max(0, (tier - 1) / (GEAR_FORGE_TIER_MAX - 1)));
-      const n0 = 0.38;
-      const r0 = 0.3;
-      const sr0 = 0.2;
-      const ssr0 = 0.09;
-      const ur0 = 0.03;
-      const n1 = 0.1;
-      const r1 = 0.22;
-      const sr1 = 0.3;
-      const ssr1 = 0.25;
-      const ur1 = 0.13;
-      const wN = (n0 + (n1 - n0) * uTier) / gearLuck;
-      const wR = (r0 + (r1 - r0) * uTier) / Math.pow(gearLuck, 0.28);
-      const wSr = (sr0 + (sr1 - sr0) * uTier) * Math.pow(gearLuck, 0.48);
-      const wSsr = (ssr0 + (ssr1 - ssr0) * uTier) * Math.pow(gearLuck, 0.62);
-      const wUr = (ur0 + (ur1 - ur0) * uTier) * Math.pow(gearLuck, 0.78);
-      probs = normalizeRarityWeights({ N: wN, R: wR, SR: wSr, SSR: wSsr, UR: wUr });
+      probs = normalizeRarityWeights(gearForgeRarityWeightsRaw(state, tier));
     }
     const ilvlAvg = Math.floor(
       avgGearBaseIlvl + state.realmLevel * 0.9 + state.skills.combat.level * 0.4 + gearForgeIlvlBonus(tier),
@@ -3837,11 +3815,11 @@ function renderGacha(
         probs.SSR * (rankVal.SSR * 9 + gradeShared) +
         probs.UR * (rankVal.UR * 9 + gradeShared),
     );
-    const pityCap = Math.max(22, 36 - (tier - 1));
+    const pityCap = Math.max(22, 36 - Math.min(tier - 1, 14));
     return { probs, ilvlAvg, gradeExpected, pityCap };
   };
   const currentForgeTier = gearForgeAscensionLevel(state);
-  const nextForgeTier = Math.min(GEAR_FORGE_TIER_MAX, currentForgeTier + 1);
+  const nextForgeTier = currentForgeTier + 1;
   const gearForcedSrPlusNow = state.gearPityPulls >= effectiveGearSrPityMax(state) - 1;
   const gearNow = gearDistAtTier(currentForgeTier, gearForcedSrPlusNow);
   const gearNext = gearDistAtTier(nextForgeTier, false);
@@ -3850,7 +3828,7 @@ function renderGacha(
   const gearDetailBlock = `<details class="gacha-detail-block">
       <summary class="gacha-detail-summary">查看详情：铸灵池当前概率、综合期望与下一阶预告</summary>
       <div class="gacha-detail-content">
-        <p class="hint sm">当前：铸灵阶 ${currentForgeTier}/${GEAR_FORGE_TIER_MAX} · 高胚保底上限 ${gearNow.pityCap} 唤 · 保底计数 ${state.gearPityPulls}/${gearNow.pityCap} · 运势系数 ×${gearLuck.toFixed(3)}。</p>
+        <p class="hint sm">当前：铸灵阶 ${currentForgeTier}（随积分持续升阶）· 高胚保底上限 ${gearNow.pityCap} 唤 · 保底计数 ${state.gearPityPulls}/${gearNow.pityCap} · 运势系数 ×${gearLuck.toFixed(3)}。</p>
         <p class="hint sm">当前单铸底胚概率：N ${pct(gearNow.probs.N)} · R ${pct(gearNow.probs.R)} · SR ${pct(gearNow.probs.SR)} · SSR ${pct(gearNow.probs.SSR)} · UR ${pct(gearNow.probs.UR)}。最终显示按 9 品阶（凡品→至宝）结合筑灵阶换算。</p>
         <p class="hint sm">当前综合期望：平均 ilvl 约 ${gearNow.ilvlAvg} · 平均筑灵阶约 ${gearNow.gradeExpected.toFixed(2)} / 48。</p>
         <p class="hint sm">下一阶（${nextForgeTier}）预估：高胚+ ${pct(gearSrPlusNext)}（当前 ${pct(gearSrPlusNow)}）· UR 底胚 ${pct(gearNext.probs.UR)}（当前 ${pct(gearNow.probs.UR)}）· 平均 ilvl 约 ${gearNext.ilvlAvg} · 平均筑灵阶约 ${gearNext.gradeExpected.toFixed(2)} / 48 · 保底上限 ${gearNext.pityCap} 唤。</p>
@@ -4400,6 +4378,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     if (hub === "estate") {
       if (sub === "idle" || sub === "vein" || sub === "garden" || sub === "array") {
         estateSub = sub;
+        if (sub === "idle") estateIdleSub = "away";
       }
     } else if (hub === "battle") {
       if (sub === "dungeon" || sub === "forge") {
@@ -4437,6 +4416,15 @@ function bindEvents(rb: Decimal, _slots: number): void {
       if (s === "garden" && !uNav.tabGarden) return;
       if (s === "array" && !uNav.tabSpiritArray) return;
       estateSub = s;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-estate-idle-sub]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const s = (el as HTMLElement).dataset.estateIdleSub as EstateIdleSub | undefined;
+      if (s !== "core" && s !== "well" && s !== "away") return;
+      estateIdleSub = s;
       render();
     });
   });
@@ -4528,7 +4516,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
       else if (t === "autoBuyMeta") state.uiPrefs.autoBuyMeta = checked;
       else if (t === "confirmReincarnation") state.uiPrefs.confirmReincarnation = checked;
       else if (t === "dynamicDocumentTitle") state.uiPrefs.dynamicDocumentTitle = checked;
-      else if (t === "showIncomeGuidePanel") state.uiPrefs.showIncomeGuidePanel = checked;
+      else if (t === "showHubAssistHints") state.uiPrefs.showHubAssistHints = checked;
       else return;
       saveGame(state);
       render();
@@ -4701,6 +4689,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     gachaPool = "cards";
     activeHub = "estate";
     estateSub = "idle";
+    estateIdleSub = "core";
     cultivateSub = "deck";
     characterSub = "stats";
     autoEnterPromptHandled = false;

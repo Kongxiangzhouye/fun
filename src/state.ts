@@ -145,7 +145,7 @@ export function createInitialState(): GameState {
       autoBuyMeta: false,
       confirmReincarnation: true,
       dynamicDocumentTitle: true,
-      showIncomeGuidePanel: true,
+      showHubAssistHints: true,
     },
     vein: { huiLing: 0, guYuan: 0, lingXi: 0, gongMing: 0 },
     pullsThisLife: 0,

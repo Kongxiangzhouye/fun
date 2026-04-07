@@ -30,7 +30,7 @@ export function renderGameLoreHtml(): string {
       <h3 class="sub-h game-lore-title">修行札记</h3>
       <p class="hint sm game-lore-lead">下列为机制细则；日常游玩只需看各页顶部的短提示即可。</p>
 
-      <details class="game-lore-block" open>
+      <details class="game-lore-block">
         <summary><img src="${UI_LORE_GLOSSARY}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 术语速查（白话版）</summary>
         <ul class="game-lore-list">
           <li><strong>幻域</strong> = 历练副本；刷怪拿<strong>筑灵髓</strong>等。底部页签「<strong>历练·筑灵</strong>」含副本与聚灵阵唤引、铸灵。</li>
@@ -130,7 +130,7 @@ export function renderGameLoreHtml(): string {
         <summary><img src="${UI_LORE_CHRONICLE}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 唤灵通鉴</summary>
         <ul class="game-lore-list">
           <li><strong>入口</strong>：养成→唤灵通鉴。</li>
-          <li>分「灵卡唤引」「铸灵」两张表，仅作记录展示，<strong>不消耗</strong>资源。</li>
+          <li>分「灵卡唤引」「铸灵」两张时间线表，仅作记录展示，<strong>不消耗</strong>资源；终身统计见「角色→数据总览」。</li>
           <li>各表最多保留最近 <strong>48</strong> 条；新记录挤掉最旧条目。</li>
           <li>灵卡表标注时间与稀有度，首次邂逅可标「首遇」。</li>
         </ul>
