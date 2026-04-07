@@ -965,6 +965,9 @@ function runSpiritArrayUpgradeAchievementsSmoke(): void {
   st.lifetimeStats.spiritArrayUpgrades = 60;
   const b = tryCompleteAchievements(st);
   assert.ok(b.some((x) => x.id === "spirit_array_upgrades_60"));
+  st.lifetimeStats.spiritArrayUpgrades = 120;
+  const c = tryCompleteAchievements(st);
+  assert.ok(c.some((x) => x.id === "spirit_array_upgrades_120"));
 }
 
 function runGearEnhanceAndUrRefineAchievementsSmoke(): void {
@@ -1002,6 +1005,9 @@ function runSkillLevelAndRealmBreakthroughAchievementsSmoke(): void {
   st.lifetimeStats.realmBreakthroughs = 45;
   const d = tryCompleteAchievements(st);
   assert.ok(d.some((x) => x.id === "realm_breakthroughs_45"), "45 realm breakthroughs should unlock");
+  st.lifetimeStats.realmBreakthroughs = 90;
+  const e = tryCompleteAchievements(st);
+  assert.ok(e.some((x) => x.id === "realm_breakthroughs_90"), "90 realm breakthroughs should unlock");
 }
 
 function runPetFeedAndGardenPlantAchievementsSmoke(): void {

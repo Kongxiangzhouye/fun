@@ -180,6 +180,7 @@ import {
   UI_DATA_OVERVIEW_ACH_RIBBON,
   UI_DATA_OVERVIEW_TRAINING_FLAIR,
   UI_DATA_OVERVIEW_CULTIVATION_FLAIR,
+  UI_DATA_OVERVIEW_GROWTH_FLAIR,
   UI_SOUND_PREFS_DECO,
   UI_KEYBOARD_HELP_DECO,
   UI_ABOUT_GAME_DECO,
@@ -2979,6 +2980,11 @@ function buildDataOverviewExportText(st: GameState): string {
     `焚天成功累计: ${lt.fenTianBursts}`,
     `闭关时间推进累计: ${lt.biGuanCompletions}`,
     "",
+    "[成长进阶]",
+    `境界突破累计: ${lt.realmBreakthroughs}`,
+    `灵卡升阶累计: ${lt.cardLevelUps}`,
+    `纳灵阵图绘阵累计: ${lt.spiritArrayUpgrades}`,
+    "",
     "[养成淬炼]",
     `洞府灵脉升级累计: ${lt.veinUpgrades}`,
     `行囊槽位强化累计: ${lt.gearEnhances}`,
@@ -2998,7 +3004,6 @@ function buildDataOverviewExportText(st: GameState): string {
     `灵息日历当日礼领取累计: ${lt.dailyLoginDayClaims}`,
     `离线灵石回补结算累计: ${lt.offlineStoneSettlements}`,
     `灵潮时辰进入次数: ${lt.spiritTideHours}`,
-    `纳灵阵图绘阵累计: ${lt.spiritArrayUpgrades}`,
     `铸灵累计次数: ${lt.gearForgesTotal}`,
     `历史最高铸灵稀有度: ${rarityPeak}`,
     `周常悬赏单周清满次数: ${lt.weeklyBountyFullWeeks}`,
@@ -3102,6 +3107,18 @@ function renderDataOverviewPanel(): string {
     </div>
 
     <div class="data-overview-section">
+      <h3 class="data-overview-h3--growth">
+        <img class="data-overview-growth-flair" src="${UI_DATA_OVERVIEW_GROWTH_FLAIR}" alt="" width="22" height="22" loading="lazy" />
+        成长进阶
+      </h3>
+      <div class="data-overview-grid">
+        <div class="data-overview-cell"><span class="d-label">境界突破累计</span><strong class="d-val" id="data-overview-lt-realm-breakthroughs">${lt.realmBreakthroughs}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵卡升阶累计</span><strong class="d-val" id="data-overview-lt-card-level-ups">${lt.cardLevelUps}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">纳灵阵图绘阵累计</span><strong class="d-val" id="data-overview-lt-spirit-array">${lt.spiritArrayUpgrades}</strong></div>
+      </div>
+    </div>
+
+    <div class="data-overview-section">
       <h3 class="data-overview-h3--cultivation">
         <img class="data-overview-cultivation-flair" src="${UI_DATA_OVERVIEW_CULTIVATION_FLAIR}" alt="" width="22" height="22" loading="lazy" />
         养成淬炼
@@ -3129,7 +3146,6 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">灵息日历当日礼领取累计</span><strong class="d-val" id="data-overview-lt-daily-login">${lt.dailyLoginDayClaims}</strong></div>
         <div class="data-overview-cell"><span class="d-label">离线灵石回补结算累计</span><strong class="d-val" id="data-overview-lt-offline-settle">${lt.offlineStoneSettlements}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵潮时辰进入次数</span><strong class="d-val" id="data-overview-lt-spirit-tide">${lt.spiritTideHours}</strong></div>
-        <div class="data-overview-cell"><span class="d-label">纳灵阵图绘阵累计</span><strong class="d-val" id="data-overview-lt-spirit-array">${lt.spiritArrayUpgrades}</strong></div>
         <div class="data-overview-cell"><span class="d-label">铸灵累计次数</span><strong class="d-val" id="data-overview-lt-forge">${lt.gearForgesTotal}</strong></div>
         <div class="data-overview-cell"><span class="d-label">历史最高铸灵稀有度</span><strong class="d-val" id="data-overview-lt-rarity">${rarityPeak}</strong></div>
         <div class="data-overview-cell"><span class="d-label">周常悬赏单周清满次数</span><strong class="d-val" id="data-overview-lt-bounty-weeks">${lt.weeklyBountyFullWeeks}</strong></div>
@@ -3181,6 +3197,9 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-tuna", String(lt.tunaCompletions));
   set("data-overview-lt-fentian", String(lt.fenTianBursts));
   set("data-overview-lt-bi-guan", String(lt.biGuanCompletions));
+  set("data-overview-lt-realm-breakthroughs", String(lt.realmBreakthroughs));
+  set("data-overview-lt-card-level-ups", String(lt.cardLevelUps));
+  set("data-overview-lt-spirit-array", String(lt.spiritArrayUpgrades));
   set("data-overview-lt-vein-upgrades", String(lt.veinUpgrades));
   set("data-overview-lt-gear-enhances", String(lt.gearEnhances));
   set("data-overview-lt-card-star-ups", String(lt.cardStarUps));
@@ -3197,7 +3216,6 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-daily-login", String(lt.dailyLoginDayClaims));
   set("data-overview-lt-offline-settle", String(lt.offlineStoneSettlements));
   set("data-overview-lt-spirit-tide", String(lt.spiritTideHours));
-  set("data-overview-lt-spirit-array", String(lt.spiritArrayUpgrades));
   set("data-overview-lt-forge", String(lt.gearForgesTotal));
   const rarityPeak =
     lt.maxGearRarityRankForged >= 0 && lt.maxGearRarityRankForged < GEAR_TIER_LABELS.length

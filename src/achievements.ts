@@ -840,6 +840,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "realm",
   },
   {
+    id: "realm_breakthroughs_90",
+    title: "天梯九十",
+    desc: "境界突破成功累计 90 次",
+    rewardStones: 12000,
+    rewardEssence: 200,
+    listDeco: "realm",
+  },
+  {
     id: "gear_enhances_40",
     title: "玄铁淬锋",
     desc: "行囊槽位强化成功累计 40 次",
@@ -893,6 +901,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "灵卡等级提升累计 280 次",
     rewardStones: 6400,
     rewardEssence: 105,
+    listDeco: "codex",
+  },
+  {
+    id: "card_level_ups_600",
+    title: "万阶灵铸",
+    desc: "灵卡等级提升累计 600 次",
+    rewardStones: 11000,
+    rewardEssence: 175,
     listDeco: "codex",
   },
   {
@@ -1189,6 +1205,14 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: "纳灵阵图绘阵成功累计 60 次",
     rewardStones: 1800,
     rewardEssence: 48,
+    listDeco: "array",
+  },
+  {
+    id: "spirit_array_upgrades_120",
+    title: "阵纹百绘",
+    desc: "纳灵阵图绘阵成功累计 120 次",
+    rewardStones: 4200,
+    rewardEssence: 88,
     listDeco: "array",
   },
   {
@@ -1637,6 +1661,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.realmBreakthroughs ?? 0) >= 15;
     case "realm_breakthroughs_45":
       return (state.lifetimeStats?.realmBreakthroughs ?? 0) >= 45;
+    case "realm_breakthroughs_90":
+      return (state.lifetimeStats?.realmBreakthroughs ?? 0) >= 90;
     case "gear_enhances_40":
       return (state.lifetimeStats?.gearEnhances ?? 0) >= 40;
     case "gear_enhances_160":
@@ -1651,6 +1677,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.cardLevelUps ?? 0) >= 60;
     case "card_level_ups_280":
       return (state.lifetimeStats?.cardLevelUps ?? 0) >= 280;
+    case "card_level_ups_600":
+      return (state.lifetimeStats?.cardLevelUps ?? 0) >= 600;
     case "card_star_ups_40":
       return (state.lifetimeStats?.cardStarUps ?? 0) >= 40;
     case "card_star_ups_180":
@@ -1671,6 +1699,8 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.spiritArrayUpgrades ?? 0) >= 15;
     case "spirit_array_upgrades_60":
       return (state.lifetimeStats?.spiritArrayUpgrades ?? 0) >= 60;
+    case "spirit_array_upgrades_120":
+      return (state.lifetimeStats?.spiritArrayUpgrades ?? 0) >= 120;
     case "vein_gongming_40":
       return state.vein.gongMing >= 40;
     case "vein_gongming_80":
