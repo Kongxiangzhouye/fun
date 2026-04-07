@@ -3014,6 +3014,7 @@ function buildDataOverviewExportText(st: GameState): string {
     `历练副本累计获得筑灵髓（整数）: ${lt.dungeonEssenceIntGained}`,
     `天机匣兑换次数: ${lt.celestialStashBuys}`,
     `蓄灵池收取次数: ${lt.spiritReservoirClaims}`,
+    `灵砂涓滴收取累计: ${lt.idleLingShaDripClaims}`,
     `心斋卦象刷新次数: ${lt.dailyFortuneRolls}`,
     `灵息日历当日礼领取累计: ${lt.dailyLoginDayClaims}`,
     `离线灵石回补结算累计: ${lt.offlineStoneSettlements}`,
@@ -3166,6 +3167,7 @@ function renderDataOverviewPanel(): string {
         <div class="data-overview-cell"><span class="d-label">历练副本累计获得筑灵髓（整数）</span><strong class="d-val" id="data-overview-lt-dungeon-ess">${lt.dungeonEssenceIntGained}</strong></div>
         <div class="data-overview-cell"><span class="d-label">天机匣兑换次数</span><strong class="d-val" id="data-overview-lt-stash">${lt.celestialStashBuys}</strong></div>
         <div class="data-overview-cell"><span class="d-label">蓄灵池收取次数</span><strong class="d-val" id="data-overview-lt-reservoir">${lt.spiritReservoirClaims}</strong></div>
+        <div class="data-overview-cell"><span class="d-label">灵砂涓滴收取累计</span><strong class="d-val" id="data-overview-lt-ling-sha-drip">${lt.idleLingShaDripClaims}</strong></div>
         <div class="data-overview-cell"><span class="d-label">心斋卦象刷新次数</span><strong class="d-val" id="data-overview-lt-fortune">${lt.dailyFortuneRolls}</strong></div>
         <div class="data-overview-cell"><span class="d-label">灵息日历当日礼领取累计</span><strong class="d-val" id="data-overview-lt-daily-login">${lt.dailyLoginDayClaims}</strong></div>
         <div class="data-overview-cell"><span class="d-label">离线灵石回补结算累计</span><strong class="d-val" id="data-overview-lt-offline-settle">${lt.offlineStoneSettlements}</strong></div>
@@ -3237,6 +3239,7 @@ function updateDataOverviewReadouts(): void {
   set("data-overview-lt-dungeon-ess", String(lt.dungeonEssenceIntGained));
   set("data-overview-lt-stash", String(lt.celestialStashBuys));
   set("data-overview-lt-reservoir", String(lt.spiritReservoirClaims));
+  set("data-overview-lt-ling-sha-drip", String(lt.idleLingShaDripClaims));
   set("data-overview-lt-fortune", String(lt.dailyFortuneRolls));
   set("data-overview-lt-daily-login", String(lt.dailyLoginDayClaims));
   set("data-overview-lt-offline-settle", String(lt.offlineStoneSettlements));

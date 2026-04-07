@@ -678,6 +678,8 @@ export const UI_CELESTIAL_STASH_AUTO_REDEEM = asset("celestial-auto-redeem.svg")
 export const UI_HEAD_SPIRIT_RESERVOIR = asset(FEATURE_PAGE_HEADS_UI_FILES.spiritReservoir);
 /** 灵砂涓滴（灵府灵脉）标题装饰 */
 export const UI_HEAD_IDLE_LING_SHA_DRIP = asset(FEATURE_PAGE_HEADS_UI_FILES.idleLingShaDrip);
+/** 唤灵通鉴 · 灵砂涓滴收取累计小标 */
+export const UI_CHRONICLE_IDLE_LING_SHA_DRIP_STAT = asset(FEATURE_PAGE_HEADS_UI_FILES.idleLingShaDrip);
 /** 蓄灵池「满溢自动收取」开关旁小标 */
 export const UI_SPIRIT_RESERVOIR_AUTO = asset("spirit-reservoir-auto-claim.svg");
 /** 蓄灵池蓄满 ETA 行前缀小图标 */

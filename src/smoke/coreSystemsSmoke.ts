@@ -677,6 +677,14 @@ function runIdleLingShaDripAchievementSmoke(): void {
   assert.ok(ids.has("idle_ling_sha_drip_120"));
 }
 
+function runIdleLingShaDrip300AchievementSmoke(): void {
+  const st = createInitialState();
+  st.lifetimeStats.idleLingShaDripClaims = 300;
+  const newly = tryCompleteAchievements(st);
+  const ids = new Set(newly.map((x) => x.id));
+  assert.ok(ids.has("idle_ling_sha_drip_300"), "300-claim ling-sha drip milestone should unlock");
+}
+
 function runSpiritReservoirAutoClaimSmoke(): void {
   const st = createInitialState();
   st.realmLevel = 3;
@@ -1354,6 +1362,7 @@ function main(): void {
   runIdleLingShaDripSmoke();
   runIdleLingShaDripOfflineTickSmoke();
   runIdleLingShaDripAchievementSmoke();
+  runIdleLingShaDrip300AchievementSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();
   runCelestialStashProgressSmoke();

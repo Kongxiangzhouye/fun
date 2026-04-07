@@ -10680,6 +10680,23 @@ p.gear-forge-tier-hint {
   opacity: 0.95;
 }
 
+.chronicle-stat-card--idle-ling-sha-drip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(200, 150, 80, 0.42);
+  background: linear-gradient(145deg, rgba(48, 36, 22, 0.72), rgba(18, 14, 10, 0.78));
+}
+
+.chronicle-stat-card--idle-ling-sha-drip .chronicle-stat-lbl {
+  margin-bottom: 2px;
+}
+
+.chronicle-stat-card--idle-ling-sha-drip .chronicle-stat-ico {
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
 .chronicle-stat-card--playtime {
   display: flex;
   align-items: center;
