@@ -5,6 +5,7 @@
     { "id": "dailyLogin", "file": "deco-daily-login.svg" },
     { "id": "celestialStash", "file": "deco-celestial-stash.svg" },
     { "id": "spiritReservoir", "file": "deco-spirit-reservoir.svg" },
+    { "id": "idleLingShaDrip", "file": "deco-idle-ling-sha-drip.svg" },
     { "id": "dailyFortune", "file": "deco-daily-fortune.svg" },
     { "id": "spiritArray", "file": "deco-spirit-array.svg" }
   ]

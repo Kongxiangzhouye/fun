@@ -68,6 +68,8 @@ export interface LifetimeStatsState {
   celestialStashBuys: number;
   /** 蓄灵池累计收取次数 */
   spiritReservoirClaims: number;
+  /** 灵砂涓滴累计收取次数（每次收取 1 灵砂计 1） */
+  idleLingShaDripClaims: number;
   /** 心斋卦象累计刷新次数（跨日计数） */
   dailyFortuneRolls: number;
   /** 累计铸灵次数（铸灵池成功产出装备） */
@@ -769,6 +771,10 @@ export interface GameState {
    * 蓄灵池：额外比例灵石蓄存（与每秒灵石挂钩，收取时并入灵石）
    */
   spiritReservoirStored: string;
+  /**
+   * 灵砂涓滴：按当前每秒灵石等效凝露进度（收取时扣阈值并 +1 灵砂）
+   */
+  idleLingShaDripPool: string;
 
   /** 心斋卦象（每日运势） */
   dailyFortune: DailyFortuneState;

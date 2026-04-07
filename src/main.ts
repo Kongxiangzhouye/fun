@@ -143,6 +143,7 @@ import {
   UI_HEAD_COMBAT,
   UI_HUB_SECTION_FLAIR,
   UI_HEAD_SPIRIT_RESERVOIR,
+  UI_HEAD_IDLE_LING_SHA_DRIP,
   UI_SPIRIT_RESERVOIR_AUTO,
   UI_SPIRIT_RESERVOIR_ETA,
   UI_HEAD_DAILY_FORTUNE,
@@ -255,6 +256,14 @@ import {
   formatSpiritReservoirEtaLine,
   tryAutoClaimSpiritReservoirIfFull,
 } from "./systems/spiritReservoir";
+import {
+  canClaimIdleLingShaDrip,
+  claimIdleLingShaDrip,
+  dripFillRatio,
+  dripPool,
+  dripThreshold,
+  formatIdleLingShaDripEtaLine,
+} from "./systems/idleLingShaDrip";
 import { spiritTideActive, SPIRIT_TIDE_STONE_MULT } from "./systems/spiritTide";
 import { renderDaoMeridianPanel } from "./ui/daoMeridianPanel";
 import { renderChroniclePanel } from "./ui/chroniclePanel";
@@ -3544,6 +3553,32 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
     </section>`
     : "";
 
+  const dripTh = dripThreshold(state);
+  const dPool = dripPool(state);
+  const dPct = dripFillRatio(state) * 100;
+  const canDrip = canClaimIdleLingShaDrip(state);
+  const dripEtaLine = formatIdleLingShaDripEtaLine(state, ips);
+  const dripNearFull = dPct >= 80 && dPct < 100;
+  const dripFull = dPct >= 99.999;
+  const lingShaDripBlock = u.tabSpiritReservoir
+    ? `<section class="panel idle-ling-sha-drip-panel">
+      <div class="panel-title-art-row">
+        <img class="panel-title-art-icon" src="${UI_HEAD_IDLE_LING_SHA_DRIP}" alt="" width="28" height="28" loading="lazy" />
+        <h2>灵砂涓滴</h2>
+      </div>
+      <p class="hint">从灵石余韵中凝出微量灵砂（约 <strong>1.6%</strong> 当前每秒灵石等效计入进度，与主收益并行）；进度满一管可收取 <strong>1</strong> 灵砂。</p>
+      <div class="idle-ling-sha-drip-bar-wrap${dripNearFull ? " idle-ling-sha-drip-bar-wrap--near-full" : ""}${dripFull ? " idle-ling-sha-drip-bar-wrap--full" : ""}" id="idle-ling-sha-drip-bar-wrap">
+        <div class="idle-ling-sha-drip-bar"><div class="idle-ling-sha-drip-bar-fill" id="idle-ling-sha-drip-bar-fill" style="width:${dPct}%"></div></div>
+        <p class="hint sm idle-ling-sha-drip-readout"><span id="idle-ling-sha-drip-pool">${fmtDecimal(dPool)}</span> / <span id="idle-ling-sha-drip-threshold">${fmtDecimal(dripTh)}</span> 凝露</p>
+      </div>
+      <p class="hint sm idle-ling-sha-drip-eta-row">
+        <img class="idle-ling-sha-drip-eta-ico" src="${UI_SPIRIT_RESERVOIR_ETA}" alt="" width="16" height="16" loading="lazy" />
+        <span id="idle-ling-sha-drip-eta">${dripEtaLine}</span>
+      </p>
+      <button type="button" class="btn ${canDrip ? "btn-primary" : ""}" id="btn-idle-ling-sha-drip-claim" ${canDrip ? "" : "disabled"}>${canDrip ? "收取灵砂" : "凝露未满"}</button>
+    </section>`
+    : "";
+
   const fd = getActiveFortuneDef(state);
   const calDay = state.dailyFortune.calendarDay || toLocalYMD(nowMs());
   const fortuneBlock =
@@ -3658,7 +3693,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
       <p class="hint">图鉴收集 ${unique} / ${codex}${deckRealmPct > 0.001 ? ` · 卡组境界加成 ${deckRealmPct.toFixed(2)}%` : ""}</p>
     </section>`;
 
-  return reservoirBlock + fortuneBlock + offlineChoicePanel + estateCommissionPanel + incomeGuidePanel + core;
+  return reservoirBlock + lingShaDripBlock + fortuneBlock + offlineChoicePanel + estateCommissionPanel + incomeGuidePanel + core;
 }
 
 function renderGacha(
@@ -5284,6 +5319,29 @@ function bindEvents(rb: Decimal, _slots: number): void {
     });
 
     document.body.addEventListener("click", (ev) => {
+    const bd = (ev.target as HTMLElement | null)?.closest?.("#btn-idle-ling-sha-drip-claim") as HTMLElement | null;
+    if (!bd) return;
+    if (!canClaimIdleLingShaDrip(state)) {
+      toast("凝露未满，暂不可收取。");
+      return;
+    }
+    const gotLs = claimIdleLingShaDrip(state);
+    if (gotLs <= 0) return;
+    tryCompleteAchievements(state);
+    saveGame(state);
+    toast("灵砂涓滴：+1 灵砂");
+    updateTopResourcePillsAndVigor(totalCardsInPool());
+    const pAch2 = document.getElementById("ps-ach");
+    if (pAch2) pAch2.textContent = `${state.achievementsDone.size} / ${ACHIEVEMENTS.length}`;
+    const t2 = nowMs();
+    if (activeHub === "estate" && estateSub === "idle") {
+      updateEstateIdleLiveReadouts(t2);
+    } else {
+      render();
+    }
+    });
+
+    document.body.addEventListener("click", (ev) => {
     const b = (ev.target as HTMLElement | null)?.closest?.("#btn-spirit-array-up") as HTMLElement | null;
     if (!b) return;
     if (!tryUpgradeSpiritArray(state)) {
@@ -5729,6 +5787,29 @@ function updateEstateIdleLiveReadouts(now: number): void {
       btn.disabled = !canRs;
       btn.className = `btn ${canRs ? "btn-primary" : ""}`;
       btn.textContent = canRs ? "收取蓄灵" : "暂无蓄灵";
+    }
+    const dTh = dripThreshold(state);
+    const dPool2 = dripPool(state);
+    const dPct2 = dripFillRatio(state) * 100;
+    const canDrip2 = canClaimIdleLingShaDrip(state);
+    const dWrap = document.getElementById("idle-ling-sha-drip-bar-wrap");
+    if (dWrap) {
+      dWrap.classList.toggle("idle-ling-sha-drip-bar-wrap--near-full", dPct2 >= 80 && dPct2 < 100);
+      dWrap.classList.toggle("idle-ling-sha-drip-bar-wrap--full", dPct2 >= 99.999);
+    }
+    const elDp = document.getElementById("idle-ling-sha-drip-pool");
+    const elDt = document.getElementById("idle-ling-sha-drip-threshold");
+    const dBar = document.getElementById("idle-ling-sha-drip-bar-fill") as HTMLElement | null;
+    const dBtn = document.getElementById("btn-idle-ling-sha-drip-claim") as HTMLButtonElement | null;
+    const dEta = document.getElementById("idle-ling-sha-drip-eta");
+    if (dEta) dEta.textContent = formatIdleLingShaDripEtaLine(state, ips);
+    if (elDp) elDp.textContent = fmtDecimal(dPool2);
+    if (elDt) elDt.textContent = fmtDecimal(dTh);
+    if (dBar) dBar.style.width = `${dPct2}%`;
+    if (dBtn) {
+      dBtn.disabled = !canDrip2;
+      dBtn.className = `btn ${canDrip2 ? "btn-primary" : ""}`;
+      dBtn.textContent = canDrip2 ? "收取灵砂" : "凝露未满";
     }
   }
   if (uIdle.tabDailyFortune) {

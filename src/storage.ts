@@ -147,6 +147,7 @@ export interface SerializedState {
   loginCalendarClaimedDates?: string[];
   loginCalendarWeeklyBonusClaimed?: boolean;
   spiritReservoirStored?: string;
+  idleLingShaDripPool?: string;
   dailyFortune?: GameState["dailyFortune"];
   offlineAdventure?: GameState["offlineAdventure"];
   estateCommission?: GameState["estateCommission"];
@@ -344,6 +345,7 @@ export function serialize(state: GameState): string {
     loginCalendarClaimedDates: [...state.loginCalendarClaimedDates],
     loginCalendarWeeklyBonusClaimed: state.loginCalendarWeeklyBonusClaimed,
     spiritReservoirStored: state.spiritReservoirStored,
+    idleLingShaDripPool: state.idleLingShaDripPool,
     dailyFortune: { ...state.dailyFortune },
     offlineAdventure: state.offlineAdventure
       ? {
@@ -562,6 +564,10 @@ export function deserialize(json: string): GameState {
   st.spiritReservoirStored =
     data.spiritReservoirStored !== undefined && data.spiritReservoirStored !== null
       ? String(data.spiritReservoirStored)
+      : "0";
+  st.idleLingShaDripPool =
+    data.idleLingShaDripPool !== undefined && data.idleLingShaDripPool !== null
+      ? String(data.idleLingShaDripPool)
       : "0";
   if (data.dailyFortune && typeof data.dailyFortune.fortuneId === "string") {
     st.dailyFortune = {
@@ -922,6 +928,7 @@ export function deserialize(json: string): GameState {
       dungeonEssenceIntGained: Math.max(0, Math.floor(data.lifetimeStats.dungeonEssenceIntGained ?? 0)),
       celestialStashBuys: Math.max(0, Math.floor(data.lifetimeStats.celestialStashBuys ?? 0)),
       spiritReservoirClaims: Math.max(0, Math.floor(data.lifetimeStats.spiritReservoirClaims ?? 0)),
+      idleLingShaDripClaims: Math.max(0, Math.floor(data.lifetimeStats.idleLingShaDripClaims ?? 0)),
       dailyFortuneRolls: Math.max(0, Math.floor(data.lifetimeStats.dailyFortuneRolls ?? 0)),
       gearForgesTotal: Math.max(0, Math.floor(data.lifetimeStats.gearForgesTotal ?? 0)),
       maxGearRarityRankForged: Math.max(

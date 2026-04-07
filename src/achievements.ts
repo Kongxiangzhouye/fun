@@ -1152,6 +1152,30 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     listDeco: "reservoirBloom",
   },
   {
+    id: "idle_ling_sha_drip_8",
+    title: "砂露初凝",
+    desc: "从灵砂涓滴累计收取 8 次灵砂",
+    rewardStones: 420,
+    rewardEssence: 18,
+    listDeco: "garden",
+  },
+  {
+    id: "idle_ling_sha_drip_40",
+    title: "涓滴成渠",
+    desc: "从灵砂涓滴累计收取 40 次灵砂",
+    rewardStones: 2100,
+    rewardEssence: 52,
+    listDeco: "gardenBloom",
+  },
+  {
+    id: "idle_ling_sha_drip_120",
+    title: "万砂归府",
+    desc: "从灵砂涓滴累计收取 120 次灵砂",
+    rewardStones: 7200,
+    rewardEssence: 120,
+    listDeco: "gardenBloom",
+  },
+  {
     id: "daily_fortune_1",
     title: "心斋有象",
     desc: "经历 1 次卦象日更替",
@@ -1607,6 +1631,12 @@ export function checkAchievementUnlock(state: GameState, id: string): boolean {
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 200;
     case "spirit_reservoir_500":
       return (state.lifetimeStats?.spiritReservoirClaims ?? 0) >= 500;
+    case "idle_ling_sha_drip_8":
+      return (state.lifetimeStats?.idleLingShaDripClaims ?? 0) >= 8;
+    case "idle_ling_sha_drip_40":
+      return (state.lifetimeStats?.idleLingShaDripClaims ?? 0) >= 40;
+    case "idle_ling_sha_drip_120":
+      return (state.lifetimeStats?.idleLingShaDripClaims ?? 0) >= 120;
     case "daily_fortune_1":
       return (state.lifetimeStats?.dailyFortuneRolls ?? 0) >= 1;
     case "daily_fortune_30":

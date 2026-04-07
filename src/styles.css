@@ -11588,6 +11588,57 @@ p.gear-forge-tier-hint {
   line-height: 1.35;
 }
 
+/* —— 灵府 · 灵砂涓滴 —— */
+.idle-ling-sha-drip-panel {
+  margin-bottom: 12px;
+}
+
+.idle-ling-sha-drip-bar-wrap {
+  margin: 10px 0 8px;
+}
+
+.idle-ling-sha-drip-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.38);
+  overflow: hidden;
+  border: 1px solid rgba(180, 140, 80, 0.4);
+}
+
+.idle-ling-sha-drip-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b8894a, #e8c896);
+  transition: width 0.25s ease;
+}
+
+.idle-ling-sha-drip-readout {
+  margin-top: 6px;
+}
+
+.idle-ling-sha-drip-bar-wrap--near-full .idle-ling-sha-drip-bar {
+  border-color: rgba(220, 180, 100, 0.55);
+  box-shadow: 0 0 12px rgba(200, 140, 60, 0.22);
+}
+
+.idle-ling-sha-drip-bar-wrap--full .idle-ling-sha-drip-bar {
+  border-color: rgba(240, 200, 120, 0.65);
+  box-shadow: 0 0 16px rgba(220, 160, 80, 0.32);
+}
+
+.idle-ling-sha-drip-eta-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.idle-ling-sha-drip-eta-ico {
+  flex-shrink: 0;
+  margin-top: 2px;
+  opacity: 0.88;
+}
+
 .spirit-reservoir-eta-row {
   display: flex;
   align-items: flex-start;

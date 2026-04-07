@@ -27,6 +27,7 @@ import { ensureCelestialStashWeek } from "./systems/celestialStash";
 import { tickDailyLoginCalendar } from "./systems/dailyLoginCalendar";
 import { tickDailyFortune } from "./systems/dailyFortune";
 import { spiritReservoirUnlocked, tickSpiritReservoir } from "./systems/spiritReservoir";
+import { idleLingShaDripUnlocked, tickIdleLingShaDrip } from "./systems/idleLingShaDrip";
 import { tickEstateCommission } from "./systems/estateCommission";
 
 const TICK_MAX_DT = 120;
@@ -152,6 +153,7 @@ export function applyTick(state: GameState, now: number): void {
     tickDungeon(state, dt, tickNow);
     const ips = incomePerSecondAt(state, totalCardsInPool(), tickNow);
     if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips);
+    if (idleLingShaDripUnlocked(state)) tickIdleLingShaDrip(state, dt, ips);
     addStones(state, ips.mul(dt));
     if (state.autoSalvageAccumSec == null || !Number.isFinite(state.autoSalvageAccumSec)) state.autoSalvageAccumSec = 0;
     state.autoSalvageAccumSec += dt;
@@ -180,6 +182,7 @@ function applyOfflineLikeProgress(
   mult: number,
 ): void {
   if (spiritReservoirUnlocked(state)) tickSpiritReservoir(state, dt, ips.mul(mult));
+  if (idleLingShaDripUnlocked(state)) tickIdleLingShaDrip(state, dt, ips.mul(mult));
   addStones(state, stoneGain);
   state.playtimeSec += dt;
   state.lifePlaytimeSec += dt;

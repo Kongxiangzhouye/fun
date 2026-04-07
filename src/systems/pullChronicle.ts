@@ -35,6 +35,7 @@ export function normalizeLifetimeStats(st: GameState): void {
       dungeonEssenceIntGained: 0,
       celestialStashBuys: 0,
       spiritReservoirClaims: 0,
+      idleLingShaDripClaims: 0,
       dailyFortuneRolls: 0,
       gearForgesTotal: 0,
       maxGearRarityRankForged: 0,
@@ -91,6 +92,9 @@ export function normalizeLifetimeStats(st: GameState): void {
   const rc = st.lifetimeStats.spiritReservoirClaims;
   if (rc == null || !Number.isFinite(rc)) st.lifetimeStats.spiritReservoirClaims = 0;
   else st.lifetimeStats.spiritReservoirClaims = Math.max(0, Math.floor(rc));
+  const idc = st.lifetimeStats.idleLingShaDripClaims;
+  if (idc == null || !Number.isFinite(idc)) st.lifetimeStats.idleLingShaDripClaims = 0;
+  else st.lifetimeStats.idleLingShaDripClaims = Math.max(0, Math.floor(idc));
   const dr = st.lifetimeStats.dailyFortuneRolls;
   if (dr == null || !Number.isFinite(dr)) st.lifetimeStats.dailyFortuneRolls = 0;
   else st.lifetimeStats.dailyFortuneRolls = Math.max(0, Math.floor(dr));

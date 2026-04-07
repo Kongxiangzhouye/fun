@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import Decimal from "decimal.js";
 import { createInitialState } from "../state";
 import { applyTick, catchUpOffline, fastForward, maxOfflineSec } from "../gameLoop";
 import {
@@ -29,6 +30,11 @@ import {
 } from "../systems/offlineAdventure";
 import { acceptEstateCommission, settleEstateCommission, tryAutoSettleEstateCommission } from "../systems/estateCommission";
 import { reservoirCap, tryAutoClaimSpiritReservoirIfFull } from "../systems/spiritReservoir";
+import {
+  canClaimIdleLingShaDrip,
+  claimIdleLingShaDrip,
+  dripThreshold,
+} from "../systems/idleLingShaDrip";
 import { plantCrop, tryAutoHarvestAndReplantGarden } from "../systems/spiritGarden";
 import {
   serialize,
@@ -636,6 +642,39 @@ function runGardenAutoHarvestSmoke(): void {
   assert.equal(plantCrop(st, 0, "qing_grass", now - 120_000), true, "garden plant should succeed");
   const r = tryAutoHarvestAndReplantGarden(st, now);
   assert.ok(r != null && r.harvested >= 1, "auto harvest should run when mature");
+}
+
+function runIdleLingShaDripSmoke(): void {
+  const st = createInitialState();
+  st.realmLevel = 5;
+  const th = dripThreshold(st);
+  st.idleLingShaDripPool = th.toString();
+  assert.ok(canClaimIdleLingShaDrip(st));
+  const beforeLs = st.lingSha;
+  const n = claimIdleLingShaDrip(st);
+  assert.equal(n, 1);
+  assert.equal(st.lingSha, beforeLs + 1);
+  assert.ok(!canClaimIdleLingShaDrip(st));
+}
+
+function runIdleLingShaDripOfflineTickSmoke(): void {
+  const st = createInitialState();
+  st.realmLevel = 8;
+  st.spiritStones = "1e15";
+  const now = Date.now();
+  st.lastTick = now - 5000;
+  catchUpOffline(st, now);
+  assert.ok(new Decimal(st.idleLingShaDripPool || "0").gt(0), "offline should advance drip pool");
+}
+
+function runIdleLingShaDripAchievementSmoke(): void {
+  const st = createInitialState();
+  st.lifetimeStats.idleLingShaDripClaims = 120;
+  const newly = tryCompleteAchievements(st);
+  const ids = new Set(newly.map((x) => x.id));
+  assert.ok(ids.has("idle_ling_sha_drip_8"));
+  assert.ok(ids.has("idle_ling_sha_drip_40"));
+  assert.ok(ids.has("idle_ling_sha_drip_120"));
 }
 
 function runSpiritReservoirAutoClaimSmoke(): void {
@@ -1312,6 +1351,9 @@ function main(): void {
   runSpiritTideAchievementsSmoke();
   runSpiritArrayUpgradeAchievementsSmoke();
   runSpiritReservoirAutoClaimSmoke();
+  runIdleLingShaDripSmoke();
+  runIdleLingShaDripOfflineTickSmoke();
+  runIdleLingShaDripAchievementSmoke();
   runGardenAutoHarvestSmoke();
   runDailyLoginAutoClaimPrefsSmoke();
   runCelestialStashProgressSmoke();
