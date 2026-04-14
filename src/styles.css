@@ -2051,6 +2051,97 @@ body {
   font-size: 0.9rem;
 }
 
+/* 下一步成长：浮动定位条（随主循环节流刷新文案） */
+.next-boost-fab {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  z-index: 70;
+  max-width: min(220px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.next-boost-fab__btn {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 156, 255, 0.35);
+  background: linear-gradient(145deg, rgba(22, 28, 44, 0.96), rgba(12, 16, 26, 0.98));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.next-boost-fab__btn:hover {
+  border-color: rgba(160, 190, 255, 0.55);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(124, 156, 255, 0.12);
+}
+
+.next-boost-fab__btn:active {
+  transform: translateY(1px);
+}
+
+.next-boost-fab__kicker {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(180, 198, 230, 0.72);
+  font-weight: 700;
+}
+
+.next-boost-fab__title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.next-boost-fab__detail {
+  pointer-events: none;
+  margin: 0;
+  padding: 0 2px 0 0;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: rgba(180, 190, 210, 0.82);
+  max-height: 2.8em;
+  overflow: hidden;
+}
+
+.next-boost-fab--claim .next-boost-fab__btn {
+  border-color: rgba(232, 197, 71, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 18px rgba(232, 197, 71, 0.12);
+}
+
+.next-boost-jump-flash {
+  animation: next-boost-jump-flash 0.85s ease-out 1;
+}
+
+@keyframes next-boost-jump-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(124, 156, 255, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(124, 156, 255, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .next-boost-jump-flash {
+    animation: none;
+  }
+}
+
 .app-bottom-nav {
   position: fixed;
   bottom: 0;

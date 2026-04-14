@@ -32,7 +32,7 @@ export function renderSpiritArrayPanel(state: GameState): string {
       <p class="hint sm spirit-array-readout">当前阵图 <strong id="spirit-array-lv">${lv}</strong> / ${SPIRIT_ARRAY_MAX_LEVEL} · 灵石收益 <strong id="spirit-array-mult">+${bonusPct.toFixed(1)}%</strong></p>
       <p class="hint sm">预览：每秒灵石约 <strong id="spirit-array-ips">${fmtDecimal(ips)}</strong>（已含阵图）</p>
       <div class="spirit-array-actions">
-        <button type="button" class="btn ${can ? "btn-primary" : ""}" id="btn-spirit-array-up" ${can ? "" : "disabled"}>
+        <button type="button" class="btn ${can ? "btn-primary" : ""}" id="btn-spirit-array-up" data-next-boost-target="spirit-array-up" ${can ? "" : "disabled"}>
           ${maxed ? "阵图已满" : `绘阵一重（${fmtDecimal(sc)} 灵石 · ${lc} 灵砂）`}
         </button>
       </div>

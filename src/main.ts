@@ -99,6 +99,7 @@ import type { Application, Container, Graphics, Ticker } from "pixi.js";
 import { gearItemPower } from "./systems/gearCraft";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
+import { computeNextBoostHint, scrollToNextBoostTarget, type NextBoostHint } from "./nextBoostHint";
 import { sessionFunFlavorLine, onTitleSpiritPet, bindKonamiEasterEgg } from "./funBits";
 import {
   DUNGEON_HELP_BLURB,
@@ -547,6 +548,9 @@ let showKeyboardHelpModal = false;
 let showAboutModal = false;
 /** 上一次完整 render 对应的主内容视图（用于同页操作时恢复 .hub-page-scroll 滚动） */
 let lastMainContentViewKey = "";
+/** 「下一步成长」浮动条：节流刷新，避免主循环每 tick 重算文案 */
+let lastNextBoostSerialized = "";
+let nextBoostFabLoopCounter = 0;
 /** 主循环基准间隔：实际会按移动端/减动效自适应放大 */
 const LOOP_INTERVAL_BASE_MS = 50;
 
@@ -3315,6 +3319,124 @@ function escapeHtmlAttr(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function escapeHtmlText(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderNextBoostFab(): string {
+  if (state.tutorialStep !== 0) return "";
+  const hint = computeNextBoostHint(state, nowMs(), totalCardsInPool());
+  if (!hint) return "";
+  const claimCls = hint.claimStyle ? " next-boost-fab--claim" : "";
+  return `<aside class="next-boost-fab${claimCls}" id="next-boost-fab" aria-label="下一步成长建议">
+    <button type="button" class="next-boost-fab__btn" id="btn-next-boost-jump" title="${escapeHtmlAttr(hint.detailLine)}">
+      <span class="next-boost-fab__kicker">下一步</span>
+      <span class="next-boost-fab__title">${escapeHtmlText(hint.title)}</span>
+    </button>
+    <p class="next-boost-fab__detail" id="next-boost-fab-detail">${escapeHtmlText(hint.detailLine)}</p>
+  </aside>`;
+}
+
+function routeNextBoostNavigation(h: NextBoostHint): void {
+  switch (h.scrollTarget) {
+    case "daily-login":
+      activeHub = "cultivate";
+      cultivateSub = "daily";
+      break;
+    case "bounty-claim":
+      activeHub = "cultivate";
+      cultivateSub = "bounty";
+      break;
+    case "spirit-reservoir":
+    case "ling-sha-drip":
+      activeHub = "estate";
+      estateSub = "idle";
+      estateIdleSub = "well";
+      break;
+    case "realm-break":
+      activeHub = "estate";
+      estateSub = "idle";
+      estateIdleSub = "core";
+      break;
+    case "gacha-card":
+      activeHub = "cultivate";
+      cultivateSub = "deck";
+      gachaPool = "cards";
+      break;
+    case "gacha-gear":
+      activeHub = "battle";
+      battleSub = "forge";
+      gachaPool = "gear";
+      break;
+    case "battle-skill-pull":
+      activeHub = "cultivate";
+      cultivateSub = "xinfa";
+      break;
+    case "spirit-array-up":
+      activeHub = "estate";
+      estateSub = "array";
+      break;
+    case "vein-huiLing":
+    case "vein-lingXi":
+    case "vein-gongMing":
+    case "vein-guYuan":
+      activeHub = "estate";
+      estateSub = "vein";
+      break;
+    case "meta-idleMult":
+    case "meta-gachaLuck":
+    case "meta-deckSlots":
+    case "meta-ticketRegen":
+    case "meta-stoneMult":
+      activeHub = "cultivate";
+      cultivateSub = "meta";
+      break;
+    case "dao-meridian-panel":
+      activeHub = "character";
+      characterSub = "meridian";
+      break;
+    case "deck-panel":
+      activeHub = "cultivate";
+      cultivateSub = "deck";
+      break;
+    case "rein":
+      activeHub = "cultivate";
+      cultivateSub = "meta";
+      break;
+    default:
+      break;
+  }
+  normalizeHubNavigation(getUiUnlocks(state));
+}
+
+function refreshNextBoostFabDom(): void {
+  if (state.tutorialStep !== 0) {
+    document.getElementById("next-boost-fab")?.remove();
+    lastNextBoostSerialized = "";
+    return;
+  }
+  const hint = computeNextBoostHint(state, nowMs(), totalCardsInPool());
+  const wrap = document.getElementById("next-boost-fab");
+  if (!hint) {
+    wrap?.remove();
+    lastNextBoostSerialized = "";
+    return;
+  }
+  if (!wrap) return;
+  const serialized = `${hint.scrollTarget}|${hint.title}|${hint.detailLine}|${hint.claimStyle ? "1" : "0"}`;
+  if (serialized === lastNextBoostSerialized) return;
+  lastNextBoostSerialized = serialized;
+  wrap.classList.toggle("next-boost-fab--claim", hint.claimStyle);
+  const btn = document.getElementById("btn-next-boost-jump") as HTMLButtonElement | null;
+  if (btn) {
+    btn.title = hint.detailLine;
+    const titleEl = btn.querySelector(".next-boost-fab__title");
+    if (titleEl) titleEl.textContent = hint.title;
+  }
+  const det = document.getElementById("next-boost-fab-detail");
+  if (det) det.textContent = hint.detailLine;
+}
+
 function renderHubContent(
   ips: Decimal,
   rb: Decimal,
@@ -3446,6 +3568,7 @@ function render(): void {
     </div>
     </main>
 
+    ${renderNextBoostFab()}
     ${renderTutorialBlock()}
     ${renderFlyOverlay()}
     ${renderBottomNav(u)}
@@ -3455,6 +3578,7 @@ function render(): void {
   `;
 
   bindEvents(rb, slots);
+  lastNextBoostSerialized = "";
 
   lastMainContentViewKey = viewKeyNow;
   if (restoreHubScroll) {
@@ -3566,7 +3690,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const reservoirNearFull = rPct >= 80 && rPct < 100;
   const reservoirFull = rPct >= 99.999;
   const reservoirBlock = u.tabSpiritReservoir
-    ? `<section class="panel spirit-reservoir-panel">
+    ? `<section class="panel spirit-reservoir-panel" data-next-boost-target="spirit-reservoir">
       <div class="panel-title-art-row">
         <img class="panel-title-art-icon" src="${UI_HEAD_SPIRIT_RESERVOIR}" alt="" width="28" height="28" loading="lazy" />
         <h2>蓄灵池</h2>
@@ -3597,7 +3721,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const dripNearFull = dPct >= 80 && dPct < 100;
   const dripFull = dPct >= 99.999;
   const lingShaDripBlock = u.tabSpiritReservoir
-    ? `<section class="panel idle-ling-sha-drip-panel">
+    ? `<section class="panel idle-ling-sha-drip-panel" data-next-boost-target="ling-sha-drip">
       <div class="panel-title-art-row">
         <img class="panel-title-art-icon" src="${UI_HEAD_IDLE_LING_SHA_DRIP}" alt="" width="28" height="28" loading="lazy" />
         <h2>灵砂涓滴</h2>
@@ -3666,7 +3790,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         </ul>
       </div>
       <div class="btn-row">
-        <button class="btn btn-primary" type="button" id="btn-realm" ${canBreak ? "" : "disabled"}>
+        <button class="btn btn-primary" type="button" id="btn-realm" data-next-boost-target="realm-break" ${canBreak ? "" : "disabled"}>
           破境（耗 ${fmtDecimal(rb)} 灵石）
         </button>
         <button class="btn ${tunaReady ? "btn-primary" : ""}" type="button" id="btn-tuna" ${tunaReady ? "" : "disabled"}>
@@ -3929,7 +4053,7 @@ function renderGacha(
       </div>
       <p class="hint${embedBattle ? " gacha-hint-embed" : ""}">${embedBattle ? "金系卡牌≥3 时抽卡额外灵石。" : "金系卡牌≥3 时，抽卡可获得额外灵石；解锁十连加成功能后收益更高。"}</p>
       <div class="gacha-actions">
-        <button class="btn btn-primary gacha-flash${tutPulseGacha ? " tutorial-pulse" : ""}" type="button" id="btn-pull-1" ${state.summonEssence >= ESSENCE_COST_SINGLE ? "" : "disabled"}>单抽（${ESSENCE_COST_SINGLE} 唤灵髓）</button>
+        <button class="btn btn-primary gacha-flash${tutPulseGacha ? " tutorial-pulse" : ""}" type="button" id="btn-pull-1" data-next-boost-target="gacha-card" ${state.summonEssence >= ESSENCE_COST_SINGLE ? "" : "disabled"}>单抽（${ESSENCE_COST_SINGLE} 唤灵髓）</button>
         ${
           tenUnlocked
             ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-10" ${tenDisabled ? "disabled" : ""}>十连（${ESSENCE_COST_TEN} 唤灵髓）</button>`
@@ -3977,7 +4101,7 @@ function renderGacha(
       <p class="hint${embedBattle ? " gacha-hint-embed" : ""}">${embedBattle ? "词条与强化：历练页长按筑灵条 →「管理」。" : "词条与强化请在「历练·筑灵」筑灵条长按展开后点「管理」；筑灵阶 1–48 与稀有度共同决定词条池。"}</p>
       ${gearDetailBlock}
       <div class="gacha-actions">
-        <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 筑灵髓）</button>
+        <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" data-next-boost-target="gacha-gear" ${state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 筑灵髓）</button>
         ${
           tenUnlocked
             ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-10" ${gearTenDisabled ? "disabled" : ""}>十铸（${ESSENCE_COST_GEAR_TEN} 筑灵髓）</button>`
@@ -4086,7 +4210,7 @@ function renderVeinPage(): string {
           <div class="vein-lv-fill vein-lv-fill-${k}" style="width:${lvPct}%"></div>
         </div>
         <p class="hint">${VEIN_DESC[k]}</p>
-        <button class="btn btn-primary" type="button" data-vein="${k}" ${affordable ? "" : "disabled"}>
+        <button class="btn btn-primary" type="button" data-vein="${k}" data-next-boost-target="vein-${k}" ${affordable ? "" : "disabled"}>
           ${maxed ? "已满" : `强化（${costLabel}）`}
         </button>
         ${previewLine ? `<p class="hint sm">${previewLine}</p>` : ""}
@@ -4151,7 +4275,7 @@ function renderDeck(slots: number): string {
   const u = getUiUnlocks(state);
   const pityUr = urPityRemaining(state);
   return `
-    <section class="panel deck-panel-wrap" id="deck-panel-root">
+    <section class="panel deck-panel-wrap" id="deck-panel-root" data-next-boost-target="deck-panel">
       <h2>卡组（${slots} 槽生效）</h2>
       <p class="hint">${syn}</p>
       <p class="hint">升阶、分解与仓库：<strong>角色 → 灵卡</strong>；点阵位在此弹层中布阵与升阶。</p>
@@ -4221,7 +4345,7 @@ function renderMeta(): string {
       <div class="meta-card">
         <h3>${titles[k]} <span class="inv-meta">Lv.${lv}</span></h3>
         <p class="hint">${desc[k]}</p>
-        <button class="btn ${can ? "btn-primary" : ""}" type="button" data-meta="${k}" ${can ? "" : "disabled"}>
+        <button class="btn ${can ? "btn-primary" : ""}" type="button" data-meta="${k}" data-next-boost-target="meta-${k}" ${can ? "" : "disabled"}>
           强化（${fmt(cost)} 道韵）
         </button>
       </div>
@@ -4262,7 +4386,7 @@ function renderMeta(): string {
         </p>
       </div>
       <div class="btn-row">
-        <button class="btn btn-danger" type="button" id="btn-rein" ${reinOk ? "" : "disabled"}>确认轮回</button>
+        <button class="btn btn-danger" type="button" id="btn-rein" data-next-boost-target="rein" ${reinOk ? "" : "disabled"}>确认轮回</button>
       </div>
     </section>
     <section class="panel">
@@ -4368,6 +4492,16 @@ function renderAch(): string {
 }
 
 function bindEvents(rb: Decimal, _slots: number): void {
+  document.getElementById("btn-next-boost-jump")?.addEventListener("click", () => {
+    const hint = computeNextBoostHint(state, nowMs(), totalCardsInPool());
+    if (!hint) return;
+    routeNextBoostNavigation(hint);
+    render();
+    requestAnimationFrame(() => {
+      scrollToNextBoostTarget(hint.scrollTarget);
+    });
+  });
+
   const applyHubSideEffects = (hub: HubId): void => {
     activeHub = hub;
     if (hub !== "cultivate") deckModalSlot = null;
@@ -6663,6 +6797,10 @@ function loop(): void {
     }
   }
   updateTopResourcePillsAndVigor(pool);
+  nextBoostFabLoopCounter = (nextBoostFabLoopCounter + 1) % 4;
+  if (nextBoostFabLoopCounter === 0) {
+    refreshNextBoostFabDom();
+  }
   const pr = document.getElementById("ps-realm");
   const pa = document.getElementById("ps-atk");
   const ph = document.getElementById("ps-hp");

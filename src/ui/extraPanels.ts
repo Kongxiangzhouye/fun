@@ -790,7 +790,7 @@ export function renderBattleSkillPanel(state: GameState): string {
         <span class="battle-skill-auto-text">主循环自动领悟/精进（唤灵髓不足或全部 Lv.20 则停）</span>
       </label>
       <p class="inv-meta" id="battle-skills-readout">当前：${describeBattleSkillLevels(state)}</p>
-      <button class="btn btn-primary" type="button" id="btn-pull-battle-skill" ${state.summonEssence >= battleSkillPullCost() ? "" : "disabled"}>领悟心法（${battleSkillPullCost()} 唤灵髓）</button>
+      <button class="btn btn-primary" type="button" id="btn-pull-battle-skill" data-next-boost-target="battle-skill-pull" ${state.summonEssence >= battleSkillPullCost() ? "" : "disabled"}>领悟心法（${battleSkillPullCost()} 唤灵髓）</button>
     </section>`;
 }
 

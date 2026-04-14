@@ -21,7 +21,7 @@ export function renderDaoMeridianPanel(state: GameState): string {
   }).join("");
 
   return `
-    <section class="panel dao-meridian-panel">
+    <section class="panel dao-meridian-panel" data-next-boost-target="dao-meridian-panel">
       <div class="panel-title-art-row">
         <img class="panel-title-art-icon" src="${UI_HEAD_DAO_MERIDIAN}" alt="" width="28" height="28" loading="lazy" />
         <h2>道韵 · 灵窍</h2>

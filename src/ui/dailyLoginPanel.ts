@@ -44,7 +44,7 @@ export function renderDailyLoginPanel(state: GameState, now: number): string {
   const bonusDone = state.loginCalendarWeeklyBonusClaimed;
 
   return `
-    <section class="panel daily-login-panel">
+    <section class="panel daily-login-panel" data-next-boost-target="daily-login">
       <div class="panel-title-art-row">
         <img class="panel-title-art-icon" src="${UI_HEAD_DAILY_LOGIN}" alt="" width="28" height="28" loading="lazy" />
         <h2>灵息日历</h2>
