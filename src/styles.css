@@ -2054,7 +2054,8 @@ body {
 /* 下一步成长：浮动定位条（随主循环节流刷新文案） */
 .next-boost-fab {
   position: fixed;
-  right: max(12px, env(safe-area-inset-right, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  right: auto;
   bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   z-index: 70;
   max-width: min(220px, calc(100vw - 24px));

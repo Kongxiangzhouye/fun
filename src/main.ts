@@ -3355,12 +3355,12 @@ function routeNextBoostNavigation(h: NextBoostHint): void {
       estateSub = "idle";
       estateIdleSub = "core";
       break;
-    case "gacha-card":
+    case "gacha-card-ten":
       activeHub = "cultivate";
       cultivateSub = "deck";
       gachaPool = "cards";
       break;
-    case "gacha-gear":
+    case "gacha-gear-ten":
       activeHub = "battle";
       battleSub = "forge";
       gachaPool = "gear";
@@ -4042,10 +4042,10 @@ function renderGacha(
       </div>
       <p class="hint${embedBattle ? " gacha-hint-embed" : ""}">${embedBattle ? "金系卡牌≥3 时抽卡额外灵石。" : "金系卡牌≥3 时，抽卡可获得额外灵石；解锁十连加成功能后收益更高。"}</p>
       <div class="gacha-actions">
-        <button class="btn btn-primary gacha-flash${tutPulseGacha ? " tutorial-pulse" : ""}" type="button" id="btn-pull-1" data-next-boost-target="gacha-card" ${state.summonEssence >= ESSENCE_COST_SINGLE ? "" : "disabled"}>单抽（${ESSENCE_COST_SINGLE} 唤灵髓）</button>
+        <button class="btn btn-primary gacha-flash${tutPulseGacha ? " tutorial-pulse" : ""}" type="button" id="btn-pull-1" ${state.summonEssence >= ESSENCE_COST_SINGLE ? "" : "disabled"}>单抽（${ESSENCE_COST_SINGLE} 唤灵髓）</button>
         ${
           tenUnlocked
-            ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-10" ${tenDisabled ? "disabled" : ""}>十连（${ESSENCE_COST_TEN} 唤灵髓）</button>`
+            ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-10" data-next-boost-target="gacha-card-ten" ${tenDisabled ? "disabled" : ""}>十连（${ESSENCE_COST_TEN} 唤灵髓）</button>`
             : `<button class="btn gacha-ten-locked" type="button" disabled title="完成一次单抽或境界≥三重后开放">十连（未解锁）</button>`
         }
       </div>
@@ -4090,10 +4090,10 @@ function renderGacha(
       <p class="hint${embedBattle ? " gacha-hint-embed" : ""}">${embedBattle ? "词条与强化：历练页长按筑灵条 →「管理」。" : "词条与强化请在「历练·筑灵」筑灵条长按展开后点「管理」；筑灵阶 1–48 与稀有度共同决定词条池。"}</p>
       ${gearDetailBlock}
       <div class="gacha-actions">
-        <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" data-next-boost-target="gacha-gear" ${state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 筑灵髓）</button>
+        <button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-1" ${state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE ? "" : "disabled"}>单铸（${ESSENCE_COST_GEAR_SINGLE} 筑灵髓）</button>
         ${
           tenUnlocked
-            ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-10" ${gearTenDisabled ? "disabled" : ""}>十铸（${ESSENCE_COST_GEAR_TEN} 筑灵髓）</button>`
+            ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-10" data-next-boost-target="gacha-gear-ten" ${gearTenDisabled ? "disabled" : ""}>十铸（${ESSENCE_COST_GEAR_TEN} 筑灵髓）</button>`
             : `<button class="btn gacha-ten-locked" type="button" disabled title="完成一次单抽或境界≥三重后开放">十铸（未解锁）</button>`
         }
       </div>

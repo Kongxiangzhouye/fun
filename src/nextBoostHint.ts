@@ -1,6 +1,12 @@
 import Decimal from "decimal.js";
 import type { GameState } from "./types";
-import { ESSENCE_COST_GEAR_SINGLE, ESSENCE_COST_SINGLE, MAX_CARD_LEVEL, REINCARNATION_REALM_REQ } from "./types";
+import {
+  ESSENCE_COST_GEAR_SINGLE,
+  ESSENCE_COST_GEAR_TEN,
+  ESSENCE_COST_TEN,
+  MAX_CARD_LEVEL,
+  REINCARNATION_REALM_REQ,
+} from "./types";
 import { incomePerSecond, realmBreakthroughCostForState, upgradeCardLevelCost, upgradeCardLingShaCost } from "./economy";
 import { canAfford } from "./stones";
 import { canClaimDailyLoginReward } from "./systems/dailyLoginCalendar";
@@ -174,21 +180,22 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     };
   }
 
-  if (u.tabGear && state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE) {
+  const tenUnlocked = u.gachaTenUnlocked;
+  if (u.tabGear && tenUnlocked && state.zhuLingEssence >= ESSENCE_COST_GEAR_TEN) {
     return {
-      scrollTarget: "gacha-gear",
-      title: "境界铸灵可单铸",
-      detailLine: `筑灵髓 ≥ ${ESSENCE_COST_GEAR_SINGLE}`,
+      scrollTarget: "gacha-gear-ten",
+      title: "境界铸灵可十铸",
+      detailLine: `筑灵髓 ≥ ${ESSENCE_COST_GEAR_TEN}`,
       priority: 82,
       claimStyle: false,
     };
   }
 
-  if (state.summonEssence >= ESSENCE_COST_SINGLE) {
+  if (tenUnlocked && state.summonEssence >= ESSENCE_COST_TEN) {
     return {
-      scrollTarget: "gacha-card",
-      title: "灵卡池可单抽",
-      detailLine: `唤灵髓 ≥ ${ESSENCE_COST_SINGLE}`,
+      scrollTarget: "gacha-card-ten",
+      title: "灵卡池可十连",
+      detailLine: `唤灵髓 ≥ ${ESSENCE_COST_TEN}`,
       priority: 80,
       claimStyle: false,
     };
