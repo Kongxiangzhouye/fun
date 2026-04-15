@@ -21,6 +21,7 @@ export function qoLCost(kind: keyof QoLFlags): number {
 }
 
 export function buyQoL(state: GameState, kind: keyof QoLFlags): boolean {
+  if (kind === "autoRealm" || kind === "autoGacha" || kind === "autoTuna") return false;
   if (state.qoL[kind]) return false;
   const c = COSTS[kind];
   if (state.zaoHuaYu < c) return false;

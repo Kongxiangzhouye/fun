@@ -289,7 +289,6 @@ function runFastForwardCrossWeekSyncSmoke(): void {
   st.weeklyBounty.waves = 5;
   st.celestialStash.weekKey = "1999-01-04";
   st.celestialStash.purchased = ["starter-stash"];
-  st.qoL.autoTuna = true;
   st.lastTunaMs = 0;
   const monday = new Date();
   monday.setHours(0, 10, 0, 0);
@@ -305,7 +304,6 @@ function runFastForwardCrossWeekSyncSmoke(): void {
   assert.equal(st.weeklyBounty.weekKey, currentWeekKey(endMs), "fast-forward should sync weekly bounty week key");
   assert.equal(st.celestialStash.weekKey, currentWeekKey(endMs), "fast-forward should sync celestial stash week key");
   assert.equal(st.celestialStash.purchased.length, 0, "cross-week fast-forward should reset celestial stash purchases");
-  assert.ok(st.lastTunaMs >= startMs, "fast-forward should follow offline auto tuna timing");
 }
 
 function runEstateCommissionDueSettleSmoke(): void {

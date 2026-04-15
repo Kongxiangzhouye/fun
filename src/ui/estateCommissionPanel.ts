@@ -21,7 +21,6 @@ import {
   UI_ESTATE_COMMISSION_STREAK,
   UI_ESTATE_COMMISSION_REFRESH_COOLDOWN,
   UI_ESTATE_COMMISSION_REFRESH_BLOCKED,
-  UI_ESTATE_COMMISSION_AUTO_SETTLE,
   UI_WEEKLY_BOUNTY_STATE_SYNC,
 } from "./visualAssets";
 
@@ -124,11 +123,6 @@ export function renderEstateCommissionPanel(
         <h2>洞府委托</h2>
       </div>
       <p class="hint sm">当前仅可同时进行 1 个委托。离线归来会按时长自动判定完成，可直接结算。</p>
-      <label class="estate-commission-auto-settle-row">
-        <input type="checkbox" id="chk-estate-auto-settle" data-ui-pref="autoSettleEstateCommission" ${state.uiPrefs.autoSettleEstateCommission ? "checked" : ""} />
-        <img class="estate-commission-auto-settle-ico" src="${UI_ESTATE_COMMISSION_AUTO_SETTLE}" alt="" width="18" height="18" loading="lazy" />
-        <span class="estate-commission-auto-settle-text">委托到期可自动结算领奖（无需开启托管连签）</span>
-      </label>
       <div class="estate-commission-streak-row">
         <span class="estate-commission-pill">
           <img src="${UI_ESTATE_COMMISSION_STREAK}" alt="" width="16" height="16" loading="lazy" />
@@ -268,8 +262,6 @@ export function updateEstateCommissionPanelReadouts(
   const autoFeedbackEl = document.getElementById("estate-commission-auto-feedback");
   const autoOpenStateEl = document.getElementById("estate-commission-auto-open-state");
   const autoRenewStateEl = document.getElementById("estate-commission-auto-renew-state");
-  const autoSettleChk = document.getElementById("chk-estate-auto-settle") as HTMLInputElement | null;
-  if (autoSettleChk) autoSettleChk.checked = state.uiPrefs.autoSettleEstateCommission;
   const streak = getEstateCommissionStreakPreview(state);
   if (specLineEl) {
     specLineEl.textContent = streak.specializationType

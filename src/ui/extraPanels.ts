@@ -89,11 +89,9 @@ import {
   gearTierBadgeSrc,
   UI_HEAD_GEAR,
   UI_HEAD_PET,
-  UI_PET_AUTO_FEED,
   UI_PET_FEED_ACTION,
   UI_HEAD_TRAIN,
   UI_HEAD_COMBAT,
-  UI_BATTLE_SKILL_AUTO,
 } from "./visualAssets";
 import { formatMobDisplayName } from "../data/dungeonMobs";
 import { PET_DEFS } from "../data/pets";
@@ -606,7 +604,6 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
               showCombatBossBtn
                 ? `<div class="dungeon-phase-banner-cta" id="dungeon-phase-cta">
               <button type="button" class="btn btn-primary btn-dungeon-challenge-boss" id="btn-dungeon-challenge-boss" ${bossPrep.canChallenge ? "" : "disabled"}>挑战首领</button>
-              <button type="button" class="btn" data-toggle-auto-boss-challenge="1">${state.autoBossChallenge ? "自动挑战首领：开" : "自动挑战首领：关"}</button>
               <span class="hint sm dungeon-phase-cta-note" id="dungeon-phase-cta-note"><img class="dungeon-boss-progress-badge" src="${bossPrep.canChallenge ? UI_DUNGEON_BOSS_READY_BADGE : UI_DUNGEON_BOSS_LOCKED_BADGE}" alt="" width="16" height="16" loading="lazy" />${bossPrep.challengeHint}</span>
             </div>`
                 : ""
@@ -637,7 +634,6 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
             showIdleBossBtn
               ? `<div class="dungeon-boss-intent-row">
             <button type="button" class="btn btn-primary" id="btn-dungeon-boss-next-entry">下一关为首领 · 挑战首领</button>
-            <button type="button" class="btn" data-toggle-auto-boss-challenge="1">${state.autoBossChallenge ? "自动挑战首领：开" : "自动挑战首领：关"}</button>
             <p class="hint sm">默认进关为首领位小怪群；点此后再进关将面对真正首领。</p>
           </div>`
               : ""
@@ -784,11 +780,6 @@ export function renderBattleSkillPanel(state: GameState): string {
           </div>`;
         }).join("")}
       </div>
-      <label class="battle-skill-auto-row">
-        <input type="checkbox" id="chk-battle-skill-auto" data-ui-pref="autoPullBattleSkill" ${state.uiPrefs.autoPullBattleSkill ? "checked" : ""} />
-        <img class="battle-skill-auto-ico" src="${UI_BATTLE_SKILL_AUTO}" alt="" width="18" height="18" loading="lazy" />
-        <span class="battle-skill-auto-text">主循环自动领悟/精进（唤灵髓不足或全部 Lv.20 则停）</span>
-      </label>
       <p class="inv-meta" id="battle-skills-readout">当前：${describeBattleSkillLevels(state)}</p>
       <button class="btn btn-primary" type="button" id="btn-pull-battle-skill" data-next-boost-target="battle-skill-pull" ${state.summonEssence >= battleSkillPullCost() ? "" : "disabled"}>领悟心法（${battleSkillPullCost()} 唤灵髓）</button>
     </section>`;
@@ -1083,11 +1074,6 @@ export function renderPetPanel(state: GameState): string {
         </button>
         <span class="inv-meta pet-pull-meta">累计唤灵 <strong>${state.petPullsTotal}</strong> 次 · 持有唤灵髓 <strong>${Math.floor(state.summonEssence)}</strong></span>
       </div>
-      <label class="pet-auto-feed-row">
-        <input type="checkbox" id="chk-pet-auto-feed" data-ui-pref="autoFeedPets" ${state.uiPrefs.autoFeedPets ? "checked" : ""} />
-        <img class="pet-auto-feed-ico" src="${UI_PET_AUTO_FEED}" alt="" width="18" height="18" loading="lazy" />
-        <span class="pet-auto-feed-text">主循环自动尽髓喂养（已结缘灵宠依次连喂，唤灵髓不足或已满级则停）</span>
-      </label>
       <p class="hint sm">大致概率：凡 38% · 灵 26% · 珍 20% · 绝 12% · 天 4%。重复会增加灵契经验。</p>
       <p class="pet-active-summary">当前全局加成：<strong>${bonusLine}</strong></p>
       ${cards ? `<div class="pet-grid">${cards}</div>` : `<div class="empty-art-wrap"><img src="${UI_EMPTY_PET}" alt="暂无灵宠" class="empty-art-img" width="320" height="160" loading="lazy" /></div>`}

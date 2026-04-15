@@ -7,7 +7,7 @@ import { emptyWeeklyBounty, currentWeekKey } from "./systems/weeklyBounty";
 import { emptyCelestialStash } from "./systems/celestialStash";
 import { createEmptyEstateCommissionState } from "./systems/estateCommission";
 
-export const SAVE_VERSION = 110;
+export const SAVE_VERSION = 111;
 
 const emptySkills = (): GameState["skills"] => ({
   combat: { level: 1, xp: 0 },
@@ -204,6 +204,8 @@ export function createInitialState(): GameState {
     celestialStash: emptyCelestialStash(currentWeekKey(now)),
     spiritReservoirStored: "0",
     idleLingShaDripPool: "0",
+    reservoirClaimableAccumSec: 0,
+    dripClaimableAccumSec: 0,
     dailyFortune: { calendarDay: "", fortuneId: "fd_he" },
     offlineAdventure: {
       pending: null,

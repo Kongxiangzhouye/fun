@@ -22,6 +22,7 @@ import {
 } from "./systems/pullChronicle";
 import { emptyCelestialStash, ensureCelestialStashWeek } from "./systems/celestialStash";
 import { normalizeSpiritArrayLevel } from "./systems/spiritArray";
+import { disableDiscretionaryAutoProgress } from "./discretionaryAuto";
 import { buildEssenceOptionForSettledSec, normalizeOfflineAdventureState } from "./systems/offlineAdventure";
 import { normalizeGearGrade } from "./systems/gearCraft";
 import { legacyGearRank5ToRank9 } from "./ui/gearVisualTier";
@@ -148,6 +149,8 @@ export interface SerializedState {
   loginCalendarWeeklyBonusClaimed?: boolean;
   spiritReservoirStored?: string;
   idleLingShaDripPool?: string;
+  reservoirClaimableAccumSec?: number;
+  dripClaimableAccumSec?: number;
   dailyFortune?: GameState["dailyFortune"];
   offlineAdventure?: GameState["offlineAdventure"];
   estateCommission?: GameState["estateCommission"];
@@ -346,6 +349,8 @@ export function serialize(state: GameState): string {
     loginCalendarWeeklyBonusClaimed: state.loginCalendarWeeklyBonusClaimed,
     spiritReservoirStored: state.spiritReservoirStored,
     idleLingShaDripPool: state.idleLingShaDripPool,
+    reservoirClaimableAccumSec: state.reservoirClaimableAccumSec,
+    dripClaimableAccumSec: state.dripClaimableAccumSec,
     dailyFortune: { ...state.dailyFortune },
     offlineAdventure: state.offlineAdventure
       ? {
@@ -569,6 +574,15 @@ export function deserialize(json: string): GameState {
     data.idleLingShaDripPool !== undefined && data.idleLingShaDripPool !== null
       ? String(data.idleLingShaDripPool)
       : "0";
+  {
+    const r = (data as { reservoirClaimableAccumSec?: unknown }).reservoirClaimableAccumSec;
+    st.reservoirClaimableAccumSec =
+      r != null && Number.isFinite(r) ? Math.max(0, Number(r)) : 0;
+  }
+  {
+    const d = (data as { dripClaimableAccumSec?: unknown }).dripClaimableAccumSec;
+    st.dripClaimableAccumSec = d != null && Number.isFinite(d) ? Math.max(0, Number(d)) : 0;
+  }
   if (data.dailyFortune && typeof data.dailyFortune.fortuneId === "string") {
     st.dailyFortune = {
       calendarDay: typeof data.dailyFortune.calendarDay === "string" ? data.dailyFortune.calendarDay : "",
@@ -843,6 +857,7 @@ export function deserialize(json: string): GameState {
     dynamicDocumentTitle: data.uiPrefs?.dynamicDocumentTitle !== false,
     showHubAssistHints: data.uiPrefs?.showHubAssistHints !== false,
   };
+  disableDiscretionaryAutoProgress(st);
 
   if (data.pets && typeof data.pets === "object") {
     st.pets = { ...st.pets, ...data.pets };

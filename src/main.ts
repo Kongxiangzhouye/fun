@@ -145,7 +145,6 @@ import {
   UI_HUB_SECTION_FLAIR,
   UI_HEAD_SPIRIT_RESERVOIR,
   UI_HEAD_IDLE_LING_SHA_DRIP,
-  UI_SPIRIT_RESERVOIR_AUTO,
   UI_SPIRIT_RESERVOIR_ETA,
   UI_HEAD_DAILY_FORTUNE,
   UI_ACH_FORGE_DECO,
@@ -189,12 +188,10 @@ import {
   UI_ABOUT_GAME_DECO,
   UI_PREF_CONFIRM_REINCARNATION,
   UI_PREF_DYNAMIC_TITLE,
-  UI_META_AUTO_BUY,
   UI_META_LIFE_PEAK,
   UI_DATA_EXPORT_DECO,
   UI_DATA_STATS_DOWNLOAD_DECO,
   UI_VEIN_GONGMING_LINK,
-  UI_VEIN_AUTO_UPGRADE,
   UI_BOUNTY_CLAIM_BURST,
   UI_BOUNTY_CLAIM_ECHO_BADGE,
   UI_OFFLINE_IDLE_BADGE,
@@ -3630,9 +3627,6 @@ function renderPrivilegePanel(u: ReturnType<typeof getUiUnlocks>): string {
       <div class="meta-grid">
         ${qoLRow("十连加成", "tenPull", "十连结束后额外获得 1 层奖励加成")}
         ${qoLRow("一键尽升", "bulkLevel", "一键将已拥有灵卡升到当前上限")}
-        ${qoLRow("自动破境", "autoRealm", "灵石足够时自动破境")}
-        ${qoLRow("自动抽卡", "autoGacha", "唤灵髓足够时自动单抽灵卡")}
-        ${qoLRow("自动吐纳", "autoTuna", "吐纳冷却结束后自动执行")}
       </div>
       <div class="btn-row" style="margin-top:10px">
         ${bulkRow}
@@ -3704,11 +3698,6 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <img class="spirit-reservoir-eta-ico" src="${UI_SPIRIT_RESERVOIR_ETA}" alt="" width="16" height="16" loading="lazy" />
         <span id="spirit-reservoir-eta">${rEtaLine}</span>
       </p>
-      <label class="spirit-reservoir-auto-row">
-        <input type="checkbox" id="chk-spirit-reservoir-auto-claim" data-ui-pref="autoClaimSpiritReservoir" ${state.uiPrefs.autoClaimSpiritReservoir ? "checked" : ""} />
-        <img class="spirit-reservoir-auto-ico" src="${UI_SPIRIT_RESERVOIR_AUTO}" alt="" width="18" height="18" loading="lazy" />
-        <span class="spirit-reservoir-auto-text">蓄满时自动收取并计入灵石</span>
-      </label>
       <button type="button" class="btn ${canRs ? "btn-primary" : ""}" id="btn-spirit-reservoir-claim" ${canRs ? "" : "disabled"}>${canRs ? "收取蓄灵" : "暂无蓄灵"}</button>
     </section>`
     : "";
@@ -4107,7 +4096,6 @@ function renderGacha(
             ? `<button class="btn btn-primary gacha-flash" type="button" id="btn-pull-gear-10" ${gearTenDisabled ? "disabled" : ""}>十铸（${ESSENCE_COST_GEAR_TEN} 筑灵髓）</button>`
             : `<button class="btn gacha-ten-locked" type="button" disabled title="完成一次单抽或境界≥三重后开放">十铸（未解锁）</button>`
         }
-        <button class="btn" type="button" id="btn-toggle-auto-gear-forge">${state.autoGearForge ? "自动单铸：开" : "自动单铸：关"}</button>
       </div>
       ${!tenUnlocked ? `<p class="hint gacha-ten-hint">与灵卡十连相同条件解锁<strong>十铸</strong>。</p>` : ""}
       <div id="pull-output-gear" class="pull-result pull-result-gear"></div>
@@ -4227,11 +4215,6 @@ function renderVeinPage(): string {
         · 每秒灵石 <strong id="vein-preview-ips">${fmtDecimal(ipsNow)}</strong>
       </p>
       <p class="hint sm vein-res-readout"><img src="${UI_VEIN_GONGMING_LINK}" alt="" width="14" height="14" class="vein-gm-deco" /> 共鸣乘区 ×<span id="vein-live-gongming">${gmMult.toFixed(3)}</span> · 聚灵共鸣 / 幻域唤灵髓（与法篆、词条等叠乘）</p>
-      <label class="vein-auto-upgrade-row">
-        <input type="checkbox" id="chk-vein-auto-upgrade" data-ui-pref="autoUpgradeVein" ${state.uiPrefs.autoUpgradeVein ? "checked" : ""} />
-        <img class="vein-auto-upgrade-ico" src="${UI_VEIN_AUTO_UPGRADE}" alt="" width="18" height="18" loading="lazy" />
-        <span class="vein-auto-upgrade-text">主循环自动强化（顺序：汇灵→灵息→共鸣→固元，多轮直至买不起）</span>
-      </label>
       <div class="vein-grid">${grid}</div>
     </section>${renderPrivilegePanel(u)}
   `;
@@ -4391,11 +4374,6 @@ function renderMeta(): string {
     </section>
     <section class="panel">
       <h2>元强化</h2>
-      <label class="meta-auto-buy-row">
-        <input type="checkbox" id="chk-meta-auto-buy" data-ui-pref="autoBuyMeta" ${state.uiPrefs.autoBuyMeta ? "checked" : ""} />
-        <img class="meta-auto-buy-ico" src="${UI_META_AUTO_BUY}" alt="" width="18" height="18" loading="lazy" />
-        <span class="meta-auto-buy-text">道韵足够时按顺序自动强化五条（多轮直至买不起或满级）</span>
-      </label>
       <div class="meta-grid">${grid}</div>
     </section>
   `;
@@ -4644,18 +4622,6 @@ function bindEvents(rb: Decimal, _slots: number): void {
       if (t === "reduceMotion") state.uiPrefs.reduceMotion = checked;
       else if (t === "compactNumbers") state.uiPrefs.compactNumbers = checked;
       else if (t === "soundMuted") state.uiPrefs.soundMuted = checked;
-      else if (t === "autoClaimSpiritReservoir") state.uiPrefs.autoClaimSpiritReservoir = checked;
-      else if (t === "autoHarvestSpiritGarden") state.uiPrefs.autoHarvestSpiritGarden = checked;
-      else if (t === "autoClaimDailyLogin") state.uiPrefs.autoClaimDailyLogin = checked;
-      else if (t === "autoClaimWeeklyBounty") state.uiPrefs.autoClaimWeeklyBounty = checked;
-      else if (t === "autoSettleEstateCommission") state.uiPrefs.autoSettleEstateCommission = checked;
-      else if (t === "autoRedeemCelestialStash") state.uiPrefs.autoRedeemCelestialStash = checked;
-      else if (t === "autoFeedPets") state.uiPrefs.autoFeedPets = checked;
-      else if (t === "autoUpgradeSpiritArray") state.uiPrefs.autoUpgradeSpiritArray = checked;
-      else if (t === "autoPullBattleSkill") state.uiPrefs.autoPullBattleSkill = checked;
-      else if (t === "autoBuyDaoMeridian") state.uiPrefs.autoBuyDaoMeridian = checked;
-      else if (t === "autoUpgradeVein") state.uiPrefs.autoUpgradeVein = checked;
-      else if (t === "autoBuyMeta") state.uiPrefs.autoBuyMeta = checked;
       else if (t === "confirmReincarnation") state.uiPrefs.confirmReincarnation = checked;
       else if (t === "dynamicDocumentTitle") state.uiPrefs.dynamicDocumentTitle = checked;
       else if (t === "showHubAssistHints") state.uiPrefs.showHubAssistHints = checked;
@@ -5004,25 +4970,6 @@ function bindEvents(rb: Decimal, _slots: number): void {
   document.getElementById("btn-pull-10")?.addEventListener("click", () => runCardPull(10));
   document.getElementById("btn-pull-gear-1")?.addEventListener("click", () => runGearPull(1));
   document.getElementById("btn-pull-gear-10")?.addEventListener("click", () => runGearPullTen());
-  document.getElementById("btn-toggle-auto-gear-forge")?.addEventListener("click", () => {
-    state.autoGearForge = !state.autoGearForge;
-    saveGame(state);
-    const btn = document.getElementById("btn-toggle-auto-gear-forge") as HTMLButtonElement | null;
-    if (btn) btn.textContent = state.autoGearForge ? "自动单铸：开" : "自动单铸：关";
-    toast(state.autoGearForge ? "已开启自动单铸" : "已关闭自动单铸");
-  });
-  document.querySelectorAll<HTMLElement>('[data-toggle-auto-boss-challenge="1"]').forEach((el) => {
-    el.addEventListener("click", () => {
-      state.autoBossChallenge = !state.autoBossChallenge;
-      saveGame(state);
-      const txt = state.autoBossChallenge ? "自动挑战首领：开" : "自动挑战首领：关";
-      document.querySelectorAll<HTMLElement>('[data-toggle-auto-boss-challenge="1"]').forEach((node) => {
-        node.textContent = txt;
-      });
-      toast(state.autoBossChallenge ? "已开启自动挑战首领" : "已关闭自动挑战首领");
-    });
-  });
-
   document.getElementById("main-content")?.addEventListener("click", handleDeckPanelClick);
   document.getElementById("main-content")?.addEventListener("keydown", (e) => {
     const ke = e as KeyboardEvent;
@@ -5912,8 +5859,6 @@ function updateEstateIdleLiveReadouts(now: number): void {
       wrap.classList.toggle("spirit-reservoir-bar-wrap--near-full", rPct >= 80 && rPct < 100);
       wrap.classList.toggle("spirit-reservoir-bar-wrap--full", rPct >= 99.999);
     }
-    const autoChk = document.getElementById("chk-spirit-reservoir-auto-claim") as HTMLInputElement | null;
-    if (autoChk) autoChk.checked = state.uiPrefs.autoClaimSpiritReservoir;
     const etaEl = document.getElementById("spirit-reservoir-eta");
     if (etaEl) etaEl.textContent = formatSpiritReservoirEtaLine(state, ips);
     if (elS) elS.textContent = fmtDecimal(rs);
@@ -5973,8 +5918,6 @@ function updateEstateIdleLiveReadouts(now: number): void {
 
 /** 灵府·灵田：生长条与收获按钮（仅在该子页时 DOM 存在） */
 function updateEstateGardenLiveReadouts(now: number): void {
-  const autoChk = document.getElementById("chk-garden-auto-harvest") as HTMLInputElement | null;
-  if (autoChk) autoChk.checked = state.uiPrefs.autoHarvestSpiritGarden;
   const totalEl = document.getElementById("garden-total-harvests");
   if (totalEl) totalEl.textContent = String(state.spiritGarden.totalHarvests);
   for (let i = 0; i < GARDEN_PLOT_COUNT; i++) {
@@ -6362,8 +6305,6 @@ function loop(): void {
     updateEstateIdleLiveReadouts(now);
   }
   if (activeHub === "estate" && estateSub === "vein") {
-    const veinAutoChk = document.getElementById("chk-vein-auto-upgrade") as HTMLInputElement | null;
-    if (veinAutoChk) veinAutoChk.checked = state.uiPrefs.autoUpgradeVein;
     const ipsV = incomePerSecond(state, pool);
     const v = state.vein;
     const huiM = veinHuiLingMult(v.huiLing);
@@ -6418,8 +6359,6 @@ function loop(): void {
     }
   }
   if (activeHub === "cultivate" && cultivateSub === "xinfa") {
-    const autoBs = document.getElementById("chk-battle-skill-auto") as HTMLInputElement | null;
-    if (autoBs) autoBs.checked = state.uiPrefs.autoPullBattleSkill;
     const bsr = document.getElementById("battle-skills-readout");
     if (bsr) bsr.textContent = `当前：${describeBattleSkillLevels(state)}`;
     const btnPull = document.getElementById("btn-pull-battle-skill") as HTMLButtonElement | null;

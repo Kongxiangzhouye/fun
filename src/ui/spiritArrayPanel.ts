@@ -9,7 +9,7 @@ import {
 } from "../systems/spiritArray";
 import { incomePerSecond } from "../economy";
 import { totalCardsInPool } from "../storage";
-import { UI_HEAD_SPIRIT_ARRAY, UI_SPIRIT_ARRAY_AUTO } from "./visualAssets";
+import { UI_HEAD_SPIRIT_ARRAY } from "./visualAssets";
 
 export function renderSpiritArrayPanel(state: GameState): string {
   const lv = state.spiritArrayLevel;
@@ -40,8 +40,6 @@ export function renderSpiritArrayPanel(state: GameState): string {
 }
 
 export function updateSpiritArrayPanelReadouts(state: GameState): void {
-  const autoChk = document.getElementById("chk-spirit-array-auto") as HTMLInputElement | null;
-  if (autoChk) autoChk.checked = state.uiPrefs.autoUpgradeSpiritArray;
   const lv = state.spiritArrayLevel;
   const maxed = lv >= SPIRIT_ARRAY_MAX_LEVEL;
   const sc = spiritArrayStoneCost(lv);

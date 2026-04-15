@@ -776,6 +776,16 @@ export interface GameState {
    */
   idleLingShaDripPool: string;
 
+  /**
+   * 蓄灵池：自「可收取」状态起累计的秒数（池清空或非可领时归零）。
+   * 供「下一步成长」等 UI 避免刚有一点蓄灵就刷屏提示。
+   */
+  reservoirClaimableAccumSec: number;
+  /**
+   * 灵砂涓滴：自「凝露已满可收取」起累计的秒数（未满或非可领时归零）。
+   */
+  dripClaimableAccumSec: number;
+
   /** 心斋卦象（每日运势） */
   dailyFortune: DailyFortuneState;
 

@@ -6,7 +6,7 @@ import {
   celestialStashWeeklyProgress,
   isCelestialOfferPurchasedThisWeek,
 } from "../systems/celestialStash";
-import { UI_CELESTIAL_STASH_AUTO_REDEEM, UI_CELESTIAL_STASH_PROGRESS, UI_HEAD_CELESTIAL_STASH } from "./visualAssets";
+import { UI_CELESTIAL_STASH_PROGRESS, UI_HEAD_CELESTIAL_STASH } from "./visualAssets";
 
 function costLine(_state: GameState, offerId: string): string {
   const def = CELESTIAL_OFFERS.find((o) => o.id === offerId);
@@ -67,18 +67,11 @@ export function renderCelestialStashPanel(state: GameState, now: number): string
           · 剩余 <strong id="celestial-progress-remaining">${remain}</strong> 项
         </p>
       </div>
-      <label class="celestial-auto-redeem-row">
-        <input type="checkbox" id="chk-celestial-auto-redeem" data-ui-pref="autoRedeemCelestialStash" ${state.uiPrefs.autoRedeemCelestialStash ? "checked" : ""} />
-        <img class="celestial-auto-redeem-ico" src="${UI_CELESTIAL_STASH_AUTO_REDEEM}" alt="" width="20" height="20" loading="lazy" />
-        <span class="celestial-auto-redeem-text">资源足够时自动兑换本周尚未兑换的可换条目（按列表顺序）</span>
-      </label>
       <div class="celestial-grid">${cards}</div>
     </section>`;
 }
 
 export function updateCelestialStashPanelReadouts(state: GameState, now: number): void {
-  const autoChk = document.getElementById("chk-celestial-auto-redeem") as HTMLInputElement | null;
-  if (autoChk) autoChk.checked = state.uiPrefs.autoRedeemCelestialStash;
   const wkEl = document.querySelector(".celestial-week-line strong");
   if (wkEl) wkEl.textContent = currentWeekKey(now);
   const prog = celestialStashWeeklyProgress(state, now);

@@ -5,6 +5,7 @@ import { reseedRng } from "../rng";
 import { emptyDungeon } from "../state";
 import { playerMaxHp } from "./playerCombat";
 import { createEmptyEstateCommissionState } from "./estateCommission";
+import { disableDiscretionaryAutoProgress } from "../discretionaryAuto";
 import { normalizeLifetimeStats, recordDaoEssenceSpentLifetime } from "./pullChronicle";
 
 export function canReincarnate(state: GameState): boolean {
@@ -113,6 +114,9 @@ export function performReincarnate(state: GameState): void {
   state.offlineAdventure.resonanceStacks = 0;
   state.offlineAdventure.lastAutoSettleReceipt = null;
   state.estateCommission = createEmptyEstateCommissionState();
+  state.reservoirClaimableAccumSec = 0;
+  state.dripClaimableAccumSec = 0;
+  disableDiscretionaryAutoProgress(state);
   reseedRng(state);
 }
 

@@ -23,6 +23,11 @@ import { canReincarnate, metaUpgradeCost } from "./systems/reincarnation";
 import { getUiUnlocks } from "./uiUnlocks";
 import { fmtDecimal } from "./stones";
 
+/** 蓄灵池「可收取」累计满此秒数后才进入「下一步」提示，避免刚有一点蓄灵就刷屏 */
+const RESERVOIR_HINT_MIN_CLAIMABLE_SEC = 15 * 60;
+/** 灵砂涓滴凝满后同样门槛 */
+const DRIP_HINT_MIN_CLAIMABLE_SEC = 15 * 60;
+
 export interface NextBoostHint {
   /** 与 DOM `data-next-boost-target` 对应 */
   scrollTarget: string;
@@ -125,21 +130,33 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     };
   }
 
-  if (u.tabSpiritReservoir && spiritReservoirUnlocked(state) && canClaimSpiritReservoir(state)) {
+  const resAccum = Math.max(0, state.reservoirClaimableAccumSec ?? 0);
+  if (
+    u.tabSpiritReservoir &&
+    spiritReservoirUnlocked(state) &&
+    canClaimSpiritReservoir(state) &&
+    resAccum >= RESERVOIR_HINT_MIN_CLAIMABLE_SEC
+  ) {
     return {
       scrollTarget: "spirit-reservoir",
       title: "收取蓄灵池",
-      detailLine: "池内已有灵石可并入账",
+      detailLine: "池内灵石已攒够一阵，可并入账",
       priority: 92,
       claimStyle: true,
     };
   }
 
-  if (u.tabSpiritReservoir && idleLingShaDripUnlocked(state) && canClaimIdleLingShaDrip(state)) {
+  const dripAccum = Math.max(0, state.dripClaimableAccumSec ?? 0);
+  if (
+    u.tabSpiritReservoir &&
+    idleLingShaDripUnlocked(state) &&
+    canClaimIdleLingShaDrip(state) &&
+    dripAccum >= DRIP_HINT_MIN_CLAIMABLE_SEC
+  ) {
     return {
       scrollTarget: "ling-sha-drip",
       title: "收取灵砂涓滴",
-      detailLine: "凝露已满，可领 1 灵砂",
+      detailLine: "凝露已满一阵，可领 1 灵砂",
       priority: 91,
       claimStyle: true,
     };
@@ -147,7 +164,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
 
   const rb = realmBreakthroughCostForState(state);
   const canBreak = canAfford(state, rb);
-  if (canBreak && !state.qoL.autoRealm) {
+  if (canBreak) {
     return {
       scrollTarget: "realm-break",
       title: "境界可破境",
@@ -157,7 +174,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     };
   }
 
-  if (u.tabGear && state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE && !state.autoGearForge) {
+  if (u.tabGear && state.zhuLingEssence >= ESSENCE_COST_GEAR_SINGLE) {
     return {
       scrollTarget: "gacha-gear",
       title: "境界铸灵可单铸",
@@ -167,7 +184,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     };
   }
 
-  if (state.summonEssence >= ESSENCE_COST_SINGLE && !state.qoL.autoGacha) {
+  if (state.summonEssence >= ESSENCE_COST_SINGLE) {
     return {
       scrollTarget: "gacha-card",
       title: "灵卡池可单抽",
@@ -177,7 +194,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     };
   }
 
-  if (u.tabBattleSkills && state.summonEssence >= battleSkillPullCost() && !state.uiPrefs.autoPullBattleSkill) {
+  if (u.tabBattleSkills && state.summonEssence >= battleSkillPullCost()) {
     return {
       scrollTarget: "battle-skill-pull",
       title: "心法可领悟",
@@ -187,7 +204,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     };
   }
 
-  if (u.tabSpiritArray && canUpgradeSpiritArray(state) && !state.uiPrefs.autoUpgradeSpiritArray) {
+  if (u.tabSpiritArray && canUpgradeSpiritArray(state)) {
     return {
       scrollTarget: "spirit-array-up",
       title: "纳灵阵图可绘阵",
@@ -198,7 +215,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
   }
 
   const veinPick = u.tabVein ? pickAffordableVein(state) : null;
-  if (veinPick && !state.uiPrefs.autoUpgradeVein) {
+  if (veinPick) {
     const t = VEIN_TITLES[veinPick];
     return {
       scrollTarget: `vein-${veinPick}`,
@@ -210,7 +227,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
   }
 
   const metaPick = u.tabMeta ? pickAffordableMeta(state) : null;
-  if (metaPick && !state.uiPrefs.autoBuyMeta) {
+  if (metaPick) {
     const titles: Record<keyof GameState["meta"], string> = {
       idleMult: "灵脉共鸣",
       gachaLuck: "祈愿加护",
@@ -231,7 +248,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
 
   if (u.tabDaoMeridian) {
     const cost = nextDaoMeridianCost(state);
-    if (cost != null && state.daoEssence >= cost && !state.uiPrefs.autoBuyDaoMeridian) {
+    if (cost != null && state.daoEssence >= cost) {
       return {
         scrollTarget: "dao-meridian-panel",
         title: "道韵灵窍可贯通",
@@ -243,7 +260,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
   }
 
   const cardUp = u.tabTrain ? bestCardLevelUp(state, pool) : null;
-  if (cardUp && !state.qoL.bulkLevel) {
+  if (cardUp) {
     return {
       scrollTarget: "deck-panel",
       title: "灵卡可升阶",
