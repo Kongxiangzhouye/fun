@@ -29,10 +29,11 @@ import { canReincarnate, metaUpgradeCost } from "./systems/reincarnation";
 import { getUiUnlocks } from "./uiUnlocks";
 import { fmtDecimal } from "./stones";
 
-/** 蓄灵池「可收取」累计满此秒数后才进入「下一步」提示，避免刚有一点蓄灵就刷屏 */
-const RESERVOIR_HINT_MIN_CLAIMABLE_SEC = 15 * 60;
-/** 灵砂涓滴凝满后同样门槛 */
-const DRIP_HINT_MIN_CLAIMABLE_SEC = 15 * 60;
+/**
+ * 蓄灵池、灵砂涓滴等「随时可点收取」类：须在**可收取状态**下连续累计满此时长，才进入「下一步」提示，
+ * 避免刚有一点进度就占满提示位。
+ */
+const IDLE_CLAIMABLE_HINT_MIN_DWELL_SEC = 10 * 60;
 
 export interface NextBoostHint {
   /** 与 DOM `data-next-boost-target` 对应 */
@@ -141,7 +142,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     u.tabSpiritReservoir &&
     spiritReservoirUnlocked(state) &&
     canClaimSpiritReservoir(state) &&
-    resAccum >= RESERVOIR_HINT_MIN_CLAIMABLE_SEC
+    resAccum >= IDLE_CLAIMABLE_HINT_MIN_DWELL_SEC
   ) {
     return {
       scrollTarget: "spirit-reservoir",
@@ -157,7 +158,7 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     u.tabSpiritReservoir &&
     idleLingShaDripUnlocked(state) &&
     canClaimIdleLingShaDrip(state) &&
-    dripAccum >= DRIP_HINT_MIN_CLAIMABLE_SEC
+    dripAccum >= IDLE_CLAIMABLE_HINT_MIN_DWELL_SEC
   ) {
     return {
       scrollTarget: "ling-sha-drip",
