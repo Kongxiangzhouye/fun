@@ -100,6 +100,13 @@ import { gearItemPower } from "./systems/gearCraft";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
 import { computeNextBoostHint, scrollToNextBoostTarget, type NextBoostHint } from "./nextBoostHint";
+import {
+  buildAiAgentSnapshot,
+  installAiAgentBridge,
+  renderAiAgentHiddenMarkup,
+  updateAiAgentGuideDom,
+  type AiAgentNavigation,
+} from "./aiAgentGuide";
 import { sessionFunFlavorLine, onTitleSpiritPet, bindKonamiEasterEgg } from "./funBits";
 import {
   DUNGEON_HELP_BLURB,
@@ -3320,6 +3327,18 @@ function escapeHtmlText(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function currentAiAgentNavigation(): AiAgentNavigation {
+  return {
+    activeHub,
+    estateSub,
+    estateIdleSub,
+    battleSub,
+    cultivateSub,
+    characterSub,
+    gachaPool,
+  };
+}
+
 function renderNextBoostFab(): string {
   if (state.tutorialStep !== 0) return "";
   const hint = computeNextBoostHint(state, nowMs(), totalCardsInPool());
@@ -3407,31 +3426,36 @@ function routeNextBoostNavigation(h: NextBoostHint): void {
 }
 
 function refreshNextBoostFabDom(): void {
-  if (state.tutorialStep !== 0) {
-    document.getElementById("next-boost-fab")?.remove();
-    lastNextBoostSerialized = "";
-    return;
+  const nav = currentAiAgentNavigation();
+  try {
+    if (state.tutorialStep !== 0) {
+      document.getElementById("next-boost-fab")?.remove();
+      lastNextBoostSerialized = "";
+      return;
+    }
+    const hint = computeNextBoostHint(state, nowMs(), totalCardsInPool());
+    const wrap = document.getElementById("next-boost-fab");
+    if (!hint) {
+      wrap?.remove();
+      lastNextBoostSerialized = "";
+      return;
+    }
+    if (!wrap) return;
+    const serialized = `${hint.scrollTarget}|${hint.title}|${hint.detailLine}|${hint.claimStyle ? "1" : "0"}`;
+    if (serialized === lastNextBoostSerialized) return;
+    lastNextBoostSerialized = serialized;
+    wrap.classList.toggle("next-boost-fab--claim", hint.claimStyle);
+    const btn = document.getElementById("btn-next-boost-jump") as HTMLButtonElement | null;
+    if (btn) {
+      btn.title = hint.detailLine;
+      const titleEl = btn.querySelector(".next-boost-fab__title");
+      if (titleEl) titleEl.textContent = hint.title;
+    }
+    const det = document.getElementById("next-boost-fab-detail");
+    if (det) det.textContent = hint.detailLine;
+  } finally {
+    updateAiAgentGuideDom(buildAiAgentSnapshot(state, nowMs(), totalCardsInPool(), nav));
   }
-  const hint = computeNextBoostHint(state, nowMs(), totalCardsInPool());
-  const wrap = document.getElementById("next-boost-fab");
-  if (!hint) {
-    wrap?.remove();
-    lastNextBoostSerialized = "";
-    return;
-  }
-  if (!wrap) return;
-  const serialized = `${hint.scrollTarget}|${hint.title}|${hint.detailLine}|${hint.claimStyle ? "1" : "0"}`;
-  if (serialized === lastNextBoostSerialized) return;
-  lastNextBoostSerialized = serialized;
-  wrap.classList.toggle("next-boost-fab--claim", hint.claimStyle);
-  const btn = document.getElementById("btn-next-boost-jump") as HTMLButtonElement | null;
-  if (btn) {
-    btn.title = hint.detailLine;
-    const titleEl = btn.querySelector(".next-boost-fab__title");
-    if (titleEl) titleEl.textContent = hint.title;
-  }
-  const det = document.getElementById("next-boost-fab-detail");
-  if (det) det.textContent = hint.detailLine;
 }
 
 function renderHubContent(
@@ -3579,6 +3603,7 @@ function render(): void {
     ${renderTutorialBlock()}
     ${renderFlyOverlay()}
     ${renderBottomNav(u)}
+    ${renderAiAgentHiddenMarkup(buildAiAgentSnapshot(state, nowMs(), totalCardsInPool(), currentAiAgentNavigation()))}
     </div>
     ${renderKeyboardHelpModal()}
     ${renderAboutModal()}
@@ -3586,6 +3611,7 @@ function render(): void {
 
   bindEvents(rb, slots);
   lastNextBoostSerialized = "";
+  installAiAgentBridge(buildAiAgentSnapshot(state, nowMs(), totalCardsInPool(), currentAiAgentNavigation()));
 
   lastMainContentViewKey = viewKeyNow;
   if (restoreHubScroll) {
