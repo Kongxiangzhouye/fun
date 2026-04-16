@@ -3502,6 +3502,7 @@ function render(): void {
     gachaPool = "cards";
   } else if ((state.tutorialStep === 4 || state.tutorialStep === 5) && activeHub !== "cultivate") {
     activeHub = "cultivate";
+    cultivateSub = "deck";
   } else if ((state.tutorialStep === 6 || state.tutorialStep === 7) && activeHub !== "estate") {
     activeHub = "estate";
   }
@@ -3512,6 +3513,15 @@ function render(): void {
     cultivateSub === "deck"
   ) {
     state.tutorialStep = 3;
+    saveGame(state);
+  }
+
+  if (
+    state.tutorialStep === 4 &&
+    activeHub === "cultivate" &&
+    cultivateSub === "deck"
+  ) {
+    state.tutorialStep = 5;
     saveGame(state);
   }
 
