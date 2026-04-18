@@ -1,5 +1,8 @@
 import type { GameState } from "../types";
 
+/** 避免每次全页 render 时对同一节点重复 addEventListener（会导致多次 confirm / 行为异常） */
+let dungeonInteractionAbort: AbortController | null = null;
+
 type HubSetter = () => void;
 
 type DungeonInteractionDeps = {
@@ -39,6 +42,10 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
     requestBossChallenge,
   } = deps;
 
+  dungeonInteractionAbort?.abort();
+  dungeonInteractionAbort = new AbortController();
+  const { signal } = dungeonInteractionAbort;
+
   const readEntryWave = (): number => {
     const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
     const raw = inp?.valueAsNumber;
@@ -48,67 +55,114 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
     return Math.max(1, Math.min(cap, Math.floor(raw)));
   };
 
-  document.getElementById("btn-dungeon-entry-frontier")?.addEventListener("click", () => {
-    const n = dungeonFrontierWave(state);
-    const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
-    if (inp) inp.value = String(n);
-    state.dungeon.entryWave = n;
-    save();
-    render();
-  });
+  document.body.addEventListener(
+    "click",
+    (ev) => {
+      const t = ev.target as HTMLElement | null;
+      if (!t) return;
 
-  document.getElementById("btn-dungeon-enter")?.addEventListener("click", () => {
-    const w = readEntryWave();
-    state.dungeon.entryWave = w;
-    const now = nowMs();
-    if (!canEnterDungeon(state, now)) {
-      toast("当前无法进入：冷却中或仍在副本内。");
-      return;
-    }
-    if (!canEnterAtWave(state, w)) {
-      toast("无法从该波进入：已超过当前可推进范围，或该波不可选。");
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？`)) return;
-    if (enterDungeon(state, w)) {
+      if (t.closest("#btn-dungeon-entry-frontier")) {
+        const n = dungeonFrontierWave(state);
+        const inp = document.getElementById("dungeon-entry-wave") as HTMLInputElement | null;
+        if (inp) inp.value = String(n);
+        state.dungeon.entryWave = n;
+        save();
+        render();
+        return;
+      }
+
+      if (t.closest("#btn-dungeon-enter")) {
+        const btn = document.getElementById("btn-dungeon-enter") as HTMLButtonElement | null;
+        if (btn?.disabled) return;
+        const w = readEntryWave();
+        state.dungeon.entryWave = w;
+        const now = nowMs();
+        if (!canEnterDungeon(state, now)) {
+          toast("当前无法进入：冷却中或仍在副本内。");
+          return;
+        }
+        if (!canEnterAtWave(state, w)) {
+          toast("无法从该波进入：已超过当前可推进范围，或该波不可选。");
+          return;
+        }
+        if (!confirm(`确认进入第 ${w} 关？`)) return;
+        if (enterDungeon(state, w)) {
+          save();
+          toast(`已进入幻域（自第 ${w} 波）`);
+          render();
+        } else {
+          toast("无法进入副本（冷却或其它限制）");
+        }
+        return;
+      }
+
+      if (t.closest("#btn-sanctuary-portal")) {
+        const btn = document.getElementById("btn-sanctuary-portal") as HTMLButtonElement | null;
+        if (btn?.disabled) return;
+        const now = nowMs();
+        const w = state.dungeonPortalTargetWave;
+        if (!state.dungeonSanctuaryMode || state.dungeon.active || w < 1) return;
+        const pmax = playerMaxHp(state);
+        if (state.combatHpCurrent < pmax - 0.25) {
+          toast("灵息未满");
+          return;
+        }
+        if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
+          toast("当前无法进入该关卡。");
+          return;
+        }
+        if (!confirm(`确认进入第 ${w} 关？`)) return;
+        if (enterDungeon(state, w)) {
+          setActiveHubBattle();
+          save();
+          toast(`已进入第 ${w} 关`);
+          render();
+        } else {
+          toast("无法进入副本");
+        }
+        return;
+      }
+
+      if (t.closest("#btn-dungeon-challenge-boss")) {
+        const bossBtn = document.getElementById("btn-dungeon-challenge-boss") as HTMLButtonElement | null;
+        if (bossBtn?.disabled) return;
+        const snap = dungeonBossPrepSnapshot(state);
+        if (!snap.canChallenge) {
+          tryToastDungeonVictory(snap.challengeHint);
+          return;
+        }
+        const r = requestBossChallenge(state);
+        if (!r.ok) {
+          tryToastDungeonVictory(r.msg);
+          return;
+        }
+        save();
+        tryToastDungeonVictory(r.msg);
+        render();
+        return;
+      }
+
+      if (t.closest("#btn-dungeon-boss-next-entry")) {
+        state.dungeonDeferBoss = false;
+        save();
+        toast("已切换为首领战：下次进入该波将面对首领。");
+        render();
+      }
+    },
+    { signal },
+  );
+
+  document.body.addEventListener(
+    "change",
+    (e) => {
+      const el = e.target as HTMLInputElement | null;
+      if (!el || el.id !== "sanctuary-auto-enter") return;
+      state.dungeonSanctuaryAutoEnter = el.checked;
       save();
-      toast(`已进入幻域（自第 ${w} 波）`);
       render();
-    } else {
-      toast("无法进入副本（冷却或其它限制）");
-    }
-  });
-
-  document.getElementById("sanctuary-auto-enter")?.addEventListener("change", (e) => {
-    const el = e.target as HTMLInputElement;
-    state.dungeonSanctuaryAutoEnter = el.checked;
-    save();
-    render();
-  });
-
-  document.getElementById("btn-sanctuary-portal")?.addEventListener("click", () => {
-    const now = nowMs();
-    const w = state.dungeonPortalTargetWave;
-    if (!state.dungeonSanctuaryMode || state.dungeon.active || w < 1) return;
-    const pmax = playerMaxHp(state);
-    if (state.combatHpCurrent < pmax - 0.25) {
-      toast("灵息未满");
-      return;
-    }
-    if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
-      toast("当前无法进入该关卡。");
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？`)) return;
-    if (enterDungeon(state, w)) {
-      setActiveHubBattle();
-      save();
-      toast(`已进入第 ${w} 关`);
-      render();
-    } else {
-      toast("无法进入副本");
-    }
-  });
+    },
+    { signal },
+  );
 
   const onDungeonLivePointerUp = (e: PointerEvent): void => {
     if (!state.dungeon.active) return;
@@ -120,28 +174,13 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
     if (el?.closest("button, a, input, textarea, select, label, [role='button']")) return;
     tryQueueDungeonDodgeWithFeedback();
   };
-  document.getElementById("dungeon-live-root")?.addEventListener("pointerup", onDungeonLivePointerUp);
-
-  document.getElementById("btn-dungeon-challenge-boss")?.addEventListener("click", () => {
-    const snap = dungeonBossPrepSnapshot(state);
-    if (!snap.canChallenge) {
-      tryToastDungeonVictory(snap.challengeHint);
-      return;
-    }
-    const r = requestBossChallenge(state);
-    if (!r.ok) {
-      tryToastDungeonVictory(r.msg);
-      return;
-    }
-    save();
-    tryToastDungeonVictory(r.msg);
-    render();
-  });
-
-  document.getElementById("btn-dungeon-boss-next-entry")?.addEventListener("click", () => {
-    state.dungeonDeferBoss = false;
-    save();
-    toast("已切换为首领战：下次进入该波将面对首领。");
-    render();
-  });
+  document.body.addEventListener(
+    "pointerup",
+    (e) => {
+      const t = e.target as HTMLElement | null;
+      if (!t?.closest("#dungeon-live-root")) return;
+      onDungeonLivePointerUp(e);
+    },
+    { signal },
+  );
 }
