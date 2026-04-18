@@ -1883,6 +1883,7 @@ body {
   margin-top: 4px;
   position: relative;
   z-index: 3;
+  min-width: 8.5rem;
 }
 
 .sanctuary-visual {
@@ -1951,6 +1952,24 @@ body {
   margin: 0;
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+.sanctuary-portal-pending {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  pointer-events: auto;
+}
+
+.sanctuary-portal-pending .sanctuary-wait-txt {
+  position: static;
 }
 
 .sanctuary-portal-wrap {
