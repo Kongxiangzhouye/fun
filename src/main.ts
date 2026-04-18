@@ -6735,6 +6735,20 @@ function loop(): void {
     const b = document.getElementById("dungeon-global-hp-bar");
     if (t) t.textContent = `${fmtNumZh(Math.max(0, chp))} / ${fmtNumZh(pmax)}`;
     if (b) (b as HTMLElement).style.width = `${pct}%`;
+    const portalReady = chp >= pmax - 0.25;
+    const w = state.dungeonPortalTargetWave;
+    const canEnter = canEnterDungeon(state, now);
+    const waveOk = w >= 1 && canEnterAtWave(state, w);
+    const portalBtn = document.getElementById("btn-sanctuary-portal") as HTMLButtonElement | null;
+    if (portalBtn) {
+      const portalBtnDisabled = !portalReady || !canEnter || !waveOk;
+      portalBtn.disabled = portalBtnDisabled;
+      let label = "进入副本";
+      if (!portalReady) label = "进入副本（回满灵息）";
+      else if (!canEnter) label = Math.max(0, state.dungeon.deathCooldownUntil - now) > 0 ? "冷却中" : "无法进入";
+      else if (!waveOk) label = "无法进入该关";
+      portalBtn.textContent = label;
+    }
   }
   {
     const bar = document.getElementById("resonance-bar-fill");

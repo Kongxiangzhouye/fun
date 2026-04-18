@@ -7,6 +7,7 @@ import {
   PLAYER_DUNGEON_HIT_INTERVAL_SEC,
 } from "../types";
 import {
+  canEnterAtWave,
   canEnterDungeon,
   describeWaveProfile,
   dungeonBossPrepSnapshot,
@@ -358,17 +359,28 @@ function renderDungeonMapHtml(state: GameState): string {
 
 export const DUNGEON_HELP_BLURB = `筑灵髓来自战斗：普通波为小怪群，每击杀一只即入袋整数唤灵髓；清完一波进下一波。每逢第 5、10…波为首领关：前哨小怪可持续清剿，达成挑战门槛后可随时点「挑战首领」；击败首领后进下一关。首领可造成伤害，小怪不会致死（灵护）。唤灵髓用于本页聚灵阵。幻域生命全局共享。阵亡无灵石损失。`;
 
-function renderSanctuaryBlock(state: GameState, chp: number, pmax: number): string {
+function renderSanctuaryBlock(state: GameState, chp: number, pmax: number, now: number): string {
   const portalReady = state.dungeonSanctuaryMode && chp >= pmax - 0.25;
   const w = state.dungeonPortalTargetWave;
+  const canEnter = canEnterDungeon(state, now);
+  const waveOk = w >= 1 && canEnterAtWave(state, w);
+  const portalBtnDisabled = !portalReady || !canEnter || !waveOk;
+  let portalBtnLabel = "进入副本";
+  if (!portalReady) portalBtnLabel = "进入副本（回满灵息）";
+  else if (!canEnter) portalBtnLabel = Math.max(0, state.dungeon.deathCooldownUntil - now) > 0 ? "冷却中" : "无法进入";
+  else if (!waveOk) portalBtnLabel = "无法进入该关";
   const autoOn = !!state.dungeonSanctuaryAutoEnter;
   const autoBadge = autoOn ? UI_DUNGEON_AUTO_BADGE_ON : UI_DUNGEON_AUTO_BADGE_OFF;
   const portalSection = portalReady
     ? `<div class="sanctuary-portal-wrap sanctuary-portal-wrap--ready" aria-live="polite">
       <div class="sanctuary-portal-ring" aria-hidden="true"></div>
       <p class="sanctuary-portal-msg">生命已回满，将<strong>自动</strong>进入段首第 <strong>${w}</strong> 关继续清小怪</p>
+      <button type="button" class="btn btn-primary btn-sanctuary-portal" id="btn-sanctuary-portal" ${portalBtnDisabled ? "disabled" : ""}>${portalBtnLabel}</button>
     </div>`
-    : `<p class="sanctuary-wait-txt">恢复中，回满后将自动返回段首第 <strong>${w}</strong> 关</p>`;
+    : `<div class="sanctuary-portal-pending">
+      <p class="sanctuary-wait-txt">恢复中，回满后将自动返回段首第 <strong>${w}</strong> 关</p>
+      <button type="button" class="btn btn-primary btn-sanctuary-portal" id="btn-sanctuary-portal" disabled>${portalBtnLabel}</button>
+    </div>`;
   return `<div class="sanctuary-visual">
     <div class="sanctuary-visual-bg" aria-hidden="true"></div>
     <div class="sanctuary-heal-particles" aria-hidden="true"></div>
@@ -616,7 +628,7 @@ export function renderDungeonPanel(state: GameState, battleGearStripExpanded = f
         </div>`
           : sanctuaryIdle
             ? `<div class="dungeon-idle-sanctuary dungeon-stage-fill">
-          ${renderSanctuaryBlock(state, chp, pmax)}
+          ${renderSanctuaryBlock(state, chp, pmax, now)}
           <div class="bar-label"><span>幻域生命</span><span id="dungeon-global-hp-txt">${fmtNum(Math.max(0, chp))} / ${fmtNum(pmax)}</span></div>
           <div class="progress-track dungeon"><div class="progress-fill player sanctuary-hp-fill" id="dungeon-global-hp-bar" style="width:${chpPctGlobal}%"></div></div>
         </div>`
