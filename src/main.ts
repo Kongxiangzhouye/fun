@@ -5565,6 +5565,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     if (r.ok) {
       tryCompleteAchievements(state);
       saveGame(state);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
       render();
     }
   });
@@ -5580,6 +5581,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     toast(r.msg);
     if (r.ok) {
       saveGame(state);
+      updateTopResourcePillsAndVigor(totalCardsInPool());
       render();
     }
   });
