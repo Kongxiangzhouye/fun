@@ -8169,6 +8169,40 @@ html.ui-reduce-motion *::after {
   filter: none;
 }
 
+/* 进本确认：挂在 body，避免整页 innerHTML 重绘与原生 confirm 在 WebView 中冲突 */
+.dungeon-enter-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(5, 8, 16, 0.72);
+  box-sizing: border-box;
+}
+
+.dungeon-enter-confirm-modal {
+  width: min(100%, 360px);
+  margin: 0;
+  animation: fade-in 0.2s ease;
+}
+
+.dungeon-enter-confirm-msg {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.dungeon-enter-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .map-legend {
   margin: 8px 0 0;
   font-size: 0.78rem !important;

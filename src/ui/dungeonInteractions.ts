@@ -3,6 +3,64 @@ import type { GameState } from "../types";
 /** 避免每次全页 render 时对同一节点重复 addEventListener（会导致多次 confirm / 行为异常） */
 let dungeonInteractionAbort: AbortController | null = null;
 
+/** 原生 confirm 在部分 WebView 中与整页 innerHTML 重绘冲突，会一闪即关；确认层挂在 body、在 #app 之外 */
+let dungeonEnterConfirmEl: HTMLElement | null = null;
+let dungeonEnterConfirmAbort: AbortController | null = null;
+
+/** 关闭进本确认层（例如打开新一层前） */
+function dismissDungeonEnterConfirm(): void {
+  dungeonEnterConfirmAbort?.abort();
+  dungeonEnterConfirmAbort = null;
+  dungeonEnterConfirmEl?.remove();
+  dungeonEnterConfirmEl = null;
+}
+
+function showDungeonEnterConfirm(wave: number, onConfirm: () => void): void {
+  dismissDungeonEnterConfirm();
+  const w = Math.max(1, Math.floor(wave));
+  dungeonEnterConfirmAbort = new AbortController();
+  const { signal } = dungeonEnterConfirmAbort;
+
+  const overlay = document.createElement("div");
+  overlay.className = "dungeon-enter-confirm-overlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "dungeon-enter-confirm-title");
+  overlay.innerHTML = `
+    <div class="dungeon-enter-confirm-modal panel">
+      <p class="dungeon-enter-confirm-msg" id="dungeon-enter-confirm-title">确认进入第 <strong>${w}</strong> 关？</p>
+      <div class="dungeon-enter-confirm-actions">
+        <button type="button" class="btn" id="dungeon-enter-confirm-cancel">取消</button>
+        <button type="button" class="btn btn-primary" id="dungeon-enter-confirm-ok">确认</button>
+      </div>
+    </div>`;
+  dungeonEnterConfirmEl = overlay;
+  document.body.appendChild(overlay);
+
+  const ok = (): void => {
+    dismissDungeonEnterConfirm();
+    onConfirm();
+  };
+  const cancel = (): void => dismissDungeonEnterConfirm();
+
+  overlay.querySelector("#dungeon-enter-confirm-ok")?.addEventListener("click", ok, { signal });
+  overlay.querySelector("#dungeon-enter-confirm-cancel")?.addEventListener("click", cancel, { signal });
+  overlay.addEventListener(
+    "click",
+    (e) => {
+      if (e.target === overlay) cancel();
+    },
+    { signal },
+  );
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "Escape") cancel();
+    },
+    { signal },
+  );
+}
+
 type HubSetter = () => void;
 
 type DungeonInteractionDeps = {
@@ -85,14 +143,15 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
           toast("无法从该波进入：已超过当前可推进范围，或该波不可选。");
           return;
         }
-        if (!confirm(`确认进入第 ${w} 关？`)) return;
-        if (enterDungeon(state, w)) {
-          save();
-          toast(`已进入幻域（自第 ${w} 波）`);
-          render();
-        } else {
-          toast("无法进入副本（冷却或其它限制）");
-        }
+        showDungeonEnterConfirm(w, () => {
+          if (enterDungeon(state, w)) {
+            save();
+            toast(`已进入幻域（自第 ${w} 波）`);
+            render();
+          } else {
+            toast("无法进入副本（冷却或其它限制）");
+          }
+        });
         return;
       }
 
@@ -111,15 +170,16 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
           toast("当前无法进入该关卡。");
           return;
         }
-        if (!confirm(`确认进入第 ${w} 关？`)) return;
-        if (enterDungeon(state, w)) {
-          setActiveHubBattle();
-          save();
-          toast(`已进入第 ${w} 关`);
-          render();
-        } else {
-          toast("无法进入副本");
-        }
+        showDungeonEnterConfirm(w, () => {
+          if (enterDungeon(state, w)) {
+            setActiveHubBattle();
+            save();
+            toast(`已进入第 ${w} 关`);
+            render();
+          } else {
+            toast("无法进入副本");
+          }
+        });
         return;
       }
 
