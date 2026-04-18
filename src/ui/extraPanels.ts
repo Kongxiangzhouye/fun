@@ -459,7 +459,7 @@ export function renderBattleEquippedStrip(state: GameState, expanded: boolean): 
         <div class="battle-equipped-expanded-only" ${expanded ? "" : "hidden"}>
           <div class="battle-equipped-strip-head">
             <span class="battle-equipped-strip-title">筑灵装备</span>
-            <span class="hint sm battle-equipped-strip-hint">12 部位等权掉落，按同部位战力自动替换</span>
+            <span class="hint sm battle-equipped-strip-hint">12 部位等权掉落，铸灵试穿综合战力提高才替换</span>
           </div>
           <div class="battle-gear-grid">${cells}</div>
           <div class="battle-equipped-actions">
@@ -987,7 +987,7 @@ export function renderGearPanel(
         <img class="panel-title-art-icon" src="${UI_HEAD_GEAR}" alt="" width="28" height="28" loading="lazy" />
         <h2>装备</h2>
       </div>
-      <p class="hint">装备按<strong>12 部位</strong>生效：新装在境界铸灵与当前部位比对<strong>战力</strong>，更高才替换。强化消耗玄铁。在「历练·筑灵」页长按筑灵条展开，点「管理」在此强化、锁定或分解。</p>
+      <p class="hint">装备按<strong>12 部位</strong>生效：境界铸灵新装试穿后<strong>综合战力</strong>（顶栏）须提高才替换。强化消耗玄铁。在「历练·筑灵」页长按筑灵条展开，点「管理」在此强化、锁定或分解。</p>
       <p class="hint sm">锁定装备不可分解，也不会被自动分解（灵卡自动分解仍可在聚灵阵勾选）。</p>
       <h3 class="sub-h">已装备</h3>
       ${slotHtml}

@@ -8,7 +8,7 @@ import { ALL_GEAR_SLOTS, GEAR_BASES, getGearBase, maxAffixCount, maxEnhanceLevel
 import { gearForgeAscensionLevel, gearForgeIlvlBonus, rollGearRarityForForge } from "./gearGachaTier";
 import { gearVisualTierFor } from "../ui/gearVisualTier";
 
-/** 单件装备战力（与顶栏综合战力不同：仅用于同部位替换比对） */
+/** 单件装备战力（与顶栏综合战力公式不同；境界铸灵自动换装以综合战力为准，本值用于列表展示等） */
 export function gearItemPower(g: GearItem, slotEnhanceLevel = 0): number {
   const rr = rarityRank(g.rarity);
   const grade = Math.max(1, Math.min(GEAR_GRADE_MAX, g.gearGrade ?? 1 + rr * 8));
