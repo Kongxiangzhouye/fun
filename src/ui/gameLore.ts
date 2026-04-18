@@ -188,7 +188,7 @@ export function renderGameLoreHtml(): string {
         <summary><img src="${UI_LORE_GEAR}" alt="" width="20" height="20" class="game-lore-summary-icon" loading="lazy" /> 装备与铸灵</summary>
         <ul class="game-lore-list">
           <li><strong>三槽位</strong>：武器 / 衣甲 / 戒指仅可各穿一件，<strong>无装备背包</strong>；新装备要么<strong>替换</strong>该槽（旧件按规则拆解返玄铁），要么<strong>摧毁</strong>较差件。可<strong>锁定</strong>当前槽以防误替换。</li>
-          <li><strong>筑灵阶与战力</strong>：装备带有<strong>筑灵阶</strong>（多档）与随机词条，阶位越高可 roll 出越强词条；面板显示<strong>战力</strong>便于比对。</li>
+          <li><strong>筑灵阶与战力</strong>：装备带有<strong>筑灵阶</strong>（多档）与随机词条，阶位越高可 roll 出越强词条；列表中的单件<strong>战力</strong>便于浏览，<strong>境界铸灵自动换装以顶栏综合战力为准</strong>，仅试穿后综合战力提高才换上。</li>
           <li><strong>铸灵</strong>：在「<strong>历练·筑灵</strong>」页消耗<strong>筑灵髓</strong>，随机部位与词条；连续未出珍品以上会累积珍品保底计数。累计铸灵达 <strong>1 / 50 / 200 / 500 / 1000</strong> 次等可在<strong>成就</strong>领奖（另有珍品、天极稀有度里程碑）。</li>
           <li><strong>强化 / 精炼</strong>：消耗<strong>玄铁</strong>提升强化等级；高稀有可继续精炼（细则见养成→背包装备说明区）。</li>
           <li><strong>拆解</strong>：替换或卸下时旧件拆解为玄铁（锁定槽不可随意卸下，逻辑见面板提示）。</li>

@@ -4108,8 +4108,8 @@ function renderGacha(
     : "";
 
   const gearPityBlurb = embedBattle
-    ? `仅产装备；新装与当前部位比对<strong>战力</strong>，<strong>更高才替换</strong>，否则销毁返少量玄铁。珍品+最长 <strong>${gearPityCap}</strong> 唤保底。`
-    : `境界铸灵 · 仅产<strong>装备</strong>，<strong>不占灵卡天极保底</strong>；当前阶下<strong>最长 ${gearPityCap} 唤</strong>内至少一件珍品+（基准 ${GEAR_SR_PITY_MAX} 唤，随铸灵阶缩短）。<strong>无背包装备</strong>：新装与当前部位比对<strong>战力</strong>，更强才替换，更弱销毁并返少量玄铁。`;
+    ? `仅产装备；试穿后若<strong>综合战力</strong>（顶栏）严格提高才替换，否则销毁返少量玄铁。珍品+最长 <strong>${gearPityCap}</strong> 唤保底。`
+    : `境界铸灵 · 仅产<strong>装备</strong>，<strong>不占灵卡天极保底</strong>；当前阶下<strong>最长 ${gearPityCap} 唤</strong>内至少一件珍品+（基准 ${GEAR_SR_PITY_MAX} 唤，随铸灵阶缩短）。<strong>无背包装备</strong>：试穿后<strong>综合战力</strong>（顶栏）须<strong>严格提高</strong>才替换，否则销毁并返少量玄铁。`;
 
   const gearSection = showGear
     ? `
@@ -4972,7 +4972,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     const visualTierLabel = gearTierLabel(visualTier);
     const pullHtml = r.equipped
       ? `<span class="pull-tag">${g.displayName} · ${visualTierLabel}</span>`
-      : `<span class="pull-tag">${g.displayName} · ${visualTierLabel}</span><p class="hint sm">未超过当前部位战力，已分解为玄铁 +${r.salvagedXuanTie}</p>`;
+      : `<span class="pull-tag">${g.displayName} · ${visualTierLabel}</span><p class="hint sm">未提高综合战力，已分解为玄铁 +${r.salvagedXuanTie}</p>`;
     if (!r.equipped) {
       applyGearPullUiPatch(pullHtml, false);
       return;
