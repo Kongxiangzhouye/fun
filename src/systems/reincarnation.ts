@@ -114,8 +114,8 @@ export function performReincarnate(state: GameState): void {
   state.offlineAdventure.resonanceStacks = 0;
   state.offlineAdventure.lastAutoSettleReceipt = null;
   state.estateCommission = createEmptyEstateCommissionState();
-  state.reservoirClaimableAccumSec = 0;
   state.dripClaimableAccumSec = 0;
+  state.spiritReservoirClaimCooldownUntilMs = 0;
   disableDiscretionaryAutoProgress(state);
   reseedRng(state);
 }

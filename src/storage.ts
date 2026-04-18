@@ -149,8 +149,8 @@ export interface SerializedState {
   loginCalendarWeeklyBonusClaimed?: boolean;
   spiritReservoirStored?: string;
   idleLingShaDripPool?: string;
-  reservoirClaimableAccumSec?: number;
   dripClaimableAccumSec?: number;
+  spiritReservoirClaimCooldownUntilMs?: number;
   dailyFortune?: GameState["dailyFortune"];
   offlineAdventure?: GameState["offlineAdventure"];
   estateCommission?: GameState["estateCommission"];
@@ -349,8 +349,8 @@ export function serialize(state: GameState): string {
     loginCalendarWeeklyBonusClaimed: state.loginCalendarWeeklyBonusClaimed,
     spiritReservoirStored: state.spiritReservoirStored,
     idleLingShaDripPool: state.idleLingShaDripPool,
-    reservoirClaimableAccumSec: state.reservoirClaimableAccumSec,
     dripClaimableAccumSec: state.dripClaimableAccumSec,
+    spiritReservoirClaimCooldownUntilMs: state.spiritReservoirClaimCooldownUntilMs,
     dailyFortune: { ...state.dailyFortune },
     offlineAdventure: state.offlineAdventure
       ? {
@@ -575,13 +575,13 @@ export function deserialize(json: string): GameState {
       ? String(data.idleLingShaDripPool)
       : "0";
   {
-    const r = (data as { reservoirClaimableAccumSec?: unknown }).reservoirClaimableAccumSec;
-    st.reservoirClaimableAccumSec =
-      r != null && Number.isFinite(r) ? Math.max(0, Number(r)) : 0;
-  }
-  {
     const d = (data as { dripClaimableAccumSec?: unknown }).dripClaimableAccumSec;
     st.dripClaimableAccumSec = d != null && Number.isFinite(d) ? Math.max(0, Number(d)) : 0;
+  }
+  {
+    const cd = (data as { spiritReservoirClaimCooldownUntilMs?: unknown }).spiritReservoirClaimCooldownUntilMs;
+    st.spiritReservoirClaimCooldownUntilMs =
+      cd != null && Number.isFinite(cd) ? Math.max(0, Number(cd)) : 0;
   }
   if (data.dailyFortune && typeof data.dailyFortune.fortuneId === "string") {
     st.dailyFortune = {

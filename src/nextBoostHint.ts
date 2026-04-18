@@ -1,7 +1,6 @@
 import Decimal from "decimal.js";
 import type { GameState } from "./types";
 import {
-  ESSENCE_COST_GEAR_SINGLE,
   ESSENCE_COST_GEAR_TEN,
   ESSENCE_COST_TEN,
   MAX_CARD_LEVEL,
@@ -11,7 +10,6 @@ import { incomePerSecond, realmBreakthroughCostForState, upgradeCardLevelCost, u
 import { canAfford } from "./stones";
 import { canClaimDailyLoginReward } from "./systems/dailyLoginCalendar";
 import { countClaimableWeeklyAll } from "./systems/weeklyBounty";
-import { canClaimSpiritReservoir, spiritReservoirUnlocked } from "./systems/spiritReservoir";
 import { canClaimIdleLingShaDrip, idleLingShaDripUnlocked } from "./systems/idleLingShaDrip";
 import { canUpgradeSpiritArray } from "./systems/spiritArray";
 import { battleSkillPullCost } from "./systems/battleSkills";
@@ -30,10 +28,10 @@ import { getUiUnlocks } from "./uiUnlocks";
 import { fmtDecimal } from "./stones";
 
 /**
- * 蓄灵池、灵砂涓滴等「随时可点收取」类：须在**可收取状态**下连续累计满此时长，才进入「下一步」提示，
- * 避免刚有一点进度就占满提示位。
+ * 灵砂涓滴「可收取」须在**可收取状态**下连续累计满此时长，才进入「下一步」提示。
+ * 蓄灵池不参与「下一步」提示。
  */
-const IDLE_CLAIMABLE_HINT_MIN_DWELL_SEC = 10 * 60;
+const IDLE_DRIP_HINT_MIN_DWELL_SEC = 10 * 60;
 
 export interface NextBoostHint {
   /** 与 DOM `data-next-boost-target` 对应 */
@@ -137,28 +135,12 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     };
   }
 
-  const resAccum = Math.max(0, state.reservoirClaimableAccumSec ?? 0);
-  if (
-    u.tabSpiritReservoir &&
-    spiritReservoirUnlocked(state) &&
-    canClaimSpiritReservoir(state) &&
-    resAccum >= IDLE_CLAIMABLE_HINT_MIN_DWELL_SEC
-  ) {
-    return {
-      scrollTarget: "spirit-reservoir",
-      title: "收取蓄灵池",
-      detailLine: "池内灵石已攒够一阵，可并入账",
-      priority: 92,
-      claimStyle: true,
-    };
-  }
-
   const dripAccum = Math.max(0, state.dripClaimableAccumSec ?? 0);
   if (
     u.tabSpiritReservoir &&
     idleLingShaDripUnlocked(state) &&
     canClaimIdleLingShaDrip(state) &&
-    dripAccum >= IDLE_CLAIMABLE_HINT_MIN_DWELL_SEC
+    dripAccum >= IDLE_DRIP_HINT_MIN_DWELL_SEC
   ) {
     return {
       scrollTarget: "ling-sha-drip",

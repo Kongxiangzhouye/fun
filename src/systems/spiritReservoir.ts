@@ -6,6 +6,9 @@ import { normalizeLifetimeStats } from "./pullChronicle";
 /** 与当前每秒灵石挂钩的额外蓄存比例（不计入主循环直接加钱，避免双计） */
 const FILL_MULT = 0.09;
 
+/** 手动收取蓄灵池后的最短间隔（ms），防止连点 */
+export const SPIRIT_RESERVOIR_CLAIM_COOLDOWN_MS = 60_000;
+
 /** 解锁：与 UI tabSpiritReservoir 条件一致 */
 export function spiritReservoirUnlocked(state: GameState): boolean {
   return state.realmLevel >= 3 || state.totalPulls >= 3;
@@ -35,11 +38,12 @@ export function tickSpiritReservoir(state: GameState, dt: number, effectiveIps: 
   state.spiritReservoirStored = cur.toString();
 }
 
-export function claimSpiritReservoir(state: GameState): Decimal {
+export function claimSpiritReservoir(state: GameState, nowMs: number = Date.now()): Decimal {
   const cur = reservoirStored(state);
   if (cur.lte(0)) return new Decimal(0);
   addStones(state, cur);
   state.spiritReservoirStored = "0";
+  state.spiritReservoirClaimCooldownUntilMs = nowMs + SPIRIT_RESERVOIR_CLAIM_COOLDOWN_MS;
   normalizeLifetimeStats(state);
   state.lifetimeStats.spiritReservoirClaims += 1;
   return cur;
@@ -52,9 +56,11 @@ export function reservoirFillRatio(state: GameState): number {
   return Math.max(0, Math.min(1, r));
 }
 
-/** 收取按钮是否可点 */
-export function canClaimSpiritReservoir(state: GameState): boolean {
-  return reservoirStored(state).gt(0);
+/** 收取按钮是否可点（含收取冷却） */
+export function canClaimSpiritReservoir(state: GameState, nowMs: number = Date.now()): boolean {
+  if (!reservoirStored(state).gt(0)) return false;
+  const until = state.spiritReservoirClaimCooldownUntilMs ?? 0;
+  return !(Number.isFinite(until) && until > nowMs);
 }
 
 /** 偏好开启且池内已达上限时自动收取一次；否则返回 null */

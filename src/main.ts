@@ -253,6 +253,7 @@ import {
   claimSpiritReservoir,
   formatSpiritReservoirEtaLine,
   tryAutoClaimSpiritReservoirIfFull,
+  SPIRIT_RESERVOIR_CLAIM_COOLDOWN_MS,
 } from "./systems/spiritReservoir";
 import {
   canClaimIdleLingShaDrip,
@@ -3363,7 +3364,6 @@ function routeNextBoostNavigation(h: NextBoostHint): void {
       activeHub = "cultivate";
       cultivateSub = "bounty";
       break;
-    case "spirit-reservoir":
     case "ling-sha-drip":
       activeHub = "estate";
       estateSub = "idle";
@@ -3715,12 +3715,20 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
   const rs = reservoirStored(state);
   const rc = reservoirCap(state);
   const rPct = reservoirFillRatio(state) * 100;
-  const canRs = canClaimSpiritReservoir(state);
+  const canRs = canClaimSpiritReservoir(state, now);
+  const rsCdLeft = Math.max(0, (state.spiritReservoirClaimCooldownUntilMs ?? 0) - now);
+  const hasReservoirToClaim = reservoirStored(state).gt(0);
+  const reservoirBtnLabel =
+    hasReservoirToClaim && rsCdLeft > 0
+      ? `冷却中（约 ${Math.ceil(rsCdLeft / 1000)} 秒）`
+      : canRs
+        ? "收取蓄灵"
+        : "暂无蓄灵";
   const rEtaLine = formatSpiritReservoirEtaLine(state, ips);
   const reservoirNearFull = rPct >= 80 && rPct < 100;
   const reservoirFull = rPct >= 99.999;
   const reservoirBlock = u.tabSpiritReservoir
-    ? `<section class="panel spirit-reservoir-panel" data-next-boost-target="spirit-reservoir">
+    ? `<section class="panel spirit-reservoir-panel">
       <div class="panel-title-art-row">
         <img class="panel-title-art-icon" src="${UI_HEAD_SPIRIT_RESERVOIR}" alt="" width="28" height="28" loading="lazy" />
         <h2>蓄灵池</h2>
@@ -3734,7 +3742,7 @@ function renderIdle(ips: Decimal, rb: Decimal, canBreak: boolean, u: ReturnType<
         <img class="spirit-reservoir-eta-ico" src="${UI_SPIRIT_RESERVOIR_ETA}" alt="" width="16" height="16" loading="lazy" />
         <span id="spirit-reservoir-eta">${rEtaLine}</span>
       </p>
-      <button type="button" class="btn ${canRs ? "btn-primary" : ""}" id="btn-spirit-reservoir-claim" ${canRs ? "" : "disabled"}>${canRs ? "收取蓄灵" : "暂无蓄灵"}</button>
+      <button type="button" class="btn ${canRs ? "btn-primary" : ""}" id="btn-spirit-reservoir-claim" title="收取后 ${SPIRIT_RESERVOIR_CLAIM_COOLDOWN_MS / 1000} 秒内不可再次收取" ${canRs ? "" : "disabled"}>${reservoirBtnLabel}</button>
     </section>`
     : "";
 
@@ -5417,11 +5425,16 @@ function bindEvents(rb: Decimal, _slots: number): void {
     document.body.addEventListener("click", (ev) => {
     const b = (ev.target as HTMLElement | null)?.closest?.("#btn-spirit-reservoir-claim") as HTMLElement | null;
     if (!b) return;
-    if (!canClaimSpiritReservoir(state)) {
+    const tClaim = nowMs();
+    if (!reservoirStored(state).gt(0)) {
       toast("暂无蓄灵可收。");
       return;
     }
-    const got = claimSpiritReservoir(state);
+    if (!canClaimSpiritReservoir(state, tClaim)) {
+      toast(`收取冷却中，约 ${Math.ceil(Math.max(0, (state.spiritReservoirClaimCooldownUntilMs ?? 0) - tClaim) / 1000)} 秒后可再收。`);
+      return;
+    }
+    const got = claimSpiritReservoir(state, tClaim);
     if (got.lte(0)) return;
     tryCompleteAchievements(state);
     saveGame(state);
@@ -5885,7 +5898,15 @@ function updateEstateIdleLiveReadouts(now: number): void {
     const rs = reservoirStored(state);
     const rc = reservoirCap(state);
     const rPct = reservoirFillRatio(state) * 100;
-    const canRs = canClaimSpiritReservoir(state);
+    const canRs = canClaimSpiritReservoir(state, now);
+    const rsCdLeft = Math.max(0, (state.spiritReservoirClaimCooldownUntilMs ?? 0) - now);
+    const hasReservoirToClaim = rs.gt(0);
+    const reservoirBtnLabel =
+      hasReservoirToClaim && rsCdLeft > 0
+        ? `冷却中（约 ${Math.ceil(rsCdLeft / 1000)} 秒）`
+        : canRs
+          ? "收取蓄灵"
+          : "暂无蓄灵";
     const elS = document.getElementById("spirit-reservoir-stored");
     const elC = document.getElementById("spirit-reservoir-cap");
     const bar = document.getElementById("spirit-reservoir-bar-fill") as HTMLElement | null;
@@ -5903,7 +5924,8 @@ function updateEstateIdleLiveReadouts(now: number): void {
     if (btn) {
       btn.disabled = !canRs;
       btn.className = `btn ${canRs ? "btn-primary" : ""}`;
-      btn.textContent = canRs ? "收取蓄灵" : "暂无蓄灵";
+      btn.textContent = reservoirBtnLabel;
+      btn.title = `收取后 ${SPIRIT_RESERVOIR_CLAIM_COOLDOWN_MS / 1000} 秒内不可再次收取`;
     }
     const dTh = dripThreshold(state);
     const dPool2 = dripPool(state);
