@@ -1,0 +1,25 @@
+{
+  "manifests": [
+    { "id": "achievementsListUi", "file": "achievements-list-ui-manifest.json" },
+    { "id": "chronicleHeadersUi", "file": "chronicle-headers-ui-manifest.json" },
+    { "id": "dungeonDuelUi", "file": "dungeon-duel-ui-manifest.json" },
+    { "id": "elementIcons", "file": "element-icons-manifest.json" },
+    { "id": "emptyStateArt", "file": "empty-state-art-manifest.json" },
+    { "id": "featurePageHeadsUi", "file": "feature-page-heads-ui-manifest.json" },
+    { "id": "gachaPoolUi", "file": "gacha-pool-ui-manifest.json" },
+    { "id": "gardenCrops", "file": "garden-crops-manifest.json" },
+    { "id": "gearBases", "file": "gear-bases-manifest.json" },
+    { "id": "gearInventoryUi", "file": "gear-inventory-ui-manifest.json" },
+    { "id": "gearSlotIcons", "file": "gear-slot-icons-manifest.json" },
+    { "id": "hubSectionHeaders", "file": "hub-section-headers-manifest.json" },
+    { "id": "hubVeinFlairUi", "file": "hub-vein-flair-ui-manifest.json" },
+    { "id": "hudBarIcons", "file": "hud-bar-icons-manifest.json" },
+    { "id": "loreJournalUi", "file": "lore-journal-ui-manifest.json" },
+    { "id": "offlineSettlementUi", "file": "offline-settlement-ui-manifest.json" },
+    { "id": "panelChrome", "file": "panel-chrome-manifest.json" },
+    { "id": "petPortraits", "file": "pet-portraits-manifest.json" },
+    { "id": "playerProfileUi", "file": "player-profile-ui-manifest.json" },
+    { "id": "rarityBadges", "file": "rarity-badges-manifest.json" },
+    { "id": "weeklyBountyUi", "file": "weekly-bounty-ui-manifest.json" }
+  ]
+}

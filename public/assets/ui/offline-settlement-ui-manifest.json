@@ -2,9 +2,16 @@
   "version": 1,
   "naming": "Filenames from OFFLINE_SETTLEMENT_UI_FILES in src/data/offlineSettlementUi.ts; served as public/assets/ui/<file>, including idle badge for low-yield settlement display.",
   "assets": [
-    { "id": "summaryDeco", "file": "offline-summary-deco.svg" },
     { "id": "summaryBadge", "file": "offline-summary-badge.svg" },
     { "id": "transitionShine", "file": "offline-transition-shine.svg" },
-    { "id": "idleBadge", "file": "offline-idle-badge.svg" }
+    { "id": "idleBadge", "file": "offline-idle-badge.svg" },
+    { "id": "resonanceChain", "file": "offline-resonance-chain.svg" },
+    { "id": "resonanceInstant", "file": "offline-resonance-instant.svg" },
+    { "id": "resonanceBoost", "file": "offline-resonance-boost.svg" },
+    { "id": "resonanceEssence", "file": "offline-resonance-essence.svg" },
+    { "id": "reroll", "file": "offline-reroll.svg" },
+    { "id": "rerollReady", "file": "offline-reroll-ready.svg" },
+    { "id": "rerollLocked", "file": "offline-reroll-locked.svg" },
+    { "id": "rerollCost", "file": "offline-reroll-cost.svg" }
   ]
 }

@@ -95,7 +95,6 @@ import type {
   PetId,
 } from "./types";
 import Decimal from "decimal.js";
-import type { Application, Container, Graphics, Ticker } from "pixi.js";
 import { gearItemPower } from "./systems/gearCraft";
 import { getUiUnlocks } from "./uiUnlocks";
 import { explorationHints } from "./explorationHints";
@@ -270,6 +269,33 @@ import { renderSaveToolsPanel } from "./ui/saveToolsView";
 import { setupSaveToolsBridge } from "./ui/saveToolsBridge";
 import { bindDungeonInteractions } from "./ui/dungeonInteractions";
 import { showHtmlFeedbackToast, showPlainFeedbackToast } from "./ui/feedbackToasts";
+import { renderAppShell } from "./ui/appShell";
+import {
+  DEFAULT_NAVIGATION_STATE,
+  navigationViewKey,
+  normalizeNavigationState,
+  type BattleSub,
+  type CharacterSub,
+  type CultivateSub,
+  type EstateIdleSub,
+  type EstateSub,
+  type HubId,
+  type NavigationState,
+} from "./ui/navigationState";
+import {
+  bindModernFxInteraction,
+  bindMotionUiFx,
+  configureFxLayer,
+  emitPixiBurst,
+  initPixiFxLayer,
+  isMobileLiteFx,
+  loopIntervalMs as fxLoopIntervalMs,
+  motionReduced,
+  setMobileLiteFx,
+  shouldUseMobileLiteFx,
+  updateModernVisualFx,
+} from "./ui/fxLayer";
+import { playRevealOverlayExit, playRevealOverlayIntro } from "./ui/revealOverlays";
 import { tryAutoBuyDaoMeridianIfPref, tryBuyDaoMeridian, daoMeridianLuckFlat } from "./systems/daoMeridian";
 import {
   ensureWeeklyBountyWeek,
@@ -511,39 +537,25 @@ let gachaPool: "cards" | "gear" = "cards";
 let autoEnterPromptHandled = false;
 let veinHelpDocListenerBound = false;
 let delegatedPanelClickListenersBound = false;
-/** 主导航：底部四栏（灵府→养成→历练·筑灵→角色）+ 部分页内二级子栏 */
-type HubId = "character" | "cultivate" | "battle" | "estate";
-type EstateSub = "idle" | "vein" | "array" | "garden";
-/** 「灵脉·境界升级」页内再分栏，减轻单页过长 */
-type EstateIdleSub = "core" | "well" | "away";
-type BattleSub = "dungeon" | "forge";
-type CultivateSub =
-  | "deck"
-  | "train"
-  | "pets"
-  | "codex"
-  | "meta"
-  | "ach"
-  | "bounty"
-  | "chronicle"
-  | "daily"
-  | "stash"
-  | "xinfa";
-type CharacterSub =
-  | "stats"
-  | "cards"
-  | "guides"
-  | "settings"
-  | "data"
-  | "archive"
-  | "meridian";
-
-let activeHub: HubId = "estate";
-let estateSub: EstateSub = "idle";
-let estateIdleSub: EstateIdleSub = "core";
-let battleSub: BattleSub = "dungeon";
-let cultivateSub: CultivateSub = "deck";
-let characterSub: CharacterSub = "stats";
+let gearPanelClickListenerBound = false;
+let battleStripDelegationBound = false;
+let battleStripLongPressTimer: number | null = null;
+const BATTLE_STRIP_LONG_PRESS_MS = 480;
+/** 主导航：底部四栏与页内二级状态由 navigationState 统一定义。 */
+let activeHub: HubId = DEFAULT_NAVIGATION_STATE.activeHub;
+let estateSub: EstateSub = DEFAULT_NAVIGATION_STATE.estateSub;
+let estateIdleSub: EstateIdleSub = DEFAULT_NAVIGATION_STATE.estateIdleSub;
+let battleSub: BattleSub = DEFAULT_NAVIGATION_STATE.battleSub;
+let cultivateSub: CultivateSub = DEFAULT_NAVIGATION_STATE.cultivateSub;
+let characterSub: CharacterSub = DEFAULT_NAVIGATION_STATE.characterSub;
+configureFxLayer({
+  getPreferences: () => ({ reduceMotion: state.uiPrefs.reduceMotion }),
+  getVisualState: () => ({
+    activeHub,
+    totalPulls: state.totalPulls,
+    wishResonance: state.wishResonance,
+  }),
+});
 /** 历练页：筑灵装备条是否已长按展开（默认收起） */
 let battleEquippedStripExpanded = false;
 let topBarExtrasExpanded = false;
@@ -558,6 +570,11 @@ let lastNextBoostSerialized = "";
 let nextBoostFabLoopCounter = 0;
 /** 主循环基准间隔：实际会按移动端/减动效自适应放大 */
 const LOOP_INTERVAL_BASE_MS = 50;
+let loopTimer: number | null = null;
+
+function loopIntervalMs(): number {
+  return fxLoopIntervalMs(LOOP_INTERVAL_BASE_MS);
+}
 
 let toastTimer = 0;
 let flyCreditsDismissed = false;
@@ -621,260 +638,6 @@ function updateZhuLingRateEstimate(now: number): void {
   zhuLingRateEstimatePerSec += (target - zhuLingRateEstimatePerSec) * alpha;
   if (zhuLingRateEstimatePerSec < 0.001) zhuLingRateEstimatePerSec = 0;
 }
-const reducedMotionQuery =
-  typeof window !== "undefined" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
-let prefersReducedMotion = reducedMotionQuery?.matches ?? false;
-let modernFxPointerBound = false;
-let modernFxPointerX = 0.5;
-let modernFxPointerY = 0.2;
-let motionUiFxBound = false;
-let mobileLiteFx = false;
-let pixiFxBooted = false;
-type GsapRuntime = typeof import("gsap")["gsap"];
-type PixiRuntime = {
-  ApplicationCtor: typeof import("pixi.js").Application;
-  ContainerCtor: typeof import("pixi.js").Container;
-  GraphicsCtor: typeof import("pixi.js").Graphics;
-};
-let gsapRuntime: GsapRuntime | null = null;
-let gsapLoading: Promise<GsapRuntime | null> | null = null;
-let pixiRuntime: PixiRuntime | null = null;
-let pixiLoading: Promise<PixiRuntime | null> | null = null;
-let pixiApp: Application | null = null;
-let pixiLayer: Container | null = null;
-let loopTimer: number | null = null;
-type PixiParticle = { g: Graphics; vx: number; vy: number; ttl: number; life: number };
-const pixiParticles: PixiParticle[] = [];
-
-async function getGsapRuntime(): Promise<GsapRuntime | null> {
-  if (gsapRuntime) return gsapRuntime;
-  if (!gsapLoading) {
-    gsapLoading = import("gsap")
-      .then((mod) => {
-        gsapRuntime = mod.gsap;
-        return gsapRuntime;
-      })
-      .catch(() => null);
-  }
-  return gsapLoading;
-}
-
-async function getPixiRuntime(): Promise<PixiRuntime | null> {
-  if (pixiRuntime) return pixiRuntime;
-  if (!pixiLoading) {
-    pixiLoading = import("pixi.js")
-      .then((mod) => {
-        pixiRuntime = {
-          ApplicationCtor: mod.Application,
-          ContainerCtor: mod.Container,
-          GraphicsCtor: mod.Graphics,
-        };
-        return pixiRuntime;
-      })
-      .catch(() => null);
-  }
-  return pixiLoading;
-}
-
-function motionReduced(): boolean {
-  return prefersReducedMotion || !!state.uiPrefs.reduceMotion;
-}
-
-function loopIntervalMs(): number {
-  // 手机端 + 减动效下主动降频，降低持续 CPU 占用与发热。
-  if (mobileLiteFx && motionReduced()) return 160;
-  if (motionReduced()) return 120;
-  if (mobileLiteFx) return 80;
-  return LOOP_INTERVAL_BASE_MS;
-}
-
-function initPixiFxLayer(): void {
-  if (typeof document === "undefined" || pixiFxBooted) return;
-  pixiFxBooted = true;
-  void (async () => {
-    try {
-      const runtime = await getPixiRuntime();
-      if (!runtime) return;
-      const app = new runtime.ApplicationCtor();
-      await app.init({
-        width: Math.max(1, window.innerWidth),
-        height: Math.max(1, window.innerHeight),
-        backgroundAlpha: 0,
-        antialias: true,
-        autoDensity: true,
-        resolution: Math.min(2, window.devicePixelRatio || 1),
-      });
-      const canvas = app.canvas as HTMLCanvasElement;
-      canvas.className = "modern-pixi-layer";
-      document.body.appendChild(canvas);
-      const layer = new runtime.ContainerCtor();
-      app.stage.addChild(layer);
-      app.ticker.add((ticker: Ticker) => {
-        const deltaMs = ticker.deltaMS;
-        for (let i = pixiParticles.length - 1; i >= 0; i -= 1) {
-          const p = pixiParticles[i]!;
-          p.life += deltaMs;
-          const t = Math.min(1, p.life / p.ttl);
-          p.g.x += (p.vx * deltaMs) / 16.6667;
-          p.g.y += (p.vy * deltaMs) / 16.6667;
-          p.g.alpha = 1 - t;
-          const s = 1 + t * 0.9;
-          p.g.scale.set(s, s);
-          if (t >= 1) {
-            p.g.removeFromParent();
-            p.g.destroy();
-            pixiParticles.splice(i, 1);
-          }
-        }
-      });
-      window.addEventListener(
-        "resize",
-        () => {
-          app.renderer.resize(Math.max(1, window.innerWidth), Math.max(1, window.innerHeight));
-        },
-        { passive: true },
-      );
-      pixiApp = app;
-      pixiLayer = layer;
-    } catch {
-      pixiApp = null;
-      pixiLayer = null;
-    }
-  })();
-}
-
-function emitPixiBurst(clientX: number, clientY: number, intensity: "normal" | "high" = "normal"): void {
-  if (!pixiApp || !pixiLayer || motionReduced() || !pixiRuntime) return;
-  const n = intensity === "high" ? 30 : 14;
-  const speed = intensity === "high" ? 7.6 : 5.4;
-  const palette = intensity === "high" ? [0xfff2b1, 0xffb6f8, 0x8fe8ff, 0xaac4ff] : [0x9bb8ff, 0x81d8ff, 0x9ff1d4];
-  for (let i = 0; i < n; i += 1) {
-    const g = new pixiRuntime.GraphicsCtor();
-    const r = intensity === "high" ? 1.8 + Math.random() * 3.6 : 1.3 + Math.random() * 2.2;
-    const c = palette[(Math.random() * palette.length) | 0]!;
-    g.circle(0, 0, r);
-    g.fill({ color: c, alpha: 0.95 });
-    g.x = clientX;
-    g.y = clientY;
-    const a = Math.random() * Math.PI * 2;
-    const mag = speed * (0.6 + Math.random() * 1.1);
-    pixiLayer.addChild(g);
-    pixiParticles.push({
-      g,
-      vx: Math.cos(a) * mag,
-      vy: Math.sin(a) * mag - (intensity === "high" ? 1.8 : 0.9),
-      ttl: intensity === "high" ? 720 + Math.random() * 380 : 520 + Math.random() * 260,
-      life: 0,
-    });
-  }
-}
-
-function bindMotionUiFx(): void {
-  if (typeof document === "undefined" || motionUiFxBound) return;
-  motionUiFxBound = true;
-  // 取消页签/按钮按压特效与粒子，避免移动端卡顿与风格不一致。
-}
-
-function playRevealOverlayIntro(overlay: HTMLElement, liteFx: boolean): void {
-  if (liteFx || motionReduced()) {
-    overlay.classList.add("gacha-reveal-active");
-    return;
-  }
-  if (!gsapRuntime) {
-    void getGsapRuntime();
-    overlay.classList.add("gacha-reveal-active");
-    return;
-  }
-  const gsap = gsapRuntime;
-  const content = overlay.querySelector(".gacha-reveal-content") as HTMLElement | null;
-  const cards = [...overlay.querySelectorAll(".gacha-reveal-card")] as HTMLElement[];
-  gsap.set(overlay, { opacity: 0 });
-  if (content) gsap.set(content, { opacity: 0, y: 24, scale: 0.95, filter: "blur(8px)" });
-  gsap.set(cards, { opacity: 0, y: 16, rotateX: -12, transformOrigin: "50% 100%" });
-  const tl = gsap.timeline();
-  tl.to(overlay, { opacity: 1, duration: 0.2, ease: "power2.out" });
-  if (content) {
-    tl.to(content, { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 0.02);
-  }
-  if (cards.length > 0) {
-    tl.to(cards, { opacity: 1, y: 0, rotateX: 0, duration: 0.4, stagger: 0.05, ease: "back.out(1.35)" }, 0.12);
-  }
-  overlay.classList.add("gacha-reveal-active");
-}
-
-function playRevealOverlayExit(overlay: HTMLElement, liteFx: boolean, done: () => void): void {
-  if (liteFx || motionReduced()) {
-    window.setTimeout(done, 140);
-    return;
-  }
-  if (!gsapRuntime) {
-    void getGsapRuntime();
-    window.setTimeout(done, 140);
-    return;
-  }
-  const gsap = gsapRuntime;
-  const content = overlay.querySelector(".gacha-reveal-content") as HTMLElement | null;
-  gsap.to(content, {
-    opacity: 0,
-    y: -10,
-    scale: 0.98,
-    filter: "blur(4px)",
-    duration: 0.22,
-    ease: "power2.in",
-  });
-  gsap.to(overlay, {
-    opacity: 0,
-    duration: 0.28,
-    ease: "power2.in",
-    onComplete: done,
-  });
-}
-
-function bindModernFxInteraction(): void {
-  if (typeof document === "undefined" || modernFxPointerBound) return;
-  modernFxPointerBound = true;
-  // 取消鼠标追踪光效：保持静态中心点即可。
-  modernFxPointerX = 0.5;
-  modernFxPointerY = 0.2;
-  reducedMotionQuery?.addEventListener("change", (ev) => {
-    prefersReducedMotion = ev.matches;
-  });
-}
-
-function shouldUseMobileLiteFx(): boolean {
-  if (typeof window === "undefined") return false;
-  const coarse = window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
-  const narrow = window.matchMedia?.("(max-width: 900px)")?.matches ?? false;
-  const lowCpu = typeof navigator !== "undefined" && (navigator.hardwareConcurrency ?? 8) <= 6;
-  return coarse || narrow || lowCpu;
-}
-
-function updateModernVisualFx(now: number): void {
-  if (typeof document === "undefined") return;
-  const root = document.documentElement;
-  const reduced = motionReduced();
-  root.classList.toggle("fx-reduce-motion", reduced);
-  if (reduced) return;
-  const cycle = 28000;
-  const t = ((now % cycle) + cycle) / cycle;
-  const pulse = (Math.sin((now / 1800) * Math.PI * 2) + 1) * 0.5;
-  const hubHue: Record<HubId, number> = {
-    estate: 0,
-    cultivate: -20,
-    battle: 30,
-    character: -10,
-  };
-  const pullDensity = Math.min(1, Math.log10(Math.max(10, state.totalPulls + 10)) / 4);
-  const resonance = (((state.wishResonance % 100) + 100) % 100) / 100;
-  const hue = 220 + hubHue[activeHub] + pulse * 22 + resonance * 18;
-  const energy = 0.34 + 0.38 * pullDensity + 0.28 * resonance;
-  root.style.setProperty("--modern-fx-hue", `${hue.toFixed(2)}deg`);
-  root.style.setProperty("--modern-fx-energy", energy.toFixed(3));
-  root.style.setProperty("--modern-fx-t", t.toFixed(4));
-  root.style.setProperty("--modern-fx-mx", `${(modernFxPointerX * 100).toFixed(2)}%`);
-  root.style.setProperty("--modern-fx-my", `${(modernFxPointerY * 100).toFixed(2)}%`);
-}
-
 function tryToast(msg: string): void {
   if (typeof document !== "undefined" && document.visibilityState === "hidden") {
     deferredDungeonToasts.push(msg);
@@ -2174,6 +1937,47 @@ function handleGearPanelClick(e: MouseEvent): void {
   }
 }
 
+function bindGlobalDelegatedUiEvents(): void {
+  if (!gearPanelClickListenerBound) {
+    gearPanelClickListenerBound = true;
+    document.addEventListener("click", handleGearPanelClick);
+  }
+  if (battleStripDelegationBound) return;
+  battleStripDelegationBound = true;
+  const clearBattleStripLongPress = (): void => {
+    if (battleStripLongPressTimer !== null) {
+      window.clearTimeout(battleStripLongPressTimer);
+      battleStripLongPressTimer = null;
+    }
+  };
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      const strip = (e.target as HTMLElement).closest("#battle-equipped-strip");
+      if (!strip || e.button !== 0) return;
+      if ((e.target as HTMLElement).closest("button")) return;
+      if (!strip.classList.contains("battle-equipped-strip--collapsible")) return;
+      if (strip.classList.contains("battle-equipped-strip--expanded")) return;
+      clearBattleStripLongPress();
+      battleStripLongPressTimer = window.setTimeout(() => {
+        battleStripLongPressTimer = null;
+        battleEquippedStripExpanded = true;
+        render();
+      }, BATTLE_STRIP_LONG_PRESS_MS);
+    },
+    true,
+  );
+  document.addEventListener("pointerup", clearBattleStripLongPress, true);
+  document.addEventListener("pointercancel", clearBattleStripLongPress, true);
+  document.addEventListener(
+    "contextmenu",
+    (e) => {
+      if ((e.target as HTMLElement).closest("#battle-equipped-strip")) e.preventDefault();
+    },
+    true,
+  );
+}
+
 function tryUpgradeSelectedCard(): boolean {
   if (!selectedInvId) return false;
   const o = state.owned[selectedInvId];
@@ -2420,13 +2224,14 @@ function renderTopBar(
   }
   const hasExtra = extra.length > 0;
   const extraWrap = hasExtra
-    ? `<div class="resource-strip-extra${topBarExtrasExpanded ? " expanded" : ""}" id="top-bar-extra">${extra}</div>`
+    ? `<div class="resource-strip-extra${topBarExtrasExpanded ? " expanded" : ""}" id="top-bar-extra" aria-hidden="${topBarExtrasExpanded ? "false" : "true"}">${extra}</div>`
     : "";
   const moreBtn = hasExtra
     ? `<button type="button" class="res-chip res-chip-more" id="btn-topbar-more" aria-expanded="${topBarExtrasExpanded ? "true" : "false"}">${topBarExtrasExpanded ? "收起" : "更多"}</button>`
     : "";
   return `
-  <div class="resource-strip${goldClass}" id="top-bar" title="长按货币图标查看用途">
+  <section class="resource-strip${goldClass}" id="top-bar" aria-label="资源与修行状态" title="长按货币图标查看用途">
+    <div class="resource-strip-main">
     <span class="res-chip res-chip-key res-chip-stone" data-currency-hint-id="stone">
       <img class="res-ico" src="${UI_STONE}" alt="" width="20" height="20" />
       <span class="res-chip-stack">
@@ -2473,13 +2278,36 @@ function renderTopBar(
       </span>
     </span>
     ${moreBtn}
+    </div>
     ${extraWrap}
-  </div>`;
+  </section>`;
 }
 
 /** 与 renderHubContent 强相关的导航状态；变化时主列表应回到顶部而非保留滚动 */
+function currentNavigationState(): NavigationState {
+  return {
+    activeHub,
+    estateSub,
+    estateIdleSub,
+    battleSub,
+    cultivateSub,
+    characterSub,
+    gachaPool,
+  };
+}
+
+function applyNavigationState(nav: NavigationState): void {
+  activeHub = nav.activeHub;
+  estateSub = nav.estateSub;
+  estateIdleSub = nav.estateIdleSub;
+  battleSub = nav.battleSub;
+  cultivateSub = nav.cultivateSub;
+  characterSub = nav.characterSub;
+  gachaPool = nav.gachaPool;
+}
+
 function mainContentViewKey(): string {
-  return `${activeHub}|${estateSub}|${estateIdleSub}|${battleSub}|${cultivateSub}|${characterSub}|${gachaPool}`;
+  return navigationViewKey(currentNavigationState());
 }
 
 function goByBountyAction(action: string | null | undefined): boolean {
@@ -2526,40 +2354,7 @@ const BOUNTY_ACTION_ROUTES: Record<string, () => void> = {
 };
 
 function normalizeHubNavigation(u: ReturnType<typeof getUiUnlocks>): void {
-  if (activeHub === "estate" && estateSub === "vein" && !u.tabVein) estateSub = "idle";
-  if (activeHub === "estate" && estateSub === "garden" && !u.tabGarden) estateSub = "idle";
-  if (activeHub === "estate" && estateSub === "array" && !u.tabSpiritArray) estateSub = "idle";
-  if (activeHub === "battle" && battleSub === "forge" && !u.tabGear) battleSub = "dungeon";
-  const subOk = (s: CultivateSub): boolean => {
-    switch (s) {
-      case "deck":
-        return true;
-      case "train":
-        return u.tabTrain;
-      case "pets":
-        return u.tabPets;
-      case "codex":
-        return u.tabCodex;
-      case "meta":
-        return u.tabMeta;
-      case "ach":
-        return u.tabAch;
-      case "bounty":
-        return u.tabBounty;
-      case "chronicle":
-        return u.tabChronicle;
-      case "daily":
-        return u.tabDailyLogin;
-      case "stash":
-        return u.tabCelestialStash;
-      case "xinfa":
-        return u.tabBattleSkills;
-      default:
-        return false;
-    }
-  };
-  if (activeHub === "cultivate" && !subOk(cultivateSub)) cultivateSub = "deck";
-  if (activeHub === "character" && characterSub === "meridian" && !u.tabDaoMeridian) characterSub = "stats";
+  applyNavigationState(normalizeNavigationState(currentNavigationState(), u));
 }
 
 /** 二级页签：主内容区顶部横排（幻域已独立为底部「幻域」页） */
@@ -3576,38 +3371,26 @@ function render(): void {
   const unlockLines = collectUnlockHintLines(u);
   const hubAssistBlock = renderHubAssistPanel(unlockLines);
 
-  app.innerHTML = `
-    <div class="app-visual-bg" style="--ui-sparkles:url('${UI_BG_SPARKLES}')" aria-hidden="true"></div>
-    <div class="app-visual-aurora" aria-hidden="true"></div>
-    <div class="app-root-content" style="--ui-panel-runes:url('${UI_PANEL_RUNES}')">
-    <div class="app-head">
-    <div class="app-brand-row">
-      <div class="app-title-cluster">
-        <img class="app-title-spirit" src="${UI_TITLE_SPIRIT}" alt="" width="40" height="40" loading="eager" title="戳一戳" />
-        <h1 class="app-title">万象唤灵</h1>
-      </div>
-      ${renderTopBar(u, ui, goldClass, ips)}
-    </div>
-    ${ui.tagLine ? `<p class="vigor-line vigor-compact">${ui.tagLine}</p>` : `<p class="vigor-line vigor-compact fun-flavor-line">「${sessionFunFlavorLine()}」</p>`}
-    </div>
-
-    <main class="app-main app-main-stack" id="main-content">
-    <div class="hub-page-scroll">
-    ${hubAssistBlock}
-    ${renderFloatingSubNav(u)}
-    ${renderHubContent(ips, rb, canBreak, u, pityUr, slots)}
-    </div>
-    </main>
-
-    ${renderNextBoostFab()}
-    ${renderTutorialBlock()}
-    ${renderFlyOverlay()}
-    ${renderBottomNav(u)}
-    ${renderAiAgentHiddenMarkup(buildAiAgentSnapshot(state, nowMs(), totalCardsInPool(), currentAiAgentNavigation()))}
-    </div>
-    ${renderKeyboardHelpModal()}
-    ${renderAboutModal()}
-  `;
+  app.innerHTML = renderAppShell({
+    bgSparklesSrc: UI_BG_SPARKLES,
+    panelRunesSrc: UI_PANEL_RUNES,
+    titleSpiritSrc: UI_TITLE_SPIRIT,
+    titleSpiritTitle: "戳一戳",
+    appTitle: "万象唤灵",
+    topBarHtml: renderTopBar(u, ui, goldClass, ips),
+    taglineHtml: ui.tagLine
+      ? `<p class="vigor-line vigor-compact">${ui.tagLine}</p>`
+      : `<p class="vigor-line vigor-compact fun-flavor-line">「${sessionFunFlavorLine()}」</p>`,
+    hubAssistHtml: hubAssistBlock,
+    subNavHtml: renderFloatingSubNav(u),
+    hubContentHtml: renderHubContent(ips, rb, canBreak, u, pityUr, slots),
+    nextBoostHtml: renderNextBoostFab(),
+    tutorialHtml: renderTutorialBlock(),
+    flyOverlayHtml: renderFlyOverlay(),
+    bottomNavHtml: renderBottomNav(u),
+    aiAgentHtml: renderAiAgentHiddenMarkup(buildAiAgentSnapshot(state, nowMs(), totalCardsInPool(), currentAiAgentNavigation())),
+    modalHtml: `${renderKeyboardHelpModal()}${renderAboutModal()}`,
+  });
 
   bindEvents(rb, slots);
   lastNextBoostSerialized = "";
@@ -5029,42 +4812,7 @@ function bindEvents(rb: Decimal, _slots: number): void {
     refreshDeckPanel();
   });
   document.getElementById("main-content")?.addEventListener("click", handleCharacterCardsClick);
-  document.addEventListener("click", handleGearPanelClick);
-
-  let battleStripLongPressTimer: number | null = null;
-  const clearBattleStripLongPress = (): void => {
-    if (battleStripLongPressTimer !== null) {
-      window.clearTimeout(battleStripLongPressTimer);
-      battleStripLongPressTimer = null;
-    }
-  };
-  const BATTLE_STRIP_LONG_MS = 480;
-  document.addEventListener(
-    "pointerdown",
-    (e) => {
-      const strip = (e.target as HTMLElement).closest("#battle-equipped-strip");
-      if (!strip || e.button !== 0) return;
-      if ((e.target as HTMLElement).closest("button")) return;
-      if (!strip.classList.contains("battle-equipped-strip--collapsible")) return;
-      if (strip.classList.contains("battle-equipped-strip--expanded")) return;
-      clearBattleStripLongPress();
-      battleStripLongPressTimer = window.setTimeout(() => {
-        battleStripLongPressTimer = null;
-        battleEquippedStripExpanded = true;
-        render();
-      }, BATTLE_STRIP_LONG_MS);
-    },
-    true,
-  );
-  document.addEventListener("pointerup", clearBattleStripLongPress, true);
-  document.addEventListener("pointercancel", clearBattleStripLongPress, true);
-  document.addEventListener(
-    "contextmenu",
-    (e) => {
-      if ((e.target as HTMLElement).closest("#battle-equipped-strip")) e.preventDefault();
-    },
-    true,
-  );
+  bindGlobalDelegatedUiEvents();
 
   document.getElementById("main-content")?.addEventListener("click", (e) => {
     const t = e.target as HTMLElement;
@@ -6234,7 +5982,7 @@ function loop(): void {
   if (autoSettledOfflineInLoop || autoSettledEstateInLoop) {
     requestSave("自动结算闭环", true);
   }
-  if (!mobileLiteFx) updateModernVisualFx(now);
+  if (!isMobileLiteFx()) updateModernVisualFx(now);
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
     activeHub = "battle";
     lastAutoEnterFailReason = "";
@@ -6916,8 +6664,8 @@ function init(): void {
   ensureEstateCommissionOffer(state, t);
   ensureWeeklyBountyWeek(state, t);
   ensureCelestialStashWeek(state, t);
-  mobileLiteFx = shouldUseMobileLiteFx();
-  if (!mobileLiteFx) initPixiFxLayer();
+  setMobileLiteFx(shouldUseMobileLiteFx());
+  if (!isMobileLiteFx()) initPixiFxLayer();
   bindModernFxInteraction();
   bindMotionUiFx();
   updateModernVisualFx(t);
