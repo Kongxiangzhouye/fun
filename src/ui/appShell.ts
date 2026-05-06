@@ -15,13 +15,14 @@ export type AppShellRenderContext = {
   bottomNavHtml: string;
   aiAgentHtml: string;
   modalHtml: string;
+  rootClassName?: string;
 };
 
 export function renderAppShell(ctx: AppShellRenderContext): string {
   return `
     <div class="app-visual-bg" style="--ui-sparkles:url('${ctx.bgSparklesSrc}')" aria-hidden="true"></div>
     <div class="app-visual-aurora" aria-hidden="true"></div>
-    <div class="app-root-content" style="--ui-panel-runes:url('${ctx.panelRunesSrc}')">
+    <div class="app-root-content${ctx.rootClassName ? ` ${ctx.rootClassName}` : ""}" style="--ui-panel-runes:url('${ctx.panelRunesSrc}')">
     <div class="app-head">
     <div class="app-brand-row">
       <div class="app-title-cluster">

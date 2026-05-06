@@ -423,6 +423,189 @@ export interface WaveCheckpoint {
   bossPrepChallengeReady?: boolean;
 }
 
+export type DungeonRunNodeType = "combat" | "elite" | "event" | "rest" | "boss";
+export type DungeonEnemyIntent = "attack" | "guard" | "drain" | "enrage";
+export type DungeonRunEnemyRole = "melee" | "ranged" | "guard" | "drain" | "boss";
+export type DungeonBossOmen = "none" | "heaven-strike" | "soul-drain" | "inferno";
+export type DungeonRunRewardKind = "blessing" | "card" | "gear" | "essence";
+export type DungeonRunObjectiveKind = "perfect_dodge" | "skill_counter" | "finisher" | "fast_kill";
+export type DungeonRunWarrantKind = "clear_nodes" | "counter_moves" | "boss_omens" | "elite_routes" | "blessing_picks" | "finishers";
+export type DungeonRunOpportunityAction = "dodge" | "skill" | "finisher";
+export type DungeonRunRoutePlan = "safe" | "tempo" | "risk" | "draft";
+export type DungeonRunCombatGrade = "none" | "c" | "b" | "a" | "s";
+export type DungeonRunOutcome = "none" | "victory" | "defeat";
+
+export interface DungeonRunNode {
+  id: string;
+  type: DungeonRunNodeType;
+  title: string;
+  cleared: boolean;
+  routePlan?: DungeonRunRoutePlan;
+  riskEnemyPowerPct?: number;
+  forecastEnemyRole?: DungeonRunEnemyRole;
+  forecastEnemyElement?: Element;
+}
+
+export interface DungeonRunEnemy {
+  id: string;
+  name: string;
+  role: DungeonRunEnemyRole;
+  element: Element;
+  hp: number;
+  maxHp: number;
+  intent: DungeonEnemyIntent;
+  intentPower: number;
+  intentAtMs: number;
+  nextIntentAtMs: number;
+  block: number;
+  enrage: number;
+}
+
+export interface DungeonRunObjective {
+  kind: DungeonRunObjectiveKind;
+  title: string;
+  desc: string;
+  target: number;
+  progress: number;
+  rewardZhuLingEssence: number;
+  rewardLingSha: number;
+  rewardFinisherCharge?: number;
+  rewardRerolls?: number;
+  rewardShieldPct?: number;
+  rewardStyle?: number;
+  rewardThreatDelta?: number;
+  scoutRole?: DungeonRunEnemyRole;
+  scoutElement?: Element;
+  routePlan?: DungeonRunRoutePlan;
+  completed: boolean;
+  failed?: boolean;
+  startedAtMs: number;
+  timeLimitMs?: number;
+}
+
+export interface DungeonRunWarrant {
+  kind: DungeonRunWarrantKind;
+  title: string;
+  desc: string;
+  target: number;
+  progress: number;
+  completed: boolean;
+  rewardZhuLingEssence: number;
+  rewardLingSha: number;
+  rewardFinisherCharge?: number;
+  rewardRerolls?: number;
+  rewardThreatDelta?: number;
+}
+
+export interface DungeonRunOpportunity {
+  action: DungeonRunOpportunityAction;
+  title: string;
+  desc: string;
+  untilMs: number;
+  rewardZhuLingEssence: number;
+  rewardFinisherCharge: number;
+  rewardStamina: number;
+  damagePct: number;
+  source?: "pledge_reprisal" | "reward_verb_surge" | "counter_tempo_rebound" | "event_echo";
+  sourcePower?: number;
+  sourceVerb?: string;
+}
+
+export interface DungeonRunRewardOption {
+  id: string;
+  kind: DungeonRunRewardKind;
+  title: string;
+  desc: string;
+  blessingId?: string;
+  draftHint?: string;
+  combatVerb?: string;
+  combatHint?: string;
+  synergyTier?: "dominant" | "pair" | "triple" | "major";
+  pickZhuLingBonus?: number;
+  pickFinisherBonus?: number;
+  pickTacticalEdgeHits?: number;
+  pickTacticalEdgeDamagePct?: number;
+  pickRerollBonus?: number;
+  pickThreatDelta?: number;
+  summonEssence?: number;
+  zhuLingEssence?: number;
+  lingSha?: number;
+  xuanTie?: number;
+}
+
+export interface DungeonRunEventOption {
+  id: string;
+  title: string;
+  desc: string;
+  checkElement?: Element;
+  checkFailHpPct?: number;
+  checkFailThreatDelta?: number;
+  checkFailZhuLingEssence?: number;
+  costStones?: string;
+  costHpPct?: number;
+  rewardBlessingId?: string;
+  rewardSummonEssence?: number;
+  rewardZhuLingEssence?: number;
+  rewardLingSha?: number;
+  rewardXuanTie?: number;
+  healPct?: number;
+  staminaPct?: number;
+  finisherCharge?: number;
+  shieldPct?: number;
+  enemyDamagePct?: number;
+  reviveCombat?: boolean;
+  rewardDraft?: boolean;
+  riskCombat?: boolean;
+  threatDelta?: number;
+  eventPlan?: DungeonRunRoutePlan;
+  eventPreview?: string;
+  eventStyleBonus?: number;
+  eventFinisherBonus?: number;
+  eventShieldPct?: number;
+  eventRerollBonus?: number;
+  eventBuildFit?: "match" | "steady" | "risk";
+  eventBuildHint?: string;
+  eventScoutHint?: string;
+}
+
+export interface DungeonRunEventState {
+  id: string;
+  title: string;
+  body: string;
+  options: DungeonRunEventOption[];
+}
+
+export interface DungeonRunRouteChoice {
+  id: string;
+  title: string;
+  desc: string;
+  nodeType: DungeonRunNodeType;
+  rewardBlessingId?: string;
+  rewardZhuLingEssence?: number;
+  rewardLingSha?: number;
+  healPct?: number;
+  staminaPct?: number;
+  riskEnemyPowerPct?: number;
+  threatDelta?: number;
+  forecastEnemyRole?: DungeonRunEnemyRole;
+  forecastEnemyElement?: Element;
+  attuneElement?: Element;
+  attuneBonusText?: string;
+  scoutText?: string;
+  routeBuildFit?: "match" | "steady" | "risk";
+  routeBuildHint?: string;
+  routeRecommend?: boolean;
+  routeRecommendHint?: string;
+  routeEchoFit?: "match" | "steady";
+  routeEchoHint?: string;
+  plan?: DungeonRunRoutePlan;
+  planPreview?: string;
+  routeStyleBonus?: number;
+  routeFinisherBonus?: number;
+  routeShieldPct?: number;
+  routeRerollBonus?: number;
+}
+
 export interface DungeonState {
   active: boolean;
   wave: number;
@@ -515,6 +698,205 @@ export interface DungeonState {
   bossPrepKills: number;
   /** 首领前哨：是否已达到挑战门槛（达到后即便继续刷小兵也保持可挑战） */
   bossPrepChallengeReady: boolean;
+  /** 幻域行旅：当前短局是否处于战斗节点 */
+  runInCombat: boolean;
+  /** 幻域行旅：本次行旅节点 */
+  runNodes: DungeonRunNode[];
+  /** 幻域行旅：当前节点索引 */
+  runNodeIndex: number;
+  /** 幻域行旅：累计完成的行旅次数 */
+  runsCompleted: number;
+  /** 幻域行旅：累计失败次数 */
+  runsFailed: number;
+  /** 幻域行旅：本局临时灵印 id */
+  runBlessings: string[];
+  /** 幻域行旅：本局劫压，越高敌人越强，结算越丰厚 */
+  runThreat: number;
+  /** 幻域行旅：最近一场战斗评分 */
+  runLastGrade: DungeonRunCombatGrade;
+  /** 幻域行旅：最近一场战斗评分数值 */
+  runLastScore: number;
+  /** 幻域行旅：本局剩余战利品重掷次数 */
+  runRewardRerolls: number;
+  /** 幻域行旅：本次战利品草案中被锁定、不随重掷替换的选项 id */
+  runLockedRewardIds: string[];
+  /** 幻域行旅：是否正在选择开局灵印 */
+  runOpeningDraft: boolean;
+  /** 幻域行旅：连续反制计数，满后触发破绽连携 */
+  runCounterChain: number;
+  /** 幻域行旅：连续正确破招的层数，敌方意图生效时断连 */
+  runCounterTempoStreak: number;
+  /** 幻域行旅：本局最高破招连势 */
+  runCounterTempoPeak: number;
+  /** 幻域行旅：最近一次破招连势反馈 */
+  runCounterTempoLast: string;
+  /** 幻域行旅：破招连势结算后注入下一组三选一的强度 */
+  runCounterTempoPrize: number;
+  /** 幻域行旅：最近一次破招战利品反馈 */
+  runCounterTempoPrizeLast: string;
+  /** 幻域行旅：低血清场后注入下一组三选一的翻盘强度 */
+  runClutchPrize: number;
+  /** 幻域行旅：最近一次险境翻盘反馈 */
+  runClutchPrizeLast: string;
+  /** 幻域行旅：连胜战势，满后触发乘胜追击 */
+  runMomentum: number;
+  /** 幻域行旅：本段主动操作连段，命中战机/反制/终结压制时提升 */
+  runStyleStreak: number;
+  /** 幻域行旅：本段主动操作最高连段，用于战评加分 */
+  runStylePeak: number;
+  /** 幻域行旅：本场已衔接的主动操作位，闪避/心法/终结组成三式 */
+  runActionWeaveMask: number;
+  /** 幻域行旅：连续完成万象三式的次数 */
+  runActionWeaveStreak: number;
+  /** 幻域行旅：本局最高万象三式连段 */
+  runActionWeavePeak: number;
+  /** 幻域行旅：最近一次万象三式反馈 */
+  runActionWeaveLast: string;
+  /** 幻域行旅：万象三式完成后存入的下一次战利品灵契 */
+  runActionWeavePrize: number;
+  /** 幻域行旅：最近一次三式灵契兑现反馈 */
+  runActionWeavePrizeLast: string;
+  /** 幻域行旅：本局是否已触发过濒死逆命 */
+  runLastStandUsed: boolean;
+  /** 幻域行旅：首领当前架势 */
+  runBossPosture: number;
+  /** 幻域行旅：首领架势上限 */
+  runBossPostureMax: number;
+  /** 幻域行旅：本场首领已破势次数 */
+  runBossBreaks: number;
+  /** 幻域行旅：首领阶段 0-3，阶段越高劫兆越危险 */
+  runBossPhase: number;
+  /** 幻域行旅：当前首领劫兆 */
+  runBossOmen: DungeonBossOmen;
+  /** 幻域行旅：当前首领劫兆结算时间 */
+  runBossOmenUntilMs: number;
+  /** 幻域行旅：连续正确反制首领劫兆的层数 */
+  runBossOmenStreak: number;
+  /** 幻域行旅：本局最高首领劫兆连破 */
+  runBossOmenPeak: number;
+  /** 幻域行旅：最近一次劫兆连破/断连反馈 */
+  runBossOmenLast: string;
+  /** 幻域行旅：上一局结算结果 */
+  runLastOutcome: DungeonRunOutcome;
+  /** 幻域行旅：上一局耗时秒数 */
+  runLastDurationSec: number;
+  /** 幻域行旅：上一局击破数 */
+  runLastKills: number;
+  /** 幻域行旅：上一局获得筑灵髓 */
+  runLastEssence: number;
+  /** 幻域行旅：上一局终局劫压 */
+  runLastThreat: number;
+  /** 幻域行旅：上一局获得灵印数 */
+  runLastBlessingCount: number;
+  /** 幻域行旅：上一局结算摘要 */
+  runLastSummary: string;
+  /** 幻域行旅：当前敌人 */
+  runEnemy: DungeonRunEnemy | null;
+  /** 幻域行旅：当前战斗战术目标 */
+  runObjective: DungeonRunObjective | null;
+  /** 幻域行旅：连续达成战术目标的锋芒层数 */
+  runObjectiveStreak: number;
+  /** 幻域行旅：本局最高战术锋芒 */
+  runObjectivePeak: number;
+  /** 幻域行旅：战术达成后保留的追击次数 */
+  runTacticalEdgeHits: number;
+  /** 幻域行旅：战术追击的单次伤害倍率 */
+  runTacticalEdgeDamagePct: number;
+  /** 幻域行旅：战术追击提示名 */
+  runTacticalEdgeLabel: string;
+  /** 幻域行旅：最近一次追击回响反馈 */
+  runTacticalEdgeLastEcho: string;
+  /** 幻域行旅：追击链进度，满三段触发一次连携爆点 */
+  runTacticalEdgeChain: number;
+  /** 幻域行旅：追击链成后存入，强化下一次战利品三选一 */
+  runTacticalEdgePrize: number;
+  /** 幻域行旅：上一场职责战果留下、下一场开局兑现的残响 */
+  runRoleEcho: DungeonRunEnemyRole | null;
+  /** 幻域行旅：职责残响强度，连续同类战果可叠高 */
+  runRoleEchoPower: number;
+  /** 幻域行旅：最近一次职责残响兑现反馈 */
+  runRoleEchoLast: string;
+  /** 幻域行旅：正在被玩家连续识破的敌方职责 */
+  runRoleReadRole: DungeonRunEnemyRole | null;
+  /** 幻域行旅：连续正确处理同一职责的次数 */
+  runRoleReadStreak: number;
+  /** 幻域行旅：本局最高职责识破连段 */
+  runRoleReadPeak: number;
+  /** 幻域行旅：最近一次职责识破反馈 */
+  runRoleReadLast: string;
+  /** 幻域行旅：职责识破清场后注入下一组三选一的职责 */
+  runRoleReadPrizeRole: DungeonRunEnemyRole | null;
+  /** 幻域行旅：职责识破战利品强度 */
+  runRoleReadPrizePower: number;
+  /** 幻域行旅：最近一次职责识破战利品反馈 */
+  runRoleReadPrizeLast: string;
+  /** 幻域行旅：连续完成路线承诺的次数 */
+  runRoutePledgeStreak: number;
+  /** 幻域行旅：本局最高路线承诺连段 */
+  runRoutePledgePeak: number;
+  /** 幻域行旅：最近一次路线承诺兑现反馈 */
+  runRoutePledgeLast: string;
+  /** 幻域行旅：连续选择系统推荐路线的次数 */
+  runRouteRecommendStreak: number;
+  /** 幻域行旅：本局最高推荐路线连段 */
+  runRouteRecommendPeak: number;
+  /** 幻域行旅：最近一次顺势路线反馈 */
+  runRouteRecommendLast: string;
+  /** 幻域行旅：承诺断连后蓄起的下一战反打强度 */
+  runPledgeReprisal: number;
+  /** 幻域行旅：最近一次破誓反打反馈 */
+  runPledgeReprisalLast: string;
+  /** 幻域行旅：最近连续选择的战利品战斗动词 */
+  runRewardVerb: string;
+  /** 幻域行旅：连续选择同一战斗动词的层数 */
+  runRewardVerbStreak: number;
+  /** 幻域行旅：本局最高战利品动词连选 */
+  runRewardVerbPeak: number;
+  /** 幻域行旅：最近一次战利品动词连选反馈 */
+  runRewardVerbLast: string;
+  /** 幻域行旅：战利品连选到爆点后存入的下一战开局流派战机 */
+  runRewardVerbSurge: string;
+  /** 幻域行旅：开局流派战机强度 */
+  runRewardVerbSurgePower: number;
+  /** 幻域行旅：最近一次流派开战反馈 */
+  runRewardVerbSurgeLast: string;
+  /** 幻域行旅：事件选择后存入的下一战余势类型 */
+  runEventEchoPlan: DungeonRunRoutePlan | "";
+  /** 幻域行旅：事件余势强度 */
+  runEventEchoPower: number;
+  /** 幻域行旅：最近一次事件余势反馈 */
+  runEventEchoLast: string;
+  /** 幻域行旅：贯穿本局的悬赏目标 */
+  runWarrant: DungeonRunWarrant | null;
+  /** 幻域行旅：完成悬赏后存入、强化下一次战利品三选一的兑券强度 */
+  runWarrantPrize: number;
+  /** 幻域行旅：最近一次悬赏兑券反馈 */
+  runWarrantPrizeLast: string;
+  /** 幻域行旅：当前短暂战机窗口 */
+  runOpportunity: DungeonRunOpportunity | null;
+  /** 幻域行旅：下一次战机窗口尝试出现时间 */
+  runOpportunityNextAtMs: number;
+  /** 幻域行旅：待选择奖励 */
+  runPendingRewards: DungeonRunRewardOption[];
+  /** 幻域行旅：待选择事件 */
+  runPendingEvent: DungeonRunEventState | null;
+  /** 幻域行旅：待选择下一路线 */
+  runPendingRoutes: DungeonRunRouteChoice[];
+  /** 幻域行旅：当前护盾 */
+  runShield: number;
+  /** 幻域行旅：心法技冷却结束时间 */
+  runSkillCooldownUntil: number;
+  /** 幻域行旅：终结技充能 0–100 */
+  runFinisherCharge: number;
+  /** 幻域行旅：玩家操作队列 */
+  runSkillQueued: boolean;
+  runFervorQueued: boolean;
+  runFinisherQueued: boolean;
+  /** 幻域行旅：本局击杀数与获得资源，用于结算展示 */
+  runKills: number;
+  runEssenceGained: number;
+  /** 幻域行旅：最近一条战斗提示 */
+  runLog: string;
 }
 
 /** 界面偏好（写入存档；不影响玩法数值） */

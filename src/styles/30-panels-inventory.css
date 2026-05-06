@@ -843,7 +843,7 @@
 
 .toast-wrap {
   position: fixed;
-  bottom: 20px;
+  bottom: max(150px, calc(env(safe-area-inset-bottom, 0px) + 150px));
   right: 20px;
   z-index: 9999;
   display: flex;
@@ -890,3 +890,32 @@
   padding: 10px 14px;
 }
 
+body:has(.app-root-content--battle-dungeon-active) .toast-wrap {
+  top: max(160px, calc(env(safe-area-inset-top, 0px) + 148px));
+  right: auto;
+  bottom: auto;
+  left: max(12px, env(safe-area-inset-left));
+  max-width: min(260px, calc(100vw - 24px));
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+body:has(.app-root-content--battle-dungeon-active) .toast {
+  max-width: 260px;
+  font-size: 0.78rem;
+  opacity: 0.86;
+  pointer-events: none;
+}
+
+body:has(.app-root-content--battle-dungeon-active) .toast-wrap .toast:nth-child(n + 3) {
+  display: none;
+}
+
+body:has(.app-root-content--battle-dungeon-active) .toast-offline,
+body:has(.app-root-content--battle-dungeon-active) .toast-achievement {
+  display: none;
+}
+
+body:has(.app-root-content--battle-dungeon-active) .toast-msg {
+  padding: 8px 10px;
+}

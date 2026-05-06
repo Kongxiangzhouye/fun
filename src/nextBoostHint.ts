@@ -135,6 +135,16 @@ export function computeNextBoostHint(state: GameState, nowMs: number, pool: numb
     };
   }
 
+  if (u.tabDungeon && !state.dungeon.active) {
+    return {
+      scrollTarget: "dungeon-run",
+      title: state.dungeon.runsCompleted > 0 ? "再入幻域行旅" : "开始第一局幻域",
+      detailLine: "短局战斗会产出筑灵髓、灵印选择与抽卡资源",
+      priority: 93,
+      claimStyle: false,
+    };
+  }
+
   const dripAccum = Math.max(0, state.dripClaimableAccumSec ?? 0);
   if (
     u.tabSpiritReservoir &&

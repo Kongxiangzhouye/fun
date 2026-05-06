@@ -1453,6 +1453,31 @@
   font-family: var(--font-mono);
 }
 
+body:has(.app-root-content--battle-dungeon-active) .toast.toast-achievement {
+  min-width: 0;
+  border-width: 1px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.36);
+}
+
+body:has(.app-root-content--battle-dungeon-active) .toast.toast-achievement .toast-msg-achievement {
+  padding: 8px 10px;
+}
+
+body:has(.app-root-content--battle-dungeon-active) .toast-ach-title,
+body:has(.app-root-content--battle-dungeon-active) .toast-ach-desc {
+  display: none;
+}
+
+body:has(.app-root-content--battle-dungeon-active) .toast-ach-name {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+body:has(.app-root-content--battle-dungeon-active) .toast-ach-reward {
+  margin-top: 4px;
+  font-size: 0.76rem;
+}
+
 /* 鈥斺€?闃舵鎬у姛鑳藉紩瀵硷紙瑙掕壊 鈫?鍔熻兘棰勮 鍐呭祵锛?鈥斺€?*/
 .feature-guide-card {
   max-width: 420px;
@@ -1594,4 +1619,3 @@
   color: var(--muted);
   margin-bottom: 12px;
 }
-

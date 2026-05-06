@@ -53,34 +53,28 @@ export function getUiUnlocks(state: GameState): {
   const tutDone = state.tutorialStep === 0;
   const gearCount = Object.keys(state.gearInventory).length;
   /** 幻域：启程礼后仍先引导灵卡唤引，首次唤引后再开刷髓副本（老存档 tutorialStep===0 直接开放） */
-  const dungeonUnlocked =
-    state.tutorialStep !== 1 &&
-    (state.tutorialStep === 0 ||
-      inGachaTutorial ||
-      state.totalPulls >= 1 ||
-      state.realmLevel >= 2 ||
-      state.dungeon.totalWavesCleared >= 1);
+  const dungeonUnlocked = true;
 
   return {
     tabDungeon: dungeonUnlocked,
-    tabTrain: rl >= 3 || state.dungeon.totalWavesCleared >= 1 || pulls >= 6,
-    tabGear: gearCount >= 1 || pulls >= 10,
-    gachaTenUnlocked: pulls >= 1 || rl >= 3 || state.qoL.tenPull,
+    tabTrain: true,
+    tabGear: gearCount >= 1 || pulls >= 1 || state.dungeon.runsCompleted >= 1,
+    gachaTenUnlocked: pulls >= 1 || rl >= 2 || state.qoL.tenPull,
     /** 首次唤引或破境二重即可见；引导步骤 6–7 也必须可见（勿依赖 tutorialStep===0） */
-    tabVein: inVeinTutorial || pulls >= 1 || rl >= 2,
-    tabGarden: pulls >= 1 && rl >= 4,
-    tabSpiritArray: rl >= 5 && pulls >= 2,
-    tabCodex: pulls >= 5 || rl >= 4,
-    tabChronicle: pulls >= 1,
+    tabVein: inVeinTutorial || pulls >= 1 || rl >= 2 || state.dungeon.runsCompleted >= 1,
+    tabGarden: pulls >= 3 && rl >= 4,
+    tabSpiritArray: rl >= 5 && pulls >= 4,
+    tabCodex: pulls >= 3 || rl >= 3,
+    tabChronicle: pulls >= 1 || state.dungeon.runKills >= 1,
     tabMeta: rl >= 18 || state.reincarnations >= 1,
     tabAch: rl >= 6 || pulls >= 15,
-    tabBounty: rl >= 5 || pulls >= 5,
-    tabDailyLogin: pulls >= 1 || rl >= 2,
-    tabCelestialStash: rl >= 5 || pulls >= 6,
-    tabSpiritReservoir: rl >= 3 || pulls >= 3,
-    tabDailyFortune: rl >= 4 || pulls >= 5,
+    tabBounty: rl >= 6 || pulls >= 8 || state.dungeon.runsCompleted >= 2,
+    tabDailyLogin: true,
+    tabCelestialStash: rl >= 6 || pulls >= 8,
+    tabSpiritReservoir: rl >= 3 || pulls >= 3 || state.dungeon.runsCompleted >= 1,
+    tabDailyFortune: rl >= 4 || pulls >= 5 || state.dungeon.runsCompleted >= 1,
     tabDaoMeridian: state.reincarnations >= 1 || state.daoEssence >= 15 || state.daoMeridian > 0,
-    tabPets: state.dungeon.totalWavesCleared >= 15,
+    tabPets: state.dungeon.runsCompleted >= 3 || state.dungeon.totalWavesCleared >= 18,
     tabBattleSkills: dungeonUnlocked,
     topTide: tutDone,
     statDao: state.reincarnations >= 1 || state.daoEssence > 0 || rl >= 20,

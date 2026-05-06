@@ -9,7 +9,7 @@ import { tickInGameClock } from "./inGameClock";
 import { earthOfflineCapMult, earthOfflineIncomeMult } from "./deckSynergy";
 import { pullGearOne, pullOne } from "./gacha";
 import { onGachaPulls, tickWishResonancePassive } from "./dailyRewards";
-import { dungeonBossPrepSnapshot, requestBossChallenge, tickDungeon } from "./systems/dungeon";
+import { dungeonBossPrepSnapshot, requestBossChallenge, tickDungeon } from "./systems/dungeonRun";
 import { tickCombatHpRegen } from "./systems/combatHp";
 import { tickSkillTraining } from "./systems/skillTraining";
 import { tryTuna, tunaCooldownLeftMs } from "./systems/tuna";

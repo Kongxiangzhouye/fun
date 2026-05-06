@@ -347,8 +347,16 @@ import {
   DUNGEON_DUEL_FEEDBACK,
   playerEngageRadiusNorm,
   queueDungeonDodge,
+  queueDungeonSkill,
+  queueDungeonFervor,
+  queueDungeonFinisher,
+  applyRunRewardChoice,
+  toggleRunRewardLock,
+  rerollRunRewardChoices,
+  applyRunEventChoice,
+  applyRunRouteChoice,
   totalAliveMobHpSum,
-} from "./systems/dungeon";
+} from "./systems/dungeonRun";
 import {
   ownedPetIds,
   petSystemUnlocked,
@@ -577,6 +585,8 @@ function loopIntervalMs(): number {
 }
 
 let toastTimer = 0;
+let lastModernFxUpdateAtMs = 0;
+let lastLoopResourcePaintAtMs = 0;
 let flyCreditsDismissed = false;
 const deferredDungeonToasts: string[] = [];
 let lastDungeonActive = false;
@@ -638,6 +648,36 @@ function updateZhuLingRateEstimate(now: number): void {
   zhuLingRateEstimatePerSec += (target - zhuLingRateEstimatePerSec) * alpha;
   if (zhuLingRateEstimatePerSec < 0.001) zhuLingRateEstimatePerSec = 0;
 }
+
+function dungeonRunVisibleSnapshot(st: GameState): string {
+  const d = st.dungeon;
+  const opp = d.runOpportunity;
+  const enemy = d.runEnemy;
+  return [
+    d.active ? "1" : "0",
+    d.runInCombat ? "1" : "0",
+    enemy ? `${enemy.id}:${enemy.intent}:${Math.ceil(enemy.intentAtMs / 250)}` : "",
+    opp ? `${opp.action}:${opp.title}:${opp.source ?? ""}:${opp.sourcePower ?? 0}` : "",
+    d.runPendingRewards.map((x) => `${x.id}:${x.combatVerb ?? ""}`).join(","),
+    d.runPendingEvent?.id ?? "",
+    d.runPendingRoutes.map((x) => `${x.id}:${x.routeRecommend ? 1 : 0}:${x.plan ?? ""}`).join(","),
+    d.runRewardVerb,
+    d.runRewardVerbStreak,
+    d.runRewardVerbPeak,
+    d.runRewardVerbSurge,
+    d.runRewardRerolls,
+    d.runRouteRecommendStreak,
+    d.runRouteRecommendPeak,
+    d.runRouteRecommendLast,
+    d.runTacticalEdgeHits,
+    d.runTacticalEdgeLabel,
+    d.runShield,
+    d.runFinisherCharge >= 100 ? "finisher-ready" : "finisher-spent",
+    d.duelFervor >= 100 ? "fervor-ready" : "fervor-spent",
+    d.runLog,
+  ].join("|");
+}
+
 function tryToast(msg: string): void {
   if (typeof document !== "undefined" && document.visibilityState === "hidden") {
     deferredDungeonToasts.push(msg);
@@ -3159,6 +3199,10 @@ function routeNextBoostNavigation(h: NextBoostHint): void {
       activeHub = "cultivate";
       cultivateSub = "bounty";
       break;
+    case "dungeon-run":
+      activeHub = "battle";
+      battleSub = "dungeon";
+      break;
     case "ling-sha-drip":
       activeHub = "estate";
       estateSub = "idle";
@@ -3358,8 +3402,11 @@ function render(): void {
   const hubScrollEl = document.querySelector(".hub-page-scroll") as HTMLElement | null;
   const preservedHubScrollTop = hubScrollEl?.scrollTop ?? 0;
   const viewKeyNow = mainContentViewKey();
+  const shouldLockBattleScroll =
+    activeHub === "battle" && battleSub === "dungeon" && Boolean(state.dungeon.active) && preservedHubScrollTop > 0;
   const restoreHubScroll =
-    lastMainContentViewKey !== "" && viewKeyNow === lastMainContentViewKey && preservedHubScrollTop > 0;
+    (lastMainContentViewKey !== "" && viewKeyNow === lastMainContentViewKey && preservedHubScrollTop > 0) ||
+    shouldLockBattleScroll;
 
   const ui = describeInGameUi(state);
   const ips = incomePerSecond(state, totalCardsInPool());
@@ -3390,6 +3437,10 @@ function render(): void {
     bottomNavHtml: renderBottomNav(u),
     aiAgentHtml: renderAiAgentHiddenMarkup(buildAiAgentSnapshot(state, nowMs(), totalCardsInPool(), currentAiAgentNavigation())),
     modalHtml: `${renderKeyboardHelpModal()}${renderAboutModal()}`,
+    rootClassName:
+      activeHub === "battle" && battleSub === "dungeon" && state.dungeon.active
+        ? "app-root-content--battle-dungeon-active"
+        : "",
   });
 
   bindEvents(rb, slots);
@@ -3398,11 +3449,19 @@ function render(): void {
 
   lastMainContentViewKey = viewKeyNow;
   if (restoreHubScroll) {
-    requestAnimationFrame(() => {
+    const restoreHubScrollTop = () => {
       const el = document.querySelector(".hub-page-scroll") as HTMLElement | null;
       if (!el) return;
       const maxTop = Math.max(0, el.scrollHeight - el.clientHeight);
-      el.scrollTop = Math.min(preservedHubScrollTop, maxTop);
+      const nextTop = Math.min(preservedHubScrollTop, maxTop);
+      if (Math.abs(el.scrollTop - nextTop) > 1) {
+        el.scrollTop = nextTop;
+      }
+    };
+    restoreHubScrollTop();
+    requestAnimationFrame(() => {
+      restoreHubScrollTop();
+      requestAnimationFrame(restoreHubScrollTop);
     });
   }
 }
@@ -5293,6 +5352,14 @@ function bindEvents(rb: Decimal, _slots: number): void {
     enterDungeon,
     playerMaxHp,
     tryQueueDungeonDodgeWithFeedback,
+    queueDungeonSkill,
+    queueDungeonFervor,
+    queueDungeonFinisher,
+    applyRunRewardChoice,
+    toggleRunRewardLock,
+    rerollRunRewardChoices,
+    applyRunEventChoice,
+    applyRunRouteChoice,
     dungeonBossPrepSnapshot,
     requestBossChallenge,
   });
@@ -5386,11 +5453,17 @@ function setPillStrong(pillId: string, text: string): void {
   const el = document.getElementById(pillId);
   if (!el) return;
   if (el.tagName === "STRONG") {
+    if (el.textContent === text) return;
     el.textContent = text;
     return;
   }
   const strong = el.querySelector("strong");
-  if (strong) strong.textContent = text;
+  if (strong && strong.textContent !== text) strong.textContent = text;
+}
+
+function setTextIfChanged(el: globalThis.Element | null, text: string): void {
+  if (!el || el.textContent === text) return;
+  el.textContent = text;
 }
 
 function easeOutCubic01(t: number): number {
@@ -5498,15 +5571,22 @@ function updateCombatPowerTip(power: number): void {
 }
 
 const STATIC_DOCUMENT_TITLE = "万象唤灵";
+let lastDocumentTitle = "";
 
 /** 按偏好刷新浏览器标签标题（挂机时便于扫一眼境界与灵石） */
 function syncDocumentTitleFromState(): void {
   if (typeof document === "undefined") return;
   if (!state.uiPrefs.dynamicDocumentTitle) {
-    document.title = STATIC_DOCUMENT_TITLE;
+    if (lastDocumentTitle !== STATIC_DOCUMENT_TITLE) {
+      document.title = STATIC_DOCUMENT_TITLE;
+      lastDocumentTitle = STATIC_DOCUMENT_TITLE;
+    }
     return;
   }
-  document.title = `${STATIC_DOCUMENT_TITLE} · 境界${state.realmLevel} · ${fmtDecimal(stones(state))}灵石`;
+  const nextTitle = `${STATIC_DOCUMENT_TITLE} · 境界${state.realmLevel} · ${fmtDecimal(stones(state))}灵石`;
+  if (lastDocumentTitle === nextTitle) return;
+  document.title = nextTitle;
+  lastDocumentTitle = nextTitle;
 }
 
 /** 顶栏灵石/髓等 + 道韵行：局部操作后调用，避免整页 innerHTML 重绘 */
@@ -5516,16 +5596,16 @@ function updateTopResourcePillsAndVigor(pool: number): void {
   const ipsLoop = incomePerSecond(state, pool);
   setPillStrong("pill-stones", fmtDecimal(stones(state)));
   const psd = document.getElementById("pill-stones-delta");
-  if (psd) psd.textContent = `+${fmtDecimal(ipsLoop)}/秒`;
+  setTextIfChanged(psd, `+${fmtDecimal(ipsLoop)}/秒`);
   const pss = document.getElementById("pill-session-stones");
-  if (pss) pss.textContent = `+${fmtDecimal(sessionStoneGainDelta())}`;
+  setTextIfChanged(pss, `+${fmtDecimal(sessionStoneGainDelta())}`);
   setPillStrong("pill-essence", String(state.summonEssence));
   setPillStrong("pill-zhuling", String(Math.floor(state.zhuLingEssence)));
   const eps = essenceIncomePerSecondFromResonance(state);
   const ped = document.getElementById("pill-essence-delta");
-  if (ped) ped.textContent = `+${eps >= 0.1 ? eps.toFixed(2) : eps.toFixed(3)}/秒`;
+  setTextIfChanged(ped, `+${eps >= 0.1 ? eps.toFixed(2) : eps.toFixed(3)}/秒`);
   const pzd = document.getElementById("pill-zhuling-delta");
-  if (pzd) pzd.textContent = formatZhuLingRateLabel(zhuLingRateEstimatePerSec);
+  setTextIfChanged(pzd, formatZhuLingRateLabel(zhuLingRateEstimatePerSec));
   if (u.tabGear) {
     setPillStrong("pill-ling-sha", String(state.lingSha));
     setPillStrong("pill-xuan-tie", String(state.xuanTie));
@@ -5539,7 +5619,7 @@ function updateTopResourcePillsAndVigor(pool: number): void {
   const vigLine = document.querySelector(".vigor-line");
   if (vigLine) {
     const t = describeInGameUi(state).tagLine;
-    vigLine.textContent = t;
+    setTextIfChanged(vigLine, t);
     (vigLine as HTMLElement).hidden = !t;
   }
   syncDocumentTitleFromState();
@@ -5768,6 +5848,10 @@ function loop(): void {
       return;
     }
   }
+  const dungeonRunVisibleBefore =
+    typeof document !== "undefined" && activeHub === "battle" && battleSub === "dungeon" && state.dungeon.active
+      ? dungeonRunVisibleSnapshot(state)
+      : "";
   applyTick(state, now);
   const autoReservoir = tryAutoClaimSpiritReservoirIfFull(state);
   if (autoReservoir) {
@@ -5982,7 +6066,10 @@ function loop(): void {
   if (autoSettledOfflineInLoop || autoSettledEstateInLoop) {
     requestSave("自动结算闭环", true);
   }
-  if (!isMobileLiteFx()) updateModernVisualFx(now);
+  if (!isMobileLiteFx() && now - lastModernFxUpdateAtMs >= 250) {
+    lastModernFxUpdateAtMs = now;
+    updateModernVisualFx(now);
+  }
   if (typeof document !== "undefined" && tryAutoEnterFromSanctuaryPortal(state, now)) {
     activeHub = "battle";
     lastAutoEnterFailReason = "";
@@ -6098,6 +6185,17 @@ function loop(): void {
     !state.dungeonSanctuaryMode
   ) {
     deferredDungeonToasts.push("幻域已结束（阵亡等）");
+  }
+  if (
+    dungeonRunVisibleBefore &&
+    typeof document !== "undefined" &&
+    activeHub === "battle" &&
+    battleSub === "dungeon" &&
+    dungeonRunVisibleBefore !== dungeonRunVisibleSnapshot(state)
+  ) {
+    requestSave("幻域战斗反馈");
+    render();
+    return;
   }
   lastDungeonActive = state.dungeon.active;
   for (const a of drainAchievementToastQueue()) {
@@ -6386,11 +6484,21 @@ function loop(): void {
     const bb = document.getElementById("dungeon-boss-bar");
     const btxt = document.getElementById("dungeon-boss-hp-txt");
     if (pb) pb.style.width = `${hpPct}%`;
-    if (bb) bb.style.width = `${mobPct}%`;
-    if (btxt) btxt.textContent = `${fmtN(Math.max(0, d.monsterHp))} / ${fmtN(d.monsterMax)}`;
+    if (bb) {
+      const enemyPct =
+        d.runEnemy && d.runEnemy.maxHp > 0
+          ? Math.min(100, (100 * Math.max(0, d.runEnemy.hp)) / d.runEnemy.maxHp)
+          : mobPct;
+      bb.style.width = `${enemyPct}%`;
+    }
+    if (btxt) {
+      btxt.textContent = d.runEnemy
+        ? `${fmtN(Math.max(0, d.runEnemy.hp))} / ${fmtN(d.runEnemy.maxHp)}`
+        : `${fmtN(Math.max(0, d.monsterHp))} / ${fmtN(d.monsterMax)}`;
+    }
     const bname = document.getElementById("dungeon-boss-name");
     const bm = currentBossMob(d) ?? d.mobs.find((m) => m.hp > 0) ?? d.mobs[0];
-    if (bname && bm) bname.textContent = bossDisplayTitle(bm);
+    if (bname) bname.textContent = d.runEnemy?.name ?? (bm ? bossDisplayTitle(bm) : bname.textContent);
     const phase = dungeonCombatPhase(state);
     const phaseBanner = document.getElementById("dungeon-phase-banner");
     if (phaseBanner) {
@@ -6557,7 +6665,10 @@ function loop(): void {
       if (elEta) elEta.textContent = "—";
     }
   }
-  updateTopResourcePillsAndVigor(pool);
+  if (now - lastLoopResourcePaintAtMs >= 250) {
+    lastLoopResourcePaintAtMs = now;
+    updateTopResourcePillsAndVigor(pool);
+  }
   nextBoostFabLoopCounter = (nextBoostFabLoopCounter + 1) % 4;
   if (nextBoostFabLoopCounter === 0) {
     refreshNextBoostFabDom();
@@ -6665,7 +6776,7 @@ function init(): void {
   ensureWeeklyBountyWeek(state, t);
   ensureCelestialStashWeek(state, t);
   setMobileLiteFx(shouldUseMobileLiteFx());
-  if (!isMobileLiteFx()) initPixiFxLayer();
+  // Pixi particles are decorative; avoid loading that renderer during first-play boot.
   bindModernFxInteraction();
   bindMotionUiFx();
   updateModernVisualFx(t);

@@ -540,9 +540,9 @@ h1 {
 
 .combat-power-popup {
   position: fixed;
-  left: 50%;
+  left: max(18px, calc(50% - 430px));
   bottom: calc(env(safe-area-inset-bottom, 0px) + 86px);
-  transform: translate(-50%, 16px);
+  transform: translateY(16px);
   opacity: 0;
   pointer-events: none;
   z-index: 140;
@@ -551,7 +551,7 @@ h1 {
 
 .combat-power-popup.active {
   opacity: 1;
-  transform: translate(-50%, 0);
+  transform: translateY(0);
 }
 
 .combat-power-popup.fx-up .combat-power-popup-inner {
@@ -779,6 +779,40 @@ h1 {
   flex-shrink: 0;
 }
 
+.app-root-content--battle-dungeon-active .app-head {
+  height: 96px;
+  min-height: 96px;
+  overflow: visible;
+}
+
+.app-root-content--battle-dungeon-active .app-brand-row {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 48px;
+  margin-bottom: 0;
+}
+
+.app-root-content--battle-dungeon-active .app-title-cluster,
+.app-root-content--battle-dungeon-active .vigor-compact {
+  display: none;
+}
+
+.app-root-content--battle-dungeon-active .resource-strip {
+  max-width: min(100%, 720px);
+}
+
+.app-root-content--battle-dungeon-active .resource-strip-main {
+  flex-wrap: nowrap;
+  gap: 6px;
+  transform: scale(0.92);
+  transform-origin: top right;
+}
+
+.app-root-content--battle-dungeon-active .res-chip-session,
+.app-root-content--battle-dungeon-active .res-chip-more {
+  display: none;
+}
+
 @media (max-width: 560px) {
   .app-brand-row {
     grid-template-columns: 1fr;
@@ -861,7 +895,13 @@ h1 {
   }
 
   .combat-power-popup {
+    left: 50%;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 82px);
+    transform: translate(-50%, 16px);
+  }
+
+  .combat-power-popup.active {
+    transform: translate(-50%, 0);
   }
 
   .combat-power-popup-inner {

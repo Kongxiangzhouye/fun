@@ -1,4 +1,15 @@
-import type { Element, GameState, GearInventorySortMode, GearItem, Rarity, SkillId } from "../types";
+import type {
+  DungeonRunEventOption,
+  DungeonRunEnemyRole,
+  DungeonRunRewardOption,
+  DungeonRunRouteChoice,
+  Element,
+  GameState,
+  GearInventorySortMode,
+  GearItem,
+  Rarity,
+  SkillId,
+} from "../types";
 import {
   DUNGEON_DEATH_CD_MS,
   DUNGEON_DODGE_IFRAMES_MS,
@@ -14,9 +25,11 @@ import {
   dungeonCombatPhase,
   dungeonFrontierWave,
   essenceRewardTotalFloat,
+  eventOptionCheckChance,
   packSizeForWave,
   currentBossMob,
-} from "../systems/dungeon";
+  runEnemyRoleTactic,
+} from "../systems/dungeonRun";
 import {
   playerAttack,
   playerDungeonAttackSpeedMult,
@@ -25,6 +38,8 @@ import {
 import { getDungeonAffixForWeekKey, playerExpectedDpsDungeonAffix } from "../systems/dungeonAffix";
 import { elementDamageMultiplier } from "../systems/elementCombat";
 import { playerBattleElement } from "../systems/playerElement";
+import { dominantRunElement, runBlessingElementCounts, runBuildVerbProfile, runResonanceLines } from "../systems/runRewards";
+import { getRunBlessing } from "../data/runBlessings";
 import { currentWeekKey } from "../systems/weeklyBounty";
 import {
   SKILL_HINT,
@@ -168,6 +183,19 @@ export function formatDungeonActiveMeta(state: GameState, now: number): string {
 /** 手机端战报：少行、字号可读，与 formatDungeonActiveMeta 数据一致 */
 export function formatDungeonActiveMetaBrief(state: GameState, now: number): string {
   const d = state.dungeon;
+  if (d.active && (d.runEnemy || d.runPendingRewards.length > 0 || d.runPendingEvent)) {
+    const enemy = d.runEnemy;
+    const intent = enemy
+      ? `敌意 ${enemy.intent === "attack" ? "攻势" : enemy.intent === "guard" ? "护势" : enemy.intent === "drain" ? "汲灵" : "劫火"} · ${Math.max(0, Math.ceil((enemy.intentAtMs - now) / 1000))}s`
+      : d.runPendingEvent
+        ? `事件 · ${d.runPendingEvent.title}`
+        : "战利品待选";
+    return [
+      `节点 ${Math.min(d.runNodeIndex + 1, Math.max(1, d.runNodes.length))}/${Math.max(1, d.runNodes.length)} · 击破 ${d.runKills} · 筑灵髓 +${Math.floor(d.runEssenceGained)}`,
+      enemy ? `${enemy.name} ${fmtNum(Math.max(0, enemy.hp))}/${fmtNum(enemy.maxHp)} · ${intent}` : intent,
+      `闪避耗体 ${DUNGEON_DODGE_STAMINA_COST} · 心法技看主势 · 终结 ${Math.floor(d.runFinisherCharge)}%`,
+    ].join("\n");
+  }
   const fmtN = (n: number) => (n >= 1e4 ? (n / 1e4).toFixed(1) + "万" : n.toFixed(0));
   const fmtSessEss = (n: number) => (n >= 200 ? n.toFixed(1) : n.toFixed(2));
   const waveEssF = essenceRewardTotalFloat(
@@ -410,6 +438,675 @@ function battleGearStarLine(r: Rarity): string {
   return `<span class="battle-gear-stars" aria-hidden="true">${"★".repeat(n)}<span class="battle-gear-stars-dim">${"★".repeat(5 - n)}</span></span>`;
 }
 
+function renderDungeonRunPanel(state: GameState, battleGearStripExpanded: boolean, now: number): string {
+  const d = state.dungeon;
+  const pmax = Math.max(1, d.active ? d.playerMax || playerMaxHp(state) : playerMaxHp(state));
+  const php = Math.max(0, d.active ? d.playerHp : state.combatHpCurrent);
+  const hpPct = Math.min(100, (100 * php) / pmax);
+  const staPct = Math.min(100, (100 * Math.max(0, d.stamina)) / DUNGEON_STAMINA_MAX);
+  const fervorPct = Math.min(100, Math.max(0, d.duelFervor));
+  const enemy = d.runEnemy;
+  const enemyPct = enemy && enemy.maxHp > 0 ? Math.min(100, (100 * Math.max(0, enemy.hp)) / enemy.maxHp) : 0;
+  const bossPosturePct =
+    enemy?.role === "boss" && d.runBossPostureMax > 0
+      ? Math.min(100, (100 * Math.max(0, d.runBossPosture)) / d.runBossPostureMax)
+      : 0;
+  const bossOmenLabel =
+    d.runBossOmen === "heaven-strike" ? "天坠" : d.runBossOmen === "soul-drain" ? "摄魂" : d.runBossOmen === "inferno" ? "劫焰" : "";
+  const bossOmenCounter =
+    d.runBossOmen === "heaven-strike" ? "闪避反制" : d.runBossOmen === "soul-drain" ? "心法技反制" : d.runBossOmen === "inferno" ? "终结技反制" : "";
+  const bossOmenRemainMs = d.runBossOmen !== "none" ? Math.max(0, d.runBossOmenUntilMs - now) : 0;
+  const bossOmenPct = d.runBossOmen !== "none" ? Math.max(0, Math.min(100, (100 * bossOmenRemainMs) / 4200)) : 0;
+  const dom = dominantRunElement(state);
+  const tacticalEdgeEffect =
+    dom === "metal" ? "破防" : dom === "wood" ? "回生" : dom === "water" ? "回体" : dom === "earth" ? "护盾" : "战意";
+  const roleEchoLabel = (role: DungeonRunEnemyRole): string =>
+    role === "guard" ? "破甲残响" : role === "drain" ? "返灵残响" : role === "ranged" ? "身法残响" : role === "boss" ? "镇域残响" : "护身残响";
+  const roleReadLabel = (role: DungeonRunEnemyRole): string =>
+    role === "guard" ? "护卫识破" : role === "drain" ? "汲灵识破" : role === "ranged" ? "远程识破" : role === "boss" ? "首领识破" : "近战识破";
+  const tacticalEdgePreview =
+    dom === "metal"
+      ? "下一击会削护势并加深追斩。"
+      : dom === "wood"
+        ? "下一击会回生，适合顶住消耗。"
+        : dom === "water"
+          ? "下一击会回体并补短暂无敌。"
+          : dom === "earth"
+            ? "下一击会叠护盾，稳住高压。"
+            : "下一击会升战意并放大爆发。";
+  const counterHint: Record<string, string> = {
+    attack: "闪避末段可化劲反击",
+    guard: "心法或终结可破防",
+    drain: "心法技可打断汲灵",
+    enrage: "终结技可压制劫火",
+  };
+  const intentLabel: Record<string, string> = { attack: "攻势", guard: "护势", drain: "汲灵", enrage: "劫火" };
+  const threatLabel = (delta?: number): string =>
+    delta && delta !== 0 ? `<em class="run-threat-delta ${delta > 0 ? "is-up" : "is-down"}">劫压 ${delta > 0 ? "+" : ""}${delta}</em>` : "";
+  const checkLabel = (opt: DungeonRunEventOption): string =>
+    opt.checkElement
+      ? `<em class="run-check-chip">五行检定 ${EL_ZH[opt.checkElement]} · ${Math.round(eventOptionCheckChance(state, opt) * 100)}%</em>`
+      : "";
+  const eventTags = (opt: DungeonRunEventOption): string => {
+    const tags: string[] = [];
+    if (opt.eventPlan) tags.push(routePlanName(opt.eventPlan));
+    if (opt.healPct) tags.push(`回血${Math.round(opt.healPct * 100)}%`);
+    if (opt.staminaPct) tags.push(`体力+${Math.round(opt.staminaPct * 100)}%`);
+    if (opt.finisherCharge) tags.push(`终结+${opt.finisherCharge}`);
+    if (opt.shieldPct) tags.push(`护盾${Math.round(opt.shieldPct * 100)}%`);
+    if (opt.enemyDamagePct) tags.push(`反击${Math.round(opt.enemyDamagePct * 100)}%`);
+    if (opt.reviveCombat) tags.push("续战");
+    if (opt.rewardDraft) tags.push("战利品三选一");
+    if (opt.rewardZhuLingEssence) tags.push(`筑灵髓+${opt.rewardZhuLingEssence}`);
+    if (opt.rewardLingSha) tags.push(`灵砂+${opt.rewardLingSha}`);
+    if (opt.eventStyleBonus) tags.push(`身法+${opt.eventStyleBonus}`);
+    if (opt.eventFinisherBonus) tags.push(`终结+${opt.eventFinisherBonus}`);
+    if (opt.eventShieldPct) tags.push(`护盾${Math.round(opt.eventShieldPct * 100)}%`);
+    if (opt.eventRerollBonus) tags.push(`重掷+${opt.eventRerollBonus}`);
+    if (opt.eventScoutHint) tags.push("侦察命中");
+    if (opt.eventBuildFit === "match") tags.push("契合流派");
+    else if (opt.eventBuildFit === "risk") tags.push("流派转向");
+    return tags.length > 0 ? `<span class="run-route-tags">${tags.map((tag) => `<em class="run-route-tag">${tag}</em>`).join("")}</span>` : "";
+  };
+  const routePlanName = (plan?: string): string => {
+    if (plan === "safe") return "稳阵";
+    if (plan === "tempo") return "疾攻";
+    if (plan === "risk") return "险搏";
+    if (plan === "draft") return "探秘";
+    return "";
+  };
+  const routeTags = (route: DungeonRunRouteChoice): string => {
+    const tags: string[] = [];
+    if (route.plan) tags.push(routePlanName(route.plan));
+    if (route.nodeType === "elite") tags.push("高阶池", "重掷+1");
+    if (route.nodeType === "event") tags.push("事件检定");
+    if (route.nodeType === "rest") tags.push("恢复");
+    if (route.forecastEnemyRole && route.forecastEnemyElement) tags.push(`探敌${EL_ZH[route.forecastEnemyElement]}`);
+    if (route.attuneElement) tags.push(route.attuneElement === dom ? `主势契合${EL_ZH[route.attuneElement]}` : `契合${EL_ZH[route.attuneElement]}`);
+    if (route.rewardZhuLingEssence) tags.push(`筑灵髓+${route.rewardZhuLingEssence}`);
+    if (route.rewardLingSha) tags.push(`灵砂+${route.rewardLingSha}`);
+    if (route.healPct) tags.push(`回血${Math.round(route.healPct * 100)}%`);
+    if (route.staminaPct) tags.push(`体力+${Math.round(route.staminaPct * 100)}%`);
+    if (route.rewardBlessingId) tags.push("赠灵印");
+    if (route.routeStyleBonus) tags.push(`身法+${route.routeStyleBonus}`);
+    if (route.routeFinisherBonus) tags.push(`终结+${route.routeFinisherBonus}`);
+    if (route.routeShieldPct) tags.push(`护盾${Math.round(route.routeShieldPct * 100)}%`);
+    if (route.routeRerollBonus) tags.push(`重掷+${route.routeRerollBonus}`);
+    if (route.riskEnemyPowerPct) tags.push(`敌强+${Math.round(route.riskEnemyPowerPct * 100)}%`);
+    if (route.threatDelta) tags.push(`劫压${route.threatDelta > 0 ? "+" : ""}${route.threatDelta}`);
+    if (route.routeRecommend) tags.push("顺势推荐");
+    if (route.routeEchoHint) tags.push(route.routeEchoFit === "match" ? "残响契合" : "残响保留");
+    if (route.routeBuildFit === "match") tags.push("契合流派");
+    else if (route.routeBuildFit === "risk") tags.push("流派转向");
+    return tags.length > 0 ? `<span class="run-route-tags">${tags.map((tag) => `<em class="run-route-tag">${tag}</em>`).join("")}</span>` : "";
+  };
+  const blessingCounts = runBlessingElementCounts(state);
+  const rewardTags = (reward: DungeonRunRewardOption): string => {
+    if (!reward.blessingId) {
+      const resourceTags = ["资源"];
+      if ((reward.pickTacticalEdgeHits ?? 0) > 0 || (reward.pickTacticalEdgeDamagePct ?? 0) > 0) resourceTags.push("追击");
+      return `<span class="run-reward-tags">${resourceTags.map((tag) => `<em class="run-reward-tag">${tag}</em>`).join("")}</span>`;
+    }
+    const blessing = getRunBlessing(reward.blessingId);
+    if (!blessing) return "";
+    const tags: string[] = [];
+    if (blessing.element) {
+      tags.push(EL_ZH[blessing.element]);
+      if (blessing.element === dom) tags.push("主势");
+      const count = blessingCounts[blessing.element];
+      if (count === 1) tags.push("成套共鸣");
+      else if (count >= 2) tags.push("三印加成");
+    } else {
+      tags.push("无相");
+    }
+    if (reward.synergyTier === "triple") tags.push("立成三印");
+    else if (reward.synergyTier === "pair") tags.push("立成二印");
+    else if (reward.synergyTier === "dominant") tags.push("主势节奏");
+    if (blessing.rarity === "major") tags.push("高阶");
+    if (reward.combatVerb) tags.push(reward.combatVerb);
+    if ((reward.pickTacticalEdgeHits ?? 0) > 0 || (reward.pickTacticalEdgeDamagePct ?? 0) > 0) tags.push("追击");
+    return `<span class="run-reward-tags">${tags.map((tag) => `<em class="run-reward-tag">${tag}</em>`).join("")}</span>`;
+  };
+  const rewardTempoPreview = (reward: DungeonRunRewardOption): string => {
+    const parts: string[] = [];
+    if ((reward.pickZhuLingBonus ?? 0) > 0) parts.push(`筑灵髓 +${reward.pickZhuLingBonus}`);
+    if ((reward.pickFinisherBonus ?? 0) > 0) parts.push(`终结 +${reward.pickFinisherBonus}%`);
+    if ((reward.pickTacticalEdgeHits ?? 0) > 0) parts.push(`追击 +${reward.pickTacticalEdgeHits}`);
+    if ((reward.pickTacticalEdgeDamagePct ?? 0) > 0) parts.push(`追击伤害 +${Math.round((reward.pickTacticalEdgeDamagePct ?? 0) * 100)}%`);
+    if ((reward.pickRerollBonus ?? 0) > 0) parts.push(`重掷 +${reward.pickRerollBonus}`);
+    if ((reward.pickThreatDelta ?? 0) > 0) parts.push(`劫压 +${reward.pickThreatDelta}%`);
+    return parts.length > 0 ? `<span class="run-reward-preview">${parts.join(" · ")}</span>` : "";
+  };
+  const rewardCombatPreview = (reward: DungeonRunRewardOption): string =>
+    reward.combatVerb && reward.combatHint
+      ? `<span class="run-reward-combat"><strong>${reward.combatVerb}</strong><em>${reward.combatHint}</em></span>`
+      : "";
+  const rewardSimpleType = (reward: DungeonRunRewardOption): string => {
+    if (reward.kind === "essence") return "资源";
+    if (reward.pickThreatDelta && reward.pickThreatDelta > 0) return "冒险";
+    if ((reward.pickTacticalEdgeHits ?? 0) > 0 || (reward.pickTacticalEdgeDamagePct ?? 0) > 0) return "追击";
+    if ((reward.pickFinisherBonus ?? 0) > 0) return "大招";
+    return reward.combatVerb || "强化";
+  };
+  const rewardSimpleImpact = (reward: DungeonRunRewardOption): string => {
+    const parts: string[] = [];
+    if ((reward.pickZhuLingBonus ?? 0) > 0 || reward.zhuLingEssence) parts.push("多拿资源");
+    if ((reward.pickFinisherBonus ?? 0) > 0) parts.push("大招更快");
+    if ((reward.pickTacticalEdgeHits ?? 0) > 0) parts.push("下次攻击更强");
+    if ((reward.pickThreatDelta ?? 0) > 0) parts.push("风险上升");
+    if (reward.synergyTier === "pair") parts.push("凑成套装");
+    if (reward.synergyTier === "triple") parts.push("完成套装");
+    return parts.slice(0, 2).join(" · ") || "稳定变强";
+  };
+  const routeSimpleImpact = (route: DungeonRunRouteChoice): string => {
+    if (route.plan === "safe" || route.nodeType === "rest") return "稳一点，回血/降风险";
+    if (route.plan === "risk" || route.nodeType === "elite") return "更危险，但奖励更好";
+    if (route.plan === "draft" || route.nodeType === "event") return "多一次选择机会";
+    if (route.plan === "tempo") return "继续战斗，节奏更快";
+    return "进入下一段";
+  };
+  const eventSimpleImpact = (option: DungeonRunEventOption): string => {
+    if (option.healPct || option.staminaPct || option.shieldPct) return "恢复状态";
+    if (option.rewardDraft) return "拿一张强化";
+    if (option.riskCombat) return "打一场换奖励";
+    if (option.threatDelta && option.threatDelta > 0) return "收益高，风险也高";
+    return "推进事件";
+  };
+  const gradeHtml =
+    d.runLastGrade !== "none"
+      ? `<span class="run-grade-chip is-${d.runLastGrade}">战评 ${d.runLastGrade.toUpperCase()} · ${d.runLastScore}</span>`
+      : "";
+  const node = d.runNodes[d.runNodeIndex];
+  const blessingHtml =
+    d.runBlessings.length > 0
+      ? d.runBlessings
+          .map((id) => {
+            const b = getRunBlessing(id);
+            return b ? `<span class="run-blessing-chip ${b.rarity === "major" ? "is-major" : ""}">${b.name}</span>` : "";
+          })
+          .join("")
+      : `<span class="run-blessing-chip is-empty">尚未取得灵印</span>`;
+  const resonanceHtml = runResonanceLines(state)
+    .map((line) => `<span class="run-blessing-chip run-resonance-chip ${line.includes("三印") ? "is-triple" : ""}">${line}</span>`)
+    .join("");
+  const buildVerbHtml = runBuildVerbProfile(state)
+    .slice(0, 4)
+    .map(
+      (x) =>
+        `<span class="run-build-verb ${x.primary ? "is-primary" : ""}" title="${x.hint}"><strong>${x.verb}</strong><em>${x.count > 0 ? `x${x.count}` : "待选"}</em></span>`,
+    )
+    .join("");
+  const nodesHtml =
+    d.runNodes.length > 0
+      ? d.runNodes
+          .map((n, i) => `<span class="run-node-dot ${n.cleared ? "is-cleared" : i === d.runNodeIndex ? "is-current" : ""}" title="${n.title}">${i + 1}</span>`)
+          .join("")
+      : `<span class="run-node-dot is-current">1</span><span class="run-node-dot">2</span><span class="run-node-dot">3</span><span class="run-node-dot">4</span><span class="run-node-dot">5</span><span class="run-node-dot">6</span>`;
+  const objective = d.runObjective;
+  const warrant = d.runWarrant;
+  const warrantHtml = warrant
+    ? `<span class="run-warrant-chip ${warrant.completed ? "is-complete" : ""}" title="${warrant.desc}">悬赏 ${warrant.title} ${Math.min(warrant.progress, warrant.target)} / ${warrant.target}</span>`
+    : "";
+  const warrantPrizeHtml =
+    d.runWarrantPrize > 0
+      ? `<span class="run-warrant-chip is-complete">悬赏兑券 x${d.runWarrantPrize}</span>`
+      : d.runWarrantPrizeLast
+        ? `<span class="run-warrant-chip is-spent">${d.runWarrantPrizeLast}</span>`
+        : "";
+  const objectiveStreakHtml =
+    d.runObjectiveStreak > 0
+      ? `<span class="run-objective-streak-chip ${d.runObjectiveStreak >= 3 ? "is-hot" : ""}">战术锋芒 x${d.runObjectiveStreak} · 峰 ${Math.max(d.runObjectivePeak, d.runObjectiveStreak)}</span>`
+      : "";
+  const tacticalEdgeHtml =
+    d.runTacticalEdgeHits > 0 && d.runTacticalEdgeDamagePct > 0
+      ? `<span class="run-tactical-edge-chip ${d.runTacticalEdgeHits >= 5 || d.runTacticalEdgeChain >= 2 ? "is-hot" : ""}">追击 ${d.runTacticalEdgeHits} · +${Math.round(d.runTacticalEdgeDamagePct * 100)}% · ${tacticalEdgeEffect} · 链 ${d.runTacticalEdgeChain}/3</span>`
+      : "";
+  const actionWeaveCount = (d.runActionWeaveMask & 1 ? 1 : 0) + (d.runActionWeaveMask & 2 ? 1 : 0) + (d.runActionWeaveMask & 4 ? 1 : 0);
+  const actionWeaveMarks = `${d.runActionWeaveMask & 1 ? "闪" : "·"}${d.runActionWeaveMask & 2 ? "心" : "·"}${d.runActionWeaveMask & 4 ? "终" : "·"}`;
+  const actionWeaveHtml =
+    d.runActionWeaveMask > 0 || d.runActionWeaveStreak > 0
+      ? `<span class="run-action-weave-chip ${d.runActionWeaveStreak > 0 || d.runActionWeavePrize > 0 ? "is-hot" : ""}">万象三式 ${actionWeaveMarks} ${actionWeaveCount}/3 · 连 ${d.runActionWeaveStreak} · 峰 ${Math.max(d.runActionWeavePeak, d.runActionWeaveStreak)}${d.runActionWeavePrize > 0 ? ` · 灵契 ${d.runActionWeavePrize}` : ""}</span>`
+      : d.runActionWeavePrize > 0
+        ? `<span class="run-action-weave-chip is-hot">万象灵契 x${d.runActionWeavePrize}</span>`
+        : d.runActionWeavePrizeLast || d.runActionWeaveLast
+          ? `<span class="run-action-weave-chip is-spent">${d.runActionWeavePrizeLast || d.runActionWeaveLast}</span>`
+        : "";
+  const roleEchoHtml =
+    d.runRoleEcho && d.runRoleEchoPower > 0
+      ? `<span class="run-role-echo-chip">${roleEchoLabel(d.runRoleEcho)} x${d.runRoleEchoPower}</span>`
+      : d.runRoleEchoLast
+        ? `<span class="run-role-echo-chip is-spent">${d.runRoleEchoLast}</span>`
+        : "";
+  const roleReadHtml =
+    d.runRoleReadRole && d.runRoleReadStreak > 0
+      ? `<span class="run-role-read-chip ${d.runRoleReadStreak >= 2 ? "is-hot" : ""}">${roleReadLabel(d.runRoleReadRole)} x${d.runRoleReadStreak} · 峰 ${Math.max(d.runRoleReadPeak, d.runRoleReadStreak)}</span>`
+      : d.runRoleReadLast
+        ? `<span class="run-role-read-chip is-spent">${d.runRoleReadLast}</span>`
+        : "";
+  const roleReadPrizeHtml =
+    d.runRoleReadPrizeRole && d.runRoleReadPrizePower > 0
+      ? `<span class="run-role-read-chip run-role-read-chip--prize">${roleReadLabel(d.runRoleReadPrizeRole)}手札 x${d.runRoleReadPrizePower}</span>`
+      : d.runRoleReadPrizeLast
+        ? `<span class="run-role-read-chip is-spent">${d.runRoleReadPrizeLast}</span>`
+        : "";
+  const pledgeHtml =
+    d.runRoutePledgeStreak > 0
+      ? `<span class="run-pledge-chip">承诺连段 x${d.runRoutePledgeStreak} · 峰 ${Math.max(d.runRoutePledgePeak, d.runRoutePledgeStreak)}</span>`
+      : d.runRoutePledgeLast
+        ? `<span class="run-pledge-chip is-spent">${d.runRoutePledgeLast}</span>`
+        : "";
+  const routeRecommendHtml =
+    d.runRouteRecommendStreak > 0
+      ? `<span class="run-route-recommend-chip ${d.runRouteRecommendStreak >= 2 ? "is-hot" : ""}">顺势行旅 x${d.runRouteRecommendStreak} · 峰 ${Math.max(d.runRouteRecommendPeak, d.runRouteRecommendStreak)}</span>`
+      : d.runRouteRecommendLast
+        ? `<span class="run-route-recommend-chip is-spent">${d.runRouteRecommendLast}</span>`
+        : "";
+  const pledgeReprisalHtml =
+    d.runPledgeReprisal > 0
+      ? `<span class="run-pledge-reprisal-chip">破誓反打 x${d.runPledgeReprisal}</span>`
+      : d.runPledgeReprisalLast
+        ? `<span class="run-pledge-reprisal-chip is-spent">${d.runPledgeReprisalLast}</span>`
+        : "";
+  const rewardVerbHtml =
+    d.runRewardVerbStreak > 0 && d.runRewardVerb
+      ? `<span class="run-reward-verb-chip ${d.runRewardVerbStreak >= 3 ? "is-hot" : ""}">${d.runRewardVerb}连选 x${d.runRewardVerbStreak} · 峰 ${Math.max(d.runRewardVerbPeak, d.runRewardVerbStreak)}</span>`
+      : d.runRewardVerbLast
+        ? `<span class="run-reward-verb-chip is-spent">${d.runRewardVerbLast}</span>`
+        : "";
+  const rewardVerbSurgeHtml =
+    d.runRewardVerbSurge && d.runRewardVerbSurgePower > 0
+      ? `<span class="run-reward-surge-chip">${d.runRewardVerbSurge}开战 x${d.runRewardVerbSurgePower}</span>`
+      : d.runRewardVerbSurgeLast
+        ? `<span class="run-reward-surge-chip is-spent">${d.runRewardVerbSurgeLast}</span>`
+        : "";
+  const eventEchoHtml =
+    d.runEventEchoPlan && d.runEventEchoPower > 0
+      ? `<span class="run-event-echo-chip">${routePlanName(d.runEventEchoPlan)}余势 x${d.runEventEchoPower}</span>`
+      : d.runEventEchoLast
+        ? `<span class="run-event-echo-chip is-spent">${d.runEventEchoLast}</span>`
+        : "";
+  const counterTempoHtml =
+    d.runCounterTempoStreak > 0
+      ? `<span class="run-counter-tempo-chip ${d.runCounterTempoStreak >= 3 ? "is-hot" : ""}">破招连势 x${d.runCounterTempoStreak} · 峰 ${Math.max(d.runCounterTempoPeak, d.runCounterTempoStreak)}</span>`
+      : d.runCounterTempoLast
+        ? `<span class="run-counter-tempo-chip is-spent">${d.runCounterTempoLast}</span>`
+        : "";
+  const counterTempoPrizeHtml =
+    d.runCounterTempoPrize > 0
+      ? `<span class="run-counter-prize-chip">破招战利品 x${d.runCounterTempoPrize}</span>`
+      : d.runCounterTempoPrizeLast
+        ? `<span class="run-counter-prize-chip is-spent">${d.runCounterTempoPrizeLast}</span>`
+        : "";
+  const clutchPrizeHtml =
+    d.runClutchPrize > 0
+      ? `<span class="run-clutch-prize-chip">险境翻盘 x${d.runClutchPrize}</span>`
+      : d.runClutchPrizeLast
+        ? `<span class="run-clutch-prize-chip is-spent">${d.runClutchPrizeLast}</span>`
+        : "";
+  const bossOmenChainHtml =
+    d.runBossOmenStreak > 0
+      ? `<span class="run-boss-omen-chain-chip ${d.runBossOmenStreak >= 2 ? "is-hot" : ""}">劫兆连破 x${d.runBossOmenStreak} · 峰 ${Math.max(d.runBossOmenPeak, d.runBossOmenStreak)}</span>`
+      : d.runBossOmenLast
+        ? `<span class="run-boss-omen-chain-chip is-spent">${d.runBossOmenLast}</span>`
+        : "";
+  const tacticalEdgeEchoHtml =
+    d.runTacticalEdgeHits > 0 && d.runTacticalEdgeDamagePct > 0
+      ? `<div class="run-edge-echo ${d.runTacticalEdgeLastEcho ? "is-live" : ""}"><strong>${d.runTacticalEdgeLastEcho ? "追击回响" : "追击预告"}</strong><span>${d.runTacticalEdgeLastEcho || `${tacticalEdgePreview} 追击链 ${d.runTacticalEdgeChain}/3。`}</span></div>`
+      : d.runTacticalEdgeLastEcho
+        ? `<div class="run-edge-echo is-live"><strong>追击收束</strong><span>${d.runTacticalEdgeLastEcho}</span></div>`
+        : "";
+  const bossPostureHtml =
+    enemy?.role === "boss" && d.runBossPostureMax > 0
+      ? `<div class="run-posture-box">
+          <span>阶段 ${Math.max(1, d.runBossPhase)} · 镇域架势 ${d.runBossPosture} / ${d.runBossPostureMax}${d.runBossBreaks > 0 ? ` · 已破 ${d.runBossBreaks}` : ""}</span>
+          <div class="progress-track dungeon slim run-posture-track"><div class="progress-fill posture" style="width:${bossPosturePct}%"></div></div>
+        </div>`
+      : "";
+  const bossOmenHtml =
+    enemy?.role === "boss" && d.runBossOmen !== "none"
+      ? `<div class="run-omen-box">
+          <span>劫兆 ${bossOmenLabel} · ${bossOmenCounter} · ${Math.ceil(bossOmenRemainMs / 1000)}s</span>
+          <div class="progress-track dungeon slim run-omen-track"><div class="progress-fill omen" style="width:${bossOmenPct}%"></div></div>
+        </div>`
+      : "";
+  const opportunity = d.runOpportunity;
+  const opportunityRemainMs = opportunity ? Math.max(0, opportunity.untilMs - now) : 0;
+  const opportunityPct = opportunity ? Math.max(0, Math.min(100, (100 * opportunityRemainMs) / 3800)) : 0;
+  const opportunityAction =
+    opportunity?.action === "dodge" ? "闪避" : opportunity?.action === "skill" ? "心法技" : opportunity?.action === "finisher" ? "终结技" : "";
+  const opportunityHtml = opportunity
+    ? `<div class="run-opportunity-box run-opportunity-box--combat ${
+        opportunity.source === "pledge_reprisal"
+          ? "is-reprisal"
+          : opportunity.source === "reward_verb_surge"
+            ? "is-reward-surge"
+            : opportunity.source === "counter_tempo_rebound"
+              ? "is-counter-rebound"
+              : opportunity.source === "event_echo"
+                ? "is-event-echo"
+              : ""
+      }">
+        <span>战机 ${opportunity.title} · ${opportunityAction} · ${Math.ceil(opportunityRemainMs / 1000)}s</span>
+        <em>${opportunity.desc}</em>
+        <div class="progress-track dungeon slim run-opportunity-track"><div class="progress-fill opportunity" style="width:${opportunityPct}%"></div></div>
+      </div>`
+    : "";
+  const objectiveRemainMs = objective?.timeLimitMs ? Math.max(0, objective.startedAtMs + objective.timeLimitMs - now) : null;
+  const objectiveTimePct = objective?.timeLimitMs ? Math.max(0, Math.min(100, (100 * (objectiveRemainMs ?? 0)) / objective.timeLimitMs)) : 100;
+  const objectiveProgressPct = objective ? Math.min(100, (100 * Math.min(objective.progress, objective.target)) / Math.max(1, objective.target)) : 0;
+  const objectiveRewardParts = objective
+    ? [
+        `筑灵髓 +${objective.rewardZhuLingEssence}`,
+        `灵砂 +${objective.rewardLingSha}`,
+        objective.rewardFinisherCharge ? `终结 +${objective.rewardFinisherCharge}` : "",
+        objective.rewardRerolls ? `重掷 +${objective.rewardRerolls}` : "",
+        objective.rewardShieldPct ? `护盾 ${Math.round(objective.rewardShieldPct * 100)}%` : "",
+        objective.rewardStyle ? `身法 +${objective.rewardStyle}` : "",
+        objective.rewardThreatDelta ? `劫压 ${objective.rewardThreatDelta > 0 ? "+" : ""}${objective.rewardThreatDelta}` : "",
+      ].filter(Boolean)
+    : [];
+  const objectiveScoutLabel = objective?.scoutElement
+    ? `侦察战术 · ${EL_ZH[objective.scoutElement]}${objective.scoutRole ? ` · ${objective.scoutRole === "guard" ? "护卫" : objective.scoutRole === "drain" ? "汲灵" : objective.scoutRole === "ranged" ? "远程" : objective.scoutRole === "boss" ? "首领" : "近战"}` : ""}`
+    : "";
+  const objectiveRouteLabel = objective?.routePlan ? `路线承诺 · ${routePlanName(objective.routePlan)}` : "";
+  const objectiveHtml = objective
+    ? `<div class="run-objective ${objective.completed ? "is-complete" : ""} ${objective.failed ? "is-failed" : ""} ${objective.scoutElement ? "is-scouted" : ""}">
+        ${objectiveRouteLabel ? `<em class="run-objective-route">${objectiveRouteLabel}</em>` : ""}
+        ${objectiveScoutLabel ? `<em class="run-objective-scout">${objectiveScoutLabel}</em>` : ""}
+        <strong>${objective.completed ? "战术达成" : objective.failed ? "战术失手" : objective.title}</strong>
+        <span>${objective.desc}</span>
+        <div class="progress-track dungeon slim run-objective-track"><div class="progress-fill objective" style="width:${objective.completed ? 100 : objectiveProgressPct}%"></div></div>
+        ${
+          objective.timeLimitMs
+            ? `<div class="progress-track dungeon slim run-objective-timer"><div class="progress-fill objective-timer" style="width:${objective.failed ? 0 : objectiveTimePct}%"></div></div>`
+            : ""
+        }
+        <em>${Math.min(objective.progress, objective.target)} / ${objective.target}${objectiveRemainMs !== null && !objective.completed && !objective.failed ? ` · ${Math.ceil(objectiveRemainMs / 1000)}秒` : ""} · ${objectiveRewardParts.join(" · ")}</em>
+      </div>`
+    : "";
+  const tacticalPrizeHtml =
+    d.runTacticalEdgePrize > 0
+      ? `<span class="run-chain-prize-chip">追击链印 x${d.runTacticalEdgePrize}</span>`
+      : "";
+  const rewardCounterPrizeHtml =
+    d.runCounterTempoPrize > 0 ? `<span class="run-chain-prize-chip run-chain-prize-chip--counter">破招战利品 x${d.runCounterTempoPrize}</span>` : "";
+  const rewardClutchPrizeHtml =
+    d.runClutchPrize > 0 ? `<span class="run-chain-prize-chip run-chain-prize-chip--clutch">险境翻盘 x${d.runClutchPrize}</span>` : "";
+  const rewardRoleReadPrizeHtml =
+    d.runRoleReadPrizeRole && d.runRoleReadPrizePower > 0
+      ? `<span class="run-chain-prize-chip run-chain-prize-chip--role-read">${roleReadLabel(d.runRoleReadPrizeRole)}手札 x${d.runRoleReadPrizePower}</span>`
+      : "";
+  const rewardActionWeavePrizeHtml =
+    d.runActionWeavePrize > 0 ? `<span class="run-chain-prize-chip run-chain-prize-chip--action-weave">万象灵契 x${d.runActionWeavePrize}</span>` : "";
+  const rewardWarrantPrizeHtml =
+    d.runWarrantPrize > 0 ? `<span class="run-chain-prize-chip run-chain-prize-chip--warrant">悬赏兑券 x${d.runWarrantPrize}</span>` : "";
+  const rewardsHtml =
+    d.runPendingRewards.length > 0
+      ? `<div class="run-choice-panel" aria-live="polite">
+          <div class="run-choice-head">
+            <p class="run-choice-title">${d.runOpeningDraft ? "选择开局灵印" : "选择战利品"}${tacticalPrizeHtml}${rewardCounterPrizeHtml}${rewardClutchPrizeHtml}${rewardRoleReadPrizeHtml}${rewardActionWeavePrizeHtml}${rewardWarrantPrizeHtml}</p>
+            <div class="run-choice-tools">
+              <span class="run-lock-count">锁定 ${d.runLockedRewardIds.length}/2</span>
+              <button type="button" class="btn run-reroll-btn" id="btn-run-reroll-rewards" ${d.runRewardRerolls > 0 && d.runLockedRewardIds.length < d.runPendingRewards.length ? "" : "disabled"}>重掷 ${d.runRewardRerolls}</button>
+            </div>
+          </div>
+          <div class="run-choice-grid">
+            ${d.runPendingRewards
+              .map((r) => {
+                const locked = d.runLockedRewardIds.includes(r.id);
+                return `<div class="run-choice-card run-reward-card run-choice-card--simple ${locked ? "is-locked" : ""} ${r.synergyTier ? `is-${r.synergyTier}` : ""}">
+                  <button type="button" class="run-reward-main" data-run-reward="${r.id}">
+                    <em class="run-simple-kicker">${rewardSimpleType(r)}</em>
+                    <strong>${r.title}</strong>
+                    <span class="run-simple-impact">${rewardSimpleImpact(r)}</span>
+                    <span class="run-simple-desc">${r.desc}</span>
+                  </button>
+                  <details class="run-card-details">
+                    <summary>详情</summary>
+                    ${r.draftHint ? `<em class="run-draft-hint">${r.draftHint}</em>` : ""}
+                    ${rewardCombatPreview(r)}${rewardTempoPreview(r)}${rewardTags(r)}
+                  </details>
+                  <button type="button" class="run-reward-lock-btn" data-run-reward-lock="${r.id}" title="${locked ? "解除锁定" : "锁定后重掷保留"}">${locked ? "已锁" : "锁定"}</button>
+                </div>`;
+              })
+              .join("")}
+          </div>
+        </div>`
+      : "";
+  const compactEventChoices =
+    !!d.runPendingEvent &&
+    (d.runPendingEvent.id.startsWith("rest-") || d.runPendingEvent.id === "last-stand" || d.runPendingEvent.id.startsWith("boss-break"));
+  const bossBreakEventChoice = !!d.runPendingEvent && d.runPendingEvent.id.startsWith("boss-break");
+  const eventHtml = d.runPendingEvent
+    ? `<div class="run-choice-panel run-choice-panel--event ${compactEventChoices ? "run-choice-panel--rest" : ""} ${bossBreakEventChoice ? "run-choice-panel--boss-break" : ""}" aria-live="polite">
+        <p class="run-choice-title">${d.runPendingEvent.title}</p>
+        <p class="hint sm">${d.runPendingEvent.body}</p>
+        <div class="run-choice-grid">
+          ${d.runPendingEvent.options
+              .map((o) => `<button type="button" class="run-choice-card run-event-card run-choice-card--simple ${o.eventPlan ? `is-${o.eventPlan}` : ""}" data-run-event="${o.id}">
+                <em class="run-simple-kicker">${eventSimpleImpact(o)}</em>
+                <strong>${o.title}</strong>
+                <span class="run-simple-desc">${o.desc}</span>
+                <span class="run-card-details-inline">${o.eventPreview || o.eventScoutHint || o.eventBuildHint || ""}</span>
+                ${eventTags(o)}${checkLabel(o)}${threatLabel(o.threatDelta)}
+              </button>`)
+            .join("")}
+        </div>
+      </div>`
+    : "";
+  const routeHtml =
+    d.runPendingRoutes.length > 0
+      ? `<div class="run-choice-panel run-choice-panel--route" aria-live="polite">
+          <p class="run-choice-title">选择下一段路线</p>
+          <div class="run-choice-grid">
+            ${d.runPendingRoutes
+              .map((r) => `<button type="button" class="run-choice-card run-route-card run-choice-card--simple ${r.attuneElement === dom ? "is-attuned" : ""} ${r.plan ? `is-${r.plan}` : ""} ${r.routeRecommend ? "is-recommended" : ""}" data-run-route="${r.id}">
+                <em class="run-simple-kicker">${routeSimpleImpact(r)}</em>
+                <strong>${r.title}</strong>
+                <span class="run-simple-desc">${r.desc}</span>
+                <span class="run-card-details-inline">${r.routeRecommendHint || r.planPreview || r.scoutText || ""}</span>
+                ${routeTags(r)}
+              </button>`)
+              .join("")}
+          </div>
+        </div>`
+      : "";
+  const actionDisabled = !d.active || !enemy || d.runPendingRewards.length > 0 || !!d.runPendingEvent || d.runPendingRoutes.length > 0;
+  const skillCd = Math.max(0, d.runSkillCooldownUntil - now);
+  const intentEta = enemy ? Math.max(0, Math.ceil((enemy.intentAtMs - now) / 1000)) : 0;
+  const intentEtaMs = enemy ? enemy.intentAtMs - now : 9999;
+  const dodgeCue = !!enemy && enemy.intent === "attack" && intentEtaMs > 0 && intentEtaMs <= 3500;
+  const skillCue = !!enemy && (enemy.intent === "guard" || enemy.intent === "drain" || enemy.intent === "enrage") && skillCd <= 0;
+  const fervorCue = !!enemy && d.duelFervor >= 100;
+  const finisherElementCue =
+    dom === "metal" ? "破甲" : dom === "wood" ? "回生" : dom === "water" ? "流转" : dom === "earth" ? "护盾" : "爆发";
+  const finisherCue =
+    !!enemy &&
+    d.runFinisherCharge >= 100 &&
+    finisherElementCue.length > 0 &&
+    (enemy.intent === "guard" || enemy.intent === "enrage" || enemy.hp / Math.max(1, enemy.maxHp) <= 0.35);
+  const actionCue = (() => {
+    if (!enemy) return { tone: "steady", label: "战术", body: "选择路线后进入战斗。" };
+    if (d.runBossOmen !== "none") {
+      return { tone: "danger", label: "劫兆", body: `${bossOmenCounter} · ${Math.ceil(bossOmenRemainMs / 1000)}s` };
+    }
+    if (opportunity) {
+      return { tone: "hot", label: "战机", body: `${opportunityAction} · ${Math.ceil(opportunityRemainMs / 1000)}s · ${opportunity.title}` };
+    }
+    if (d.runTacticalEdgeHits > 0 && d.runTacticalEdgeDamagePct > 0) {
+      return { tone: "hot", label: d.runTacticalEdgeLabel || "追击", body: `${d.runTacticalEdgeHits}击 · +${Math.round(d.runTacticalEdgeDamagePct * 100)}% · ${EL_ZH[dom]}系${tacticalEdgeEffect} · 链 ${d.runTacticalEdgeChain}/3` };
+    }
+    if (dodgeCue) return { tone: "danger", label: "反制", body: `闪避窗口 · ${intentEta}s` };
+    if (skillCue) return { tone: "hot", label: "反制", body: `${enemy.intent === "guard" ? "破护势" : enemy.intent === "drain" ? "断汲灵" : "压劫火"} · 心法技` };
+    if (finisherCue) return { tone: "hot", label: "收束", body: `终结技 · ${finisherElementCue}` };
+    if (fervorCue) return { tone: "hot", label: "爆发", body: "战意已满 · 五行爆发可用" };
+    return { tone: "steady", label: "压制", body: `${intentLabel[enemy.intent]} · ${intentEta}s · 观察反制窗口` };
+  })();
+  const settleMin = Math.floor(Math.max(0, d.runLastDurationSec) / 60);
+  const settleSec = String(Math.max(0, d.runLastDurationSec) % 60).padStart(2, "0");
+  const settlementHtml =
+    !d.active && d.runLastOutcome !== "none"
+      ? `<div class="run-settlement ${d.runLastOutcome === "victory" ? "is-victory" : "is-defeat"}">
+          <div class="run-settlement-head">
+            <strong>${d.runLastOutcome === "victory" ? "行旅凯旋" : "行旅折返"}</strong>
+            ${d.runLastGrade !== "none" ? `<em>战评 ${d.runLastGrade.toUpperCase()} · ${d.runLastScore}</em>` : ""}
+          </div>
+          <p>${d.runLastSummary}</p>
+          <div class="run-settlement-grid">
+            <span>耗时 <b>${settleMin}:${settleSec}</b></span>
+            <span>击破 <b>${d.runLastKills}</b></span>
+            <span>筑灵髓 <b>+${d.runLastEssence}</b></span>
+            <span>灵印 <b>${d.runLastBlessingCount}</b></span>
+            <span>终局劫压 <b>${d.runLastThreat}%</b></span>
+          </div>
+        </div>`
+      : "";
+  const coachHtml = d.active
+    ? `<div class="run-coach">
+        <span class="run-coach-step">${d.runPendingRewards.length > 0 ? "选奖励" : d.runPendingRoutes.length > 0 ? "选路线" : d.runPendingEvent ? "做选择" : "战斗中"}</span>
+        <strong>${
+          d.runPendingRewards.length > 0
+            ? "选一张你看得懂的强化。第一局优先选“资源”或“稳定变强”。"
+            : d.runPendingRoutes.length > 0
+              ? "选下一站：稳一点、打一场、或拿一次新选择。"
+              : d.runPendingEvent
+                ? "不用读完故事，先看每张卡左上角的小结。"
+                : actionCue.tone === "danger"
+                  ? "敌人要出手了，看底部发光按钮。"
+                  : "先打着，按钮亮了再按。"
+        }</strong>
+        <span>${d.runPendingRewards.length > 0 ? "点卡片直接拿；想研究再点“详情”。" : d.runPendingRoutes.length > 0 || d.runPendingEvent ? "每次只需要做一个选择。" : actionCue.body}</span>
+      </div>`
+    : "";
+  const liveHtml =
+    d.active && d.runPendingRoutes.length > 0
+      ? `<div class="dungeon-viewport dungeon-live-combat run-playfield run-playfield--route" id="dungeon-live-root">
+        <div class="run-route">${nodesHtml}</div>
+        ${routeHtml}
+      </div>`
+      : d.active && d.runPendingEvent
+        ? `<div class="dungeon-viewport dungeon-live-combat run-playfield run-playfield--event" id="dungeon-live-root">
+        <div class="run-route">${nodesHtml}</div>
+        ${eventHtml}
+      </div>`
+      : d.active && d.runPendingRewards.length > 0
+        ? `<div class="dungeon-viewport dungeon-live-combat run-playfield run-playfield--reward" id="dungeon-live-root">
+        <div class="run-route">${nodesHtml}</div>
+        ${rewardsHtml}
+      </div>`
+      : d.active
+        ? `<div class="dungeon-viewport dungeon-live-combat run-playfield" id="dungeon-live-root">
+        <div class="run-route">${nodesHtml}</div>
+        ${objectiveHtml}
+        <div class="run-arena" id="dungeon-map">
+          <div class="run-side run-side--player">
+            <span class="run-side-tag">我方</span>
+            <strong>五行主势：${EL_ZH[dom]}</strong>
+            <div class="progress-track dungeon slim run-fervor-track"><div class="progress-fill fervor" style="width:${fervorPct}%"></div></div>
+            <span class="run-fervor-txt" title="Fervor at 100 unlocks an active five-element burst.">战意 ${Math.floor(fervorPct)} / 100 · 身法 ${d.runStyleStreak}/12 · 连携 ${Math.min(2, d.runCounterChain)} / 2 · 三式 ${actionWeaveCount}/3</span>
+            <div class="progress-track dungeon slim"><div class="progress-fill player" id="dungeon-pl-bar" style="width:${hpPct}%"></div></div>
+            <span id="dungeon-pl-txt">${fmtNum(php)} / ${fmtNum(pmax)}</span>
+            <div class="progress-track dungeon slim stamina-track"><div class="progress-fill stamina" id="dungeon-stamina-bar" style="width:${staPct}%"></div></div>
+            <span id="dungeon-stamina-txt">${Math.floor(d.stamina)} / ${DUNGEON_STAMINA_MAX}</span>
+          </div>
+          <div class="run-center-sigil">
+            <img class="dungeon-duel-deco" src="${UI_DUNGEON_DUEL_DECO}" alt="" width="96" height="96" loading="lazy" />
+            <div id="dungeon-float-layer" class="dungeon-float-layer"></div>
+          </div>
+          <div class="run-side run-side--enemy">
+            <span class="run-side-tag">${node?.type === "boss" ? "首领" : "敌方"}</span>
+            <strong id="dungeon-boss-name">${enemy ? enemy.name : node?.title ?? "幻域节点"}</strong>
+            ${bossPostureHtml}
+            ${bossOmenHtml}
+            <div class="progress-track dungeon slim"><div class="progress-fill enemy" id="dungeon-boss-bar" style="width:${enemyPct}%"></div></div>
+            <span id="dungeon-boss-hp-txt">${enemy ? `${fmtNum(Math.max(0, enemy.hp))} / ${fmtNum(enemy.maxHp)}` : "等待选择"}</span>
+            <span class="run-intent-pill" id="run-enemy-intent">${enemy ? `${intentLabel[enemy.intent]} · ${intentEta}s` : "无攻势"}</span>
+            <span class="run-counter-hint">${enemy ? counterHint[enemy.intent] : "选择路线后进入战斗"}</span>
+            ${enemy ? `<span class="run-role-tactic">${runEnemyRoleTactic(enemy.role)}</span>` : ""}
+          </div>
+        </div>
+        ${opportunityHtml}
+        <div class="run-action-cue is-${actionCue.tone}">
+          <strong>${actionCue.label}</strong>
+          <span>${actionCue.body}</span>
+        </div>
+        ${tacticalEdgeEchoHtml}
+        <div class="run-actions">
+          <button type="button" class="btn run-action-btn ${dodgeCue ? "is-counter-cue" : ""}" id="btn-dungeon-dodge" ${actionDisabled ? "disabled" : ""}>闪避</button>
+          <button type="button" class="btn run-action-btn ${skillCue ? "is-counter-cue" : ""}" id="btn-dungeon-skill" ${actionDisabled || skillCd > 0 ? "disabled" : ""}>心法技${skillCd > 0 ? ` ${Math.ceil(skillCd / 1000)}s` : ""}</button>
+          <button type="button" class="btn run-action-btn ${fervorCue ? "is-counter-cue is-fervor-cue" : ""}" id="btn-dungeon-fervor" ${actionDisabled || d.duelFervor < 100 ? "disabled" : ""}>&#25112;&#24847; ${Math.floor(fervorPct)}%</button>
+          <button type="button" class="btn btn-primary run-action-btn ${finisherCue ? "is-counter-cue is-finisher-cue" : ""}" id="btn-dungeon-finisher" ${actionDisabled || d.runFinisherCharge < 100 ? "disabled" : ""}>终结 ${Math.floor(d.runFinisherCharge)}%</button>
+        </div>
+        <p class="dungeon-active-meta hint sm dungeon-active-meta--brief" id="dungeon-active-meta-brief">${formatDungeonActiveMetaBrief(state, now)}</p>
+        ${rewardsHtml}
+        ${eventHtml}
+        ${routeHtml}
+      </div>`
+        : `<div class="dungeon-idle dungeon-stage-fill run-start-panel">
+        ${settlementHtml}
+        ${renderIdlePreviewMap()}
+        <p class="dungeon-idle-stats">短局行旅 <strong>${d.runsCompleted}</strong> 胜 · 失败 <strong>${d.runsFailed}</strong> 次 · 最深节点 <strong>${Math.max(0, d.maxWaveRecord)}</strong></p>
+        <p class="hint sm">一局约 3-6 分钟：战斗、事件、精英、整息、首领。胜利后带回灵石、唤灵髓、筑灵髓和灵砂。</p>
+        <button class="btn btn-primary btn-dungeon-enter" type="button" id="btn-dungeon-enter">
+          <img class="btn-dungeon-enter-ico" src="${UI_DUNGEON_ENTER_DECO}" alt="" width="18" height="18" loading="lazy" />
+          <span id="btn-dungeon-enter-label">进入幻域行旅</span>
+        </button>
+      </div>`;
+  const choicePanelClass =
+    d.active && d.runPendingRoutes.length > 0
+      ? " dungeon-panel--route-choice"
+      : d.active && (d.runPendingRewards.length > 0 || d.runPendingEvent)
+        ? " dungeon-panel--choice"
+        : "";
+  return `
+    <section class="panel dungeon-strip-panel dungeon-run-panel${d.active ? " dungeon-panel--run dungeon-panel--live-fight" : ""}${choicePanelClass}" data-next-boost-target="dungeon-run">
+      <div class="panel-title-art-row dungeon-panel-title-cluster">
+        <img class="panel-title-art-icon" src="${UI_HEAD_DUNGEON}" alt="" width="28" height="28" loading="lazy" />
+        <div class="dungeon-panel-title-text">
+          <h2>幻域·行旅</h2>
+          <p class="hint sm dungeon-panel-subtitle">短局战斗 · 灵印构筑 · 事件选择 · 首领结算</p>
+        </div>
+      </div>
+      ${coachHtml}
+      <details class="run-detail-drawer">
+        <summary>本局详情</summary>
+        <div class="run-status-strip">
+        <span>战艺 Lv.${state.skills.combat.level}</span>
+        <span>攻击 ${fmtNum(playerAttack(state))}</span>
+        <span>生命 ${fmtNum(php)} / ${fmtNum(pmax)}</span>
+        <span class="run-threat-chip">劫压 ${Math.floor(d.runThreat)}%</span>
+        <span class="run-momentum-chip ${d.runMomentum >= 2 ? "is-high" : ""}">战势 ${Math.min(3, d.runMomentum)} / 3</span>
+        <span class="run-style-chip ${d.runStyleStreak >= 6 ? "is-hot" : ""}">身法 ${d.runStyleStreak}/12 · 峰 ${d.runStylePeak}</span>
+        ${counterTempoHtml}
+        ${counterTempoPrizeHtml}
+        ${clutchPrizeHtml}
+        ${objectiveStreakHtml}
+        ${pledgeHtml}
+        ${routeRecommendHtml}
+        ${pledgeReprisalHtml}
+        ${rewardVerbHtml}
+        ${rewardVerbSurgeHtml}
+        ${eventEchoHtml}
+        ${bossOmenChainHtml}
+        ${tacticalEdgeHtml}
+        ${actionWeaveHtml}
+        ${roleEchoHtml}
+        ${roleReadHtml}
+        ${roleReadPrizeHtml}
+        ${warrantHtml}
+        ${warrantPrizeHtml}
+        ${gradeHtml}
+        <span>本局筑灵髓 +${Math.floor(d.runEssenceGained)}</span>
+        </div>
+        <div class="run-build-row">${buildVerbHtml}</div>
+        <div class="run-blessing-row">${blessingHtml}${resonanceHtml}</div>
+        <p class="hint sm run-log-line" id="run-log-line">${d.runLog}</p>
+      </details>
+      <div class="dungeon-combat-module">${liveHtml}</div>
+      ${renderBattleEquippedStrip(state, battleGearStripExpanded)}
+    </section>`;
+}
+
 /** 历练页中部：三件筑灵装备概览；默认收起，长按展开详情 */
 export function renderBattleEquippedStrip(state: GameState, expanded: boolean): string {
   const displaySlots = ALL_GEAR_SLOTS;
@@ -471,6 +1168,7 @@ export function renderBattleEquippedStrip(state: GameState, expanded: boolean): 
 }
 
 export function renderDungeonPanel(state: GameState, battleGearStripExpanded = false, now = Date.now()): string {
+  return renderDungeonRunPanel(state, battleGearStripExpanded, now);
   const d = state.dungeon;
   const cd = Math.max(0, d.deathCooldownUntil - now);
   const canEnter = canEnterDungeon(state, now);

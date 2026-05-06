@@ -263,6 +263,268 @@ function normalizeDungeonState(st: GameState): void {
   if (d.bossPrepKills == null || !Number.isFinite(d.bossPrepKills)) d.bossPrepKills = 0;
   d.bossPrepKills = Math.max(0, Math.floor(d.bossPrepKills));
   if (d.bossPrepChallengeReady == null) d.bossPrepChallengeReady = false;
+  d.runInCombat = !!d.runInCombat;
+  if (!Array.isArray(d.runNodes)) d.runNodes = [];
+  for (const node of d.runNodes) {
+    if (!node || typeof node !== "object") continue;
+    if (typeof node.routePlan !== "string" || !["safe", "tempo", "risk", "draft"].includes(node.routePlan)) delete node.routePlan;
+  }
+  d.runNodeIndex = Number.isFinite(d.runNodeIndex) ? Math.max(0, Math.floor(d.runNodeIndex)) : 0;
+  d.runsCompleted = Number.isFinite(d.runsCompleted) ? Math.max(0, Math.floor(d.runsCompleted)) : 0;
+  d.runsFailed = Number.isFinite(d.runsFailed) ? Math.max(0, Math.floor(d.runsFailed)) : 0;
+  if (!Array.isArray(d.runBlessings)) d.runBlessings = [];
+  d.runThreat = Number.isFinite(d.runThreat) ? Math.max(0, Math.min(100, d.runThreat)) : 0;
+  d.runLastGrade =
+    d.runLastGrade === "s" || d.runLastGrade === "a" || d.runLastGrade === "b" || d.runLastGrade === "c"
+      ? d.runLastGrade
+      : "none";
+  d.runLastScore = Number.isFinite(d.runLastScore) ? Math.max(0, Math.min(100, Math.floor(d.runLastScore))) : 0;
+  d.runRewardRerolls = Number.isFinite(d.runRewardRerolls) ? Math.max(0, Math.min(2, Math.floor(d.runRewardRerolls))) : 0;
+  if (!Array.isArray(d.runLockedRewardIds)) d.runLockedRewardIds = [];
+  d.runLockedRewardIds = d.runLockedRewardIds
+    .filter((id): id is string => typeof id === "string")
+    .filter((id, idx, arr) => arr.indexOf(id) === idx)
+    .slice(0, 2);
+  d.runOpeningDraft = !!d.runOpeningDraft;
+  d.runCounterChain = Number.isFinite(d.runCounterChain) ? Math.max(0, Math.min(2, Math.floor(d.runCounterChain))) : 0;
+  d.runCounterTempoStreak = Number.isFinite(d.runCounterTempoStreak)
+    ? Math.max(0, Math.min(9, Math.floor(d.runCounterTempoStreak)))
+    : 0;
+  d.runCounterTempoPeak = Number.isFinite(d.runCounterTempoPeak)
+    ? Math.max(0, Math.min(9, Math.floor(d.runCounterTempoPeak)))
+    : 0;
+  if (typeof d.runCounterTempoLast !== "string") d.runCounterTempoLast = "";
+  d.runCounterTempoPrize = Number.isFinite(d.runCounterTempoPrize)
+    ? Math.max(0, Math.min(3, Math.floor(d.runCounterTempoPrize)))
+    : 0;
+  if (typeof d.runCounterTempoPrizeLast !== "string") d.runCounterTempoPrizeLast = "";
+  d.runClutchPrize = Number.isFinite(d.runClutchPrize) ? Math.max(0, Math.min(3, Math.floor(d.runClutchPrize))) : 0;
+  if (typeof d.runClutchPrizeLast !== "string") d.runClutchPrizeLast = "";
+  d.runMomentum = Number.isFinite(d.runMomentum) ? Math.max(0, Math.min(3, Math.floor(d.runMomentum))) : 0;
+  d.runStyleStreak = Number.isFinite(d.runStyleStreak) ? Math.max(0, Math.min(12, Math.floor(d.runStyleStreak))) : 0;
+  d.runStylePeak = Number.isFinite(d.runStylePeak) ? Math.max(0, Math.min(12, Math.floor(d.runStylePeak))) : 0;
+  d.runActionWeaveMask = Number.isFinite(d.runActionWeaveMask) ? Math.max(0, Math.min(7, Math.floor(d.runActionWeaveMask))) : 0;
+  d.runActionWeaveStreak = Number.isFinite(d.runActionWeaveStreak) ? Math.max(0, Math.min(9, Math.floor(d.runActionWeaveStreak))) : 0;
+  d.runActionWeavePeak = Number.isFinite(d.runActionWeavePeak) ? Math.max(0, Math.min(9, Math.floor(d.runActionWeavePeak))) : 0;
+  if (typeof d.runActionWeaveLast !== "string") d.runActionWeaveLast = "";
+  d.runActionWeavePrize = Number.isFinite(d.runActionWeavePrize) ? Math.max(0, Math.min(3, Math.floor(d.runActionWeavePrize))) : 0;
+  if (typeof d.runActionWeavePrizeLast !== "string") d.runActionWeavePrizeLast = "";
+  d.runLastStandUsed = !!d.runLastStandUsed;
+  d.runBossPosture = Number.isFinite(d.runBossPosture) ? Math.max(0, Math.floor(d.runBossPosture)) : 0;
+  d.runBossPostureMax = Number.isFinite(d.runBossPostureMax) ? Math.max(0, Math.floor(d.runBossPostureMax)) : 0;
+  d.runBossBreaks = Number.isFinite(d.runBossBreaks) ? Math.max(0, Math.floor(d.runBossBreaks)) : 0;
+  d.runBossPhase = Number.isFinite(d.runBossPhase) ? Math.max(0, Math.min(3, Math.floor(d.runBossPhase))) : 0;
+  d.runBossOmen =
+    d.runBossOmen === "heaven-strike" || d.runBossOmen === "soul-drain" || d.runBossOmen === "inferno"
+      ? d.runBossOmen
+      : "none";
+  d.runBossOmenUntilMs = Number.isFinite(d.runBossOmenUntilMs) ? Math.max(0, Math.floor(d.runBossOmenUntilMs)) : 0;
+  d.runBossOmenStreak = Number.isFinite(d.runBossOmenStreak)
+    ? Math.max(0, Math.min(3, Math.floor(d.runBossOmenStreak)))
+    : 0;
+  d.runBossOmenPeak = Number.isFinite(d.runBossOmenPeak)
+    ? Math.max(0, Math.min(3, Math.floor(d.runBossOmenPeak)))
+    : 0;
+  if (typeof d.runBossOmenLast !== "string") d.runBossOmenLast = "";
+  d.runLastOutcome = d.runLastOutcome === "victory" || d.runLastOutcome === "defeat" ? d.runLastOutcome : "none";
+  d.runLastDurationSec = Number.isFinite(d.runLastDurationSec) ? Math.max(0, Math.floor(d.runLastDurationSec)) : 0;
+  d.runLastKills = Number.isFinite(d.runLastKills) ? Math.max(0, Math.floor(d.runLastKills)) : 0;
+  d.runLastEssence = Number.isFinite(d.runLastEssence) ? Math.max(0, Math.floor(d.runLastEssence)) : 0;
+  d.runLastThreat = Number.isFinite(d.runLastThreat) ? Math.max(0, Math.min(100, Math.floor(d.runLastThreat))) : 0;
+  d.runLastBlessingCount = Number.isFinite(d.runLastBlessingCount) ? Math.max(0, Math.floor(d.runLastBlessingCount)) : 0;
+  if (typeof d.runLastSummary !== "string") d.runLastSummary = "";
+  d.runEnemy = d.runEnemy ?? null;
+  d.runObjective = d.runObjective && typeof d.runObjective === "object" ? d.runObjective : null;
+  d.runObjectiveStreak = Number.isFinite(d.runObjectiveStreak) ? Math.max(0, Math.min(5, Math.floor(d.runObjectiveStreak))) : 0;
+  d.runObjectivePeak = Number.isFinite(d.runObjectivePeak) ? Math.max(0, Math.min(5, Math.floor(d.runObjectivePeak))) : 0;
+  d.runTacticalEdgeHits = Number.isFinite(d.runTacticalEdgeHits) ? Math.max(0, Math.min(9, Math.floor(d.runTacticalEdgeHits))) : 0;
+  d.runTacticalEdgeDamagePct = Number.isFinite(d.runTacticalEdgeDamagePct) ? Math.max(0, Math.min(0.75, d.runTacticalEdgeDamagePct)) : 0;
+  if (d.runTacticalEdgeHits <= 0 || d.runTacticalEdgeDamagePct <= 0) {
+    d.runTacticalEdgeHits = 0;
+    d.runTacticalEdgeDamagePct = 0;
+  }
+  if (typeof d.runTacticalEdgeLabel !== "string") d.runTacticalEdgeLabel = "";
+  if (typeof d.runTacticalEdgeLastEcho !== "string") d.runTacticalEdgeLastEcho = "";
+  d.runTacticalEdgeChain = Number.isFinite(d.runTacticalEdgeChain) ? Math.max(0, Math.min(2, Math.floor(d.runTacticalEdgeChain))) : 0;
+  d.runTacticalEdgePrize = Number.isFinite(d.runTacticalEdgePrize) ? Math.max(0, Math.min(3, Math.floor(d.runTacticalEdgePrize))) : 0;
+  if (typeof d.runRoleEcho !== "string" || !["melee", "ranged", "guard", "drain", "boss"].includes(d.runRoleEcho)) d.runRoleEcho = null;
+  d.runRoleEchoPower = Number.isFinite(d.runRoleEchoPower) ? Math.max(0, Math.min(3, Math.floor(d.runRoleEchoPower))) : 0;
+  if (!d.runRoleEcho || d.runRoleEchoPower <= 0) {
+    d.runRoleEcho = null;
+    d.runRoleEchoPower = 0;
+  }
+  if (typeof d.runRoleEchoLast !== "string") d.runRoleEchoLast = "";
+  if (typeof d.runRoleReadRole !== "string" || !["melee", "ranged", "guard", "drain", "boss"].includes(d.runRoleReadRole)) {
+    d.runRoleReadRole = null;
+  }
+  d.runRoleReadStreak = Number.isFinite(d.runRoleReadStreak) ? Math.max(0, Math.min(9, Math.floor(d.runRoleReadStreak))) : 0;
+  d.runRoleReadPeak = Number.isFinite(d.runRoleReadPeak) ? Math.max(0, Math.min(9, Math.floor(d.runRoleReadPeak))) : 0;
+  if (!d.runRoleReadRole || d.runRoleReadStreak <= 0) {
+    d.runRoleReadRole = null;
+    d.runRoleReadStreak = 0;
+  }
+  if (typeof d.runRoleReadLast !== "string") d.runRoleReadLast = "";
+  if (
+    typeof d.runRoleReadPrizeRole !== "string" ||
+    !["melee", "ranged", "guard", "drain", "boss"].includes(d.runRoleReadPrizeRole)
+  ) {
+    d.runRoleReadPrizeRole = null;
+  }
+  if (d.runRoleReadPrizeRole === "boss") d.runRoleReadPrizeRole = null;
+  d.runRoleReadPrizePower = Number.isFinite(d.runRoleReadPrizePower)
+    ? Math.max(0, Math.min(3, Math.floor(d.runRoleReadPrizePower)))
+    : 0;
+  if (!d.runRoleReadPrizeRole || d.runRoleReadPrizePower <= 0) {
+    d.runRoleReadPrizeRole = null;
+    d.runRoleReadPrizePower = 0;
+  }
+  if (typeof d.runRoleReadPrizeLast !== "string") d.runRoleReadPrizeLast = "";
+  d.runRoutePledgeStreak = Number.isFinite(d.runRoutePledgeStreak) ? Math.max(0, Math.min(9, Math.floor(d.runRoutePledgeStreak))) : 0;
+  d.runRoutePledgePeak = Number.isFinite(d.runRoutePledgePeak) ? Math.max(0, Math.min(9, Math.floor(d.runRoutePledgePeak))) : 0;
+  if (typeof d.runRoutePledgeLast !== "string") d.runRoutePledgeLast = "";
+  d.runRouteRecommendStreak = Number.isFinite(d.runRouteRecommendStreak) ? Math.max(0, Math.min(9, Math.floor(d.runRouteRecommendStreak))) : 0;
+  d.runRouteRecommendPeak = Number.isFinite(d.runRouteRecommendPeak) ? Math.max(0, Math.min(9, Math.floor(d.runRouteRecommendPeak))) : 0;
+  if (typeof d.runRouteRecommendLast !== "string") d.runRouteRecommendLast = "";
+  d.runPledgeReprisal = Number.isFinite(d.runPledgeReprisal) ? Math.max(0, Math.min(3, Math.floor(d.runPledgeReprisal))) : 0;
+  if (typeof d.runPledgeReprisalLast !== "string") d.runPledgeReprisalLast = "";
+  if (typeof d.runRewardVerb !== "string") d.runRewardVerb = "";
+  d.runRewardVerbStreak = Number.isFinite(d.runRewardVerbStreak) ? Math.max(0, Math.min(9, Math.floor(d.runRewardVerbStreak))) : 0;
+  d.runRewardVerbPeak = Number.isFinite(d.runRewardVerbPeak) ? Math.max(0, Math.min(9, Math.floor(d.runRewardVerbPeak))) : 0;
+  if (typeof d.runRewardVerbLast !== "string") d.runRewardVerbLast = "";
+  if (typeof d.runRewardVerbSurge !== "string") d.runRewardVerbSurge = "";
+  d.runRewardVerbSurgePower = Number.isFinite(d.runRewardVerbSurgePower)
+    ? Math.max(0, Math.min(3, Math.floor(d.runRewardVerbSurgePower)))
+    : 0;
+  if (!d.runRewardVerbSurge) d.runRewardVerbSurgePower = 0;
+  if (typeof d.runRewardVerbSurgeLast !== "string") d.runRewardVerbSurgeLast = "";
+  d.runEventEchoPlan =
+    d.runEventEchoPlan === "safe" ||
+    d.runEventEchoPlan === "tempo" ||
+    d.runEventEchoPlan === "risk" ||
+    d.runEventEchoPlan === "draft"
+      ? d.runEventEchoPlan
+      : "";
+  d.runEventEchoPower = Number.isFinite(d.runEventEchoPower)
+    ? Math.max(0, Math.min(3, Math.floor(d.runEventEchoPower)))
+    : 0;
+  if (!d.runEventEchoPlan) d.runEventEchoPower = 0;
+  if (typeof d.runEventEchoLast !== "string") d.runEventEchoLast = "";
+  if (d.runObjective) {
+    const validObjectiveKinds = ["perfect_dodge", "skill_counter", "finisher", "fast_kill"];
+    if (!validObjectiveKinds.includes(d.runObjective.kind)) d.runObjective = null;
+    else {
+      if (typeof d.runObjective.title !== "string") d.runObjective.title = "战术目标";
+      if (typeof d.runObjective.desc !== "string") d.runObjective.desc = "";
+      d.runObjective.target = Number.isFinite(d.runObjective.target) ? Math.max(1, Math.floor(d.runObjective.target)) : 1;
+      d.runObjective.progress = Number.isFinite(d.runObjective.progress) ? Math.max(0, Math.floor(d.runObjective.progress)) : 0;
+      d.runObjective.rewardZhuLingEssence = Number.isFinite(d.runObjective.rewardZhuLingEssence)
+        ? Math.max(0, Math.floor(d.runObjective.rewardZhuLingEssence))
+        : 0;
+      d.runObjective.rewardLingSha = Number.isFinite(d.runObjective.rewardLingSha) ? Math.max(0, Math.floor(d.runObjective.rewardLingSha)) : 0;
+      d.runObjective.rewardFinisherCharge = Number.isFinite(d.runObjective.rewardFinisherCharge ?? NaN)
+        ? Math.max(0, Math.floor(d.runObjective.rewardFinisherCharge ?? 0))
+        : undefined;
+      d.runObjective.rewardRerolls = Number.isFinite(d.runObjective.rewardRerolls ?? NaN)
+        ? Math.max(0, Math.floor(d.runObjective.rewardRerolls ?? 0))
+        : undefined;
+      d.runObjective.rewardShieldPct = Number.isFinite(d.runObjective.rewardShieldPct ?? NaN)
+        ? Math.max(0, d.runObjective.rewardShieldPct ?? 0)
+        : undefined;
+      d.runObjective.rewardStyle = Number.isFinite(d.runObjective.rewardStyle ?? NaN)
+        ? Math.max(0, Math.floor(d.runObjective.rewardStyle ?? 0))
+        : undefined;
+      d.runObjective.rewardThreatDelta = Number.isFinite(d.runObjective.rewardThreatDelta ?? NaN)
+        ? Math.floor(d.runObjective.rewardThreatDelta ?? 0)
+        : undefined;
+      d.runObjective.completed = !!d.runObjective.completed || d.runObjective.progress >= d.runObjective.target;
+      d.runObjective.failed = !!d.runObjective.failed && !d.runObjective.completed;
+      d.runObjective.startedAtMs = Number.isFinite(d.runObjective.startedAtMs) ? Math.max(0, Math.floor(d.runObjective.startedAtMs)) : Date.now();
+      d.runObjective.timeLimitMs = Number.isFinite(d.runObjective.timeLimitMs ?? NaN)
+        ? Math.max(0, Math.floor(d.runObjective.timeLimitMs ?? 0))
+        : undefined;
+      if (typeof d.runObjective.routePlan !== "string" || !["safe", "tempo", "risk", "draft"].includes(d.runObjective.routePlan)) {
+        delete d.runObjective.routePlan;
+      }
+    }
+  }
+  d.runWarrantPrize = Number.isFinite(d.runWarrantPrize) ? Math.max(0, Math.min(3, Math.floor(d.runWarrantPrize))) : 0;
+  if (typeof d.runWarrantPrizeLast !== "string") d.runWarrantPrizeLast = "";
+  d.runWarrant = d.runWarrant && typeof d.runWarrant === "object" ? d.runWarrant : null;
+  if (d.runWarrant) {
+    const validKinds = ["clear_nodes", "counter_moves", "boss_omens", "elite_routes", "blessing_picks", "finishers"];
+    if (!validKinds.includes(d.runWarrant.kind)) d.runWarrant = null;
+    else {
+      d.runWarrant.target = Number.isFinite(d.runWarrant.target) ? Math.max(1, Math.floor(d.runWarrant.target)) : 1;
+      d.runWarrant.progress = Number.isFinite(d.runWarrant.progress) ? Math.max(0, Math.floor(d.runWarrant.progress)) : 0;
+      d.runWarrant.completed = !!d.runWarrant.completed || d.runWarrant.progress >= d.runWarrant.target;
+      d.runWarrant.rewardZhuLingEssence = Number.isFinite(d.runWarrant.rewardZhuLingEssence)
+        ? Math.max(0, Math.floor(d.runWarrant.rewardZhuLingEssence))
+        : 0;
+      d.runWarrant.rewardLingSha = Number.isFinite(d.runWarrant.rewardLingSha) ? Math.max(0, Math.floor(d.runWarrant.rewardLingSha)) : 0;
+      d.runWarrant.rewardFinisherCharge = Number.isFinite(d.runWarrant.rewardFinisherCharge ?? NaN)
+        ? Math.max(0, Math.floor(d.runWarrant.rewardFinisherCharge ?? 0))
+        : undefined;
+      d.runWarrant.rewardRerolls = Number.isFinite(d.runWarrant.rewardRerolls ?? NaN)
+        ? Math.max(0, Math.floor(d.runWarrant.rewardRerolls ?? 0))
+        : undefined;
+      d.runWarrant.rewardThreatDelta = Number.isFinite(d.runWarrant.rewardThreatDelta ?? NaN)
+        ? Math.floor(d.runWarrant.rewardThreatDelta ?? 0)
+        : undefined;
+      if (typeof d.runWarrant.title !== "string") d.runWarrant.title = "行旅悬赏";
+      if (typeof d.runWarrant.desc !== "string") d.runWarrant.desc = "";
+    }
+  }
+  d.runOpportunity = d.runOpportunity && typeof d.runOpportunity === "object" ? d.runOpportunity : null;
+  if (d.runOpportunity) {
+    if (
+      d.runOpportunity.action !== "dodge" &&
+      d.runOpportunity.action !== "skill" &&
+      d.runOpportunity.action !== "finisher"
+    ) {
+      d.runOpportunity = null;
+    } else {
+      if (typeof d.runOpportunity.title !== "string") d.runOpportunity.title = "战机";
+      if (typeof d.runOpportunity.desc !== "string") d.runOpportunity.desc = "";
+      d.runOpportunity.untilMs = Number.isFinite(d.runOpportunity.untilMs) ? Math.max(0, Math.floor(d.runOpportunity.untilMs)) : 0;
+      d.runOpportunity.rewardZhuLingEssence = Number.isFinite(d.runOpportunity.rewardZhuLingEssence)
+        ? Math.max(0, Math.floor(d.runOpportunity.rewardZhuLingEssence))
+        : 0;
+      d.runOpportunity.rewardFinisherCharge = Number.isFinite(d.runOpportunity.rewardFinisherCharge)
+        ? Math.max(0, Math.floor(d.runOpportunity.rewardFinisherCharge))
+        : 0;
+      d.runOpportunity.rewardStamina = Number.isFinite(d.runOpportunity.rewardStamina)
+        ? Math.max(0, Math.floor(d.runOpportunity.rewardStamina))
+        : 0;
+      d.runOpportunity.damagePct = Number.isFinite(d.runOpportunity.damagePct) ? Math.max(0, d.runOpportunity.damagePct) : 0;
+      if (
+        d.runOpportunity.source !== "pledge_reprisal" &&
+        d.runOpportunity.source !== "reward_verb_surge" &&
+        d.runOpportunity.source !== "counter_tempo_rebound" &&
+        d.runOpportunity.source !== "event_echo"
+      ) {
+        delete d.runOpportunity.source;
+      }
+      d.runOpportunity.sourcePower = Number.isFinite(d.runOpportunity.sourcePower ?? NaN)
+        ? Math.max(0, Math.min(3, Math.floor(d.runOpportunity.sourcePower ?? 0)))
+        : undefined;
+      if (typeof d.runOpportunity.sourceVerb !== "string") delete d.runOpportunity.sourceVerb;
+    }
+  }
+  d.runOpportunityNextAtMs = Number.isFinite(d.runOpportunityNextAtMs) ? Math.max(0, Math.floor(d.runOpportunityNextAtMs)) : 0;
+  if (!Array.isArray(d.runPendingRewards)) d.runPendingRewards = [];
+  d.runPendingEvent = d.runPendingEvent ?? null;
+  if (!Array.isArray(d.runPendingRoutes)) d.runPendingRoutes = [];
+  d.runShield = Number.isFinite(d.runShield) ? Math.max(0, d.runShield) : 0;
+  d.runSkillCooldownUntil = Number.isFinite(d.runSkillCooldownUntil) ? Math.max(0, d.runSkillCooldownUntil) : 0;
+  d.runFinisherCharge = Number.isFinite(d.runFinisherCharge)
+    ? Math.max(0, Math.min(100, d.runFinisherCharge))
+    : 0;
+  d.runSkillQueued = !!d.runSkillQueued;
+  d.runFervorQueued = !!d.runFervorQueued;
+  d.runFinisherQueued = !!d.runFinisherQueued;
+  d.runKills = Number.isFinite(d.runKills) ? Math.max(0, Math.floor(d.runKills)) : 0;
+  d.runEssenceGained = Number.isFinite(d.runEssenceGained) ? Math.max(0, d.runEssenceGained) : 0;
+  if (typeof d.runLog !== "string") d.runLog = "";
 }
 
 function normalizePetsState(st: GameState): void {
@@ -503,6 +765,10 @@ export function deserialize(json: string): GameState {
   }
   const st = createInitialState();
   const ver = data.version ?? 1;
+
+  if (ver < SAVE_VERSION) {
+    return createInitialState();
+  }
 
   if (ver < 4) {
     return migrateFromOlder(data, st);

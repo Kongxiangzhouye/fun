@@ -16,6 +16,14 @@ type DungeonInteractionDeps = {
   enterDungeon: (state: GameState, wave: number) => boolean;
   playerMaxHp: (state: GameState) => number;
   tryQueueDungeonDodgeWithFeedback: () => void;
+  queueDungeonSkill: (state: GameState) => void;
+  queueDungeonFervor: (state: GameState) => void;
+  queueDungeonFinisher: (state: GameState) => void;
+  applyRunRewardChoice: (state: GameState, rewardId: string) => boolean;
+  toggleRunRewardLock: (state: GameState, rewardId: string) => boolean;
+  rerollRunRewardChoices: (state: GameState) => boolean;
+  applyRunEventChoice: (state: GameState, optionId: string) => boolean;
+  applyRunRouteChoice: (state: GameState, routeId: string) => boolean;
   dungeonBossPrepSnapshot: (state: GameState) => { canChallenge: boolean; challengeHint: string };
   requestBossChallenge: (state: GameState) => { ok: boolean; msg: string };
 };
@@ -35,6 +43,14 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
     enterDungeon,
     playerMaxHp,
     tryQueueDungeonDodgeWithFeedback,
+    queueDungeonSkill,
+    queueDungeonFervor,
+    queueDungeonFinisher,
+    applyRunRewardChoice,
+    toggleRunRewardLock,
+    rerollRunRewardChoices,
+    applyRunEventChoice,
+    applyRunRouteChoice,
     dungeonBossPrepSnapshot,
     requestBossChallenge,
   } = deps;
@@ -61,21 +77,16 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
     const w = readEntryWave();
     state.dungeon.entryWave = w;
     const now = nowMs();
-    if (!canEnterDungeon(state, now)) {
-      toast("当前无法进入：冷却中或仍在副本内。");
+    if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
+      toast("当前无法进入幻域行旅。");
       return;
     }
-    if (!canEnterAtWave(state, w)) {
-      toast("无法从该波进入：已超过当前可推进范围，或该波不可选。");
-      return;
-    }
-    if (!confirm(`确认进入第 ${w} 关？`)) return;
     if (enterDungeon(state, w)) {
       save();
-      toast(`已进入幻域（自第 ${w} 波）`);
+      toast("已进入幻域行旅。");
       render();
     } else {
-      toast("无法进入副本（冷却或其它限制）");
+      toast("无法进入幻域行旅。");
     }
   });
 
@@ -92,21 +103,20 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
     if (!state.dungeonSanctuaryMode || state.dungeon.active || w < 1) return;
     const pmax = playerMaxHp(state);
     if (state.combatHpCurrent < pmax - 0.25) {
-      toast("灵息未满");
+      toast("灵息未满。");
       return;
     }
     if (!canEnterDungeon(state, now) || !canEnterAtWave(state, w)) {
       toast("当前无法进入该关卡。");
       return;
     }
-    if (!confirm(`确认进入第 ${w} 关？`)) return;
     if (enterDungeon(state, w)) {
       setActiveHubBattle();
       save();
-      toast(`已进入第 ${w} 关`);
+      toast(`已进入第 ${w} 关。`);
       render();
     } else {
-      toast("无法进入副本");
+      toast("无法进入幻域。");
     }
   });
 
@@ -121,6 +131,81 @@ export function bindDungeonInteractions(deps: DungeonInteractionDeps): void {
     tryQueueDungeonDodgeWithFeedback();
   };
   document.getElementById("dungeon-live-root")?.addEventListener("pointerup", onDungeonLivePointerUp);
+
+  document.getElementById("btn-dungeon-dodge")?.addEventListener("click", () => {
+    tryQueueDungeonDodgeWithFeedback();
+    save();
+    render();
+  });
+
+  document.getElementById("btn-dungeon-skill")?.addEventListener("click", () => {
+    queueDungeonSkill(state);
+    save();
+    render();
+  });
+
+  document.getElementById("btn-dungeon-fervor")?.addEventListener("click", () => {
+    queueDungeonFervor(state);
+    save();
+    render();
+  });
+
+  document.getElementById("btn-dungeon-finisher")?.addEventListener("click", () => {
+    queueDungeonFinisher(state);
+    save();
+    render();
+  });
+
+  document.querySelectorAll<HTMLElement>("[data-run-reward]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.runReward;
+      if (!id) return;
+      if (applyRunRewardChoice(state, id)) {
+        save();
+        render();
+      }
+    });
+  });
+
+  document.querySelectorAll<HTMLElement>("[data-run-reward-lock]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.runRewardLock;
+      if (!id) return;
+      if (toggleRunRewardLock(state, id)) {
+        save();
+        render();
+      }
+    });
+  });
+
+  document.getElementById("btn-run-reroll-rewards")?.addEventListener("click", () => {
+    if (rerollRunRewardChoices(state)) {
+      save();
+      render();
+    }
+  });
+
+  document.querySelectorAll<HTMLElement>("[data-run-event]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.runEvent;
+      if (!id) return;
+      if (applyRunEventChoice(state, id)) {
+        save();
+        render();
+      }
+    });
+  });
+
+  document.querySelectorAll<HTMLElement>("[data-run-route]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.runRoute;
+      if (!id) return;
+      if (applyRunRouteChoice(state, id)) {
+        save();
+        render();
+      }
+    });
+  });
 
   document.getElementById("btn-dungeon-challenge-boss")?.addEventListener("click", () => {
     const snap = dungeonBossPrepSnapshot(state);

@@ -152,7 +152,11 @@ export function initPixiFxLayer(): void {
 }
 
 export function emitPixiBurst(clientX: number, clientY: number, intensity: "normal" | "high" = "normal"): void {
-  if (!pixiApp || !pixiLayer || motionReduced() || !pixiRuntime) return;
+  if (motionReduced()) return;
+  if (!pixiApp || !pixiLayer || !pixiRuntime) {
+    initPixiFxLayer();
+    return;
+  }
   const n = intensity === "high" ? 30 : 14;
   const speed = intensity === "high" ? 7.6 : 5.4;
   const palette = intensity === "high" ? [0xfff2b1, 0xffb6f8, 0x8fe8ff, 0xaac4ff] : [0x9bb8ff, 0x81d8ff, 0x9ff1d4];
