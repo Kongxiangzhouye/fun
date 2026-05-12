@@ -5,7 +5,8 @@ import { ensureOwned } from "./state";
 import { nextRand01 } from "./rng";
 import { addStones } from "./stones";
 import { metalGachaBonusStones } from "./deckSynergy";
-import { generateRandomGear, gearItemPower, slotEnhanceLevel } from "./systems/gearCraft";
+import { generateRandomGear } from "./systems/gearCraft";
+import { playerCombatPower } from "./systems/playerCombat";
 import { xuanTieFromGearPiece } from "./systems/salvage";
 import { noteWeeklyBountyCardPulls, noteWeeklyBountyGearForges } from "./systems/weeklyBounty";
 import {
@@ -109,11 +110,22 @@ export interface PullResult {
 export type GearReplaceExpectation = "upgrade" | "even" | "downgrade";
 
 const POWER_COMPARE_EPSILON = 1e-6;
+/** 境界铸灵自动换装：以顶栏综合战力为准，避免单件分高却拉低综合战力 */
+const COMBAT_POWER_COMPARE_EPSILON = 1e-6;
 
 function stablePowerDelta(nextPower: number, currentPower: number): number {
   const delta = nextPower - currentPower;
   if (Math.abs(delta) < POWER_COMPARE_EPSILON) return 0;
   return Math.round(delta * 10000) / 10000;
+}
+
+/** 假设 `instanceId` 已穿在 `slot` 上时的综合战力（不写入 inventory，仅试穿） */
+function combatPowerIfSlotEquipped(state: GameState, slot: GearItem["slot"], instanceId: string): number {
+  const prev = state.equippedGear[slot];
+  state.equippedGear[slot] = instanceId;
+  const p = playerCombatPower(state);
+  state.equippedGear[slot] = prev;
+  return p;
 }
 
 /** 用于抽卡演出：取本批最高稀有度 */
@@ -131,7 +143,7 @@ export function highestRarityInPulls(results: PullResult[]): Rarity {
 }
 
 /**
- * 境界铸灵：无背包，新装仅能与当前部位比对战力——战力更高则替换并分解旧装；更低或相等则销毁新装并返少量玄铁。
+ * 境界铸灵：无背包；新装试穿后若综合战力（顶栏）严格高于换装前则替换并分解旧装，否则销毁新装并返少量玄铁。
  * 返回本次新装是否成功装备（用于前端决定是否播放演出）。
  */
 function finalizeGearPull(state: GameState, g: GearItem): {
@@ -143,37 +155,48 @@ function finalizeGearPull(state: GameState, g: GearItem): {
   const slot = g.slot;
   const curId = state.equippedGear[slot];
   if (!curId) {
+    const before = playerCombatPower(state);
     state.gearInventory[g.instanceId] = g;
     state.equippedGear[slot] = g.instanceId;
+    const after = playerCombatPower(state);
+    const powerDelta = stablePowerDelta(after, before);
+    const replaceExpectation: GearReplaceExpectation =
+      powerDelta > 0 ? "upgrade" : powerDelta < 0 ? "downgrade" : "even";
     return commitGearPullMeta(state, g, {
       equipped: true,
       salvagedXuanTie: 0,
-      replaceExpectation: "upgrade",
-      powerDelta: 0,
+      replaceExpectation,
+      powerDelta,
     });
   } else {
     const cur = state.gearInventory[curId];
     if (!cur) {
+      const before = playerCombatPower(state);
       state.gearInventory[g.instanceId] = g;
       state.equippedGear[slot] = g.instanceId;
+      const after = playerCombatPower(state);
+      const powerDelta = stablePowerDelta(after, before);
+      const replaceExpectation: GearReplaceExpectation =
+        powerDelta > 0 ? "upgrade" : powerDelta < 0 ? "downgrade" : "even";
       return commitGearPullMeta(state, g, {
         equipped: true,
         salvagedXuanTie: 0,
-        replaceExpectation: "upgrade",
-        powerDelta: 0,
+        replaceExpectation,
+        powerDelta,
       });
     } else {
-      const slotLv = slotEnhanceLevel(state, slot);
-      const np = gearItemPower(g, slotLv);
-      const cp = gearItemPower(cur, slotLv);
-      const powerDelta = stablePowerDelta(np, cp);
+      state.gearInventory[g.instanceId] = g;
+      const baseline = playerCombatPower(state);
+      const trial = combatPowerIfSlotEquipped(state, slot, g.instanceId);
+      const powerDelta = stablePowerDelta(trial, baseline);
       const replaceExpectation: GearReplaceExpectation =
         powerDelta > 0 ? "upgrade" : powerDelta < 0 ? "downgrade" : "even";
+      delete state.gearInventory[g.instanceId];
       if (cur.locked) {
         const gain = Math.max(1, Math.floor(xuanTieFromGearPiece(g) * 0.35));
         state.xuanTie += gain;
         return commitGearPullMeta(state, g, { equipped: false, salvagedXuanTie: gain, replaceExpectation, powerDelta });
-      } else if (np > cp + POWER_COMPARE_EPSILON) {
+      } else if (trial > baseline + COMBAT_POWER_COMPARE_EPSILON) {
         const gain = xuanTieFromGearPiece(cur);
         state.xuanTie += gain;
         delete state.gearInventory[curId];
